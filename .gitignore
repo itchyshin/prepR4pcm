@@ -42,8 +42,8 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
+# pkgdown site (tracked — served via GitHub Pages from /docs on main)
+# docs/
 
 # translation temp files
 po/*~
@@ -59,3 +59,4 @@ data-raw/sources/
 scripts/output/
 /doc/
 /Meta/
+.github/workflows/pkgdown.yaml
