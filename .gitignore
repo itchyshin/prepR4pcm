@@ -48,3 +48,5 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .claude/worktrees/trusting-snyder/
+data/dat_10597spp.csv
+data/tre_10597spp.nex
