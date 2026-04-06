@@ -18,7 +18,8 @@ Description: Reconcile species names across datasets and phylogenetic trees
     normalisation, synonym resolution via local taxonomic databases, and
     fuzzy matching for likely typos. Detects taxonomic splits and lumps.
 License: MIT + file LICENSE
-URL: https://github.com/itchyshin/prepR4pcm
+URL: https://github.com/itchyshin/prepR4pcm,
+    https://itchyshin.github.io/prepR4pcm/
 BugReports: https://github.com/itchyshin/prepR4pcm/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -34,6 +35,7 @@ Suggests:
     dplyr,
     knitr,
     phytools,
+    pkgdown,
     rmarkdown,
     taxadb,
     testthat (>= 3.0.0)
