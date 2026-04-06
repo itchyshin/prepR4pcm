@@ -14,3 +14,4 @@
 ^Meta$
 \.DS_Store$
 ^README\.Rmd$
+^index\.html$

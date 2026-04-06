@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-04-06 15:35:34
+#>   Timestamp: 2026-04-06 15:46:03
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -127,11 +127,11 @@ taxonomic splits and lumps from synonym resolution results.
 ## Vignettes
 
 - [Getting
-  Started](https://itchyshin.github.io/prepR4pcm/articles/getting-started.html)
+  Started](https://itchyshin.github.io/prepR4pcm/docs/articles/getting-started.html)
   ([source](vignettes/getting-started.Rmd)) — core concepts and a
   minimal worked example
 - [Bird Trait
-  Workflow](https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html)
+  Workflow](https://itchyshin.github.io/prepR4pcm/docs/articles/bird-workflow.html)
   ([source](vignettes/bird-workflow.Rmd)) — a realistic multi-dataset,
   multi-tree analysis pipeline
 
