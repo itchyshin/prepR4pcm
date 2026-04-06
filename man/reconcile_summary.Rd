@@ -35,10 +35,11 @@ Produces a detailed, human-readable report of the reconciliation results,
 breaking down matches by type and listing unresolved names.
 }
 \examples{
-\dontrun{
-result <- reconcile_tree(my_data, my_tree)
-reconcile_summary(result)
+data(avonet_subset)
+data(tree_jetz)
+result <- reconcile_tree(avonet_subset, tree_jetz,
+                         x_species = "Species1", authority = NULL)
+reconcile_summary(result, detail = "brief")
 reconcile_summary(result, detail = "mismatches_only")
-}
 
 }

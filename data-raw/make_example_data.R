@@ -2,7 +2,7 @@
 # Generates bundled example datasets for prepR4pcm from full data files.
 #
 # Run with: source("data-raw/make_example_data.R")
-# Requires: ape, readxl (for BIRDBASE if needed)
+# Requires: ape, here, usethis
 #
 # Data sources and citations:
 #   AVONET:    Tobias et al. (2022) Ecology Letters 25:581-597
@@ -19,7 +19,7 @@ root <- here::here()
 # --- 1. Load the BirdLife-BirdTree crosswalk (full, small enough) ---------
 
 crosswalk_raw <- read.csv(
-  file.path(root, "data/AVONET/data/PhylogeneticData/BirdLife-BirdTree crosswalk.csv"),
+  file.path(root, "data-raw/sources/AVONET/data/PhylogeneticData/BirdLife-BirdTree crosswalk.csv"),
   stringsAsFactors = FALSE
 )
 
@@ -37,94 +37,68 @@ crosswalk_birdlife_birdtree <- crosswalk_birdlife_birdtree[
 # --- 2. Load AVONET (BirdLife taxonomy) ------------------------------------
 
 avonet_full <- read.csv(
-  file.path(root, "data/AVONET/data/TraitData/AVONET1_BirdLife.csv"),
+  file.path(root, "data-raw/sources/AVONET/data/TraitData/AVONET1_BirdLife.csv"),
   stringsAsFactors = FALSE
 )
 
 # --- 3. Load NestTrait v2 --------------------------------------------------
 
 nesttrait_full <- read.csv(
-  file.path(root, "data/nest/NestTrait_v2.csv"),
+  file.path(root, "data-raw/sources/nest/NestTrait_v2.csv"),
   stringsAsFactors = FALSE, fileEncoding = "UTF-8-BOM"
 )
 
 # --- 4. Load Delhey plumage -------------------------------------------------
 
 delhey_full <- read.csv(
-  file.path(root, "data/Delhey2019_plumage_lightness.csv"),
+  file.path(root, "data-raw/sources/Delhey2019_plumage_lightness.csv"),
   stringsAsFactors = FALSE
 )
 
 # --- 5. Load phylogenetic trees ---------------------------------------------
 
 tree_jetz_full <- read.tree(
-  file.path(root, "data/phylo_tree/birdtree_Stage2_Hackett_MCC_no_neg.tre")
+  file.path(root, "data-raw/sources/phylo_tree/birdtree_Stage2_Hackett_MCC_no_neg.tre")
 )
 
 tree_clements25_full <- read.nexus(
-  file.path(root, "data/phylo_tree/clements_2025.nex")
+  file.path(root, "data-raw/sources/phylo_tree/clements_2025.nex")
 )
 
-# --- 6. Select 200 representative species -----------------------------------
+# --- 6. Select species from a coherent clade --------------------------------
 
-# Strategy: pick species that appear in AVONET AND have entries in the
-# crosswalk with varied match types. Include some that are in Delhey and
-# NestTrait too.
+# Strategy: take ALL species from a phylogenetically coherent set of
+# passerine families (Corvoidea and allies — the Australasian corvoid
+# radiation). This is realistic: real comparative studies focus on clades,
+# not random samples from across the tree.
+#
+# Selected families (12, all within the broader Corvoidea/basal oscine
+# radiation):
+#   Corvidae (crows, jays), Monarchidae (monarch flycatchers),
+#   Campephagidae (cuckooshrikes), Laniidae (shrikes),
+#   Sturnidae (starlings), Oriolidae (orioles),
+#   Artamidae (woodswallows), Dicruridae (drongos),
+#   Meliphagidae (honeyeaters), Maluridae (fairy-wrens),
+#   Acanthizidae (thornbills), Pachycephalidae (whistlers)
+#
+# This gives ~920 species with:
+#   - 71% in Jetz tree (260 unresolved → good for augmentation demos)
+#   - 93% in Clements tree (shows tree difference)
+#   - 71% in Delhey (plumage lightness data available)
+#   - 100% in NestTrait (nest data available)
 
-# Species in AVONET
-avonet_spp <- unique(avonet_full$Species1)
+target_families <- c(
+  "Corvidae", "Monarchidae", "Campephagidae", "Laniidae",
+  "Sturnidae", "Oriolidae", "Artamidae", "Dicruridae",
+  "Meliphagidae", "Maluridae", "Acanthizidae", "Pachycephalidae"
+)
 
-# Species in NestTrait
-nesttrait_spp <- unique(nesttrait_full$Scientific_name)
+pass <- avonet_full[avonet_full$Order1 == "Passeriformes", ]
+target_spp <- unique(pass$Species1[pass$Family1 %in% target_families])
 
-# Species in Delhey (uses underscores in TipLabel)
-delhey_spp <- gsub("_", " ", delhey_full$TipLabel)
-
-# Species in Jetz tree tips (uses underscores)
-jetz_tips <- gsub("_", " ", tree_jetz_full$tip.label)
-
-# Species in Clements tree tips
-clements_tips <- gsub("_", " ", tree_clements25_full$tip.label)
-
-# Crosswalk species
-xw_1to1 <- crosswalk_birdlife_birdtree$Species1[
-  crosswalk_birdlife_birdtree$Match.type == "1BL to 1BT"
-]
-xw_many_to_1 <- crosswalk_birdlife_birdtree$Species1[
-  crosswalk_birdlife_birdtree$Match.type == "Many BL to 1BT"
-]
-xw_1_to_many <- crosswalk_birdlife_birdtree$Species1[
-  crosswalk_birdlife_birdtree$Match.type == "1BL to many BT"
-]
-
-# Find species present in ALL major sources
-in_all <- intersect(intersect(avonet_spp, nesttrait_spp),
-                    intersect(jetz_tips, delhey_spp))
-
-# Pick 120 from in_all (good coverage), plus some edge cases
-set.seed(42)
-core_spp <- sample(in_all, min(120, length(in_all)))
-
-# Add 30 species that are in AVONET + Jetz but NOT in Delhey (broader taxa)
-avonet_jetz_only <- setdiff(intersect(avonet_spp, jetz_tips), delhey_spp)
-extra_broad <- sample(avonet_jetz_only, min(30, length(avonet_jetz_only)))
-
-# Add 20 species with many-to-1 crosswalk match type
-m2o_candidates <- intersect(xw_many_to_1, avonet_spp)
-extra_m2o <- sample(m2o_candidates, min(20, length(m2o_candidates)))
-
-# Add 15 species with 1-to-many crosswalk match type
-o2m_candidates <- intersect(xw_1_to_many, avonet_spp)
-extra_o2m <- sample(o2m_candidates, min(15, length(o2m_candidates)))
-
-# Add 15 species that are in AVONET but NOT in Jetz tree (unresolved cases)
-avonet_not_jetz <- setdiff(avonet_spp, jetz_tips)
-extra_unresolved <- sample(avonet_not_jetz, min(15, length(avonet_not_jetz)))
-
-target_spp <- unique(c(core_spp, extra_broad, extra_m2o, extra_o2m,
-                        extra_unresolved))
-
-cat(sprintf("Selected %d species for example datasets\n", length(target_spp)))
+cat(sprintf("Selected %d species from %d families (Corvoidea + allies)\n",
+            length(target_spp), length(target_families)))
+cat(sprintf("  Families: %s\n", paste(target_families, collapse = ", ")))
 
 # --- 7. Subset AVONET -------------------------------------------------------
 
@@ -159,7 +133,6 @@ cat(sprintf("nesttrait_subset: %d species, %d columns\n",
 
 # --- 9. Subset Delhey -------------------------------------------------------
 
-# Delhey uses underscores and a row-number first column
 delhey_target <- gsub(" ", "_", target_spp)
 delhey_subset <- delhey_full[delhey_full$TipLabel %in% delhey_target,
                               c("TipLabel", "family",
@@ -173,33 +146,41 @@ cat(sprintf("delhey_subset: %d species, %d columns\n",
 
 # --- 10. Prune trees --------------------------------------------------------
 
-# For Jetz tree: match with underscored names
+# For Jetz tree: keep target species that have tips
 jetz_target_tips <- gsub(" ", "_", target_spp)
 jetz_keep <- intersect(tree_jetz_full$tip.label, jetz_target_tips)
-tree_jetz_200 <- drop.tip(tree_jetz_full,
-                           setdiff(tree_jetz_full$tip.label, jetz_keep))
+tree_jetz <- drop.tip(tree_jetz_full,
+                       setdiff(tree_jetz_full$tip.label, jetz_keep))
 
-cat(sprintf("tree_jetz_200: %d tips\n", Ntip(tree_jetz_200)))
+cat(sprintf("tree_jetz: %d tips\n", Ntip(tree_jetz)))
 
-# For Clements tree: match with underscored names
+# For Clements tree: keep target species that have tips
 clements_target_tips <- gsub(" ", "_", target_spp)
 clements_keep <- intersect(tree_clements25_full$tip.label, clements_target_tips)
-tree_clements25_200 <- drop.tip(tree_clements25_full,
-                                 setdiff(tree_clements25_full$tip.label,
-                                         clements_keep))
+tree_clements25 <- drop.tip(tree_clements25_full,
+                              setdiff(tree_clements25_full$tip.label,
+                                      clements_keep))
 
-cat(sprintf("tree_clements25_200: %d tips\n", Ntip(tree_clements25_200)))
+cat(sprintf("tree_clements25: %d tips\n", Ntip(tree_clements25)))
+
+# Report data-vs-tree gaps (important for augmentation demos)
+n_data <- nrow(avonet_subset)
+n_jetz <- Ntip(tree_jetz)
+n_clem <- Ntip(tree_clements25)
+cat(sprintf("\nData-tree gaps:\n"))
+cat(sprintf("  AVONET (%d) vs Jetz (%d):     %d in data but not tree\n",
+            n_data, n_jetz, n_data - n_jetz))
+cat(sprintf("  AVONET (%d) vs Clements (%d): %d in data but not tree\n",
+            n_data, n_clem, n_data - n_clem))
 
 # --- 11. Save .rda files ----------------------------------------------------
-
-data_dir <- file.path(root, "data")
 
 usethis::use_data(avonet_subset, overwrite = TRUE)
 usethis::use_data(nesttrait_subset, overwrite = TRUE)
 usethis::use_data(delhey_subset, overwrite = TRUE)
 usethis::use_data(crosswalk_birdlife_birdtree, overwrite = TRUE)
-usethis::use_data(tree_jetz_200, overwrite = TRUE)
-usethis::use_data(tree_clements25_200, overwrite = TRUE)
+usethis::use_data(tree_jetz, overwrite = TRUE)
+usethis::use_data(tree_clements25, overwrite = TRUE)
 
 cat("\nAll example datasets saved to data/\n")
 
@@ -214,5 +195,5 @@ cat(sprintf("  delhey_subset:                %d rows x %d cols\n",
             nrow(delhey_subset), ncol(delhey_subset)))
 cat(sprintf("  crosswalk_birdlife_birdtree:  %d rows x %d cols\n",
             nrow(crosswalk_birdlife_birdtree), ncol(crosswalk_birdlife_birdtree)))
-cat(sprintf("  tree_jetz_200:                %d tips\n", Ntip(tree_jetz_200)))
-cat(sprintf("  tree_clements25_200:          %d tips\n", Ntip(tree_clements25_200)))
+cat(sprintf("  tree_jetz:                    %d tips\n", Ntip(tree_jetz)))
+cat(sprintf("  tree_clements25:              %d tips\n", Ntip(tree_clements25)))

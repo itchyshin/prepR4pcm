@@ -48,7 +48,6 @@ naming systems and want to use it instead of (or in addition to)
 automated synonym resolution.
 }
 \examples{
-\dontrun{
 data(crosswalk_birdlife_birdtree)
 overrides <- reconcile_crosswalk(
   crosswalk_birdlife_birdtree,
@@ -56,7 +55,6 @@ overrides <- reconcile_crosswalk(
   to_col = "Species3",
   match_type_col = "Match.type"
 )
-result <- reconcile_tree(my_data, jetz_tree, overrides = overrides)
-}
+head(overrides)
 
 }

@@ -11,10 +11,9 @@
 #' @return Character vector of tip labels.
 #'
 #' @examples
-#' \dontrun{
-#' tips <- pr_extract_tips("my_tree.nwk")
-#' tips <- pr_extract_tips(ape::rtree(10))
-#' }
+#' data(tree_jetz)
+#' tips <- pr_extract_tips(tree_jetz)
+#' head(tips)
 #'
 #' @export
 pr_extract_tips <- function(tree) {

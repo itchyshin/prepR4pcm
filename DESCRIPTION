@@ -33,6 +33,7 @@ Imports:
 Suggests:
     dplyr,
     knitr,
+    phytools,
     rmarkdown,
     taxadb,
     testthat (>= 3.0.0)

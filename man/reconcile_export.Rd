@@ -47,13 +47,18 @@ and full mapping table to disk. This produces publication-ready files
 with a documented provenance trail.
 }
 \examples{
-\dontrun{
-result <- reconcile_tree(my_data, my_tree)
-files <- reconcile_export(result, data = my_data, tree = my_tree,
-                           dir = "output", prefix = "pgls_ready")
-files$data     # "output/pgls_ready_data.csv"
-files$tree     # "output/pgls_ready_tree.nex"
-files$mapping  # "output/pgls_ready_mapping.csv"
-}
+data(avonet_subset)
+data(tree_jetz)
+result <- reconcile_tree(avonet_subset, tree_jetz,
+                         x_species = "Species1", authority = NULL)
+out_dir <- tempfile("export_")
+files <- reconcile_export(result,
+                          data = avonet_subset, tree = tree_jetz,
+                          species_col = "Species1",
+                          dir = out_dir, prefix = "avonet_jetz")
+files$data     # path to CSV
+files$tree     # path to Nexus tree
+files$mapping  # path to mapping CSV
+unlink(out_dir, recursive = TRUE)  # clean up
 
 }

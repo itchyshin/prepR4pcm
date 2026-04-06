@@ -70,11 +70,12 @@ mapping documenting exact matches, normalised matches, synonym-based
 matches, and unresolved names.
 }
 \examples{
-\dontrun{
-df1 <- data.frame(species = c("Homo sapiens", "Pan troglodytes", "Gorilla gorilla"))
-df2 <- data.frame(species = c("Homo_sapiens", "Pan troglodytes", "Pongo pygmaeus"))
-result <- reconcile_data(df1, df2)
+data(avonet_subset)
+data(nesttrait_subset)
+result <- reconcile_data(avonet_subset, nesttrait_subset,
+                         x_species = "Species1",
+                         y_species = "Scientific_name",
+                         authority = NULL)
 print(result)
-}
 
 }

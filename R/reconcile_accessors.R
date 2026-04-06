@@ -9,12 +9,14 @@
 #'   `match_type`, `match_score`, `match_source`, `in_x`, `in_y`, `notes`.
 #'
 #' @examples
-#' \dontrun{
-#' result <- reconcile_tree(my_data, my_tree)
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' result <- reconcile_tree(avonet_subset, tree_jetz,
+#'                          x_species = "Species1", authority = NULL)
 #' mapping <- reconcile_mapping(result)
 #' # Filter to matched species
 #' matched <- mapping[mapping$in_x & mapping$in_y, ]
-#' }
+#' nrow(matched)
 #'
 #' @export
 reconcile_mapping <- function(x) {
@@ -40,13 +42,21 @@ reconcile_mapping <- function(x) {
 #' @return An updated `reconciliation` object.
 #'
 #' @examples
-#' \dontrun{
-#' result <- reconcile_override(
-#'   result,
-#'   name_x = "Corvus sp.",
-#'   name_y = "Corvus corax",
-#'   note = "Only one Corvus in tree"
-#' )
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' result <- reconcile_tree(avonet_subset, tree_jetz,
+#'                          x_species = "Species1", authority = NULL)
+#' # Manually assign an unresolved species to a tree tip
+#' unresolved <- reconcile_mapping(result)
+#' unresolved <- unresolved[unresolved$match_type == "unresolved" &
+#'                            unresolved$in_x, ]
+#' if (nrow(unresolved) > 0) {
+#'   result <- reconcile_override(
+#'     result,
+#'     name_x = unresolved$name_x[1],
+#'     name_y = tree_jetz$tip.label[1],
+#'     note = "Manual assignment for demonstration"
+#'   )
 #' }
 #'
 #' @export
@@ -153,12 +163,16 @@ reconcile_override <- function(x, name_x, name_y = NULL,
 #'   (aligned phylo object). Either may be `NULL` if not provided.
 #'
 #' @examples
-#' \dontrun{
-#' result <- reconcile_tree(my_data, my_tree)
-#' aligned <- reconcile_apply(result, data = my_data, tree = my_tree,
-#'                             drop_unresolved = TRUE)
-#' # aligned$data and aligned$tree now have matching species
-#' }
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' result <- reconcile_tree(avonet_subset, tree_jetz,
+#'                          x_species = "Species1", authority = NULL)
+#' aligned <- reconcile_apply(result,
+#'                            data = avonet_subset, tree = tree_jetz,
+#'                            species_col = "Species1",
+#'                            drop_unresolved = TRUE)
+#' cat("Aligned data:", nrow(aligned$data), "rows\n")
+#' cat("Aligned tree:", ape::Ntip(aligned$tree), "tips\n")
 #'
 #' @export
 reconcile_apply <- function(x, data = NULL, tree = NULL,

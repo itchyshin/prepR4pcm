@@ -18,14 +18,17 @@
 #' @return A named list of `reconciliation` objects, one per tree.
 #'
 #' @examples
-#' \dontrun{
-#' trees <- list(
-#'   jetz     = "jetz_2012.tre",
-#'   clements = "clements_2025.nex"
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' data(tree_clements25)
+#' results <- reconcile_to_trees(
+#'   avonet_subset,
+#'   trees = list(jetz = tree_jetz, clements = tree_clements25),
+#'   x_species = "Species1",
+#'   authority = NULL
 #' )
-#' results <- reconcile_to_trees(my_data, trees, x_species = "species")
-#' lapply(results, print)
-#' }
+#' # Compare overlap across trees
+#' sapply(results, function(r) r$counts$n_exact)
 #'
 #' @export
 reconcile_to_trees <- function(x, trees,

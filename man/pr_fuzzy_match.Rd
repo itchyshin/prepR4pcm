@@ -24,4 +24,9 @@ separately, then combined with weights (genus 0.6, epithet 0.4) to
 reflect that genus-level errors are more informative. Uses base R
 \code{utils::adist()} for Levenshtein distance — no extra dependencies.
 }
+\details{
+Genus pre-filtering is applied: only names whose genus is within 2
+edits of each other are compared. This reduces the number of pairwise
+comparisons dramatically for large datasets.
+}
 \keyword{internal}

@@ -102,12 +102,13 @@ pr_detect_splits_lumps <- function(mapping) {
 #' @return A list with `$splits` and `$lumps` tibbles, invisibly.
 #'
 #' @examples
-#' \dontrun{
-#' result <- reconcile_tree(my_data, my_tree, authority = "col")
-#' sl <- reconcile_splits_lumps(result)
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' result <- reconcile_tree(avonet_subset, tree_jetz,
+#'                          x_species = "Species1", authority = NULL)
+#' sl <- reconcile_splits_lumps(result, quiet = TRUE)
 #' sl$splits
 #' sl$lumps
-#' }
 #'
 #' @export
 reconcile_splits_lumps <- function(x, quiet = FALSE) {

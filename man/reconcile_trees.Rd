@@ -59,9 +59,10 @@ Compares tip labels of two phylogenetic trees and identifies matching,
 normalised, synonym-resolved, and unresolved names.
 }
 \examples{
-\dontrun{
-result <- reconcile_trees("tree_source_A.nwk", "tree_source_B.nwk")
+data(tree_jetz)
+data(tree_clements25)
+result <- reconcile_trees(tree_jetz, tree_clements25,
+                          authority = NULL)
 print(result)
-}
 
 }

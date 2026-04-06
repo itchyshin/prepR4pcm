@@ -7,6 +7,10 @@
 #' reflect that genus-level errors are more informative. Uses base R
 #' `utils::adist()` for Levenshtein distance — no extra dependencies.
 #'
+#' Genus pre-filtering is applied: only names whose genus is within 2
+#' edits of each other are compared. This reduces the number of pairwise
+#' comparisons dramatically for large datasets.
+#'
 #' @param names_x Character vector.
 #' @param names_y Character vector.
 #' @param threshold Numeric (0--1). Minimum similarity score. Default 0.9.
@@ -21,50 +25,85 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   norm_x <- as.character(pr_normalize_names(names_x, rank = rank))
   norm_y <- as.character(pr_normalize_names(names_y, rank = rank))
 
+  # Parse into genus + epithet
+  parse_binomial <- function(nms) {
+    parts <- strsplit(nms, "\\s+")
+    genus   <- vapply(parts, function(p) if (length(p) >= 1) p[1] else NA_character_, character(1))
+    epithet <- vapply(parts, function(p) if (length(p) >= 2) p[2] else NA_character_, character(1))
+    list(genus = genus, epithet = epithet)
+  }
+
+  px <- parse_binomial(norm_x)
+  py <- parse_binomial(norm_y)
+
+  # Filter out entries without valid binomials
+  valid_x <- !is.na(px$genus) & !is.na(px$epithet)
+  valid_y <- !is.na(py$genus) & !is.na(py$epithet)
+
+  idx_x <- which(valid_x)
+  idx_y <- which(valid_y)
+
+  if (length(idx_x) == 0 || length(idx_y) == 0) {
+    return(tibble(
+      name_x = character(),
+      name_y = character(),
+      score  = numeric(),
+      notes  = character()
+    ))
+  }
+
+  # Build genus-level index: for each genus in y, store indices
+  genus_y_groups <- split(idx_y, py$genus[idx_y])
+
+  # Compute genus edit-distance matrix (unique genera only)
+  unique_genus_x <- unique(px$genus[idx_x])
+  unique_genus_y <- names(genus_y_groups)
+
+  # Vectorised genus distance: adist can take vectors
+  genus_dist_mat <- utils::adist(unique_genus_x, unique_genus_y)
+
+  # For each x genus, find y genera within 2 edits (allows fuzzy genus match)
+  max_genus_edits <- 2L
+  genus_x_lookup <- stats::setNames(seq_along(unique_genus_x), unique_genus_x)
+
   results <- list()
 
-  for (i in seq_along(norm_x)) {
-    nx <- norm_x[i]
-    if (is.na(nx) || nchar(nx) == 0) next
+  for (ii in seq_along(idx_x)) {
+    i <- idx_x[ii]
+    gx <- px$genus[i]
+    ex <- px$epithet[i]
+    gx_idx <- genus_x_lookup[gx]
 
-    parts_x <- strsplit(nx, "\\s+")[[1]]
-    if (length(parts_x) < 2) next
+    # Find candidate y genera (within max_genus_edits)
+    close_genus_mask <- genus_dist_mat[gx_idx, ] <= max_genus_edits
+    candidate_genera <- unique_genus_y[close_genus_mask]
 
-    genus_x <- parts_x[1]
-    epithet_x <- parts_x[2]
+    if (length(candidate_genera) == 0) next
 
-    best_score <- -1
-    best_j <- NA_integer_
+    # Collect all y indices from candidate genera
+    cand_y <- unlist(genus_y_groups[candidate_genera], use.names = FALSE)
+    if (length(cand_y) == 0) next
 
-    for (j in seq_along(norm_y)) {
-      ny <- norm_y[j]
-      if (is.na(ny) || nchar(ny) == 0) next
+    # Vectorised epithet distance
+    epithets_y <- py$epithet[cand_y]
+    ep_dists <- utils::adist(ex, epithets_y)[1, ]
+    ep_maxlen <- pmax(nchar(ex), nchar(epithets_y))
+    ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
 
-      parts_y <- strsplit(ny, "\\s+")[[1]]
-      if (length(parts_y) < 2) next
+    # Genus similarity for candidates
+    genera_y <- py$genus[cand_y]
+    g_dists <- utils::adist(gx, genera_y)[1, ]
+    g_maxlen <- pmax(nchar(gx), nchar(genera_y))
+    g_sim <- ifelse(g_maxlen == 0, 1, 1 - g_dists / g_maxlen)
 
-      genus_y <- parts_y[1]
-      epithet_y <- parts_y[2]
+    # Weighted score
+    scores <- 0.6 * g_sim + 0.4 * ep_sim
 
-      # Levenshtein similarity: 1 - (edit_distance / max_length)
-      genus_dist <- utils::adist(genus_x, genus_y)[1, 1]
-      genus_max <- max(nchar(genus_x), nchar(genus_y))
-      genus_sim <- if (genus_max == 0) 1 else 1 - genus_dist / genus_max
+    best_k <- which.max(scores)
+    best_score <- scores[best_k]
 
-      epithet_dist <- utils::adist(epithet_x, epithet_y)[1, 1]
-      epithet_max <- max(nchar(epithet_x), nchar(epithet_y))
-      epithet_sim <- if (epithet_max == 0) 1 else 1 - epithet_dist / epithet_max
-
-      # Weighted score: genus more important than epithet
-      score <- 0.6 * genus_sim + 0.4 * epithet_sim
-
-      if (score > best_score) {
-        best_score <- score
-        best_j <- j
-      }
-    }
-
-    if (!is.na(best_j) && best_score >= threshold) {
+    if (best_score >= threshold) {
+      best_j <- cand_y[best_k]
       results[[length(results) + 1]] <- tibble(
         name_x = names_x[i],
         name_y = names_y[best_j],

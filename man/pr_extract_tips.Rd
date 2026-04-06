@@ -18,9 +18,8 @@ Accepts an \code{ape::phylo} object or a file path (Newick or Nexus,
 auto-detected). Returns the tip labels as a character vector.
 }
 \examples{
-\dontrun{
-tips <- pr_extract_tips("my_tree.nwk")
-tips <- pr_extract_tips(ape::rtree(10))
-}
+data(tree_jetz)
+tips <- pr_extract_tips(tree_jetz)
+head(tips)
 
 }

@@ -19,11 +19,12 @@ User-facing function that wraps \code{\link[=pr_detect_splits_lumps]{pr_detect_s
 formatted console output.
 }
 \examples{
-\dontrun{
-result <- reconcile_tree(my_data, my_tree, authority = "col")
-sl <- reconcile_splits_lumps(result)
+data(avonet_subset)
+data(tree_jetz)
+result <- reconcile_tree(avonet_subset, tree_jetz,
+                         x_species = "Species1", authority = NULL)
+sl <- reconcile_splits_lumps(result, quiet = TRUE)
 sl$splits
 sl$lumps
-}
 
 }

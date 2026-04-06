@@ -39,6 +39,15 @@ pr_run_cascade <- function(names_x, names_y,
   unique_x <- unique(names_x[!is.na(names_x)])
   unique_y <- unique(names_y[!is.na(names_y)])
 
+  # Show progress for large datasets
+  use_progress <- !quiet && length(unique_x) > 500
+  if (use_progress) {
+    n_stages <- 2L + (!is.null(authority)) + fuzzy
+    cli_alert_info(
+      "Matching {length(unique_x)} x {length(unique_y)} names through {n_stages} stages..."
+    )
+  }
+
   # Track which names are matched at each stage
   matched_x <- character()
   matched_y <- character()
@@ -46,13 +55,28 @@ pr_run_cascade <- function(names_x, names_y,
 
   # --- Pre-stage: Apply manual overrides ---
   if (!is.null(overrides) && nrow(overrides) > 0) {
+    # Normalise for comparison so overrides with spaces match targets
+    # with underscores (and vice versa)
+    norm_ux <- as.character(pr_normalize_names(unique_x, rank = rank))
+    norm_uy <- as.character(pr_normalize_names(unique_y, rank = rank))
+    lookup_orig_ux <- stats::setNames(unique_x, norm_ux)
+    lookup_orig_uy <- stats::setNames(unique_y, norm_uy)
+
     for (i in seq_len(nrow(overrides))) {
       ox <- overrides$name_x[i]
       oy <- overrides$name_y[i]
-      if (ox %in% unique_x && oy %in% unique_y) {
+      ox_norm <- as.character(pr_normalize_names(ox, rank = rank))
+      oy_norm <- as.character(pr_normalize_names(oy, rank = rank))
+
+      # Match override names to input names via normalised form
+      ox_orig <- lookup_orig_ux[ox_norm]
+      oy_orig <- lookup_orig_uy[oy_norm]
+
+      if (!is.na(ox_orig) && !is.na(oy_orig) &&
+          !(ox_orig %in% matched_x) && !(oy_orig %in% matched_y)) {
         rows[[length(rows) + 1]] <- tibble(
-          name_x        = ox,
-          name_y        = oy,
+          name_x        = unname(ox_orig),
+          name_y        = unname(oy_orig),
           name_resolved = NA_character_,
           match_type    = "manual",
           match_score   = 1.0,
@@ -61,13 +85,14 @@ pr_run_cascade <- function(names_x, names_y,
           in_y          = TRUE,
           notes         = overrides$user_note[i] %||% "Manual override"
         )
-        matched_x <- c(matched_x, ox)
-        matched_y <- c(matched_y, oy)
+        matched_x <- c(matched_x, unname(ox_orig))
+        matched_y <- c(matched_y, unname(oy_orig))
       }
     }
   }
 
   # --- Stage 1: Exact match ---
+  if (use_progress) cli_alert_info("Stage 1/4: Exact matching...")
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
@@ -90,6 +115,7 @@ pr_run_cascade <- function(names_x, names_y,
   }
 
   # --- Stage 2: Normalised match ---
+  if (use_progress) cli_alert_info("Stage 2/4: Normalised matching ({length(matched_x)} matched so far)...")
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
@@ -126,6 +152,7 @@ pr_run_cascade <- function(names_x, names_y,
   }
 
   # --- Stage 3: Synonym resolution ---
+  if (use_progress) cli_alert_info("Stage 3/4: Synonym resolution ({length(matched_x)} matched so far)...")
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
@@ -180,6 +207,7 @@ pr_run_cascade <- function(names_x, names_y,
   }
 
   # --- Stage 4: Fuzzy matching ---
+  if (use_progress) cli_alert_info("Stage 4/4: Fuzzy matching ({length(matched_x)} matched so far)...")
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 

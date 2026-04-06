@@ -5,7 +5,7 @@
 \alias{avonet_subset}
 \title{AVONET morphological trait data (subset)}
 \format{
-A data frame with ~200 rows and 16 columns:
+A data frame with ~920 rows and 16 columns:
 \describe{
 \item{Species1}{Scientific name (BirdLife taxonomy)}
 \item{Family1}{Family}
@@ -34,7 +34,9 @@ geographical data for all birds. \emph{Ecology Letters} 25:581--597.
 avonet_subset
 }
 \description{
-A subset of 200 bird species from the AVONET database (BirdLife taxonomy),
-containing morphological measurements and ecological traits.
+A subset of ~920 bird species from the AVONET database (BirdLife
+taxonomy), covering 12 passerine families within the Corvoidea and
+allied clades. Contains morphological measurements and ecological
+traits.
 }
 \keyword{datasets}

@@ -24,9 +24,11 @@ radiation. \emph{American Naturalist} 194:13--27. \doi{10.1086/703588}
 delhey_subset
 }
 \description{
-A subset of passerine species from Delhey et al. (2019), with plumage
-lightness measurements and climate variables. Note that species names
-use underscores (e.g., \code{"Abroscopus_albogularis"}), making this useful
-for demonstrating name normalisation.
+A subset of ~650 passerine species from Delhey et al. (2019), with
+plumage lightness measurements and climate variables. Covers species
+from the same families as \link{avonet_subset} that have plumage data.
+Note that species names use underscores (e.g.,
+\code{"Corvus_corax"}), making this useful for demonstrating name
+normalisation.
 }
 \keyword{datasets}

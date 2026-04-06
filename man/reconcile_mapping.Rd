@@ -17,11 +17,13 @@ A tibble with columns: \code{name_x}, \code{name_y}, \code{name_resolved},
 Returns the full mapping tibble, suitable for downstream joins.
 }
 \examples{
-\dontrun{
-result <- reconcile_tree(my_data, my_tree)
+data(avonet_subset)
+data(tree_jetz)
+result <- reconcile_tree(avonet_subset, tree_jetz,
+                         x_species = "Species1", authority = NULL)
 mapping <- reconcile_mapping(result)
 # Filter to matched species
 matched <- mapping[mapping$in_x & mapping$in_y, ]
-}
+nrow(matched)
 
 }

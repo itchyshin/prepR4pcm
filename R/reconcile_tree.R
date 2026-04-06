@@ -14,11 +14,11 @@
 #' @return A `reconciliation` object.
 #'
 #' @examples
-#' \dontrun{
-#' result <- reconcile_tree(my_data, "my_tree.nwk", x_species = "species")
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' result <- reconcile_tree(avonet_subset, tree_jetz,
+#'                          x_species = "Species1", authority = NULL)
 #' print(result)
-#' aligned <- reconcile_apply(result, drop_unresolved = TRUE)
-#' }
 #'
 #' @export
 reconcile_tree <- function(x, tree,

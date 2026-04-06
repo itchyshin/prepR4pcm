@@ -28,10 +28,10 @@ data(crosswalk_birdlife_birdtree)
 cat(sprintf("\ncrosswalk:        %d rows\n", nrow(crosswalk_birdlife_birdtree)))
 table(crosswalk_birdlife_birdtree$Match.type)
 
-data(tree_jetz_200)
-data(tree_clements25_200)
-cat(sprintf("\ntree_jetz_200:       %d tips\n", ape::Ntip(tree_jetz_200)))
-cat(sprintf("tree_clements25_200: %d tips\n", ape::Ntip(tree_clements25_200)))
+data(tree_jetz)
+data(tree_clements25)
+cat(sprintf("\ntree_jetz:       %d tips\n", ape::Ntip(tree_jetz)))
+cat(sprintf("tree_clements25: %d tips\n", ape::Ntip(tree_clements25)))
 
 
 # --- Step 2: Basic reconcile_tree() ----------------------------------------
@@ -39,7 +39,7 @@ cat("\n=== reconcile_tree: AVONET vs Jetz tree ===\n")
 
 rec1 <- reconcile_tree(
   x = avonet_subset,
-  tree = tree_jetz_200,
+  tree = tree_jetz,
   x_species = "Species1",
   authority = NULL     # skip synonym lookup for speed
 )
@@ -118,7 +118,7 @@ cat("\n=== reconcile_tree with crosswalk ===\n")
 
 rec4 <- reconcile_tree(
   x = avonet_subset,
-  tree = tree_jetz_200,
+  tree = tree_jetz,
   x_species = "Species1",
   authority = NULL,
   overrides = overrides
@@ -138,8 +138,8 @@ cat("\n=== reconcile_to_trees: AVONET vs Jetz + Clements ===\n")
 results <- reconcile_to_trees(
   x = avonet_subset,
   trees = list(
-    jetz     = tree_jetz_200,
-    clements = tree_clements25_200
+    jetz     = tree_jetz,
+    clements = tree_clements25
   ),
   x_species = "Species1",
   authority = NULL,
@@ -160,7 +160,7 @@ cat("\n=== reconcile_apply: aligned data + tree ===\n")
 aligned <- reconcile_apply(
   results$jetz,
   data = avonet_subset,
-  tree = tree_jetz_200,
+  tree = tree_jetz,
   species_col = "Species1",
   drop_unresolved = TRUE
 )
@@ -181,7 +181,7 @@ out_dir <- file.path(tempdir(), "prepR4pcm_demo")
 paths <- reconcile_export(
   results$jetz,
   data = avonet_subset,
-  tree = tree_jetz_200,
+  tree = tree_jetz,
   species_col = "Species1",
   dir = out_dir,
   prefix = "avonet_jetz"
@@ -278,7 +278,158 @@ cat(sprintf("Splits detected: %d\n", nrow(sl$splits)))
 cat(sprintf("Lumps detected:  %d\n", nrow(sl$lumps)))
 
 
-# --- Step 15: Run the test suite --------------------------------------------
+# --- Step 15: Tree augmentation (Phase 2) -----------------------------------
+cat("\n=== Tree augmentation ===\n")
+
+# With ~920 data species and ~660 tree tips, ~260 are unresolved.
+# reconcile_augment() grafts missing species onto the tree using congeners.
+
+aug <- reconcile_augment(rec1, tree_jetz, seed = 42)
+
+cat(sprintf("Original tree: %d tips\n", ape::Ntip(tree_jetz)))
+cat(sprintf("Augmented tree: %d tips\n", ape::Ntip(aug$tree)))
+cat(sprintf("Added: %d | Skipped (no congener): %d\n",
+            nrow(aug$augmented), nrow(aug$skipped)))
+
+# What was added and where?
+cat("\nFirst 10 augmented species:\n")
+print(aug$augmented[1:min(10, nrow(aug$augmented)),
+                    c("species", "genus", "placed_near", "branch_length", "n_congeners")])
+
+cat("\nFirst 5 skipped species:\n")
+print(aug$skipped[1:min(5, nrow(aug$skipped)), ])
+
+# Alternative: MRCA placement with zero-length branches
+aug_near <- reconcile_augment(rec1, tree_jetz,
+                               where = "near",
+                               branch_length = "zero",
+                               seed = 42, quiet = TRUE)
+cat(sprintf("\nMRCA placement: %d added, %d skipped\n",
+            nrow(aug_near$augmented), nrow(aug_near$skipped)))
+
+# Use the augmented tree for downstream analysis
+aligned_aug <- reconcile_apply(
+  rec1,
+  data = avonet_subset,
+  tree = aug$tree,
+  species_col = "Species1",
+  drop_unresolved = TRUE
+)
+cat(sprintf("\nAligned with augmented tree: %d rows, %d tips\n",
+            nrow(aligned_aug$data), ape::Ntip(aligned_aug$tree)))
+
+
+# --- Step 16: HTML report (Phase 3) -------------------------------------------
+cat("\n=== HTML reconciliation report ===\n")
+
+report_file <- tempfile(fileext = ".html")
+reconcile_report(rec1, file = report_file, open = FALSE)
+
+cat(sprintf("Report file exists: %s\n", file.exists(report_file)))
+cat(sprintf("Report size: %s bytes\n", file.size(report_file)))
+
+# Quick check that it contains expected content
+report_content <- paste(readLines(report_file), collapse = "\n")
+cat(sprintf("Contains 'Match summary': %s\n",
+            grepl("Match summary", report_content, fixed = TRUE)))
+cat(sprintf("Contains 'Normalized matches': %s\n",
+            grepl("Normalized matches", report_content, fixed = TRUE)))
+
+# Custom title
+reconcile_report(rec1, file = report_file,
+                 title = "AVONET vs Jetz Tree Reconciliation",
+                 open = FALSE)
+cat("Custom-titled report written successfully.\n")
+unlink(report_file)
+
+
+# --- Step 17: Merge two datasets (Phase 3) ------------------------------------
+cat("\n=== reconcile_merge: merge AVONET + NestTrait ===\n")
+
+merged <- reconcile_merge(
+  rec2,
+  data_x = avonet_subset,
+  data_y = nesttrait_subset,
+  species_col_x = "Species1",
+  species_col_y = "Scientific_name"
+)
+
+cat(sprintf("Merged data: %d rows, %d cols\n", nrow(merged), ncol(merged)))
+cat(sprintf("First column: %s\n", names(merged)[1]))
+cat("\nFirst 5 rows (selected columns):\n")
+print(head(merged[, c("species_resolved",
+                       grep("Family|Common_name|Mass", names(merged), value = TRUE)[1:3])], 5))
+
+# Try with Delhey (uses underscores → normalised matches)
+merged_delhey <- reconcile_merge(
+  rec3,
+  data_x = avonet_subset,
+  data_y = delhey_subset,
+  species_col_x = "Species1",
+  species_col_y = "TipLabel"
+)
+cat(sprintf("\nMerged AVONET + Delhey: %d rows, %d cols\n",
+            nrow(merged_delhey), ncol(merged_delhey)))
+
+
+# --- Step 18: Plot reconciliation results (Phase 4) --------------------------
+cat("\n=== reconcile_plot ===\n")
+
+# Bar chart (default)
+reconcile_plot(rec1)
+cat("Bar chart plotted.\n")
+
+# Pie chart
+reconcile_plot(rec1, type = "pie")
+cat("Pie chart plotted.\n")
+
+
+# --- Step 19: Suggest matches for unresolved species (Phase 4) ---------------
+cat("\n=== reconcile_suggest ===\n")
+
+suggestions <- reconcile_suggest(rec1, n = 3)
+cat(sprintf("Suggestions generated: %d rows\n", nrow(suggestions)))
+if (nrow(suggestions) > 0) {
+  cat("\nTop suggestions:\n")
+  print(head(suggestions, 10))
+}
+
+
+# --- Step 20: Compare two reconciliations (Phase 4) ---------------------------
+cat("\n=== reconcile_diff ===\n")
+
+# Compare: without crosswalk vs with crosswalk
+d <- reconcile_diff(rec1, rec4)
+cat(sprintf("Gained: %d | Lost: %d | Type changed: %d | Target changed: %d\n",
+            nrow(d$gained), nrow(d$lost),
+            nrow(d$type_changed), nrow(d$target_changed)))
+if (nrow(d$gained) > 0) {
+  cat("\nFirst 5 gained matches:\n")
+  print(head(d$gained, 5))
+}
+
+
+# --- Step 21: Batch override (Phase 4) ----------------------------------------
+cat("\n=== reconcile_override_batch ===\n")
+
+# Take first 3 unresolved species and map them to arbitrary tree tips
+unres <- reconcile_mapping(rec1)
+unres <- unres[unres$match_type == "unresolved" & unres$in_x, ]
+if (nrow(unres) >= 3) {
+  batch <- data.frame(
+    name_x = unres$name_x[1:3],
+    name_y = tree_jetz$tip.label[1:3],
+    action = "accept",
+    note = "Batch override demo",
+    stringsAsFactors = FALSE
+  )
+  rec1_batch <- reconcile_override_batch(rec1, batch, quiet = TRUE)
+  cat(sprintf("After batch override: %d manual matches\n",
+              rec1_batch$counts$n_manual))
+}
+
+
+# --- Step 22: Run the test suite ----------------------------------------------
 cat("\n=== Running test suite ===\n")
 devtools::test()
 
@@ -289,5 +440,12 @@ cat("Next steps:\n")
 cat("  - Try with your own data: reconcile_tree(my_data, my_tree)\n")
 cat("  - Use authority = 'col' for synonym resolution (requires taxadb)\n")
 cat("  - Use fuzzy = TRUE to catch typos in species names\n")
+cat("  - Use reconcile_augment() to add missing species to your tree\n")
 cat("  - Use reconcile_splits_lumps() to detect taxonomic splits/lumps\n")
+cat("  - Use reconcile_report() to generate an HTML report\n")
+cat("  - Use reconcile_merge() to join reconciled datasets\n")
+cat("  - Use reconcile_plot() to visualise match composition\n")
+cat("  - Use reconcile_suggest() to see candidates for unresolved species\n")
+cat("  - Use reconcile_diff() to compare reconciliation runs\n")
+cat("  - Use reconcile_review() for interactive match auditing\n")
 cat("  - Read vignette('bird-workflow', package = 'prepR4pcm')\n")

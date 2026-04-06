@@ -2,10 +2,12 @@
 
 #' AVONET morphological trait data (subset)
 #'
-#' A subset of 200 bird species from the AVONET database (BirdLife taxonomy),
-#' containing morphological measurements and ecological traits.
+#' A subset of ~920 bird species from the AVONET database (BirdLife
+#' taxonomy), covering 12 passerine families within the Corvoidea and
+#' allied clades. Contains morphological measurements and ecological
+#' traits.
 #'
-#' @format A data frame with ~200 rows and 16 columns:
+#' @format A data frame with ~920 rows and 16 columns:
 #' \describe{
 #'   \item{Species1}{Scientific name (BirdLife taxonomy)}
 #'   \item{Family1}{Family}
@@ -33,8 +35,9 @@
 
 #' Nest trait data (subset)
 #'
-#' A subset of bird species from the global nest trait database (v2),
-#' containing nest site and structure information.
+#' A subset of ~920 bird species from the global nest trait database (v2),
+#' covering the same Corvoidea + allied families as [avonet_subset].
+#' Contains nest site and structure information.
 #'
 #' @format A data frame with columns:
 #' \describe{
@@ -61,10 +64,12 @@
 
 #' Plumage lightness data (subset)
 #'
-#' A subset of passerine species from Delhey et al. (2019), with plumage
-#' lightness measurements and climate variables. Note that species names
-#' use underscores (e.g., `"Abroscopus_albogularis"`), making this useful
-#' for demonstrating name normalisation.
+#' A subset of ~650 passerine species from Delhey et al. (2019), with
+#' plumage lightness measurements and climate variables. Covers species
+#' from the same families as [avonet_subset] that have plumage data.
+#' Note that species names use underscores (e.g.,
+#' `"Corvus_corax"`), making this useful for demonstrating name
+#' normalisation.
 #'
 #' @format A data frame with columns:
 #' \describe{
@@ -109,23 +114,27 @@
 #' Jetz (2012) phylogenetic tree (subset)
 #'
 #' A pruned version of the BirdTree Stage 2 maximum clade credibility tree
-#' (Hackett backbone), containing ~200 species. Tip labels use underscores
-#' (e.g., `"Homo_sapiens"`).
+#' (Hackett backbone), containing ~660 species from the Corvoidea and
+#' allied passerine families. Deliberately smaller than [avonet_subset]
+#' (~920 species) so that reconciliation produces unresolved species
+#' suitable for [reconcile_augment()]. Tip labels use underscores.
 #'
 #' @format An object of class `phylo` (from the ape package).
 #'
 #' @source Jetz et al. (2012) The global diversity of birds in space and
 #'   time. *Nature* 491:444--448. \doi{10.1038/nature11631}
-"tree_jetz_200"
+"tree_jetz"
 
 
 #' Clements 2025 phylogenetic tree (subset)
 #'
 #' A pruned version of the Clements 2025 taxonomy phylogenetic tree,
-#' containing ~200 species. Tip labels use underscores.
+#' containing ~850 species from the same families. Larger than
+#' [tree_jetz] because the Clements taxonomy recognises more species
+#' in these clades. Tip labels use underscores.
 #'
 #' @format An object of class `phylo` (from the ape package).
 #'
 #' @source Clements et al. (2025) eBird/Clements Checklist of Birds of
 #'   the World, v2025.
-"tree_clements25_200"
+"tree_clements25"

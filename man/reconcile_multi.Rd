@@ -67,14 +67,16 @@ reconciled once; the combined mapping shows which datasets each species
 appears in.
 }
 \examples{
-\dontrun{
+data(avonet_subset)
+data(nesttrait_subset)
+data(tree_jetz)
 datasets <- list(
-  traits  = trait_data,
-  ecology = ecology_data,
-  morpho  = morpho_data
+  morpho = avonet_subset,
+  nests  = nesttrait_subset
 )
-result <- reconcile_multi(datasets, my_tree)
+result <- reconcile_multi(datasets, tree_jetz,
+                          species_cols = c("Species1", "Scientific_name"),
+                          authority = NULL)
 print(result)
-}
 
 }

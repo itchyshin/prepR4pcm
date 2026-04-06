@@ -35,11 +35,15 @@ Uses the reconciliation mapping to rename and/or subset a data frame and
 phylogenetic tree so that species names match.
 }
 \examples{
-\dontrun{
-result <- reconcile_tree(my_data, my_tree)
-aligned <- reconcile_apply(result, data = my_data, tree = my_tree,
-                            drop_unresolved = TRUE)
-# aligned$data and aligned$tree now have matching species
-}
+data(avonet_subset)
+data(tree_jetz)
+result <- reconcile_tree(avonet_subset, tree_jetz,
+                         x_species = "Species1", authority = NULL)
+aligned <- reconcile_apply(result,
+                           data = avonet_subset, tree = tree_jetz,
+                           species_col = "Species1",
+                           drop_unresolved = TRUE)
+cat("Aligned data:", nrow(aligned$data), "rows\n")
+cat("Aligned tree:", ape::Ntip(aligned$tree), "tips\n")
 
 }

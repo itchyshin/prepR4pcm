@@ -34,13 +34,21 @@ Creates an updated reconciliation object with a manual name correction
 applied.
 }
 \examples{
-\dontrun{
-result <- reconcile_override(
-  result,
-  name_x = "Corvus sp.",
-  name_y = "Corvus corax",
-  note = "Only one Corvus in tree"
-)
+data(avonet_subset)
+data(tree_jetz)
+result <- reconcile_tree(avonet_subset, tree_jetz,
+                         x_species = "Species1", authority = NULL)
+# Manually assign an unresolved species to a tree tip
+unresolved <- reconcile_mapping(result)
+unresolved <- unresolved[unresolved$match_type == "unresolved" &
+                           unresolved$in_x, ]
+if (nrow(unresolved) > 0) {
+  result <- reconcile_override(
+    result,
+    name_x = unresolved$name_x[1],
+    name_y = tree_jetz$tip.label[1],
+    note = "Manual assignment for demonstration"
+  )
 }
 
 }

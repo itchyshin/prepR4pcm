@@ -31,7 +31,8 @@ Chia et al. (2023) A global database of bird nest traits.
 nesttrait_subset
 }
 \description{
-A subset of bird species from the global nest trait database (v2),
-containing nest site and structure information.
+A subset of ~920 bird species from the global nest trait database (v2),
+covering the same Corvoidea + allied families as \link{avonet_subset}.
+Contains nest site and structure information.
 }
 \keyword{datasets}

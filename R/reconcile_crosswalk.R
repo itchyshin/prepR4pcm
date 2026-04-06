@@ -26,7 +26,6 @@
 #'   suitable for passing to the `overrides` parameter.
 #'
 #' @examples
-#' \dontrun{
 #' data(crosswalk_birdlife_birdtree)
 #' overrides <- reconcile_crosswalk(
 #'   crosswalk_birdlife_birdtree,
@@ -34,8 +33,7 @@
 #'   to_col = "Species3",
 #'   match_type_col = "Match.type"
 #' )
-#' result <- reconcile_tree(my_data, jetz_tree, overrides = overrides)
-#' }
+#' head(overrides)
 #'
 #' @export
 reconcile_crosswalk <- function(crosswalk,

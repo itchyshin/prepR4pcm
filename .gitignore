@@ -52,13 +52,10 @@ po/*~
 rsconnect/
 .claude/worktrees/trusting-snyder/
 
-# Raw data files (not part of the R package)
-data/AVONET/
-data/nest/
-data/phylo_tree/
-data/data_papers/
-data/BIRDBASE.xlsx
-data/Delhey2019_plumage_lightness.csv
-data/range_trait_10597spp*.csv
-data/dat_10597spp.csv
-data/tre_10597spp.nex
+# Raw source data (large files, not part of the R package)
+data-raw/sources/
+
+# Script output (generated, not tracked)
+scripts/output/
+/doc/
+/Meta/

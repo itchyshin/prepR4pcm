@@ -97,7 +97,8 @@ pr_compute_counts <- function(mapping) {
     n_unresolved_y = sum(types == "unresolved" & !mapping$in_x &
                            mapping$in_y, na.rm = TRUE),
     n_flagged      = sum(types == "flagged", na.rm = TRUE),
-    n_manual       = sum(types == "manual", na.rm = TRUE)
+    n_manual       = sum(types == "manual", na.rm = TRUE),
+    n_augmented    = sum(types == "augmented", na.rm = TRUE)
   )
 }
 
@@ -130,6 +131,22 @@ print.reconciliation <- function(x, ...) {
   pct <- function(n) {
     if (n_total_x == 0) return("")
     sprintf(" (%4.1f%%)", 100 * n / n_total_x)
+  }
+
+  # Coverage bar
+  n_matched <- counts$n_exact + counts$n_normalized + counts$n_synonym +
+               counts$n_fuzzy + counts$n_manual
+  if (n_total_x > 0) {
+    pct_matched <- n_matched / n_total_x
+    bar_width <- 30
+    filled <- round(pct_matched * bar_width)
+    bar <- paste0(
+      strrep("\u2588", filled),
+      strrep("\u2591", bar_width - filled)
+    )
+    cli_alert_info(
+      "Match coverage: [{bar}] {sprintf('%.0f%%', pct_matched * 100)} ({n_matched}/{n_total_x})"
+    )
   }
 
   cli_h2("Match summary")

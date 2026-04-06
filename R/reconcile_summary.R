@@ -16,11 +16,12 @@
 #' @return A `reconciliation_summary` object (invisibly for console output).
 #'
 #' @examples
-#' \dontrun{
-#' result <- reconcile_tree(my_data, my_tree)
-#' reconcile_summary(result)
+#' data(avonet_subset)
+#' data(tree_jetz)
+#' result <- reconcile_tree(avonet_subset, tree_jetz,
+#'                          x_species = "Species1", authority = NULL)
+#' reconcile_summary(result, detail = "brief")
 #' reconcile_summary(result, detail = "mismatches_only")
-#' }
 #'
 #' @export
 reconcile_summary <- function(x,
