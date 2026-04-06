@@ -106,8 +106,10 @@ Load data + tree
 ## Vignettes
 
 - [Getting Started](https://itchyshin.github.io/prepR4pcm/articles/getting-started.html)
+  ([source](vignettes/getting-started.Rmd))
   --- core concepts and a minimal worked example
 - [Bird Trait Workflow](https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html)
+  ([source](vignettes/bird-workflow.Rmd))
   --- a realistic multi-dataset, multi-tree analysis pipeline
 
 ## Citation
