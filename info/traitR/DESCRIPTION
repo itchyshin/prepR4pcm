@@ -1,0 +1,20 @@
+Package: traitR
+Type: Package
+Title: traitR: A package to create and manage a comparative database
+Version: 0.2
+Authors@R: c(
+    person(
+      "Sergio", "Poo Hernandez",
+      email = "pooherna@ualberta.ca",
+      role = c("aut", "cre")
+    )
+  )
+Description: More about what it does (maybe more than one line).
+    Continuation lines should be indented.
+License: What license is it under?
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+NeedsCompilation: no
+Packaged: 2026-03-25 18:29:59 UTC; finro
+Author: Sergio Poo Hernandez [aut, cre]
+Maintainer: Sergio Poo Hernandez <pooherna@ualberta.ca>
