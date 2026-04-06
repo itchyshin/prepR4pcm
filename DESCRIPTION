@@ -6,9 +6,6 @@ Authors@R: c(
            email = "s.nakagawa@unsw.edu.au",
            role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7765-5182")),
-    person("Sergio", "Poo Hernandez",
-           email = "pooherna@ualberta.ca",
-           role = "aut"),
     person("Santiago", "Ortega",
            role = "aut"),
     person("Ayumi", "Mizuno",
@@ -19,6 +16,9 @@ Authors@R: c(
            role = "aut",
            comment = c(ORCID = "0000-0002-3993-6127")),
     person("Jimuel Jr", "Celeste",
+           role = "aut"),
+    person("Sergio", "Poo Hernandez",
+           email = "pooherna@ualberta.ca",
            role = "aut")
   )
 Description: Reconcile species names across datasets and phylogenetic trees
