@@ -1,0 +1,41 @@
+Package: prepR4pcm
+Title: Prepare Data and Trees for Phylogenetic Comparative Methods
+Version: 0.3.0
+Authors@R: c(
+    person("Shinichi", "Nakagawa",
+           email = "s.nakagawa@unsw.edu.au",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-7765-5182")),
+    person("Sergio", "Poo Hernandez",
+           email = "pooherna@ualberta.ca",
+           role = "aut")
+  )
+Description: Reconcile species names across datasets and phylogenetic trees
+    for comparative biology workflows. Identifies mismatches due to formatting
+    differences, taxonomic synonymy, and spelling errors. Produces detailed
+    reports documenting how each name was resolved, which taxonomic authority
+    was used, and what remains unresolved. Supports exact matching, name
+    normalisation, synonym resolution via local taxonomic databases, and
+    fuzzy matching for likely typos. Detects taxonomic splits and lumps.
+License: MIT + file LICENSE
+URL: https://github.com/itchyshin/prepR4pcm
+BugReports: https://github.com/itchyshin/prepR4pcm/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0)
+Imports:
+    ape,
+    cli,
+    rlang,
+    tibble
+Suggests:
+    dplyr,
+    knitr,
+    rmarkdown,
+    taxadb,
+    testthat (>= 3.0.0)
+LazyData: true
+Config/testthat/edition: 3
+VignetteBuilder: knitr

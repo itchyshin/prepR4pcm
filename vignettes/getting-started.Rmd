@@ -1,0 +1,278 @@
+---
+title: "Getting Started with prepR4pcm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with prepR4pcm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Before running any phylogenetic comparative analysis — PGLS, phylogenetic
+mixed models, ancestral state reconstruction — species names in your data
+must match the tip labels in your tree. In practice, they rarely do.
+**prepR4pcm** automates this reconciliation, documents every decision, and
+produces aligned objects ready for analysis.
+
+## The problem
+
+Mismatches between data and tree arise from:
+- **Formatting**: `Homo_sapiens` vs `Homo sapiens`, trailing whitespace,
+  attached authority strings
+- **Synonymy**: Taxonomic revisions move species between genera
+- **Missing names**: Species in the data but not the tree (or vice versa)
+
+Fixing these by hand is tedious, error-prone, and poorly documented.
+prepR4pcm solves this with a structured matching cascade: exact match →
+normalised match → synonym resolution. Every decision is recorded.
+
+## Installation
+
+```{r install, eval = FALSE}
+# Install from GitHub
+remotes::install_github("itchyshin/prepR4pcm")
+```
+
+```{r setup}
+library(prepR4pcm)
+```
+
+## Example 1: Reconcile a dataset against a tree
+
+Suppose you have trait data and a phylogenetic tree with slightly different
+naming conventions.
+
+```{r example-data}
+# Simulated trait data
+trait_data <- data.frame(
+  species = c(
+    "Homo sapiens",
+    "Pan_troglodytes",       # underscore instead of space
+    "Gorilla gorilla",
+    "Pongo pygmaeus",
+    "Macaca mulatta",
+    "Cebus capucinus"
+  ),
+  body_mass = c(70, 50, 160, 80, 8, 3),
+  brain_mass = c(1.35, 0.39, 0.50, 0.37, 0.11, 0.07)
+)
+
+# Simulated phylogenetic tree (built manually for this example)
+tree <- ape::read.tree(text = paste0(
+  "((((Homo_sapiens:5,Pan_troglodytes:5):3,",
+  "Gorilla_gorilla:8):4,Pongo_pygmaeus:12):6,",
+  "(Macaca_mulatta:10,Papio_anubis:10):8);"
+))
+```
+
+Notice the mismatches:
+- `Pan_troglodytes` in the data has an underscore; the tree uses underscores too,
+  but the data column uses a mix
+- `Cebus capucinus` is in the data but not the tree
+- `Papio anubis` is in the tree but not the data
+
+```{r reconcile-tree}
+result <- reconcile_tree(
+  x = trait_data,
+  tree = tree,
+  x_species = "species",
+  authority = NULL,        # skip synonym lookup for this example
+  quiet = FALSE
+)
+```
+
+### Inspect the result
+
+```{r print-result}
+print(result)
+```
+
+The `reconciliation` object tells you immediately how many names matched
+and how. Use `reconcile_mapping()` to see the full table:
+
+```{r mapping}
+reconcile_mapping(result)
+```
+
+For a detailed report:
+
+```{r summary, eval = FALSE}
+reconcile_summary(result)
+```
+
+### Apply manual overrides
+
+Suppose you know that `Cebus capucinus` should not be in the analysis.
+You can document this decision:
+```{r override}
+result <- reconcile_override(
+  result,
+  name_x = "Cebus capucinus",
+  name_y = NA,
+  action = "reject",
+  note = "Not in target phylogeny; exclude from analysis"
+)
+```
+
+### Produce aligned objects
+
+Once satisfied with the reconciliation, apply it:
+
+```{r apply}
+aligned <- reconcile_apply(
+  result,
+  data = trait_data,
+  tree = tree,
+  species_col = "species",
+  drop_unresolved = TRUE
+)
+
+# Aligned data frame — only species present in both data and tree
+aligned$data
+
+# Aligned tree — pruned to matched species
+ape::Ntip(aligned$tree)
+```
+
+The `$data` and `$tree` components now have matching species, ready for
+comparative analysis.
+
+## Example 2: Reconcile two datasets
+
+When merging trait data from different sources, species names often
+disagree:
+
+```{r data-data}
+df1 <- data.frame(
+  species = c("Homo sapiens", "Pan_troglodytes", "Gorilla gorilla"),
+  mass = c(70, 50, 160)
+)
+
+df2 <- data.frame(
+  species = c("Homo sapiens", "Pan troglodytes", "Pongo pygmaeus"),
+  lifespan = c(79, 40, 45)
+)
+
+result2 <- reconcile_data(
+  x = df1,
+  y = df2,
+  authority = NULL,
+  quiet = TRUE
+)
+
+print(result2)
+```
+
+`Pan_troglodytes` (underscore) in `df1` is matched to `Pan troglodytes`
+(space) in `df2` via normalisation.
+
+## Example 3: Using a taxonomic authority
+
+When names differ due to synonymy, pass an authority to enable synonym
+resolution via taxadb:
+
+```{r authority, eval = FALSE}
+# Requires taxadb and a local database download (automatic on first use)
+result3 <- reconcile_tree(
+  x = trait_data,
+  tree = tree,
+  x_species = "species",
+  authority = "col"        # Catalogue of Life
+)
+```
+
+Supported authorities: `col`, `itis`, `gbif`, `ncbi`, `ott`, `fb`,
+`slb`, `wd`, `iucn`, `itis_test`. The database is downloaded once and
+cached locally, ensuring reproducibility — results do not depend on an
+external API being available.
+
+## Example 4: Pre-built overrides
+
+Labs often maintain a curated list of known corrections. You can pass
+these as a data frame or CSV path:
+
+```{r overrides-table, eval = FALSE}
+# A data frame of known corrections
+corrections <- data.frame(
+  name_x = c("Corvus sp.", "Turdus merulaa"),
+  name_y = c("Corvus corax", "Turdus merula"),
+  user_note = c("Only one Corvus in our tree", "Typo in source data")
+)
+
+result4 <- reconcile_tree(
+  x = my_data,
+  tree = my_tree,
+  overrides = corrections
+)
+
+# Or from a CSV file:
+result5 <- reconcile_tree(
+  x = my_data,
+  tree = my_tree,
+  overrides = "lab_corrections.csv"
+)
+```
+
+Overrides are applied before any other matching stage, so they always
+take priority.
+
+## Example 5: Multiple datasets against one tree
+
+`reconcile_multi()` reconciles several datasets at once, pooling all
+unique species names before running the cascade:
+
+```{r multi, eval = FALSE}
+datasets <- list(
+  traits  = trait_data,
+  ecology = ecology_data,
+  morpho  = morpho_data
+)
+
+result6 <- reconcile_multi(datasets, my_tree)
+print(result6)
+```
+
+## Key design principles
+
+1. **Conservative**: Names are never silently changed. Ambiguous cases
+   are flagged, not auto-resolved.
+2. **Transparent**: Every decision is recorded with match type, score,
+   source, and a human-readable note.
+3. **Reproducible**: Database versions are pinned. All parameters are
+   stored in the reconciliation object.
+4. **Practical**: Works with the objects comparative biologists already
+   use — `data.frame` and `ape::phylo`.
+
+## Typical workflow
+
+```{r workflow, eval = FALSE}
+library(prepR4pcm)
+
+# 1. Load your data and tree
+my_data <- read.csv("species_traits.csv")
+my_tree <- ape::read.tree("species_tree.nwk")
+
+# 2. Reconcile
+result <- reconcile_tree(my_data, my_tree, authority = "col")
+
+# 3. Review
+print(result)
+reconcile_summary(result, detail = "mismatches_only")
+
+# 4. Fix manually if needed
+result <- reconcile_override(result, "Corvus sp.", "Corvus corax",
+                             note = "Only one Corvus in tree")
+
+# 5. Apply
+aligned <- reconcile_apply(result, data = my_data, tree = my_tree,
+                            drop_unresolved = TRUE)
+
+# 6. Analyse
+# aligned$data and aligned$tree are ready for caper, phytools, MCMCglmm, etc.
+```

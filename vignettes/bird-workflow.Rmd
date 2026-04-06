@@ -1,0 +1,241 @@
+---
+title: "From Raw Data to PGLS: A Complete Bird Trait Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From Raw Data to PGLS: A Complete Bird Trait Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette walks through a real comparative biology workflow using
+avian trait data and phylogenetic trees. The same approach applies to
+any taxon group --- mammals, fish, amphibians, plants --- the functions
+are fully taxon-agnostic.
+
+## Setup
+
+```{r setup}
+library(prepR4pcm)
+```
+
+## Step 1: Load the data
+
+prepR4pcm ships with subsets of three published bird trait datasets and
+two phylogenetic trees, selected to illustrate common name-matching
+challenges.
+
+```{r load-data}
+data(avonet_subset)        # AVONET morphological traits (Tobias et al. 2022)
+data(nesttrait_subset)     # Nest traits (Chia et al. 2023)
+data(delhey_subset)        # Plumage lightness (Delhey et al. 2019)
+data(tree_jetz_200)        # Jetz et al. (2012) tree, pruned
+data(tree_clements25_200)  # Clements 2025 tree, pruned
+
+str(avonet_subset[, 1:5])
+str(nesttrait_subset[, 1:5])
+head(delhey_subset$TipLabel)  # Note: underscores, not spaces
+```
+
+Notice the naming differences:
+
+- AVONET uses `Species1` with spaces: `"Abeillia abeillei"`
+- NestTrait uses `Scientific_name` with spaces: `"Abeillia abeillei"`
+- Delhey uses `TipLabel` with underscores: `"Abeillia_abeillei"`
+- Tree tip labels use underscores: `"Abeillia_abeillei"`
+
+These formatting differences are exactly what prepR4pcm resolves
+automatically.
+
+## Step 2: Reconcile datasets against each other
+
+Before matching to a tree, harmonise species names across trait
+datasets. Here we reconcile NestTrait names against AVONET names:
+
+```{r reconcile-data}
+rec_nest <- reconcile_data(
+  x = nesttrait_subset,
+  y = avonet_subset,
+  x_species = "Scientific_name",
+  y_species = "Species1",
+  authority = NULL,          # skip synonym lookup for speed
+  quiet = FALSE
+)
+print(rec_nest)
+```
+
+Most names match exactly because both datasets use BirdLife taxonomy.
+The few mismatches are typically formatting differences caught by the
+normalisation stage.
+
+## Step 3: Use a taxonomy crosswalk
+
+When matching data to a phylogenetic tree built from a different
+taxonomy (e.g., BirdLife data against a BirdTree phylogeny), you can
+load a curated crosswalk as overrides:
+
+```{r crosswalk}
+data(crosswalk_birdlife_birdtree)
+head(crosswalk_birdlife_birdtree)
+table(crosswalk_birdlife_birdtree$Match.type)
+```
+
+Convert the crosswalk to an overrides table:
+
+```{r make-overrides}
+overrides <- reconcile_crosswalk(
+  crosswalk_birdlife_birdtree,
+  from_col = "Species1",
+  to_col = "Species3",
+  match_type_col = "Match.type"
+)
+head(overrides)
+```
+
+This tells prepR4pcm: "when you see `Species1` in the data, match it
+to `Species3` in the tree." The crosswalk handles splits, lumps, and
+renames that automated synonym resolution might miss.
+
+## Step 4: Reconcile data against one tree
+
+```{r reconcile-tree}
+rec_jetz <- reconcile_tree(
+  x = avonet_subset,
+  tree = tree_jetz_200,
+  x_species = "Species1",
+  authority = NULL,
+  overrides = overrides,
+  quiet = FALSE
+)
+print(rec_jetz)
+```
+
+### Inspect the mapping
+
+```{r mapping}
+mapping <- reconcile_mapping(rec_jetz)
+
+# Show a few normalised matches
+mapping[mapping$match_type == "normalized", c("name_x", "name_y", "notes")]
+```
+
+### Detailed report
+
+```{r summary, eval = FALSE}
+reconcile_summary(rec_jetz, detail = "mismatches_only")
+```
+
+## Step 5: Reconcile against multiple trees
+
+The typical PCM workflow requires separate tree-compatible datasets
+for each available phylogeny. `reconcile_to_trees()` handles this in
+one call:
+
+```{r multi-tree}
+results <- reconcile_to_trees(
+  x = avonet_subset,
+  trees = list(
+    jetz      = tree_jetz_200,
+    clements  = tree_clements25_200
+  ),
+  x_species = "Species1",
+  authority = NULL,
+  overrides = overrides,
+  quiet = FALSE
+)
+
+# Compare overlap across trees
+sapply(results, function(r) {
+  c(matched = sum(r$mapping$in_x & r$mapping$in_y, na.rm = TRUE),
+    unresolved_x = r$counts$n_unresolved_x)
+})
+```
+
+## Step 6: Produce aligned objects
+
+```{r apply}
+aligned <- reconcile_apply(
+  results$jetz,
+  data = avonet_subset,
+  tree = tree_jetz_200,
+  species_col = "Species1",
+  drop_unresolved = TRUE
+)
+
+cat(sprintf("Data: %d rows\nTree: %d tips\n",
+            nrow(aligned$data), ape::Ntip(aligned$tree)))
+```
+
+## Step 7: Export to files
+
+```{r export, eval = FALSE}
+reconcile_export(
+  results$jetz,
+  data = avonet_subset,
+  tree = tree_jetz_200,
+  species_col = "Species1",
+  dir = "output",
+  prefix = "avonet_jetz",
+  tree_format = "nexus"
+)
+# Writes:
+#   output/avonet_jetz_data.csv
+#   output/avonet_jetz_tree.nex
+#   output/avonet_jetz_mapping.csv
+```
+
+## Step 8: Run a comparative analysis
+
+With aligned data and tree, you are ready for any phylogenetic
+comparative method:
+
+```{r pgls, eval = FALSE}
+library(caper)
+
+# Prepare for caper
+aligned$data$species <- gsub(" ", "_", aligned$data$Species1)
+cd <- comparative.data(aligned$tree, aligned$data,
+                       names.col = "species", vcv = TRUE)
+
+# PGLS: body mass ~ wing length
+model <- pgls(log(Mass) ~ log(Wing.Length), data = cd)
+summary(model)
+```
+
+## Key points
+
+1. **Taxon-agnostic.** This workflow works for any group --- mammals,
+   fish, amphibians, plants --- as long as you have a data frame and a
+   phylogenetic tree.
+
+2. **Provenance.** Every name-matching decision is recorded in the
+   `reconciliation` object. Use `reconcile_summary()` for a
+   human-readable report or `reconcile_mapping()` for the full table.
+
+3. **Crosswalks.** When you have a curated taxonomy mapping (BirdLife
+   to BirdTree, WFO to GBIF, etc.), use `reconcile_crosswalk()` to
+   convert it to overrides. This is often more reliable than automated
+   synonym resolution for well-studied groups.
+
+4. **Multiple trees.** `reconcile_to_trees()` reconciles one dataset
+   against several trees in one call, making sensitivity analyses
+   across phylogenies straightforward.
+
+## Data sources
+
+- **AVONET**: Tobias et al. (2022) *Ecology Letters* 25:581--597.
+  doi:10.1111/ele.13898
+- **NestTrait v2**: Chia et al. (2023) *Scientific Data* 10:444.
+  doi:10.1038/s41597-023-02360-9
+- **Plumage lightness**: Delhey et al. (2019) *American Naturalist*
+  194:13--27. doi:10.1086/703588
+- **Jetz tree**: Jetz et al. (2012) *Nature* 491:444--448.
+  doi:10.1038/nature11631
+- **Clements 2025**: Clements et al. (2025) eBird/Clements Checklist.
+- **BirdLife-BirdTree crosswalk**: Tobias et al. (2022).
