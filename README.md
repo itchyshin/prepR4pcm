@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-04-07 07:43:09
+#>   Timestamp: 2026-04-07 08:06:33
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -145,13 +145,13 @@ The package includes subset datasets for examples and testing. Full
 credit to the original data providers:
 
 - **AVONET**: Tobias et al. (2022) *Ecology Letters* 25:581–597.
-  <doi:%5B10.1111/ele.13898>\](<https://doi.org/10.1111/ele.13898>)
+  [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)
 - **NestTrait v2**: Chia et al. (2023) *Scientific Data* 10:444.
-  <doi:%5B10.1038/s41597-023-02360-9>\](<https://doi.org/10.1038/s41597-023-02360-9>)
+  [doi:10.1038/s41597-023-02360-9](https://doi.org/10.1038/s41597-023-02360-9)
 - **Plumage lightness**: Delhey et al. (2019) *American Naturalist*
-  194:13–27. <doi:%5B10.1086/703588>\](<https://doi.org/10.1086/703588>)
+  194:13–27. [doi:10.1086/703588](https://doi.org/10.1086/703588)
 - **Jetz phylogeny**: Jetz et al. (2012) *Nature* 491:444–448.
-  <doi:%5B10.1038/nature11631>\](<https://doi.org/10.1038/nature11631>)
+  [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631)
 - **Clements checklist**: Clements et al. (2025) eBird/Clements
   Checklist of Birds of the World.
 - **BirdLife-BirdTree crosswalk**: Tobias et al. (2022).

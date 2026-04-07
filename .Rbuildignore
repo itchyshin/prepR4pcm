@@ -18,3 +18,4 @@
 ^README\.html$
 ^Rplots\.pdf$
 ^scripts$
+^cran-comments\.md$
