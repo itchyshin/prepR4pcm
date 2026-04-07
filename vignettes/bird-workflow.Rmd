@@ -164,7 +164,9 @@ summary(model_mcmc)
 
 For categorical responses (e.g., migration status with multiple
 categories), see Mizuno et al. (2025, *J. Evol. Biol.*
-38:1699--1715) for the multinomial PGLMM approach.
+38:1699--1715) for the multinomial PGLMM approach and the
+accompanying tutorial at
+<https://ayumi-495.github.io/multinomial-GLMM-tutorial/>.
 
 See Hadfield (2010, *J. Stat. Softw.* 33:1--22) for MCMCglmm
 details, Hadfield & Nakagawa (2010, *J. Evol. Biol.* 23:494--508)
@@ -445,7 +447,8 @@ The report includes match counts, detail tables for each match type
   (2025) Promoting the use of phylogenetic multinomial generalised
   mixed-effects model to understand the evolution of discrete traits.
   *Journal of Evolutionary Biology* 38:1699--1715.
-  doi:10.1093/jeb/voaf116
+  doi:10.1093/jeb/voaf116.
+  Tutorial: <https://ayumi-495.github.io/multinomial-GLMM-tutorial/>
 - Norman, K.E., Chamberlain, S. & Boettiger, C. (2020) taxadb: A
   high-performance local taxonomic database interface. *Methods in
   Ecology and Evolution* 11:1153--1159. doi:10.1111/2041-210X.13440
