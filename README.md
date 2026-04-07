@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-04-07 05:03:49
+#>   Timestamp: 2026-04-07 07:43:09
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -125,18 +125,11 @@ ape::Ntip(aligned$tree)
 
 ## Citation
 
-If you use prepR4pcm in your research, please cite the package and the
-associated paper:
+If you use prepR4pcm in your research, please cite the package:
 
 ``` r
 citation("prepR4pcm")
 ```
-
-> Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. & Nakagawa, S.
-> (2025) Promoting the use of phylogenetic multinomial generalised
-> mixed-effects model to understand the evolution of discrete traits.
-> *Journal of Evolutionary Biology* 38:1699–1715.
-> <doi:%5B10.1093/jeb/voaf116>\](<https://doi.org/10.1093/jeb/voaf116>)
 
 ## Key dependencies
 

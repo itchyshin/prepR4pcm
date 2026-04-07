@@ -1,4 +1,4 @@
-citHeader("To cite prepR4pcm in publications, use the package citation and, where relevant, the associated methods paper:")
+citHeader("To cite prepR4pcm in publications, use:")
 
 bibentry(
   bibtype  = "Manual",
@@ -15,21 +15,4 @@ bibentry(
   year     = "2025",
   note     = sprintf("R package version %s", meta$Version),
   url      = "https://github.com/itchyshin/prepR4pcm"
-)
-
-bibentry(
-  bibtype  = "Article",
-  title    = "Promoting the use of phylogenetic multinomial generalised mixed-effects model to understand the evolution of discrete traits",
-  author   = c(
-    person("Ayumi", "Mizuno"),
-    person("Szymon M.", "Drobniak"),
-    person("Caitlin", "Williams"),
-    person("Malgorzata", "Lagisz"),
-    person("Shinichi", "Nakagawa")
-  ),
-  journal  = "Journal of Evolutionary Biology",
-  year     = "2025",
-  volume   = "38",
-  pages    = "1699--1715",
-  doi      = "10.1093/jeb/voaf116"
 )
