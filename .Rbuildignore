@@ -15,3 +15,6 @@
 \.DS_Store$
 ^README\.Rmd$
 ^index\.html$
+^README\.html$
+^Rplots\.pdf$
+^scripts$
