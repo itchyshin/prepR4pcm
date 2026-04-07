@@ -1,8 +1,8 @@
 ---
-title: "From Raw Data to PGLS: A Complete Bird Trait Workflow"
+title: "From Raw Data to PCM: A Complete Bird Trait Workflow"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{From Raw Data to PGLS: A Complete Bird Trait Workflow}
+  %\VignetteIndexEntry{From Raw Data to PCM: A Complete Bird Trait Workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
