@@ -50,3 +50,35 @@ test_that("reconcile_tree errors on invalid input", {
     "must be a data frame"
   )
 })
+
+test_that("reconcile_tree errors on 0-row data frame", {
+  df_empty <- data.frame(species = character(0), stringsAsFactors = FALSE)
+  tree <- ape::read.tree(text = "(A_b:1,C_d:1);")
+  expect_error(
+    reconcile_tree(df_empty, tree, x_species = "species",
+                   authority = NULL, quiet = TRUE),
+    "0 rows"
+  )
+})
+
+test_that("reconcile_tree errors on all-NA species column", {
+  df_na <- data.frame(species = c(NA_character_, NA_character_))
+  tree <- ape::read.tree(text = "(A_b:1,C_d:1);")
+  expect_error(
+    reconcile_tree(df_na, tree, x_species = "species",
+                   authority = NULL, quiet = TRUE),
+    "All species names.*NA"
+  )
+})
+
+test_that("reconcile_tree errors on tree with duplicate tip labels", {
+  df <- data.frame(species = "A b", stringsAsFactors = FALSE)
+  # Construct a tree with duplicate tips manually
+  tree <- ape::read.tree(text = "(A_b:1,C_d:1);")
+  tree$tip.label <- c("A_b", "A_b")  # force duplicate
+  expect_error(
+    reconcile_tree(df, tree, x_species = "species",
+                   authority = NULL, quiet = TRUE),
+    "duplicate tip"
+  )
+})

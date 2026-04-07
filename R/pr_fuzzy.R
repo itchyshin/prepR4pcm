@@ -40,6 +40,17 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   valid_x <- !is.na(px$genus) & !is.na(px$epithet)
   valid_y <- !is.na(py$genus) & !is.na(py$epithet)
 
+  n_skip_x <- sum(!valid_x)
+  n_skip_y <- sum(!valid_y)
+  if (n_skip_x > 0 || n_skip_y > 0) {
+    cli_alert_warning(
+      paste0(
+        "{n_skip_x} non-binomial name{?s} in x and {n_skip_y} in y ",
+        "excluded from fuzzy matching."
+      )
+    )
+  }
+
   idx_x <- which(valid_x)
   idx_y <- which(valid_y)
 

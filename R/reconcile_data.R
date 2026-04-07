@@ -98,8 +98,28 @@ reconcile_data <- function(x, y,
           call = caller_env())
   }
 
+  # Input guards: empty data, all-NA species, factor columns
+  if (nrow(x) == 0) abort("`x` has 0 rows.", call = caller_env())
+  if (nrow(y) == 0) abort("`y` has 0 rows.", call = caller_env())
+
+  if (is.factor(x[[x_species]])) {
+    cli_alert_warning("Converting factor column '{x_species}' in `x` to character.")
+    x[[x_species]] <- as.character(x[[x_species]])
+  }
+  if (is.factor(y[[y_species]])) {
+    cli_alert_warning("Converting factor column '{y_species}' in `y` to character.")
+    y[[y_species]] <- as.character(y[[y_species]])
+  }
+
   names_x <- as.character(x[[x_species]])
   names_y <- as.character(y[[y_species]])
+
+  if (all(is.na(names_x))) {
+    abort("All species names in `x` are NA.", call = caller_env())
+  }
+  if (all(is.na(names_y))) {
+    abort("All species names in `y` are NA.", call = caller_env())
+  }
 
   # Load overrides
   overrides_df <- pr_load_overrides(overrides)

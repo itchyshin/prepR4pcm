@@ -32,7 +32,11 @@ pr_extract_tips <- function(tree) {
 #' @keywords internal
 pr_load_tree <- function(tree) {
   if (inherits(tree, "phylo")) {
-    return(tree)
+    return(pr_validate_tree(tree))
+  }
+  if (inherits(tree, "multiPhylo")) {
+    cli_alert_warning("Received multiPhylo with {length(tree)} trees; using the first.")
+    return(pr_validate_tree(tree[[1]]))
   }
 
   if (is.character(tree) && length(tree) == 1) {
@@ -47,8 +51,16 @@ pr_load_tree <- function(tree) {
 
     # Try Nexus for .nex/.nexus files
     if (ext %in% c("nex", "nexus")) {
-      tryCatch(
-        return(ape::read.nexus(tree)),
+      tryCatch({
+        result <- ape::read.nexus(tree)
+        if (inherits(result, "multiPhylo")) {
+          cli_alert_warning(
+            "File contains {length(result)} trees; using the first."
+          )
+          result <- result[[1]]
+        }
+        return(pr_validate_tree(result))
+      },
         error = function(e) {
           abort(
             c("Failed to read Nexus tree file.",
@@ -60,12 +72,28 @@ pr_load_tree <- function(tree) {
     }
 
     # Try Newick for everything else
-    tryCatch(
-      return(ape::read.tree(tree)),
+    tryCatch({
+      result <- ape::read.tree(tree)
+      if (inherits(result, "multiPhylo")) {
+        cli_alert_warning(
+          "File contains {length(result)} trees; using the first."
+        )
+        result <- result[[1]]
+      }
+      return(pr_validate_tree(result))
+    },
       error = function(e) {
         # If Newick fails, try Nexus as fallback
-        tryCatch(
-          return(ape::read.nexus(tree)),
+        tryCatch({
+          result <- ape::read.nexus(tree)
+          if (inherits(result, "multiPhylo")) {
+            cli_alert_warning(
+              "File contains {length(result)} trees; using the first."
+            )
+            result <- result[[1]]
+          }
+          return(pr_validate_tree(result))
+        },
           error = function(e2) {
             abort(
               c("Failed to read tree file as Newick or Nexus.",
@@ -131,5 +159,33 @@ pr_align_tree <- function(tree, mapping, drop_unresolved = FALSE) {
     }
   }
 
+  tree
+}
+
+
+#' Validate a phylo object
+#'
+#' Checks for 0 tips and duplicate tip labels.
+#'
+#' @param tree An `ape::phylo` object.
+#' @return The tree (unchanged) if valid.
+#' @keywords internal
+pr_validate_tree <- function(tree) {
+  if (!inherits(tree, "phylo")) {
+    abort("Expected a phylo object.", call = caller_env())
+  }
+  tips <- tree$tip.label
+  if (length(tips) == 0) {
+    abort("Tree has no tips.", call = caller_env())
+  }
+  dup_tips <- tips[duplicated(tips)]
+  if (length(dup_tips) > 0) {
+    shown <- paste(utils::head(unique(dup_tips), 5), collapse = ", ")
+    msg <- paste0(
+      "Tree has ", length(dup_tips), " duplicate tip label(s): ", shown
+    )
+    if (length(unique(dup_tips)) > 5) msg <- paste0(msg, ", ...")
+    abort(msg, call = caller_env())
+  }
   tree
 }

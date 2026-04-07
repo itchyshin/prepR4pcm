@@ -73,3 +73,31 @@ test_that("authority strings are stripped", {
     "Homo sapiens"
   )
 })
+
+test_that("authority strings with diacritics are stripped", {
+  expect_equal(
+    as.character(pr_normalize_names("Passer domesticus M\u00fcller, 1776")),
+    "Passer domesticus"
+  )
+  expect_equal(
+    as.character(pr_normalize_names("Turdus merula Linn\u00e9, 1758")),
+    "Turdus merula"
+  )
+})
+
+test_that("empty character vector returns empty", {
+  result <- pr_normalize_names(character(0))
+  expect_length(result, 0)
+})
+
+test_that("all-NA vector returns all NA", {
+  result <- pr_normalize_names(c(NA, NA, NA))
+  expect_true(all(is.na(result)))
+  expect_length(result, 3)
+})
+
+test_that("single-word names are preserved", {
+  # Monotypic genus used alone — should not be destroyed
+  result <- as.character(pr_normalize_names("Tyrannosaurus"))
+  expect_equal(result, "Tyrannosaurus")
+})

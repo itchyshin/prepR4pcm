@@ -78,7 +78,19 @@ reconcile_to_trees <- function(x, trees,
           call = caller_env())
   }
 
+  # Input guards: empty data, all-NA species, factor columns
+  if (nrow(x) == 0) abort("`x` has 0 rows.", call = caller_env())
+
+  if (is.factor(x[[x_species]])) {
+    cli_alert_warning("Converting factor column '{x_species}' in `x` to character.")
+    x[[x_species]] <- as.character(x[[x_species]])
+  }
+
   names_x <- as.character(x[[x_species]])
+
+  if (all(is.na(names_x))) {
+    abort("All species names in `x` are NA.", call = caller_env())
+  }
 
   # Load overrides once
   overrides_df <- pr_load_overrides(overrides)

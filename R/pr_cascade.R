@@ -131,6 +131,13 @@ pr_run_cascade <- function(names_x, names_y,
     norm_y <- pr_normalize_names(remaining_y, rank = rank)
 
     # Build lookup: normalised -> original
+    # Warn if multiple originals normalise to the same string (only first matches)
+    dup_norm_y <- norm_y[duplicated(norm_y) & !is.na(norm_y)]
+    if (length(dup_norm_y) > 0 && !quiet) {
+      cli_alert_warning(
+        "{length(dup_norm_y)} name{?s} in y have identical normalised forms; only the first of each will be matched."
+      )
+    }
     lookup_y <- stats::setNames(remaining_y, norm_y)
 
     for (i in seq_along(remaining_x)) {

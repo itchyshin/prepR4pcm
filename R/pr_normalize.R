@@ -93,21 +93,27 @@ pr_normalize_names <- function(names, rank = c("species", "subspecies")) {
 #' @return Character vector with authority strings removed.
 #' @keywords internal
 pr_strip_authority <- function(names) {
+  # Use Unicode-aware character classes (\\p{Lu} = uppercase letter,
+  # \\p{L} = any letter) so author names with diacritics (e.g., Müller,
+  # Linné) are stripped correctly.
+
   # Remove parenthetical authority: (Author, Year) or (Author Year)
-  names <- gsub("\\s*\\([A-Z][a-zA-Z.&\\s]*,?\\s*\\d{4}\\)\\s*$", "", names,
-                perl = TRUE)
+  names <- gsub(
+    "\\s*\\(\\p{Lu}[\\p{L}.&\\s]*,?\\s*\\d{4}\\)\\s*$",
+    "", names, perl = TRUE
+  )
 
   # Remove non-parenthetical authority: Author, Year or Author Year
   # Only match if preceded by at least genus + species (two words)
   names <- gsub(
-    "^(\\S+\\s+\\S+(?:\\s+\\S+)?)\\s+[A-Z][a-zA-Z.&]*(?:\\s*,\\s*|\\s+)\\d{4}\\s*$",
+    "^(\\S+\\s+\\S+(?:\\s+\\S+)?)\\s+\\p{Lu}[\\p{L}.&]*(?:\\s*,\\s*|\\s+)\\d{4}\\s*$",
     "\\1", names, perl = TRUE
   )
 
   # Remove trailing bare author name (e.g., "Genus species L." or "Genus species Author")
   # Only if what remains is at least two words
   names <- gsub(
-    "^(\\S+\\s+\\S+)\\s+[A-Z][a-zA-Z.]+\\.?\\s*$",
+    "^(\\S+\\s+\\S+)\\s+\\p{Lu}[\\p{L}.]+\\.?\\s*$",
     "\\1", names, perl = TRUE
   )
 

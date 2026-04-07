@@ -49,6 +49,24 @@ test_that("reconcile_apply works with data only", {
   expect_null(aligned$tree)
 })
 
+test_that("reconcile_apply rejects non-reconciliation input", {
+  expect_error(
+    reconcile_apply(list(), data = data.frame(species = "A b")),
+    "reconciliation"
+  )
+})
+
+test_that("reconcile_apply rejects non-data.frame data", {
+  df <- data.frame(species = "Homo sapiens", mass = 70)
+  tree <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
+  result <- reconcile_tree(df, tree, x_species = "species",
+                            authority = NULL, quiet = TRUE)
+  expect_error(
+    reconcile_apply(result, data = "not_a_df", species_col = "species"),
+    "data.*must be a data frame"
+  )
+})
+
 test_that("reconcile_apply works with tree only", {
   df <- data.frame(species = c("Homo sapiens"), mass = 70)
   tree <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")

@@ -58,6 +58,10 @@ reconcile_multi <- function(datasets, tree,
       abort(paste0("Element '", nm, "' of `datasets` is not a data frame."),
             call = caller_env())
     }
+    if (nrow(datasets[[nm]]) == 0) {
+      abort(paste0("Element '", nm, "' of `datasets` has 0 rows."),
+            call = caller_env())
+    }
   }
 
   # Handle species_cols

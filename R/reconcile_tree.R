@@ -68,7 +68,19 @@ reconcile_tree <- function(x, tree,
   tree_obj <- pr_load_tree(tree)
   tips <- tree_obj$tip.label
 
+  # Input guards: empty data, all-NA species, factor columns
+  if (nrow(x) == 0) abort("`x` has 0 rows.", call = caller_env())
+
+  if (is.factor(x[[x_species]])) {
+    cli_alert_warning("Converting factor column '{x_species}' in `x` to character.")
+    x[[x_species]] <- as.character(x[[x_species]])
+  }
+
   names_x <- as.character(x[[x_species]])
+
+  if (all(is.na(names_x))) {
+    abort("All species names in `x` are NA.", call = caller_env())
+  }
 
   # Describe tree source for metadata
   tree_source <- if (is.character(tree)) {

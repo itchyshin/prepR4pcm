@@ -39,3 +39,43 @@ test_that("reconcile_data errors on invalid input", {
     "must be a data frame"
   )
 })
+
+test_that("reconcile_data errors on 0-row data frame", {
+  df_empty <- data.frame(species = character(0), stringsAsFactors = FALSE)
+  df_ok <- data.frame(species = "A b", stringsAsFactors = FALSE)
+  expect_error(
+    reconcile_data(df_empty, df_ok,
+                   x_species = "species", y_species = "species",
+                   authority = NULL, quiet = TRUE),
+    "0 rows"
+  )
+  expect_error(
+    reconcile_data(df_ok, df_empty,
+                   x_species = "species", y_species = "species",
+                   authority = NULL, quiet = TRUE),
+    "0 rows"
+  )
+})
+
+test_that("reconcile_data errors on all-NA species column", {
+  df_na <- data.frame(species = c(NA, NA), stringsAsFactors = FALSE)
+  df_ok <- data.frame(species = "A b", stringsAsFactors = FALSE)
+  expect_error(
+    reconcile_data(df_na, df_ok,
+                   x_species = "species", y_species = "species",
+                   authority = NULL, quiet = TRUE),
+    "All species names.*NA"
+  )
+})
+
+test_that("reconcile_data handles factor species columns", {
+  df1 <- data.frame(species = factor(c("A b", "C d")))
+  df2 <- data.frame(species = factor(c("A b", "E f")))
+  expect_message(
+    result <- reconcile_data(df1, df2,
+                             x_species = "species", y_species = "species",
+                             authority = NULL, quiet = FALSE),
+    "factor"
+  )
+  expect_s3_class(result, "reconciliation")
+})

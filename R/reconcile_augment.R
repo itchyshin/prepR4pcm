@@ -125,8 +125,8 @@ reconcile_augment <- function(x,
     )
   }
 
-  # Extract genera from species names
-  genera <- pr_extract_genus(species_to_add)
+  # Extract genera from species names (normalise underscores to match tree tips)
+  genera <- pr_extract_genus(gsub("_", " ", species_to_add))
 
   # Get current tip genera for matching
   tip_genera <- pr_extract_genus(gsub("_", " ", tree$tip.label))
@@ -164,6 +164,12 @@ reconcile_augment <- function(x,
 
     # Calculate branch length
     bl <- pr_calc_augment_bl(tree, congener_tips, branch_length)
+
+    if (bl == 0 && branch_length != "zero") {
+      cli_alert_warning(
+        "Branch length is 0 for '{sp}'; added tip creates a polytomy."
+      )
+    }
 
     # Add species to tree
     sp_label <- gsub(" ", "_", sp)
