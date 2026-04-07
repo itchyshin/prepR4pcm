@@ -5,18 +5,18 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/itchyshin/prepR4pcm/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/itchyshin/prepR4pcm/actions/workflows/R-CMD-check.yaml)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-**prepR4pcm** reconciles species names across datasets and phylogenetic
-trees for comparative biology workflows. Taxonomic mismatches —
-formatting differences, synonymy, and typos — are a persistent source of
-silent data loss in phylogenetic comparative methods (PCM). This package
-detects and resolves those mismatches through a multi-stage matching
-cascade, producing documented, reproducible alignments between data and
-trees.
+Species names in your data rarely match the tip labels in your tree.
+Formatting differences (`Homo_sapiens` vs `Homo sapiens`), taxonomic
+synonyms, and simple typos silently drop species from phylogenetic
+comparative analyses. **prepR4pcm** detects and resolves these
+mismatches through a multi-stage matching cascade (exact, normalised,
+synonym, fuzzy), documents every decision, and produces aligned
+data–tree pairs ready for PGLS, phylogenetic mixed models, or any other
+PCM.
 
 ## Installation
 
@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-04-06 15:46:03
+#>   Timestamp: 2026-04-07 05:03:49
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -80,35 +80,23 @@ ape::Ntip(aligned$tree)
 #> [1] 657
 ```
 
-## What it does
+## Features
 
-**Core matching** — A four-stage cascade resolves names progressively:
-
-1.  **Exact** — identical strings
-2.  **Normalised** — case, whitespace, and underscore differences
-3.  **Synonym** — taxonomic synonym lookup via local databases
-    (optional)
-4.  **Fuzzy** — Levenshtein-based similarity with genus pre-filtering
-    (~100x faster than naive pairwise comparison)
-
-**Diagnostics** — every decision is recorded in a mapping table.
-Functions like `reconcile_summary()`, `reconcile_plot()`,
-`reconcile_report()`, and `reconcile_suggest()` make it easy to audit
-matches, visualise coverage, and find near-misses for unresolved
-species.
-
-**Multi-tree support** — `reconcile_to_trees()` matches a dataset
-against several trees at once, and `reconcile_diff()` compares results
-across trees or parameter settings.
-
-**Crosswalks and overrides** — `reconcile_crosswalk()` converts
-published taxonomy crosswalks (e.g., BirdLife–BirdTree) into override
-tables. `reconcile_override()` and `reconcile_override_batch()` let you
-inject manual corrections at any stage.
-
-**Advanced** — `reconcile_augment()` grafts unresolved species onto a
-tree using genus-level placement. `reconcile_splits_lumps()` detects
-taxonomic splits and lumps from synonym resolution results.
+- **Four-stage matching cascade**: exact match, normalised match (case,
+  whitespace, underscores), synonym resolution via
+  [taxadb](https://docs.ropensci.org/taxadb/) (Norman et al. 2020), and
+  fuzzy matching with genus pre-filtering for typos.
+- **Full provenance**: every name-matching decision is recorded.
+  `reconcile_summary()`, `reconcile_plot()`, `reconcile_report()`, and
+  `reconcile_suggest()` help you audit matches and find near-misses.
+- **Multi-tree support**: `reconcile_to_trees()` matches a dataset
+  against several trees at once; `reconcile_diff()` compares results.
+- **Crosswalks and overrides**: `reconcile_crosswalk()` converts
+  published taxonomy crosswalks (e.g., BirdLife–BirdTree) into override
+  tables.
+- **Tree augmentation**: `reconcile_augment()` grafts unresolved species
+  onto a tree using genus-level placement (always run sensitivity
+  analyses with and without augmented tips).
 
 ## Typical workflow
 
@@ -137,11 +125,43 @@ taxonomic splits and lumps from synonym resolution results.
 
 ## Citation
 
-If you use prepR4pcm in your research, please cite:
+If you use prepR4pcm in your research, please cite the package and the
+associated paper:
 
 ``` r
 citation("prepR4pcm")
 ```
+
+> Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. & Nakagawa, S.
+> (2025) Promoting the use of phylogenetic multinomial generalised
+> mixed-effects model to understand the evolution of discrete traits.
+> *Journal of Evolutionary Biology* 38:1699–1715.
+> <doi:%5B10.1093/jeb/voaf116>\](<https://doi.org/10.1093/jeb/voaf116>)
+
+## Key dependencies
+
+- [ape](https://cran.r-project.org/package=ape) — phylogenetic tree
+  handling (Paradis & Schliep 2019, *Bioinformatics* 35:526–528)
+- [taxadb](https://docs.ropensci.org/taxadb/) — local taxonomic synonym
+  resolution (Norman et al. 2020, *Methods in Ecology and Evolution*
+  11:1153–1159)
+
+## Bundled data sources
+
+The package includes subset datasets for examples and testing. Full
+credit to the original data providers:
+
+- **AVONET**: Tobias et al. (2022) *Ecology Letters* 25:581–597.
+  <doi:%5B10.1111/ele.13898>\](<https://doi.org/10.1111/ele.13898>)
+- **NestTrait v2**: Chia et al. (2023) *Scientific Data* 10:444.
+  <doi:%5B10.1038/s41597-023-02360-9>\](<https://doi.org/10.1038/s41597-023-02360-9>)
+- **Plumage lightness**: Delhey et al. (2019) *American Naturalist*
+  194:13–27. <doi:%5B10.1086/703588>\](<https://doi.org/10.1086/703588>)
+- **Jetz phylogeny**: Jetz et al. (2012) *Nature* 491:444–448.
+  <doi:%5B10.1038/nature11631>\](<https://doi.org/10.1038/nature11631>)
+- **Clements checklist**: Clements et al. (2025) eBird/Clements
+  Checklist of Birds of the World.
+- **BirdLife-BirdTree crosswalk**: Tobias et al. (2022).
 
 ## License
 

@@ -99,3 +99,8 @@ cat("  Added:", nrow(aug_near$augmented), "\n")
 head(aug_near$augmented[, c("species", "placed_near", "method")])
 
 }
+\references{
+Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
+35:526--528. \doi{10.1093/bioinformatics/bty633}
+}

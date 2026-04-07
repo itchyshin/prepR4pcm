@@ -79,3 +79,9 @@ result <- reconcile_data(avonet_subset, nesttrait_subset,
 print(result)
 
 }
+\references{
+Norman, K.E., Chamberlain, S. & Boettiger, C. (2020) taxadb: A
+high-performance local taxonomic database interface.
+\emph{Methods in Ecology and Evolution} 11:1153--1159.
+\doi{10.1111/2041-210X.13440}
+}

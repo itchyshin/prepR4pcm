@@ -72,3 +72,8 @@ result <- reconcile_tree(avonet_subset, tree_jetz,
 print(result)
 
 }
+\references{
+Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
+35:526--528. \doi{10.1093/bioinformatics/bty633}
+}

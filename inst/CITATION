@@ -1,0 +1,35 @@
+citHeader("To cite prepR4pcm in publications, use the package citation and, where relevant, the associated methods paper:")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods",
+  author   = c(
+    person("Shinichi", "Nakagawa"),
+    person("Santiago", "Ortega"),
+    person("Ayumi", "Mizuno"),
+    person("Eduardo S.A.", "Santos"),
+    person("Malgorzata", "Lagisz"),
+    person("Jimuel Jr", "Celeste"),
+    person("Sergio", "Poo Hernandez")
+  ),
+  year     = "2025",
+  note     = sprintf("R package version %s", meta$Version),
+  url      = "https://github.com/itchyshin/prepR4pcm"
+)
+
+bibentry(
+  bibtype  = "Article",
+  title    = "Promoting the use of phylogenetic multinomial generalised mixed-effects model to understand the evolution of discrete traits",
+  author   = c(
+    person("Ayumi", "Mizuno"),
+    person("Szymon M.", "Drobniak"),
+    person("Caitlin", "Williams"),
+    person("Malgorzata", "Lagisz"),
+    person("Shinichi", "Nakagawa")
+  ),
+  journal  = "Journal of Evolutionary Biology",
+  year     = "2025",
+  volume   = "38",
+  pages    = "1699--1715",
+  doi      = "10.1093/jeb/voaf116"
+)

@@ -13,6 +13,11 @@
 #'
 #' @return A `reconciliation` object.
 #'
+#' @references
+#' Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+#' phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
+#' 35:526--528. \doi{10.1093/bioinformatics/bty633}
+#'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)

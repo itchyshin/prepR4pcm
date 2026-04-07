@@ -32,6 +32,7 @@ License: MIT + file LICENSE
 URL: https://github.com/itchyshin/prepR4pcm,
     https://itchyshin.github.io/prepR4pcm/
 BugReports: https://github.com/itchyshin/prepR4pcm/issues
+Date: 2025-04-07
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

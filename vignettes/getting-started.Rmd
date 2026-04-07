@@ -228,10 +228,11 @@ take priority.
 unique species names before running the cascade:
 
 ```{r multi, eval = FALSE}
+# Suppose you have several data frames to reconcile against one tree:
 datasets <- list(
-  traits  = trait_data,
-  ecology = ecology_data,
-  morpho  = morpho_data
+  traits  = trait_data,        # defined above
+  ecology = my_ecology_data,   # your own data frame
+  morpho  = my_morpho_data     # your own data frame
 )
 
 result6 <- reconcile_multi(datasets, my_tree)

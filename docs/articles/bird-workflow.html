@@ -124,7 +124,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-06 15:58:42</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-07 05:04:51</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -244,10 +244,10 @@ package fits Bayesian phylogenetic mixed models:</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <p>See Hadfield (2010, <em>J. Stat. Softw.</em> 33:1–22) for MCMCglmm
-details, and Nakagawa &amp; Schielzeth (2013, <em>J. Evol. Biol.</em>
-23:494–508) and Villemereuil et al. (2025, <em>J. Evol. Biol.</em>
-38:1699–1723) for guidance on phylogenetic mixed models and their
-interpretation.</p>
+details, Hadfield &amp; Nakagawa (2010, <em>J. Evol. Biol.</em>
+23:494–508) for phylogenetic quantitative genetics, and Mizuno et
+al. (2025, <em>J. Evol. Biol.</em> 38:1699–1715) for phylogenetic
+multinomial mixed models.</p>
 <p>That is the complete core workflow: <strong>load, reconcile, apply,
 analyse.</strong></p>
 <hr>
@@ -280,7 +280,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-06 15:58:42</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-07 05:04:52</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -577,6 +577,38 @@ eBird/Clements Checklist.</li>
 <li>
 <strong>BirdLife-BirdTree crosswalk</strong>: Tobias et
 al. (2022).</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h3>
+<ul>
+<li>Hadfield, J.D. (2010) MCMC methods for multi-response generalized
+linear mixed models: the MCMCglmm R package. <em>Journal of Statistical
+Software</em> 33:1–22. <a href="doi:10.18637/jss.v033.i02" class="uri">doi:10.18637/jss.v033.i02</a>
+</li>
+<li>Hadfield, J.D. &amp; Nakagawa, S. (2010) General quantitative
+genetic methods for comparative biology: phylogenies, taxonomies and
+multi-trait models for continuous and categorical characters.
+<em>Journal of Evolutionary Biology</em> 23:494–508. <a href="doi:10.1111/j.1420-9101.2009.01915.x" class="uri">doi:10.1111/j.1420-9101.2009.01915.x</a>
+</li>
+<li>Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. &amp; Nakagawa,
+S.
+<ol start="2025" style="list-style-type: decimal">
+<li>Promoting the use of phylogenetic multinomial generalised
+mixed-effects model to understand the evolution of discrete traits.
+<em>Journal of Evolutionary Biology</em> 38:1699–1715. <a href="doi:10.1093/jeb/voaf116" class="uri">doi:10.1093/jeb/voaf116</a>
+</li>
+</ol>
+</li>
+<li>Norman, K.E., Chamberlain, S. &amp; Boettiger, C. (2020) taxadb: A
+high-performance local taxonomic database interface. <em>Methods in
+Ecology and Evolution</em> 11:1153–1159. <a href="doi:10.1111/2041-210X.13440" class="uri">doi:10.1111/2041-210X.13440</a>
+</li>
+<li>Paradis, E. &amp; Schliep, K. (2019) ape 5.0: an environment for
+modern phylogenetics and evolutionary analyses in R.
+<em>Bioinformatics</em> 35:526–528. <a href="doi:10.1093/bioinformatics/bty633" class="uri">doi:10.1093/bioinformatics/bty633</a>
+</li>
 </ul>
 </div>
 </div>

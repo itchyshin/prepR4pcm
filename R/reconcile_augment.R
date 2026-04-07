@@ -42,6 +42,11 @@
 #'     \item{meta}{Provenance metadata.}
 #'   }
 #'
+#' @references
+#' Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+#' phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
+#' 35:526--528. \doi{10.1093/bioinformatics/bty633}
+#'
 #' @examples
 #' # --- Example 1: genus-level placement with congener_median branch lengths ---
 #' data(avonet_subset)

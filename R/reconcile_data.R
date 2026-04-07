@@ -36,6 +36,12 @@
 #'   [reconcile_summary()] for details, [reconcile_mapping()] to extract the
 #'   mapping table, and [reconcile_apply()] to produce aligned data.
 #'
+#' @references
+#' Norman, K.E., Chamberlain, S. & Boettiger, C. (2020) taxadb: A
+#' high-performance local taxonomic database interface.
+#' \emph{Methods in Ecology and Evolution} 11:1153--1159.
+#' \doi{10.1111/2041-210X.13440}
+#'
 #' @examples
 #' data(avonet_subset)
 #' data(nesttrait_subset)

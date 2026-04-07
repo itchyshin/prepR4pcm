@@ -157,10 +157,10 @@ summary(model)
 ```
 
 See Hadfield (2010, *J. Stat. Softw.* 33:1--22) for MCMCglmm
-details, and Nakagawa & Schielzeth (2013, *J. Evol. Biol.*
-23:494--508) and Villemereuil et al. (2025, *J. Evol. Biol.*
-38:1699--1723) for guidance on phylogenetic mixed models and their
-interpretation.
+details, Hadfield & Nakagawa (2010, *J. Evol. Biol.* 23:494--508)
+for phylogenetic quantitative genetics, and Mizuno et al. (2025,
+*J. Evol. Biol.* 38:1699--1715) for phylogenetic multinomial
+mixed models.
 
 That is the complete core workflow: **load, reconcile, apply, analyse.**
 
@@ -420,3 +420,25 @@ The report includes match counts, detail tables for each match type
   doi:10.1038/nature11631
 - **Clements 2025**: Clements et al. (2025) eBird/Clements Checklist.
 - **BirdLife-BirdTree crosswalk**: Tobias et al. (2022).
+
+## References
+
+- Hadfield, J.D. (2010) MCMC methods for multi-response generalized
+  linear mixed models: the MCMCglmm R package. *Journal of Statistical
+  Software* 33:1--22. doi:10.18637/jss.v033.i02
+- Hadfield, J.D. & Nakagawa, S. (2010) General quantitative genetic
+  methods for comparative biology: phylogenies, taxonomies and
+  multi-trait models for continuous and categorical characters.
+  *Journal of Evolutionary Biology* 23:494--508.
+  doi:10.1111/j.1420-9101.2009.01915.x
+- Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. & Nakagawa, S.
+  (2025) Promoting the use of phylogenetic multinomial generalised
+  mixed-effects model to understand the evolution of discrete traits.
+  *Journal of Evolutionary Biology* 38:1699--1715.
+  doi:10.1093/jeb/voaf116
+- Norman, K.E., Chamberlain, S. & Boettiger, C. (2020) taxadb: A
+  high-performance local taxonomic database interface. *Methods in
+  Ecology and Evolution* 11:1153--1159. doi:10.1111/2041-210X.13440
+- Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+  phylogenetics and evolutionary analyses in R. *Bioinformatics*
+  35:526--528. doi:10.1093/bioinformatics/bty633

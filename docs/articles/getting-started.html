@@ -144,7 +144,7 @@ mix - <code>Cebus capucinus</code> is in the data but not the tree -
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-06 15:58:54</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-07 05:05:05</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -255,7 +255,7 @@ disagree:</p>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-06 15:58:55</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-07 05:05:05</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -327,10 +327,11 @@ take priority.</p>
 <p><code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code> reconciles several datasets at once,
 pooling all unique species names before running the cascade:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  traits  <span class="op">=</span> <span class="va">trait_data</span>,</span>
-<span>  ecology <span class="op">=</span> <span class="va">ecology_data</span>,</span>
-<span>  morpho  <span class="op">=</span> <span class="va">morpho_data</span></span>
+<code class="sourceCode R"><span><span class="co"># Suppose you have several data frames to reconcile against one tree:</span></span>
+<span><span class="va">datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  traits  <span class="op">=</span> <span class="va">trait_data</span>,        <span class="co"># defined above</span></span>
+<span>  ecology <span class="op">=</span> <span class="va">my_ecology_data</span>,   <span class="co"># your own data frame</span></span>
+<span>  morpho  <span class="op">=</span> <span class="va">my_morpho_data</span>     <span class="co"># your own data frame</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result6</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_multi.html">reconcile_multi</a></span><span class="op">(</span><span class="va">datasets</span>, <span class="va">my_tree</span><span class="op">)</span></span>
