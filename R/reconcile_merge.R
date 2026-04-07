@@ -40,8 +40,11 @@
 #'   - `"full"`: keep all species from both datasets.
 #' @param suffix Character(2). Suffixes to disambiguate columns with the
 #'   same name in both datasets. Default `c("_x", "_y")`.
-#' @param drop_unresolved Logical. Drop unresolved species? Default `TRUE`.
-#'   Only relevant for `how = "left"` or `how = "full"`.
+#' @param drop_unresolved Logical. If `TRUE`, rows where `species_resolved`
+#'   is `NA` (i.e., species that could not be reconciled) are removed from
+#'   the final result. Default `FALSE` (keep all rows, fill unmatched
+#'   columns with `NA`). Only relevant for `how = "left"` or `how = "full"`;
+#'   inner joins drop unmatched rows by definition.
 #'
 #' @return A data frame with a `species_resolved` column as the join key,
 #'   plus all columns from both datasets (with suffixes where needed).
@@ -67,7 +70,7 @@ reconcile_merge <- function(x, data_x, data_y,
                             species_col_y = NULL,
                             how = c("inner", "left", "full"),
                             suffix = c("_x", "_y"),
-                            drop_unresolved = TRUE) {
+                            drop_unresolved = FALSE) {
 
   validate_reconciliation(x)
   how <- match.arg(how)
@@ -100,10 +103,6 @@ reconcile_merge <- function(x, data_x, data_y,
 
   # Build the join key from the mapping table
   matched <- mapping[mapping$in_x & mapping$in_y, ]
-
-  if (drop_unresolved) {
-    matched <- matched[matched$match_type != "unresolved", ]
-  }
 
   # Create a lookup: name_x -> resolved name (use name_y as the resolved key)
   join_key <- data.frame(
@@ -200,6 +199,18 @@ reconcile_merge <- function(x, data_x, data_y,
     sentinel <- grepl("^\\.\\.unmatched_[xy]_\\d+\\.\\.$",
                       merged$species_resolved)
     merged$species_resolved[sentinel] <- NA_character_
+  }
+
+  # Drop unresolved species if requested
+  if (drop_unresolved && how != "inner") {
+    na_resolved <- is.na(merged$species_resolved)
+    n_drop <- sum(na_resolved)
+    if (n_drop > 0) {
+      merged <- merged[!na_resolved, , drop = FALSE]
+      cli_alert_warning(
+        "Dropped {n_drop} unresolved species from merge result (drop_unresolved = TRUE)"
+      )
+    }
   }
 
   # Reorder: species_resolved first

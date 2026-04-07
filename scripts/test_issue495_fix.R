@@ -65,7 +65,7 @@ merged_left <- reconcile_merge(
   species_col_x = "species",
   species_col_y = "species",
   how = "left",
-  drop_unresolved = TRUE
+  drop_unresolved = FALSE
 )
 
 elapsed <- round(difftime(Sys.time(), t0, units = "secs"), 2)

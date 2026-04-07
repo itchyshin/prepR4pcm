@@ -12,7 +12,7 @@ reconcile_merge(
   species_col_y = NULL,
   how = c("inner", "left", "full"),
   suffix = c("_x", "_y"),
-  drop_unresolved = TRUE
+  drop_unresolved = FALSE
 )
 }
 \arguments{
@@ -38,8 +38,11 @@ Auto-detected if \code{NULL}.}
 \item{suffix}{Character(2). Suffixes to disambiguate columns with the
 same name in both datasets. Default \code{c("_x", "_y")}.}
 
-\item{drop_unresolved}{Logical. Drop unresolved species? Default \code{TRUE}.
-Only relevant for \code{how = "left"} or \code{how = "full"}.}
+\item{drop_unresolved}{Logical. If \code{TRUE}, rows where \code{species_resolved}
+is \code{NA} (i.e., species that could not be reconciled) are removed from
+the final result. Default \code{FALSE} (keep all rows, fill unmatched
+columns with \code{NA}). Only relevant for \code{how = "left"} or \code{how = "full"};
+inner joins drop unmatched rows by definition.}
 }
 \value{
 A data frame with a \code{species_resolved} column as the join key,

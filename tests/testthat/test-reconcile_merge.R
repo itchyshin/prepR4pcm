@@ -235,3 +235,94 @@ test_that("reconcile_merge() warns about duplicate species", {
   )
   expect_equal(nrow(merged), 4)
 })
+
+
+# --- Tests for drop_unresolved parameter ---
+
+test_that("drop_unresolved = TRUE removes NA species_resolved rows from left join", {
+  shared <- paste("Genus", letters[1:3])
+  only_x <- paste("Xonly", letters[1:4])
+
+  df_x <- data.frame(species = c(shared, only_x), val = seq_len(7),
+                     stringsAsFactors = FALSE)
+  df_y <- data.frame(species = c(shared, "Yonly a"), score = seq_len(4),
+                     stringsAsFactors = FALSE)
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  # Default (drop_unresolved = FALSE): keeps all x rows
+  merged_keep <- reconcile_merge(rec, df_x, df_y,
+                                 species_col_x = "species",
+                                 species_col_y = "species",
+                                 how = "left",
+                                 drop_unresolved = FALSE)
+  expect_equal(nrow(merged_keep), 7)
+  expect_equal(sum(is.na(merged_keep$species_resolved)), 4)
+
+  # drop_unresolved = TRUE: removes unmatched x rows
+  merged_drop <- reconcile_merge(rec, df_x, df_y,
+                                 species_col_x = "species",
+                                 species_col_y = "species",
+                                 how = "left",
+                                 drop_unresolved = TRUE)
+  expect_equal(nrow(merged_drop), 3)
+  expect_false(any(is.na(merged_drop$species_resolved)))
+})
+
+test_that("drop_unresolved = TRUE removes NA species_resolved rows from full join", {
+  shared <- paste("Genus", letters[1:2])
+  only_x <- paste("Xonly", letters[1:3])
+  only_y <- paste("Yonly", letters[1:4])
+
+  df_x <- data.frame(species = c(shared, only_x), val = seq_len(5),
+                     stringsAsFactors = FALSE)
+  df_y <- data.frame(species = c(shared, only_y), score = seq_len(6),
+                     stringsAsFactors = FALSE)
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  # Default: full join keeps everything
+  merged_keep <- reconcile_merge(rec, df_x, df_y,
+                                 species_col_x = "species",
+                                 species_col_y = "species",
+                                 how = "full",
+                                 drop_unresolved = FALSE)
+  expect_equal(nrow(merged_keep), 9)  # 2 matched + 3 x-only + 4 y-only
+
+  # drop_unresolved = TRUE: only matched rows survive
+  merged_drop <- reconcile_merge(rec, df_x, df_y,
+                                 species_col_x = "species",
+                                 species_col_y = "species",
+                                 how = "full",
+                                 drop_unresolved = TRUE)
+  expect_equal(nrow(merged_drop), 2)
+  expect_false(any(is.na(merged_drop$species_resolved)))
+})
+
+test_that("drop_unresolved has no effect on inner join", {
+  df_x <- data.frame(species = c("A b", "C d", "E f"), val = 1:3,
+                     stringsAsFactors = FALSE)
+  df_y <- data.frame(species = c("A b", "C d"), score = 1:2,
+                     stringsAsFactors = FALSE)
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  merged_t <- reconcile_merge(rec, df_x, df_y,
+                              species_col_x = "species",
+                              species_col_y = "species",
+                              how = "inner",
+                              drop_unresolved = TRUE)
+  merged_f <- reconcile_merge(rec, df_x, df_y,
+                              species_col_x = "species",
+                              species_col_y = "species",
+                              how = "inner",
+                              drop_unresolved = FALSE)
+  expect_equal(nrow(merged_t), nrow(merged_f))
+  expect_equal(nrow(merged_t), 2)
+})
