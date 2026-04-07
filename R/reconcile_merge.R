@@ -6,6 +6,27 @@
 #' between the two datasets (due to formatting, synonyms, or typos) are
 #' correctly linked.
 #'
+#' @details
+#' **One row per species.** `reconcile_merge()` works best when each dataset
+#' has exactly one row per species. If a species appears in multiple rows
+#' (e.g., sex-specific measurements, repeated populations), the merge
+#' produces all pairwise combinations for that species---the same behaviour
+#' as base [merge()]. To avoid unexpected row expansion, aggregate to one
+#' row per species before merging, or be aware that the output will contain
+#' more rows than either input.
+#'
+#' **Asymmetric datasets.** When `data_y` contains many more species than
+#' `data_x` (common when merging against a large reference database), use
+#' `how = "inner"` or `how = "left"`. Inner joins keep only the species
+#' present in both datasets; left joins keep all `data_x` rows and fill
+#' `data_y` columns with `NA` for unmatched species. Use `how = "full"`
+#' only when you need to retain species unique to either side.
+#'
+#' **Recommended workflow for multi-row data.** Reconcile using a
+#' species-level summary (one row per species), inspect the mapping with
+#' [reconcile_mapping()], then join the mapping back to your full dataset
+#' using the species column as key.
+#'
 #' @param x A `reconciliation` object (typically from [reconcile_data()]).
 #' @param data_x The first data frame (source x in the reconciliation).
 #' @param data_y The second data frame (source y in the reconciliation).
@@ -103,6 +124,54 @@ reconcile_merge <- function(x, data_x, data_y,
     match(as.character(data_y[[species_col_y]]), join_key$name_y)
   ]
 
+  # Warn about duplicate species (can cause pairwise row expansion)
+  keys_x <- data_x[["..join_key.."]]
+  keys_y <- data_y[["..join_key.."]]
+  n_dup_x <- sum(duplicated(keys_x[!is.na(keys_x)]))
+  n_dup_y <- sum(duplicated(keys_y[!is.na(keys_y)]))
+  if (n_dup_x > 0 || n_dup_y > 0) {
+    cli_alert_warning(
+      paste0(
+        "Duplicate species detected: {n_dup_x} in data_x, {n_dup_y} in data_y. ",
+        "Merge will produce pairwise row combinations for duplicates."
+      )
+    )
+  }
+
+  # --- Prevent NA-to-NA cartesian explosion ---
+  # Base R merge() treats NA == NA as TRUE, so unkeyed rows from both sides
+
+  # cross-join to produce a massive cartesian product. Prevent this by
+  # removing or isolating NA-keyed rows BEFORE the merge.
+  na_x <- is.na(data_x[["..join_key.."]])
+  na_y <- is.na(data_y[["..join_key.."]])
+
+  if (how == "inner") {
+    # Inner join: NA rows would be dropped anyway; remove early
+    data_x <- data_x[!na_x, , drop = FALSE]
+    data_y <- data_y[!na_y, , drop = FALSE]
+
+  } else if (how == "left") {
+    # Left join: keep all data_x rows (including NA-keyed), but remove
+    # NA-keyed data_y rows so they don't cross-match with NA x-rows.
+    # Unmatched x-rows get NAs for all y-columns (correct left-join semantics).
+    data_y <- data_y[!na_y, , drop = FALSE]
+
+  } else {
+    # Full join: assign unique sentinel values to NA keys on both sides so
+    # they don't cross-match. Replace sentinels with NA after merge.
+    if (any(na_x)) {
+      data_x[["..join_key.."]][na_x] <- paste0(
+        "..unmatched_x_", seq_len(sum(na_x)), ".."
+      )
+    }
+    if (any(na_y)) {
+      data_y[["..join_key.."]][na_y] <- paste0(
+        "..unmatched_y_", seq_len(sum(na_y)), ".."
+      )
+    }
+  }
+
   # Handle duplicate column names with suffixes
   common_cols <- intersect(names(data_x), names(data_y))
   common_cols <- setdiff(common_cols, "..join_key..")
@@ -126,9 +195,11 @@ reconcile_merge <- function(x, data_x, data_y,
   # Rename join key to species_resolved
   names(merged)[names(merged) == "..join_key.."] <- "species_resolved"
 
-  # Drop rows with NA join key if inner join
-  if (how == "inner") {
-    merged <- merged[!is.na(merged$species_resolved), , drop = FALSE]
+  # For full joins, replace sentinel values with NA
+  if (how == "full") {
+    sentinel <- grepl("^\\.\\.unmatched_[xy]_\\d+\\.\\.$",
+                      merged$species_resolved)
+    merged$species_resolved[sentinel] <- NA_character_
   }
 
   # Reorder: species_resolved first

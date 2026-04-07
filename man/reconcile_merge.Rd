@@ -52,6 +52,27 @@ mapping table provides the species-level join key, so names that differ
 between the two datasets (due to formatting, synonyms, or typos) are
 correctly linked.
 }
+\details{
+\strong{One row per species.} \code{reconcile_merge()} works best when each dataset
+has exactly one row per species. If a species appears in multiple rows
+(e.g., sex-specific measurements, repeated populations), the merge
+produces all pairwise combinations for that species---the same behaviour
+as base \code{\link[=merge]{merge()}}. To avoid unexpected row expansion, aggregate to one
+row per species before merging, or be aware that the output will contain
+more rows than either input.
+
+\strong{Asymmetric datasets.} When \code{data_y} contains many more species than
+\code{data_x} (common when merging against a large reference database), use
+\code{how = "inner"} or \code{how = "left"}. Inner joins keep only the species
+present in both datasets; left joins keep all \code{data_x} rows and fill
+\code{data_y} columns with \code{NA} for unmatched species. Use \code{how = "full"}
+only when you need to retain species unique to either side.
+
+\strong{Recommended workflow for multi-row data.} Reconcile using a
+species-level summary (one row per species), inspect the mapping with
+\code{\link[=reconcile_mapping]{reconcile_mapping()}}, then join the mapping back to your full dataset
+using the species column as key.
+}
 \examples{
 data(avonet_subset)
 data(nesttrait_subset)

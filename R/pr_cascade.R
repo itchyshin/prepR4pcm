@@ -35,7 +35,14 @@ pr_run_cascade <- function(names_x, names_y,
                            resolve = "flag",
                            quiet = FALSE) {
 
-  # Deduplicate inputs
+  # Deduplicate inputs, warning about NAs
+  n_na_x <- sum(is.na(names_x))
+  n_na_y <- sum(is.na(names_y))
+  if (!quiet && (n_na_x > 0 || n_na_y > 0)) {
+    cli_alert_warning(
+      "Removed {n_na_x} NA name{?s} from x and {n_na_y} from y before matching."
+    )
+  }
   unique_x <- unique(names_x[!is.na(names_x)])
   unique_y <- unique(names_y[!is.na(names_y)])
 

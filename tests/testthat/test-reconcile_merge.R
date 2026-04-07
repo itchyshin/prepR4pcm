@@ -117,3 +117,121 @@ test_that("reconcile_merge() species_resolved is first column", {
 
   expect_equal(names(merged)[1], "species_resolved")
 })
+
+
+# --- Regression tests for NA cartesian explosion (issue #495) ---
+
+test_that("reconcile_merge() left join does not explode with asymmetric data", {
+
+  # Simulate Ayumi's scenario: small data_x, large data_y, few shared species
+  shared  <- paste("Genus", letters[1:5])
+  only_x  <- paste("Xonly", letters[1:5])
+  only_y  <- paste("Yonly", letters[1:95])
+
+  df_x <- data.frame(
+    species = c(shared, only_x),
+    val_x   = seq_len(10),
+    stringsAsFactors = FALSE
+  )
+  df_y <- data.frame(
+    species = c(shared, only_y),
+    val_y   = seq_len(100),
+    stringsAsFactors = FALSE
+  )
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  # Left join: must return exactly nrow(df_x) rows, NOT a cartesian product
+  merged <- reconcile_merge(rec, df_x, df_y,
+                            species_col_x = "species",
+                            species_col_y = "species",
+                            how = "left")
+
+  expect_equal(nrow(merged), nrow(df_x))
+
+  # 5 matched rows have non-NA species_resolved
+  expect_equal(sum(!is.na(merged$species_resolved)), 5)
+
+  # 5 unmatched x rows have NA species_resolved
+  expect_equal(sum(is.na(merged$species_resolved)), 5)
+})
+
+test_that("reconcile_merge() full join does not explode with asymmetric data", {
+  shared <- paste("Genus", letters[1:2])
+  only_x <- paste("Xonly", letters[1:3])
+  only_y <- paste("Yonly", letters[1:4])
+
+  df_x <- data.frame(species = c(shared, only_x), val = seq_len(5),
+                     stringsAsFactors = FALSE)
+  df_y <- data.frame(species = c(shared, only_y), score = seq_len(6),
+                     stringsAsFactors = FALSE)
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  merged <- reconcile_merge(rec, df_x, df_y,
+                            species_col_x = "species",
+                            species_col_y = "species",
+                            how = "full")
+
+  # Full join: 2 matched + 3 x-only + 4 y-only = 9 rows
+  expect_equal(nrow(merged), 9)
+
+  # 2 matched rows have non-NA species_resolved
+  expect_equal(sum(!is.na(merged$species_resolved)), 2)
+})
+
+test_that("reconcile_merge() inner join drops all unmatched", {
+  shared <- paste("Genus", letters[1:3])
+  only_x <- paste("Xonly", letters[1:7])
+  only_y <- paste("Yonly", letters[1:10])
+
+  df_x <- data.frame(species = c(shared, only_x), val = seq_len(10),
+                     stringsAsFactors = FALSE)
+  df_y <- data.frame(species = c(shared, only_y), score = seq_len(13),
+                     stringsAsFactors = FALSE)
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  merged <- reconcile_merge(rec, df_x, df_y,
+                            species_col_x = "species",
+                            species_col_y = "species",
+                            how = "inner")
+
+  expect_equal(nrow(merged), 3)
+  expect_false(any(is.na(merged$species_resolved)))
+})
+
+test_that("reconcile_merge() warns about duplicate species", {
+  # data_x has 2 rows per species (e.g., male + female)
+  df_x <- data.frame(
+    species = c("A b", "A b", "C d", "C d"),
+    sex     = c("M", "F", "M", "F"),
+    mass    = c(10, 8, 20, 18),
+    stringsAsFactors = FALSE
+  )
+  df_y <- data.frame(
+    species = c("A b", "C d"),
+    score   = c(5, 9),
+    stringsAsFactors = FALSE
+  )
+
+  rec <- reconcile_data(df_x, df_y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  # Should warn about duplicates and produce 4 rows (2 per species × 1 y row)
+  expect_message(
+    merged <- reconcile_merge(rec, df_x, df_y,
+                              species_col_x = "species",
+                              species_col_y = "species",
+                              how = "inner"),
+    "Duplicate species"
+  )
+  expect_equal(nrow(merged), 4)
+})
