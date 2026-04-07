@@ -44,8 +44,10 @@ Imports:
     rlang,
     tibble
 Suggests:
+    caper,
     dplyr,
     knitr,
+    MCMCglmm,
     phytools,
     pkgdown,
     rmarkdown,

@@ -112,49 +112,59 @@ comparative method. Here are two common approaches.
 PGLS accounts for shared evolutionary history when estimating
 regression parameters:
 
-```{r pgls, eval = FALSE}
+```{r pgls, message = FALSE, warning = FALSE}
 library(caper)
 
-# Prepare for caper
-aligned$data$species <- gsub(" ", "_", aligned$data$Species1)
+# reconcile_apply() aligns names so data$Species1 matches tree tip labels
 cd <- comparative.data(aligned$tree, aligned$data,
-                       names.col = "species", vcv = TRUE)
+                       names.col = "Species1", vcv = TRUE)
 
 # PGLS: body mass ~ wing length
-model <- pgls(log(Mass) ~ log(Wing.Length), data = cd)
-summary(model)
+model_pgls <- pgls(log(Mass) ~ log(Wing.Length), data = cd)
+summary(model_pgls)
 ```
 
 ### Phylogenetic generalised linear mixed model (PGLMM)
 
-For non-Gaussian responses (binary, count, proportional data) or when
-you need random effects beyond phylogeny, use a PGLMM. The MCMCglmm
-package fits Bayesian phylogenetic mixed models:
+When you need random effects beyond phylogeny or want a Bayesian
+framework, use a PGLMM. The MCMCglmm package fits Bayesian
+phylogenetic mixed models:
 
-```{r pglmm, eval = FALSE}
+```{r pglmm, message = FALSE, warning = FALSE, results = "hide"}
 library(MCMCglmm)
 
-# Prepare: species as a factor matching tree tip labels
-aligned$data$phylo <- gsub(" ", "_", aligned$data$Species1)
+# Species column as the phylogenetic grouping factor
+aligned$data$phylo <- aligned$data$Species1
 
 # Inverse phylogenetic covariance matrix
-inv_phylo <- inverseA(aligned$tree, nodes = "TIPS", scale = TRUE)
+# Replace any zero-length branches (can arise after pruning)
+tree_mcmc <- aligned$tree
+tree_mcmc$edge.length[tree_mcmc$edge.length == 0] <- 1e-6
+inv_phylo <- inverseA(tree_mcmc, nodes = "ALL", scale = FALSE)
 
-# PGLMM: binary response (e.g., migration status)
-prior <- list(R = list(V = 1, fix = 1),
+# PGLMM: continuous response
+prior <- list(R = list(V = 1, nu = 0.002),
               G = list(G1 = list(V = 1, nu = 0.002)))
 
-model <- MCMCglmm(
-  Migration ~ log(Mass) + Trophic.Level,
+model_mcmc <- MCMCglmm(
+  log(Mass) ~ log(Wing.Length) + Trophic.Level,
   random = ~phylo,
-  family = "categorical",
+  family = "gaussian",
   ginverse = list(phylo = inv_phylo$Ainv),
   data = aligned$data,
   prior = prior,
-  nitt = 50000, burnin = 10000, thin = 20
+  nitt = 50000, burnin = 10000, thin = 20,
+  verbose = FALSE
 )
-summary(model)
 ```
+
+```{r pglmm-summary}
+summary(model_mcmc)
+```
+
+For categorical responses (e.g., migration status with multiple
+categories), see Mizuno et al. (2025, *J. Evol. Biol.*
+38:1699--1715) for the multinomial PGLMM approach.
 
 See Hadfield (2010, *J. Stat. Softw.* 33:1--22) for MCMCglmm
 details, Hadfield & Nakagawa (2010, *J. Evol. Biol.* 23:494--508)
