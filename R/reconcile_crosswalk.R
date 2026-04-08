@@ -1,13 +1,15 @@
-#' Convert a taxonomy crosswalk to an overrides table
+#' Convert a published taxonomy crosswalk into an overrides table
 #'
-#' Parses a curated taxonomy crosswalk (e.g., the BirdLife-BirdTree
-#' crosswalk) into a data frame compatible with the `overrides` parameter
-#' of [reconcile_tree()], [reconcile_data()], and other reconciliation
-#' functions.
+#' Turn a curated species-name crosswalk (e.g. the BirdLife--BirdTree
+#' crosswalk bundled as [crosswalk_birdlife_birdtree], or Clements
+#' updates released each year) into a data frame that can be passed
+#' straight to the `overrides` argument of [reconcile_tree()],
+#' [reconcile_data()] and friends.
 #'
-#' This is useful when you have an authoritative mapping between two
-#' naming systems and want to use it instead of (or in addition to)
-#' automated synonym resolution.
+#' Using a crosswalk is preferable to automated synonym resolution when
+#' an authoritative mapping exists --- it is reproducible, does not
+#' depend on \pkg{taxadb} being available, and you can point to the
+#' published source in the methods section of your paper.
 #'
 #' @param crosswalk A data frame or a file path to a CSV.
 #' @param from_col Character(1). Column name for source names (e.g.,
@@ -22,8 +24,13 @@
 #' @param one_to_one_only Logical. If `TRUE`, keeps only one-to-one
 #'   matches (e.g., `"1BL to 1BT"`). Default `FALSE`.
 #'
-#' @return A data frame with columns `name_x`, `name_y`, and `user_note`,
-#'   suitable for passing to the `overrides` parameter.
+#' @return A data frame with columns `name_x`, `name_y`, and
+#'   `user_note`, ready to be passed as the `overrides` argument.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_override_batch()] for applying this table
+#'   directly to an existing reconciliation; [crosswalk_birdlife_birdtree]
+#'   for the bundled example.
 #'
 #' @examples
 #' data(crosswalk_birdlife_birdtree)

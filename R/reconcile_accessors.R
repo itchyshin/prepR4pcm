@@ -1,22 +1,60 @@
 # Accessor and action functions for reconciliation objects -----------------
 
-#' Extract the mapping table from a reconciliation
+#' Extract the per-name mapping table from a reconciliation
 #'
-#' Returns the full mapping tibble, suitable for downstream joins.
+#' Returns the mapping tibble inside a [reconciliation] object. Use this
+#' when you want to filter matches programmatically (e.g. pull all
+#' unresolved species, all fuzzy matches above a given score, or join
+#' the mapping back to the original data frame).
 #'
-#' @param x A `reconciliation` object.
-#' @return A tibble with columns: `name_x`, `name_y`, `name_resolved`,
-#'   `match_type`, `match_score`, `match_source`, `in_x`, `in_y`, `notes`.
+#' @param x A [reconciliation] object.
+#'
+#' @return A tibble with one row per unique name seen in either source
+#'   and the following columns:
+#'   \describe{
+#'     \item{`name_x`}{The original name as it appeared in `x` (your
+#'       data). `NA` for rows that exist only in `y` (e.g. tree tips
+#'       not in your data).}
+#'     \item{`name_y`}{The original name as it appeared in `y` (the
+#'       reference dataset or tree). `NA` for rows that exist only in
+#'       `x`.}
+#'     \item{`name_resolved`}{The accepted/canonical name returned by
+#'       the taxonomic authority, when synonym resolution was used.
+#'       `NA` when `authority = NULL` or no synonym was found.}
+#'     \item{`match_type`}{One of `"exact"`, `"normalized"`,
+#'       `"synonym"`, `"fuzzy"`, `"manual"` (set via
+#'       [reconcile_override()]), `"flagged"` (low-confidence, needs
+#'       review), or `"unresolved"`.}
+#'     \item{`match_score`}{Numeric in \[0, 1\]. `1` for
+#'       exact/normalized/synonym/manual matches; a genus-weighted
+#'       Levenshtein score for fuzzy matches; `NA` for unresolved.}
+#'     \item{`match_source`}{Where the match came from: `"exact"`,
+#'       `"normalisation"`, the taxadb authority code (e.g. `"col"`),
+#'       `"fuzzy"`, or `"user_override"`.}
+#'     \item{`in_x`}{Logical. Was this name present in `x`?}
+#'     \item{`in_y`}{Logical. Was this name present in `y`?}
+#'     \item{`notes`}{Free-text notes, populated e.g. when a name is
+#'       flagged for review or when an override carries a user comment.}
+#'   }
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_summary()] for a printed breakdown;
+#'   [reconcile_suggest()] for near-miss candidates for unresolved
+#'   names; [reconcile_apply()] to turn the mapping into an aligned
+#'   data-tree pair.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' mapping <- reconcile_mapping(result)
-#' # Filter to matched species
-#' matched <- mapping[mapping$in_x & mapping$in_y, ]
-#' nrow(matched)
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#' mapping <- reconcile_mapping(rec)
+#'
+#' # How many species matched?
+#' sum(mapping$in_x & mapping$in_y)
+#'
+#' # Which species are in the data but missing from the tree?
+#' head(mapping[mapping$in_x & !mapping$in_y, c("name_x", "match_type")])
 #'
 #' @export
 reconcile_mapping <- function(x) {
@@ -25,37 +63,65 @@ reconcile_mapping <- function(x) {
 }
 
 
-#' Add a manual override to a reconciliation
+#' Manually override a single name in a reconciliation
 #'
-#' Creates an updated reconciliation object with a manual name correction
-#' applied.
+#' Apply a single hand-curated decision to a [reconciliation] object.
+#' Use this to accept a match the cascade rejected (typically a flagged
+#' fuzzy hit), remove a spurious match, or force a new mapping that the
+#' cascade missed. The override is recorded in the provenance log so
+#' that you and your reviewers can audit every manual decision.
 #'
-#' @param x A `reconciliation` object.
-#' @param name_x Character(1). Name from source x.
-#' @param name_y Character(1) or NULL. Corrected match in source y. Use `NULL`
-#'   to mark the name as deliberately unresolvable.
-#' @param action Character(1). One of `"accept"` (confirm match), `"reject"`
-#'   (remove a match), or `"replace"` (set a new match).
-#' @param note Character(1). Justification for the override. Stored in the
-#'   provenance log.
+#' For applying many overrides at once (e.g. from a curated CSV), see
+#' [reconcile_override_batch()]; for interactive decisions in the
+#' console, see [reconcile_review()]; for published taxonomy crosswalks,
+#' see [reconcile_crosswalk()].
 #'
-#' @return An updated `reconciliation` object.
+#' @param x A [reconciliation] object.
+#' @param name_x Character(1). The name as it appears in source `x`
+#'   (your data). Must match a value already present in `mapping$name_x`.
+#' @param name_y Character(1) or `NULL`. The name in source `y` (the
+#'   tree or reference dataset) that `name_x` should be mapped to.
+#'   `NULL` is only valid when `action = "reject"`.
+#' @param action Character(1). What the override does:
+#'   \describe{
+#'     \item{`"accept"` (default)}{Confirm a proposed match. Use after
+#'       reviewing a flagged fuzzy or synonym hit.}
+#'     \item{`"reject"`}{Remove an existing match and return both names
+#'       to the unresolved pool. Use when the cascade over-matched
+#'       (e.g. an aggressive fuzzy score linked the wrong species).}
+#'     \item{`"replace"`}{Set a new match, overwriting whatever the
+#'       cascade produced for `name_x`.}
+#'   }
+#' @param note Character(1). A short justification for the override,
+#'   stored in the provenance log and in `mapping$notes`. Strongly
+#'   recommended --- future you will want to know why this decision was
+#'   made.
+#'
+#' @return An updated [reconciliation] object. The existing row for
+#'   `name_x` is replaced with one whose `match_type` is `"manual"` and
+#'   `match_source` is `"user_override"`.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_override_batch()] for bulk overrides;
+#'   [reconcile_suggest()] for near-miss candidates;
+#'   [reconcile_crosswalk()] for published taxonomy crosswalks.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' # Manually assign an unresolved species to a tree tip
-#' unresolved <- reconcile_mapping(result)
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#'
+#' # Pick an unresolved species and hand-assign it for illustration
+#' unresolved <- reconcile_mapping(rec)
 #' unresolved <- unresolved[unresolved$match_type == "unresolved" &
 #'                            unresolved$in_x, ]
 #' if (nrow(unresolved) > 0) {
-#'   result <- reconcile_override(
-#'     result,
+#'   rec <- reconcile_override(
+#'     rec,
 #'     name_x = unresolved$name_x[1],
 #'     name_y = tree_jetz$tip.label[1],
-#'     note = "Manual assignment for demonstration"
+#'     note   = "Demo: manual assignment"
 #'   )
 #' }
 #'
@@ -145,34 +211,63 @@ reconcile_override <- function(x, name_x, name_y = NULL,
 }
 
 
-#' Apply a reconciliation to produce aligned data and tree
+#' Apply a reconciliation to produce an aligned data-tree pair
 #'
-#' Uses the reconciliation mapping to rename and/or subset a data frame and
-#' phylogenetic tree so that species names match.
+#' Turn a [reconciliation] object into an analysis-ready data frame and
+#' pruned phylogenetic tree whose species labels agree. This is the step
+#' that feeds directly into [caper::pgls()], [MCMCglmm::MCMCglmm()],
+#' [phytools::fastAnc()], or any other PCM that expects matching names
+#' in data and tree.
 #'
-#' @param x A `reconciliation` object.
-#' @param data A data frame to align. If `NULL`, returns only the mapping.
-#' @param tree An `ape::phylo` object to align. If `NULL`, returns only the
-#'   data frame.
-#' @param species_col Character(1). Column name in `data` containing species
+#' Rows in `data` whose species have no match in the tree (and tips in
+#' `tree` whose species have no match in the data) are handled according
+#' to `drop_unresolved`. Matched rows and tips are not renamed --- the
+#' reconciliation already knows which data name corresponds to which
+#' tree tip, and downstream PCM software looks up tips by label.
+#'
+#' @param x A [reconciliation] object.
+#' @param data A data frame to align. If `NULL`, only the tree is
+#'   returned.
+#' @param tree An `ape::phylo` object to align. If `NULL`, only the
+#'   data frame is returned.
+#' @param species_col Character(1). Column in `data` containing species
 #'   names. Auto-detected if `NULL`.
-#' @param drop_unresolved Logical. Drop species with no match? Default `FALSE`
-#'   (keeps them with a warning).
+#' @param drop_unresolved Logical. Drop unmatched rows and tips?
+#'   Defaults to `FALSE` (keep everything and just warn). Set to `TRUE`
+#'   when preparing data for an analysis that cannot tolerate mismatches.
 #'
-#' @return A list with components `$data` (aligned data frame) and `$tree`
-#'   (aligned phylo object). Either may be `NULL` if not provided.
+#' @return A list with two elements:
+#'   \describe{
+#'     \item{`data`}{The aligned data frame (or `NULL` if `data` was
+#'       not supplied).}
+#'     \item{`tree`}{The aligned `phylo` object (or `NULL` if `tree`
+#'       was not supplied).}
+#'   }
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_tree()] to build the reconciliation;
+#'   [reconcile_merge()] when you want a single merged data frame
+#'   instead of aligned data + tree; [reconcile_export()] to write
+#'   everything to disk.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' aligned <- reconcile_apply(result,
-#'                            data = avonet_subset, tree = tree_jetz,
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#'
+#' aligned <- reconcile_apply(rec,
+#'                            data = avonet_subset,
+#'                            tree = tree_jetz,
 #'                            species_col = "Species1",
 #'                            drop_unresolved = TRUE)
-#' cat("Aligned data:", nrow(aligned$data), "rows\n")
-#' cat("Aligned tree:", ape::Ntip(aligned$tree), "tips\n")
+#' nrow(aligned$data)
+#' ape::Ntip(aligned$tree)
+#'
+#' # Ready for a PCM, e.g.
+#' # fit <- caper::pgls(log(Mass) ~ log(Wing.Length),
+#' #                    data = caper::comparative.data(
+#' #                             aligned$tree, aligned$data, "Species1"))
 #'
 #' @export
 reconcile_apply <- function(x, data = NULL, tree = NULL,

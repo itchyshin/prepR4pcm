@@ -1,18 +1,34 @@
 # Batch overrides -----------------------------------------------------------
 
-#' Apply multiple overrides to a reconciliation
+#' Apply many manual corrections to a reconciliation at once
 #'
-#' A convenience wrapper around [reconcile_override()] that applies several
-#' overrides at once from a data frame or CSV file.
+#' A convenience wrapper around [reconcile_override()] for curated
+#' batches of manual decisions. Typical workflow: generate a CSV of
+#' corrections (by hand, or with the help of [reconcile_suggest()]),
+#' check it into version control, and apply it on every run so the
+#' corrections are reproducible and reviewable.
 #'
-#' @param x A `reconciliation` object.
-#' @param overrides A data frame or a character(1) file path to a CSV.
-#'   Required columns: `name_x`. Optional columns: `action` (one of
-#'   `"accept"`, `"reject"`, `"replace"`; defaults to `"accept"` if absent),
-#'   `name_y` (required when action is `"accept"` or `"replace"`), `note`.
-#' @param quiet Logical. Suppress per-override messages? Default `FALSE`.
+#' @param x A [reconciliation] object.
+#' @param overrides A data frame, or a character(1) file path to a CSV
+#'   with the same columns:
+#'   \describe{
+#'     \item{`name_x` (required)}{The original name in `x` (your data).}
+#'     \item{`action`}{One of `"accept"` (default), `"reject"`,
+#'       `"replace"`. See [reconcile_override()] for the semantics.}
+#'     \item{`name_y`}{The target name in `y`; required for
+#'       `"accept"` and `"replace"`.}
+#'     \item{`note`}{Optional free-text justification.}
+#'   }
+#' @param quiet Logical. Suppress per-override success messages?
+#'   Default `FALSE`.
 #'
-#' @return An updated `reconciliation` object with all overrides applied.
+#' @return An updated [reconciliation] object with all overrides
+#'   applied.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_override()] for the single-override case;
+#'   [reconcile_crosswalk()] for building an override table from a
+#'   published taxonomy crosswalk.
 #'
 #' @examples
 #' data(avonet_subset)

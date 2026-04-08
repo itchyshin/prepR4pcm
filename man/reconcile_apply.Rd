@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_accessors.R
 \name{reconcile_apply}
 \alias{reconcile_apply}
-\title{Apply a reconciliation to produce aligned data and tree}
+\title{Apply a reconciliation to produce an aligned data-tree pair}
 \usage{
 reconcile_apply(
   x,
@@ -13,37 +13,89 @@ reconcile_apply(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
-\item{data}{A data frame to align. If \code{NULL}, returns only the mapping.}
+\item{data}{A data frame to align. If \code{NULL}, only the tree is
+returned.}
 
-\item{tree}{An \code{ape::phylo} object to align. If \code{NULL}, returns only the
-data frame.}
+\item{tree}{An \code{ape::phylo} object to align. If \code{NULL}, only the
+data frame is returned.}
 
-\item{species_col}{Character(1). Column name in \code{data} containing species
+\item{species_col}{Character(1). Column in \code{data} containing species
 names. Auto-detected if \code{NULL}.}
 
-\item{drop_unresolved}{Logical. Drop species with no match? Default \code{FALSE}
-(keeps them with a warning).}
+\item{drop_unresolved}{Logical. Drop unmatched rows and tips?
+Defaults to \code{FALSE} (keep everything and just warn). Set to \code{TRUE}
+when preparing data for an analysis that cannot tolerate mismatches.}
 }
 \value{
-A list with components \verb{$data} (aligned data frame) and \verb{$tree}
-(aligned phylo object). Either may be \code{NULL} if not provided.
+A list with two elements:
+\describe{
+\item{\code{data}}{The aligned data frame (or \code{NULL} if \code{data} was
+not supplied).}
+\item{\code{tree}}{The aligned \code{phylo} object (or \code{NULL} if \code{tree}
+was not supplied).}
+}
 }
 \description{
-Uses the reconciliation mapping to rename and/or subset a data frame and
-phylogenetic tree so that species names match.
+Turn a \link{reconciliation} object into an analysis-ready data frame and
+pruned phylogenetic tree whose species labels agree. This is the step
+that feeds directly into \code{\link[caper:pgls]{caper::pgls()}}, \code{\link[MCMCglmm:MCMCglmm]{MCMCglmm::MCMCglmm()}},
+\code{\link[phytools:fastAnc]{phytools::fastAnc()}}, or any other PCM that expects matching names
+in data and tree.
+}
+\details{
+Rows in \code{data} whose species have no match in the tree (and tips in
+\code{tree} whose species have no match in the data) are handled according
+to \code{drop_unresolved}. Matched rows and tips are not renamed --- the
+reconciliation already knows which data name corresponds to which
+tree tip, and downstream PCM software looks up tips by label.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-aligned <- reconcile_apply(result,
-                           data = avonet_subset, tree = tree_jetz,
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+
+aligned <- reconcile_apply(rec,
+                           data = avonet_subset,
+                           tree = tree_jetz,
                            species_col = "Species1",
                            drop_unresolved = TRUE)
-cat("Aligned data:", nrow(aligned$data), "rows\n")
-cat("Aligned tree:", ape::Ntip(aligned$tree), "tips\n")
+nrow(aligned$data)
+ape::Ntip(aligned$tree)
+
+# Ready for a PCM, e.g.
+# fit <- caper::pgls(log(Mass) ~ log(Wing.Length),
+#                    data = caper::comparative.data(
+#                             aligned$tree, aligned$data, "Species1"))
 
 }
+\seealso{
+\code{\link[=reconcile_tree]{reconcile_tree()}} to build the reconciliation;
+\code{\link[=reconcile_merge]{reconcile_merge()}} when you want a single merged data frame
+instead of aligned data + tree; \code{\link[=reconcile_export]{reconcile_export()}} to write
+everything to disk.
+
+Other reconciliation functions: 
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

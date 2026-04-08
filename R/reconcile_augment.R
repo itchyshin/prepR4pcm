@@ -1,46 +1,83 @@
 # Tree augmentation --------------------------------------------------------
 
-#' Add missing species to a phylogenetic tree
+#' Graft missing species onto a phylogenetic tree (genus-level placement)
 #'
-#' When a reconciliation identifies species in the data that are absent
-#' from the tree, this function grafts them onto the tree using
-#' genus-level placement. Each missing species is added as sister to a
-#' congener (a species in the same genus already present in the tree).
+#' When a reconciliation identifies species that are present in your data
+#' but missing from the tree, `reconcile_augment()` attaches each missing
+#' species as sister to a congener --- i.e., a species in the same genus
+#' already present in the tree. The result is a tree that contains every
+#' species in your dataset, at the cost of making a strong assumption
+#' about where the new tips sit.
 #'
-#' This is a convenience for exploratory analyses. Genus-level placement
-#' assumes that the missing species diverged similarly to its congeners,
-#' which may not hold. Always report which species were augmented and
-#' run sensitivity analyses comparing results with and without them.
+#' @section When to use this:
+#' Genus-level placement is an \emph{exploratory} convenience, not a
+#' substitute for a properly inferred phylogeny. It assumes the missing
+#' species diverged in roughly the same way as its congeners, which is
+#' often wrong in detail. Use it to keep exploratory PCMs running while
+#' you decide how to handle orphan species, and always:
+#' \enumerate{
+#'   \item Report exactly which species were augmented (see `$augmented`
+#'     in the return value).
+#'   \item Run sensitivity analyses with and without the augmented tips.
+#'   \item Prefer a published imputed phylogeny (e.g. the PhyloMaker or
+#'     TACT approaches) when grafting many species.
+#' }
 #'
-#' @param x A `reconciliation` object (from [reconcile_tree()] or
-#'   similar).
-#' @param tree An `ape::phylo` object. Must be the tree used in the
-#'   reconciliation.
-#' @param where Character(1). Placement strategy:
-#'   - `"genus"` (default): add as sister to a random congener.
-#'   - `"near"`: attach at the MRCA of all congeners in the tree
-#'     (better when the genus has multiple representatives).
-#' @param branch_length Character(1). How to set the new terminal
-#'   branch length:
-#'   - `"congener_median"` (default): median terminal branch length of
-#'     congeners in the tree.
-#'   - `"half_terminal"`: half the sister tip's terminal branch.
-#'   - `"zero"`: zero-length branch (creates a polytomy).
+#' @param x A [reconciliation] object, typically from [reconcile_tree()].
+#' @param tree An `ape::phylo` object. Must be the same tree used to
+#'   build `x` (or a tree with the same tip set).
+#' @param where Character(1). Where to attach each new tip:
+#'   \describe{
+#'     \item{`"genus"` (default)}{Attach as sister to a single congener
+#'       chosen at random from the genus. Simpler; recommended when the
+#'       genus has only one or two representatives in the tree, or when
+#'       you want variation across runs for sensitivity analyses.}
+#'     \item{`"near"`}{Attach at the most recent common ancestor (MRCA)
+#'       of all congeners in the tree. Better when the genus is
+#'       well-represented, because the new tip is not arbitrarily tied
+#'       to one sister taxon.}
+#'   }
+#' @param branch_length Character(1). How to set the terminal branch
+#'   length of each newly added tip:
+#'   \describe{
+#'     \item{`"congener_median"` (default)}{Median terminal branch length
+#'       of the species' congeners. Uses the average "how long since
+#'       this group diverged" for the genus. Recommended for
+#'       time-calibrated trees because it preserves approximate
+#'       branch-length scale.}
+#'     \item{`"half_terminal"`}{Half the sister tip's terminal branch.
+#'       A conservative alternative that places the new tip as a recent
+#'       split from its sister. Useful when the genus is sparsely
+#'       sampled and the median is unreliable.}
+#'     \item{`"zero"`}{Zero-length branch, producing a polytomy with the
+#'       sister taxon (or MRCA). Use for exploratory sensitivity checks
+#'       where you want to see the effect of adding species without
+#'       assuming any divergence time.}
+#'   }
 #' @param seed Integer or `NULL`. Random seed for reproducibility when
-#'   selecting a congener. Default `NULL` (no seed).
+#'   `where = "genus"` picks a congener at random. Set to a fixed
+#'   integer in real analyses so results are reproducible. Default
+#'   `NULL`.
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
 #'
 #' @return A list with:
 #'   \describe{
 #'     \item{tree}{The augmented `phylo` object.}
-#'     \item{original}{The original (unmodified) `phylo` object.}
+#'     \item{original}{The original (unmodified) `phylo` object, for
+#'       easy comparison.}
 #'     \item{augmented}{A tibble documenting each added species:
-#'       `species`, `genus`, `placed_near`, `branch_length`, `method`,
-#'       `n_congeners`.}
-#'     \item{skipped}{A tibble of species that could not be placed:
-#'       `species`, `genus`, `reason`.}
-#'     \item{meta}{Provenance metadata.}
+#'       `species`, `genus`, `placed_near` (sister tip or MRCA node),
+#'       `branch_length`, `method`, `n_congeners`.}
+#'     \item{skipped}{A tibble of species that could not be placed,
+#'       with the reason (e.g. "no congener in tree").}
+#'     \item{meta}{Provenance metadata: placement strategy, branch
+#'       length rule, counts.}
 #'   }
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_tree()] for the reconciliation step;
+#'   [reconcile_apply()] for the non-augmenting alternative (prune data
+#'   and tree to the intersection).
 #'
 #' @references
 #' Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern

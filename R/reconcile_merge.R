@@ -46,8 +46,14 @@
 #'   columns with `NA`). Only relevant for `how = "left"` or `how = "full"`;
 #'   inner joins drop unmatched rows by definition.
 #'
-#' @return A data frame with a `species_resolved` column as the join key,
-#'   plus all columns from both datasets (with suffixes where needed).
+#' @return A data frame with a `species_resolved` column as the join
+#'   key, plus all columns from both datasets (with suffixes added when
+#'   column names collide).
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_data()] to build the reconciliation;
+#'   [reconcile_apply()] when you want aligned data + tree instead of a
+#'   single merged data frame.
 #'
 #' @examples
 #' data(avonet_subset)

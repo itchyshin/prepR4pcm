@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_crosswalk.R
 \name{reconcile_crosswalk}
 \alias{reconcile_crosswalk}
-\title{Convert a taxonomy crosswalk to an overrides table}
+\title{Convert a published taxonomy crosswalk into an overrides table}
 \usage{
 reconcile_crosswalk(
   crosswalk,
@@ -33,19 +33,21 @@ notes.}
 matches (e.g., \code{"1BL to 1BT"}). Default \code{FALSE}.}
 }
 \value{
-A data frame with columns \code{name_x}, \code{name_y}, and \code{user_note},
-suitable for passing to the \code{overrides} parameter.
+A data frame with columns \code{name_x}, \code{name_y}, and
+\code{user_note}, ready to be passed as the \code{overrides} argument.
 }
 \description{
-Parses a curated taxonomy crosswalk (e.g., the BirdLife-BirdTree
-crosswalk) into a data frame compatible with the \code{overrides} parameter
-of \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, and other reconciliation
-functions.
+Turn a curated species-name crosswalk (e.g. the BirdLife--BirdTree
+crosswalk bundled as \link{crosswalk_birdlife_birdtree}, or Clements
+updates released each year) into a data frame that can be passed
+straight to the \code{overrides} argument of \code{\link[=reconcile_tree]{reconcile_tree()}},
+\code{\link[=reconcile_data]{reconcile_data()}} and friends.
 }
 \details{
-This is useful when you have an authoritative mapping between two
-naming systems and want to use it instead of (or in addition to)
-automated synonym resolution.
+Using a crosswalk is preferable to automated synonym resolution when
+an authoritative mapping exists --- it is reproducible, does not
+depend on \pkg{taxadb} being available, and you can point to the
+published source in the methods section of your paper.
 }
 \examples{
 data(crosswalk_birdlife_birdtree)
@@ -58,3 +60,30 @@ overrides <- reconcile_crosswalk(
 head(overrides)
 
 }
+\seealso{
+\code{\link[=reconcile_override_batch]{reconcile_override_batch()}} for applying this table
+directly to an existing reconciliation; \link{crosswalk_birdlife_birdtree}
+for the bundled example.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

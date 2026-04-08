@@ -21,8 +21,13 @@
 #' @param quiet Logical. If `TRUE`, suppress the end-of-review summary.
 #'   Default `FALSE`.
 #'
-#' @return An updated `reconciliation` object reflecting accepted and
+#' @return An updated [reconciliation] object reflecting accepted and
 #'   rejected decisions.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_override()] and [reconcile_override_batch()] for
+#'   non-interactive corrections; [reconcile_suggest()] for shortlisting
+#'   unresolved species before review.
 #'
 #' @details
 #' This function requires an interactive session. In non-interactive

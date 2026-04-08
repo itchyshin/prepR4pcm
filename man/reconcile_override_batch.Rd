@@ -2,26 +2,37 @@
 % Please edit documentation in R/reconcile_override_batch.R
 \name{reconcile_override_batch}
 \alias{reconcile_override_batch}
-\title{Apply multiple overrides to a reconciliation}
+\title{Apply many manual corrections to a reconciliation at once}
 \usage{
 reconcile_override_batch(x, overrides, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
-\item{overrides}{A data frame or a character(1) file path to a CSV.
-Required columns: \code{name_x}. Optional columns: \code{action} (one of
-\code{"accept"}, \code{"reject"}, \code{"replace"}; defaults to \code{"accept"} if absent),
-\code{name_y} (required when action is \code{"accept"} or \code{"replace"}), \code{note}.}
+\item{overrides}{A data frame, or a character(1) file path to a CSV
+with the same columns:
+\describe{
+\item{\code{name_x} (required)}{The original name in \code{x} (your data).}
+\item{\code{action}}{One of \code{"accept"} (default), \code{"reject"},
+\code{"replace"}. See \code{\link[=reconcile_override]{reconcile_override()}} for the semantics.}
+\item{\code{name_y}}{The target name in \code{y}; required for
+\code{"accept"} and \code{"replace"}.}
+\item{\code{note}}{Optional free-text justification.}
+}}
 
-\item{quiet}{Logical. Suppress per-override messages? Default \code{FALSE}.}
+\item{quiet}{Logical. Suppress per-override success messages?
+Default \code{FALSE}.}
 }
 \value{
-An updated \code{reconciliation} object with all overrides applied.
+An updated \link{reconciliation} object with all overrides
+applied.
 }
 \description{
-A convenience wrapper around \code{\link[=reconcile_override]{reconcile_override()}} that applies several
-overrides at once from a data frame or CSV file.
+A convenience wrapper around \code{\link[=reconcile_override]{reconcile_override()}} for curated
+batches of manual decisions. Typical workflow: generate a CSV of
+corrections (by hand, or with the help of \code{\link[=reconcile_suggest]{reconcile_suggest()}}),
+check it into version control, and apply it on every run so the
+corrections are reproducible and reviewable.
 }
 \examples{
 data(avonet_subset)
@@ -44,3 +55,30 @@ if (nrow(batch) > 0) {
 }
 
 }
+\seealso{
+\code{\link[=reconcile_override]{reconcile_override()}} for the single-override case;
+\code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}} for building an override table from a
+published taxonomy crosswalk.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

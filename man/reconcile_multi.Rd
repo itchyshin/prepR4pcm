@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_multi.R
 \name{reconcile_multi}
 \alias{reconcile_multi}
-\title{Reconcile multiple datasets against one phylogenetic tree}
+\title{Reconcile several datasets against one phylogenetic tree}
 \usage{
 reconcile_multi(
   datasets,
@@ -19,52 +19,90 @@ reconcile_multi(
 )
 }
 \arguments{
-\item{datasets}{A named list of data frames. Names are used as dataset
-labels in the output.}
+\item{datasets}{A named list of data frames. The names are used as
+dataset labels (e.g. \code{morpho}, \code{nests}, \code{plumage}) in the output.}
 
-\item{tree}{An \code{ape::phylo} object or a file path.}
+\item{tree}{An \code{ape::phylo} object, or a path to a Newick/Nexus
+file.}
 
-\item{species_cols}{Character vector or NULL. Column names for species in
-each dataset (recycled if length 1). Auto-detected if \code{NULL}.}
+\item{species_cols}{Character vector. Species column name in each
+dataset. If length 1, the same column name is used for every
+dataset. Auto-detected from each data frame if \code{NULL}.}
 
-\item{authority}{Character(1). Taxonomic authority for synonym resolution:
-\code{"col"} (default), \code{"itis"}, \code{"gbif"}, \code{"ncbi"}, etc. Set to \code{NULL} to
-skip synonym lookup entirely.}
+\item{authority}{Character(1) or \code{NULL}. Taxonomic authority used for
+synonym resolution (stage 3 of the cascade). One of:
+\describe{
+\item{\code{"col"} (default)}{Catalogue of Life --- broad, curated,
+frequently updated. A sensible default for most taxa.}
+\item{\code{"gbif"}}{Global Biodiversity Information Facility backbone.
+Wider coverage; includes more recent synonymy.}
+\item{\code{"itis"}}{Integrated Taxonomic Information System --- strong
+for North American vertebrates and plants.}
+\item{\code{"ncbi"}}{NCBI Taxonomy --- best when working with sequence
+data.}
+\item{\code{"iucn"}, \code{"fb"} (FishBase), \code{"slb"} (SeaLifeBase), \code{"wd"}
+(Wikidata), \code{"tpl"} (The Plant List), \code{"itis_test"}}{
+Also supported via \pkg{taxadb}.}
+\item{\code{NULL}}{Skip the synonym stage entirely. Useful for quick
+checks or when taxadb is unavailable. Stages 1, 2 and 4 still
+run.}
+}}
 
-\item{rank}{Character(1). \code{"species"} (default) strips infraspecific
-epithets during normalisation. \code{"subspecies"} retains trinomials.}
+\item{rank}{Character(1). Controls how trinomials are handled during
+normalisation:
+\describe{
+\item{\code{"species"} (default)}{Strip infraspecific epithets so that
+\code{"Parus major major"} becomes \code{"Parus major"} before matching.}
+\item{\code{"subspecies"}}{Keep trinomials intact. Use this when your
+analysis operates at subspecies level.}
+}}
 
-\item{overrides}{A data frame with at least columns \code{name_x} and \code{name_y}
-containing pre-built name corrections, or a file path to a CSV. Optional
-column \code{user_note} for documentation. Set to \code{NULL} (default) for no
-overrides.}
+\item{overrides}{Optional pre-built corrections. Either a data frame
+with at least columns \code{name_x} and \code{name_y} (plus an optional
+\code{user_note} column), or a file path to a CSV with the same columns.
+Any name listed here bypasses the cascade and is recorded as
+\code{match_type = "manual"}. Useful for applying published crosswalks
+(see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}) or for locking down decisions made in a
+previous run.}
 
-\item{db_version}{Character(1). taxadb database version. \code{NULL} uses the
-latest available.}
+\item{db_version}{Character(1). \pkg{taxadb} database snapshot to use
+(e.g. \code{"22.12"}). \code{NULL} (default) uses the latest available.}
 
-\item{fuzzy}{Logical. Enable fuzzy matching for likely typos? Default
-\code{FALSE}. When \code{TRUE}, names that remain unmatched after synonym
-resolution are compared using component-based string similarity.}
+\item{fuzzy}{Logical. Enable the fuzzy-matching stage? Default \code{FALSE}.
+Turn this on to catch likely typos (\emph{Corvus brachyrhnchos}
+-> \emph{Corvus brachyrhynchos}). When \code{FALSE}, stages 1--3 still run.}
 
-\item{fuzzy_threshold}{Numeric (0--1). Minimum similarity score for
-fuzzy matches. Default \code{0.9} (conservative; catches obvious typos).}
+\item{fuzzy_threshold}{Numeric in [0, 1]. Minimum genus-weighted
+similarity score for a fuzzy match to be accepted. Default \code{0.9}
+(roughly "no more than ~10\% of characters differ"). Lower values
+(e.g. \code{0.7}) are more permissive but produce more false positives;
+always review fuzzy matches with \code{\link[=reconcile_suggest]{reconcile_suggest()}} or
+\code{\link[=reconcile_review]{reconcile_review()}} before trusting them.}
 
-\item{resolve}{Character(1). How to handle low-confidence matches:
-\code{"flag"} (default) marks fuzzy matches below 0.95 and indirect
-synonym matches as \code{match_type = "flagged"} for manual review.
-\code{"first"} accepts all matches at face value.}
+\item{resolve}{Character(1). What to do with borderline matches:
+\describe{
+\item{\code{"flag"} (default)}{Mark low-confidence fuzzy matches (score
+below 0.95) and names with ambiguous taxadb synonymy as
+\code{match_type = "flagged"} so you can audit them with
+\code{\link[=reconcile_review]{reconcile_review()}} or \code{\link[=reconcile_suggest]{reconcile_suggest()}}.}
+\item{\code{"first"}}{Accept the highest-scoring candidate silently,
+without flagging. Faster but riskier; use only when you have
+already reviewed the ambiguities.}
+}}
 
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
 }
 \value{
-A \code{reconciliation} object. The mapping table includes all unique
-species across all datasets.
+A \link{reconciliation} object. The mapping tibble gains one
+logical column per input dataset (e.g. \code{in_morpho}, \code{in_nests})
+indicating which datasets contained each species.
 }
 \description{
-Calls \code{\link[=reconcile_tree]{reconcile_tree()}} on each dataset and combines the results into a
-single reconciliation object. Species that appear in multiple datasets are
-reconciled once; the combined mapping shows which datasets each species
-appears in.
+Match several trait or occurrence datasets against a single
+phylogenetic tree in one call. Species that appear in more than one
+dataset are reconciled once; the combined mapping records which
+dataset(s) each species belongs to, making it easy to identify the
+set of species with complete trait coverage.
 }
 \examples{
 data(avonet_subset)
@@ -80,3 +118,29 @@ result <- reconcile_multi(datasets, tree_jetz,
 print(result)
 
 }
+\seealso{
+\code{\link[=reconcile_tree]{reconcile_tree()}} for the single-dataset case;
+\code{\link[=reconcile_merge]{reconcile_merge()}} to join two datasets after reconciliation.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

@@ -2,24 +2,35 @@
 % Please edit documentation in R/pr_tree_utils.R
 \name{pr_extract_tips}
 \alias{pr_extract_tips}
-\title{Extract tip labels from a tree}
+\title{Extract tip labels from a phylogenetic tree}
 \usage{
 pr_extract_tips(tree)
 }
 \arguments{
-\item{tree}{An \code{ape::phylo} object, or a character(1) file path to a
-Newick (.nwk, .tre, .tree, .newick) or Nexus (.nex, .nexus) file.}
+\item{tree}{An \code{ape::phylo} object, or a character(1) path to a
+Newick (\code{.nwk}, \code{.tre}, \code{.tree}, \code{.newick}) or Nexus (\code{.nex},
+\code{.nexus}) file. Format is auto-detected.}
 }
 \value{
 Character vector of tip labels.
 }
 \description{
-Accepts an \code{ape::phylo} object or a file path (Newick or Nexus,
-auto-detected). Returns the tip labels as a character vector.
+Return the tip labels of a tree as a character vector, whether the
+tree is already an \code{ape::phylo} object in memory or lives in a
+Newick or Nexus file on disk. Convenience wrapper around
+\code{tree$tip.label} that also handles file input and multi-tree files
+(returns the tips of the first tree).
 }
 \examples{
 data(tree_jetz)
-tips <- pr_extract_tips(tree_jetz)
-head(tips)
+head(pr_extract_tips(tree_jetz))
 
 }
+\seealso{
+\code{\link[=pr_normalize_names]{pr_normalize_names()}} for cleaning tip labels before
+joining against a data frame.
+
+Other name utilities: 
+\code{\link{pr_normalize_names}()}
+}
+\concept{name utilities}

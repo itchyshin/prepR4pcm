@@ -1,26 +1,36 @@
 # HTML report generation ----------------------------------------------------
 
-#' Generate an HTML reconciliation report
+#' Write a self-contained HTML reconciliation report
 #'
-#' Creates a self-contained HTML file documenting the reconciliation
-#' results. Suitable for sharing with collaborators or archiving
-#' alongside analysis outputs.
+#' Produce an HTML file summarising a [reconciliation] object: provenance
+#' metadata, match-type breakdown, full mapping table, and a list of
+#' unresolved / flagged species. The file has no external dependencies
+#' (CSS is inlined), so it is suitable for sharing with collaborators,
+#' pasting into supplementary materials, or archiving next to analysis
+#' outputs.
 #'
-#' @param x A `reconciliation` object.
+#' @param x A [reconciliation] object.
 #' @param file Character(1). Output file path. Must end in `.html`.
-#' @param title Character(1). Report title. Default uses a generic title.
-#' @param open Logical. Open the report in a browser? Default `TRUE` in
-#'   interactive sessions.
+#' @param title Character(1). Report title shown at the top of the
+#'   page. Default is generic.
+#' @param open Logical. Open the finished report in the default
+#'   browser? Defaults to `TRUE` in interactive sessions, `FALSE`
+#'   otherwise (so it does not block scripts).
 #'
-#' @return The file path (invisibly).
+#' @return The file path, invisibly.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_summary()] for a console equivalent;
+#'   [reconcile_export()] to additionally save aligned data and tree
+#'   files.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
 #' f <- tempfile(fileext = ".html")
-#' reconcile_report(result, file = f, open = FALSE)
+#' reconcile_report(rec, file = f, open = FALSE)
 #' cat("Report written to:", f, "\n")
 #'
 #' @export

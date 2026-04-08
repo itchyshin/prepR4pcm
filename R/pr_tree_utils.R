@@ -1,19 +1,26 @@
 # Tree utilities -----------------------------------------------------------
 
-#' Extract tip labels from a tree
+#' Extract tip labels from a phylogenetic tree
 #'
-#' Accepts an `ape::phylo` object or a file path (Newick or Nexus,
-#' auto-detected). Returns the tip labels as a character vector.
+#' Return the tip labels of a tree as a character vector, whether the
+#' tree is already an `ape::phylo` object in memory or lives in a
+#' Newick or Nexus file on disk. Convenience wrapper around
+#' `tree$tip.label` that also handles file input and multi-tree files
+#' (returns the tips of the first tree).
 #'
-#' @param tree An `ape::phylo` object, or a character(1) file path to a
-#'   Newick (.nwk, .tre, .tree, .newick) or Nexus (.nex, .nexus) file.
+#' @param tree An `ape::phylo` object, or a character(1) path to a
+#'   Newick (`.nwk`, `.tre`, `.tree`, `.newick`) or Nexus (`.nex`,
+#'   `.nexus`) file. Format is auto-detected.
 #'
 #' @return Character vector of tip labels.
 #'
+#' @family name utilities
+#' @seealso [pr_normalize_names()] for cleaning tip labels before
+#'   joining against a data frame.
+#'
 #' @examples
 #' data(tree_jetz)
-#' tips <- pr_extract_tips(tree_jetz)
-#' head(tips)
+#' head(pr_extract_tips(tree_jetz))
 #'
 #' @export
 pr_extract_tips <- function(tree) {

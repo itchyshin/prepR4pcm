@@ -29,7 +29,7 @@ Default \code{TRUE}.}
 Default \code{FALSE}.}
 }
 \value{
-An updated \code{reconciliation} object reflecting accepted and
+An updated \link{reconciliation} object reflecting accepted and
 rejected decisions.
 }
 \description{
@@ -60,3 +60,30 @@ result <- reconcile_review(result, type = "flagged")
 }
 
 }
+\seealso{
+\code{\link[=reconcile_override]{reconcile_override()}} and \code{\link[=reconcile_override_batch]{reconcile_override_batch()}} for
+non-interactive corrections; \code{\link[=reconcile_suggest]{reconcile_suggest()}} for shortlisting
+unresolved species before review.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

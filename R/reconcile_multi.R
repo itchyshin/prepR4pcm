@@ -1,19 +1,27 @@
-#' Reconcile multiple datasets against one phylogenetic tree
+#' Reconcile several datasets against one phylogenetic tree
 #'
-#' Calls [reconcile_tree()] on each dataset and combines the results into a
-#' single reconciliation object. Species that appear in multiple datasets are
-#' reconciled once; the combined mapping shows which datasets each species
-#' appears in.
+#' Match several trait or occurrence datasets against a single
+#' phylogenetic tree in one call. Species that appear in more than one
+#' dataset are reconciled once; the combined mapping records which
+#' dataset(s) each species belongs to, making it easy to identify the
+#' set of species with complete trait coverage.
 #'
-#' @param datasets A named list of data frames. Names are used as dataset
-#'   labels in the output.
-#' @param tree An `ape::phylo` object or a file path.
-#' @param species_cols Character vector or NULL. Column names for species in
-#'   each dataset (recycled if length 1). Auto-detected if `NULL`.
+#' @param datasets A named list of data frames. The names are used as
+#'   dataset labels (e.g. `morpho`, `nests`, `plumage`) in the output.
+#' @param tree An `ape::phylo` object, or a path to a Newick/Nexus
+#'   file.
+#' @param species_cols Character vector. Species column name in each
+#'   dataset. If length 1, the same column name is used for every
+#'   dataset. Auto-detected from each data frame if `NULL`.
 #' @inheritParams reconcile_data
 #'
-#' @return A `reconciliation` object. The mapping table includes all unique
-#'   species across all datasets.
+#' @return A [reconciliation] object. The mapping tibble gains one
+#'   logical column per input dataset (e.g. `in_morpho`, `in_nests`)
+#'   indicating which datasets contained each species.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_tree()] for the single-dataset case;
+#'   [reconcile_merge()] to join two datasets after reconciliation.
 #'
 #' @examples
 #' data(avonet_subset)

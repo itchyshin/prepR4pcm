@@ -1,40 +1,113 @@
 #' Reconcile species names between two datasets
 #'
-#' Compares species names in two data frames and produces a reconciliation
-#' mapping documenting exact matches, normalised matches, synonym-based
-#' matches, and unresolved names.
+#' Match the species column of one data frame (`x`) to the species column
+#' of another (`y`), returning a [reconciliation] object that records how
+#' every name was resolved. Use this when combining trait datasets, range
+#' datasets, or any other species-level tables that may use slightly
+#' different taxonomies or spellings.
 #'
-#' @param x A data frame (first dataset).
-#' @param y A data frame (second dataset).
-#' @param x_species Character(1). Column name in `x` containing species names.
-#'   Auto-detected if `NULL`.
-#' @param y_species Character(1). Column name in `y` containing species names.
-#'   Auto-detected if `NULL`.
-#' @param authority Character(1). Taxonomic authority for synonym resolution:
-#'   `"col"` (default), `"itis"`, `"gbif"`, `"ncbi"`, etc. Set to `NULL` to
-#'   skip synonym lookup entirely.
-#' @param rank Character(1). `"species"` (default) strips infraspecific
-#'   epithets during normalisation. `"subspecies"` retains trinomials.
-#' @param overrides A data frame with at least columns `name_x` and `name_y`
-#'   containing pre-built name corrections, or a file path to a CSV. Optional
-#'   column `user_note` for documentation. Set to `NULL` (default) for no
-#'   overrides.
-#' @param db_version Character(1). taxadb database version. `NULL` uses the
-#'   latest available.
-#' @param fuzzy Logical. Enable fuzzy matching for likely typos? Default
-#'   `FALSE`. When `TRUE`, names that remain unmatched after synonym
-#'   resolution are compared using component-based string similarity.
-#' @param fuzzy_threshold Numeric (0--1). Minimum similarity score for
-#'   fuzzy matches. Default `0.9` (conservative; catches obvious typos).
-#' @param resolve Character(1). How to handle low-confidence matches:
-#'   `"flag"` (default) marks fuzzy matches below 0.95 and indirect
-#'   synonym matches as `match_type = "flagged"` for manual review.
-#'   `"first"` accepts all matches at face value.
+#' @details
+#' Names are passed through a four-stage matching cascade, and the first
+#' stage that returns a match is recorded in `match_type`:
+#'
+#' \enumerate{
+#'   \item \strong{exact} --- verbatim string equality.
+#'   \item \strong{normalized} --- after stripping underscores, authority
+#'     strings (*"Corvus corax Linnaeus, 1758"*), diacritics, and
+#'     case/whitespace differences.
+#'   \item \strong{synonym} --- lookup in a local taxonomic database via
+#'     \pkg{taxadb} (Catalogue of Life, GBIF, ITIS, NCBI, ...). Skipped if
+#'     `authority = NULL`.
+#'   \item \strong{fuzzy} --- character-level similarity (opt-in via
+#'     `fuzzy = TRUE`). Uses a genus-weighted Levenshtein score
+#'     (60% genus, 40% specific epithet) with a genus pre-filter so that
+#'     only plausibly similar genera are compared.
+#' }
+#'
+#' Names that survive all four stages are labelled `unresolved`. Any
+#' entries supplied through `overrides` take precedence over the cascade.
+#'
+#' @param x A data frame whose species will be matched \emph{from}.
+#' @param y A data frame whose species will be matched \emph{to}
+#'   (typically the "reference" taxonomy or the dataset you want to
+#'   merge with).
+#' @param x_species Character(1). Column in `x` containing scientific
+#'   names. Auto-detected (e.g. `species`, `Species1`, `scientific_name`)
+#'   if `NULL`.
+#' @param y_species Character(1). Column in `y` containing scientific
+#'   names. Auto-detected if `NULL`.
+#' @param authority Character(1) or `NULL`. Taxonomic authority used for
+#'   synonym resolution (stage 3 of the cascade). One of:
+#'   \describe{
+#'     \item{`"col"` (default)}{Catalogue of Life --- broad, curated,
+#'       frequently updated. A sensible default for most taxa.}
+#'     \item{`"gbif"`}{Global Biodiversity Information Facility backbone.
+#'       Wider coverage; includes more recent synonymy.}
+#'     \item{`"itis"`}{Integrated Taxonomic Information System --- strong
+#'       for North American vertebrates and plants.}
+#'     \item{`"ncbi"`}{NCBI Taxonomy --- best when working with sequence
+#'       data.}
+#'     \item{`"iucn"`, `"fb"` (FishBase), `"slb"` (SeaLifeBase), `"wd"`
+#'       (Wikidata), `"tpl"` (The Plant List), `"itis_test"`}{
+#'       Also supported via \pkg{taxadb}.}
+#'     \item{`NULL`}{Skip the synonym stage entirely. Useful for quick
+#'       checks or when taxadb is unavailable. Stages 1, 2 and 4 still
+#'       run.}
+#'   }
+#' @param rank Character(1). Controls how trinomials are handled during
+#'   normalisation:
+#'   \describe{
+#'     \item{`"species"` (default)}{Strip infraspecific epithets so that
+#'       `"Parus major major"` becomes `"Parus major"` before matching.}
+#'     \item{`"subspecies"`}{Keep trinomials intact. Use this when your
+#'       analysis operates at subspecies level.}
+#'   }
+#' @param overrides Optional pre-built corrections. Either a data frame
+#'   with at least columns `name_x` and `name_y` (plus an optional
+#'   `user_note` column), or a file path to a CSV with the same columns.
+#'   Any name listed here bypasses the cascade and is recorded as
+#'   `match_type = "manual"`. Useful for applying published crosswalks
+#'   (see [reconcile_crosswalk()]) or for locking down decisions made in a
+#'   previous run.
+#' @param db_version Character(1). \pkg{taxadb} database snapshot to use
+#'   (e.g. `"22.12"`). `NULL` (default) uses the latest available.
+#' @param fuzzy Logical. Enable the fuzzy-matching stage? Default `FALSE`.
+#'   Turn this on to catch likely typos (*Corvus brachyrhnchos*
+#'   -> *Corvus brachyrhynchos*). When `FALSE`, stages 1--3 still run.
+#' @param fuzzy_threshold Numeric in \[0, 1\]. Minimum genus-weighted
+#'   similarity score for a fuzzy match to be accepted. Default `0.9`
+#'   (roughly "no more than ~10% of characters differ"). Lower values
+#'   (e.g. `0.7`) are more permissive but produce more false positives;
+#'   always review fuzzy matches with [reconcile_suggest()] or
+#'   [reconcile_review()] before trusting them.
+#' @param resolve Character(1). What to do with borderline matches:
+#'   \describe{
+#'     \item{`"flag"` (default)}{Mark low-confidence fuzzy matches (score
+#'       below 0.95) and names with ambiguous taxadb synonymy as
+#'       `match_type = "flagged"` so you can audit them with
+#'       [reconcile_review()] or [reconcile_suggest()].}
+#'     \item{`"first"`}{Accept the highest-scoring candidate silently,
+#'       without flagging. Faster but riskier; use only when you have
+#'       already reviewed the ambiguities.}
+#'   }
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
 #'
-#' @return A `reconciliation` object. Use [print()] for a summary,
-#'   [reconcile_summary()] for details, [reconcile_mapping()] to extract the
-#'   mapping table, and [reconcile_apply()] to produce aligned data.
+#' @return A [reconciliation] object. Common next steps:
+#' \itemize{
+#'   \item [reconcile_summary()] --- human-readable breakdown of matches.
+#'   \item [reconcile_plot()] --- one-glance bar/pie of match composition.
+#'   \item [reconcile_mapping()] --- extract the full per-name tibble.
+#'   \item [reconcile_suggest()] --- near-miss candidates for unresolved
+#'     names.
+#'   \item [reconcile_merge()] --- join the two datasets using the
+#'     reconciliation as the species key.
+#'   \item [reconcile_report()] --- shareable HTML audit trail.
+#' }
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_tree()] for matching against a phylogenetic tree;
+#'   [reconcile_to_trees()] / [reconcile_trees()] / [reconcile_multi()]
+#'   for multi-input workflows.
 #'
 #' @references
 #' Norman, K.E., Chamberlain, S. & Boettiger, C. (2020) taxadb: A
@@ -43,13 +116,24 @@
 #' \doi{10.1111/2041-210X.13440}
 #'
 #' @examples
+#' # Merge AVONET morphology with nest-site data. Both datasets use
+#' # slightly different taxonomies; authority = NULL keeps the example
+#' # offline (no taxadb download).
 #' data(avonet_subset)
 #' data(nesttrait_subset)
-#' result <- reconcile_data(avonet_subset, nesttrait_subset,
-#'                          x_species = "Species1",
-#'                          y_species = "Scientific_name",
-#'                          authority = NULL)
-#' print(result)
+#'
+#' rec <- reconcile_data(avonet_subset, nesttrait_subset,
+#'                       x_species = "Species1",
+#'                       y_species = "Scientific_name",
+#'                       authority = NULL)
+#' rec                      # concise print method
+#' reconcile_summary(rec)   # full breakdown
+#'
+#' # Join the two datasets on the reconciled species key
+#' merged <- reconcile_merge(rec, avonet_subset, nesttrait_subset,
+#'                           species_col_x = "Species1",
+#'                           species_col_y = "Scientific_name")
+#' head(merged[, c("species_resolved", "Family1", "Common_name")])
 #'
 #' @export
 reconcile_data <- function(x, y,

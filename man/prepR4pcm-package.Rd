@@ -4,18 +4,123 @@
 \name{prepR4pcm-package}
 \alias{prepR4pcm}
 \alias{prepR4pcm-package}
-\title{prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods}
+\title{prepR4pcm: Reconcile species names for phylogenetic comparative methods}
 \description{
-Reconcile species names across datasets and phylogenetic trees for
-comparative biology workflows. Detects mismatches due to formatting
-differences, taxonomic synonymy, and spelling errors, and produces
-documented, reproducible alignments between data and trees.
+Species names in your dataset rarely match the tip labels of your
+phylogenetic tree. Formatting differences (\code{Homo_sapiens} vs
+\verb{Homo sapiens}), taxonomic synonymy (\emph{Corvus brachyrhynchos} splits and
+lumps), and simple spelling mistakes silently drop species from PGLS,
+phylogenetic mixed models, and other phylogenetic comparative methods
+(PCMs). \code{prepR4pcm} is a toolkit for ecologists and evolutionary
+biologists to detect and resolve these mismatches, audit every decision,
+and produce aligned data-tree pairs ready for downstream analysis.
 }
-\details{
-Synonym resolution uses the \pkg{taxadb} package (Norman et al. 2020)
-for local taxonomic database lookups. Phylogenetic trees are handled
-via the \pkg{ape} package (Paradis & Schliep 2019).
+\section{Typical workflow}{
+
+A minimal end-to-end pipeline looks like this:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# 1. Match your data frame to a tree
+rec <- reconcile_tree(
+  avonet_subset, tree_jetz,
+  x_species = "Species1",
+  fuzzy     = TRUE          # enable typo correction
+)
+
+# 2. Review what matched, what is flagged, what is unresolved
+reconcile_summary(rec)
+reconcile_plot(rec)
+reconcile_suggest(rec)      # suggest near-misses for unresolved names
+
+# 3. Correct any unresolved or flagged cases by hand
+rec <- reconcile_override(rec,
+        name_x = "Corvus brachyrhnchos",  # typo in data
+        name_y = "Corvus_brachyrhynchos")
+
+# 4. Produce an aligned dataset and pruned tree
+aligned <- reconcile_apply(rec,
+                           data = avonet_subset, tree = tree_jetz,
+                           species_col = "Species1",
+                           drop_unresolved = TRUE)
+
+# 5. Ready for PCM
+# caper::pgls(Mass ~ Wing.Length, data = aligned$data, tree = aligned$tree)
+}\if{html}{\out{</div>}}
 }
+
+\section{Key concepts}{
+
+\describe{
+
+\item{Reconciliation object}{The central data structure. Contains a
+\code{mapping} tibble (one row per source name, with match type and
+score), a \code{meta} list (reproducibility provenance), a \code{counts}
+summary, and an \code{overrides} log. Returned by all \verb{reconcile_*}
+matching functions. Inspect with \code{\link[=reconcile_summary]{reconcile_summary()}}, extract the
+table with \code{\link[=reconcile_mapping]{reconcile_mapping()}}, and act on it with
+\code{\link[=reconcile_apply]{reconcile_apply()}}, \code{\link[=reconcile_merge]{reconcile_merge()}}, or \code{\link[=reconcile_export]{reconcile_export()}}.}
+
+\item{Four-stage matching cascade}{Names are resolved in this order,
+and the first stage that produces a match is recorded as
+\code{match_type}:
+\enumerate{
+\item \strong{exact} --- verbatim string equality.
+\item \strong{normalized} --- after removing underscores, fixing
+case, stripping authority strings (\emph{Corvus corax} Linnaeus 1758),
+and applying diacritic folding.
+\item \strong{synonym} --- via a local taxonomic database
+(see \pkg{taxadb}) such as Catalogue of Life or GBIF.
+\item \strong{fuzzy} --- character-level similarity on the remaining
+unmatched names (opt-in via \code{fuzzy = TRUE}).
+}
+Any additional \code{overrides} or manual edits are applied on top as
+\code{match_type = "manual"}.}
+
+\item{Provenance}{Every decision is logged in the mapping table
+(\code{match_type}, \code{match_score}, \code{match_source}) and in \code{meta} (package
+version, timestamp, taxonomic authority, fuzzy threshold, etc.).
+Use \code{\link[=reconcile_report]{reconcile_report()}} to produce a shareable HTML audit trail
+for supplementary materials or collaborators.}
+
+\item{Splits and lumps}{Taxonomic revisions often split one species
+into several, or lump several into one. \code{\link[=reconcile_splits_lumps]{reconcile_splits_lumps()}}
+flags these cases so you can decide how to handle them before
+analysis.}
+
+\item{Tree augmentation}{When unresolved species have congeners in the
+tree, \code{\link[=reconcile_augment]{reconcile_augment()}} can graft them in as sister taxa at
+genus level. This is an \emph{exploratory} aid: always run
+sensitivity analyses with and without augmented tips.}
+}
+}
+
+\section{Function families}{
+
+\describe{
+\item{Match names}{\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}},
+\code{\link[=reconcile_to_trees]{reconcile_to_trees()}}, \code{\link[=reconcile_trees]{reconcile_trees()}}, \code{\link[=reconcile_multi]{reconcile_multi()}}}
+\item{Apply and export}{\code{\link[=reconcile_apply]{reconcile_apply()}}, \code{\link[=reconcile_merge]{reconcile_merge()}},
+\code{\link[=reconcile_export]{reconcile_export()}}}
+\item{Inspect and audit}{\code{\link[=reconcile_summary]{reconcile_summary()}}, \code{\link[=reconcile_mapping]{reconcile_mapping()}},
+\code{\link[=reconcile_plot]{reconcile_plot()}}, \code{\link[=reconcile_suggest]{reconcile_suggest()}}, \code{\link[=reconcile_diff]{reconcile_diff()}},
+\code{\link[=reconcile_report]{reconcile_report()}}, \code{\link[=reconcile_review]{reconcile_review()}}}
+\item{Corrections and crosswalks}{\code{\link[=reconcile_override]{reconcile_override()}},
+\code{\link[=reconcile_override_batch]{reconcile_override_batch()}}, \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}}
+\item{Advanced}{\code{\link[=reconcile_augment]{reconcile_augment()}}, \code{\link[=reconcile_splits_lumps]{reconcile_splits_lumps()}}}
+\item{Name utilities}{\code{\link[=pr_normalize_names]{pr_normalize_names()}}, \code{\link[=pr_extract_tips]{pr_extract_tips()}}}
+}
+}
+
+\section{Getting started}{
+
+\itemize{
+\item \code{vignette("getting-started", package = "prepR4pcm")} --- core
+concepts with a minimal worked example.
+\item \code{vignette("bird-workflow", package = "prepR4pcm")} --- a
+realistic multi-dataset, multi-tree pipeline ending in PGLS and
+phylogenetic GLMM fits.
+}
+}
+
 \references{
 Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. & Nakagawa, S.
 (2025) Promoting the use of phylogenetic multinomial generalised

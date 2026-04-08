@@ -1,25 +1,44 @@
 # Compare two reconciliation objects ----------------------------------------
 
-#' Compare two reconciliation objects
+#' Diff two reconciliations to see what changed
 #'
-#' Identifies what changed between two reconciliation runs by comparing
-#' their mapping tables on `name_x`. Reports species that gained or lost
-#' a match, species whose match type changed, and species whose match
-#' target changed.
+#' Compare a "before" and "after" [reconciliation] and list every
+#' species whose outcome differs: newly matched, newly unresolved,
+#' promoted to a higher-confidence match type, or linked to a different
+#' target. Useful for:
+#' \itemize{
+#'   \item checking the effect of adding a taxonomy crosswalk or a
+#'     batch of manual overrides,
+#'   \item comparing two taxonomic authorities (e.g. Catalogue of Life
+#'     vs GBIF),
+#'   \item auditing changes between runs before and after tightening
+#'     the fuzzy threshold.
+#' }
 #'
-#' @param x A `reconciliation` object (the "before" state).
-#' @param y A `reconciliation` object (the "after" state).
-#' @param quiet Logical. If `TRUE`, suppress console output. Default `FALSE`.
+#' @param x A [reconciliation] object --- the "before" state.
+#' @param y A [reconciliation] object --- the "after" state. Must be
+#'   reconciled against the same `x` data so that `name_x` values are
+#'   comparable.
+#' @param quiet Logical. Suppress the console summary? Default `FALSE`.
 #'
 #' @return A list with the following components:
 #'   \describe{
-#'     \item{gained}{Tibble of species matched in `y` but unresolved in `x`.}
-#'     \item{lost}{Tibble of species matched in `x` but unresolved in `y`.}
-#'     \item{type_changed}{Tibble of species whose `match_type` differs.}
-#'     \item{target_changed}{Tibble of species whose `name_y` differs.}
-#'     \item{summary}{A one-row tibble with counts: `n_gained`, `n_lost`,
-#'       `n_type_changed`, `n_target_changed`, `n_shared`.}
+#'     \item{`gained`}{Tibble of species matched in `y` but unresolved
+#'       in `x`.}
+#'     \item{`lost`}{Tibble of species matched in `x` but unresolved in
+#'       `y`.}
+#'     \item{`type_changed`}{Tibble of species whose `match_type`
+#'       differs between the two runs.}
+#'     \item{`target_changed`}{Tibble of species whose `name_y`
+#'       differs.}
+#'     \item{`summary`}{A one-row tibble with counts: `n_gained`,
+#'       `n_lost`, `n_type_changed`, `n_target_changed`, `n_shared`.}
 #'   }
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_crosswalk()] for building an override table from
+#'   a published taxonomy crosswalk; [reconcile_override_batch()] for
+#'   applying many hand edits.
 #'
 #' @examples
 #' data(avonet_subset)

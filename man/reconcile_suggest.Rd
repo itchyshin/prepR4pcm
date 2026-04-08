@@ -2,42 +2,93 @@
 % Please edit documentation in R/reconcile_suggest.R
 \name{reconcile_suggest}
 \alias{reconcile_suggest}
-\title{Suggest fuzzy matches for unresolved species}
+\title{Suggest near-miss matches for unresolved species}
 \usage{
 reconcile_suggest(x, n = 3, threshold = 0.7, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
-\item{n}{Integer. Maximum number of suggestions per unresolved species.
-Default 3.}
+\item{n}{Integer. Maximum number of suggestions to return per
+unresolved species. Default \code{3}.}
 
-\item{threshold}{Numeric (0--1). Minimum similarity score to include a
-suggestion. Default 0.7.}
+\item{threshold}{Numeric in [0, 1]. Minimum weighted similarity
+score for a candidate to be listed. Default \code{0.7} (quite
+permissive, because the idea is to surface candidates for review).
+Raise to \code{0.85} for a tighter shortlist.}
 
-\item{quiet}{Logical. Suppress informational messages? Default \code{FALSE}.}
+\item{quiet}{Logical. Suppress informational messages? Default
+\code{FALSE}.}
 }
 \value{
-A tibble with columns: \code{unresolved}, \code{suggestion}, \code{score}, sorted
-by \code{unresolved} (ascending), then \code{score} (descending).
+A tibble with one row per (unresolved, suggestion) pair:
+\describe{
+\item{\code{unresolved}}{The unresolved name from \code{x}.}
+\item{\code{suggestion}}{A candidate name from \code{y}.}
+\item{\code{score}}{Weighted similarity in [\code{threshold}, 1].}
+}
+Rows are sorted by \code{unresolved} then descending \code{score}, so the
+first suggestion for each name is the best candidate.
 }
 \description{
-For each unresolved species (present in x but not matched to y), finds the
-\code{n} closest matches in source y using Levenshtein-based similarity. This
-uses the same component-based approach as \code{\link[=pr_fuzzy_match]{pr_fuzzy_match()}} (genus 0.6,
-epithet 0.4) but returns the top-\code{n} candidates per unresolved name rather
-than a single best match.
+For every species that the four-stage cascade failed to resolve,
+\code{reconcile_suggest()} returns the top-\code{n} candidate matches in the
+reference source (\code{y}). This is the most efficient way to audit
+orphan species: a typo or a species epithet that drifted by one
+letter will usually appear near the top of the list, and you can
+then feed the fix to \code{\link[=reconcile_override]{reconcile_override()}} or
+\code{\link[=reconcile_override_batch]{reconcile_override_batch()}}.
 }
 \details{
-Genus pre-filtering is applied to keep computation tractable for large
-datasets: only names whose genus is within 2 edits are compared.
+Similarity is computed from the Levenshtein edit distance between
+normalised names --- i.e., the minimum number of character insertions,
+deletions and substitutions needed to turn one name into the other,
+divided by the length of the longer name and subtracted from 1.
+The final score is weighted 60\% genus, 40\% specific epithet, which
+heavily penalises genus-level disagreement while tolerating small
+epithet differences.
+
+For computational efficiency on large trees, \code{reconcile_suggest()}
+only compares a query name against reference names whose genus is
+within 2 character edits of the query genus. This can very
+occasionally miss a match where both the genus and the epithet are
+badly misspelled simultaneously; if you suspect that, lower the
+\code{threshold} and inspect manually.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-suggestions <- reconcile_suggest(result, n = 2)
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+
+suggestions <- reconcile_suggest(rec, n = 2, threshold = 0.85)
 head(suggestions, 10)
 
 }
+\seealso{
+\code{\link[=reconcile_override]{reconcile_override()}} / \code{\link[=reconcile_override_batch]{reconcile_override_batch()}} to
+act on suggestions; \code{\link[=reconcile_review]{reconcile_review()}} for an interactive
+alternative.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

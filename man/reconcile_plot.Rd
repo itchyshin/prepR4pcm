@@ -2,33 +2,66 @@
 % Please edit documentation in R/reconcile_plot.R
 \name{reconcile_plot}
 \alias{reconcile_plot}
-\title{Plot reconciliation match composition}
+\title{Plot the match composition of a reconciliation}
 \usage{
 reconcile_plot(x, type = c("bar", "pie"), ...)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
-\item{type}{Character(1). Plot type: \code{"bar"} (default) draws a horizontal
-stacked bar chart; \code{"pie"} draws a pie chart.}
+\item{type}{Character(1). Plot style:
+\describe{
+\item{\code{"bar"} (default)}{Horizontal stacked bar chart. Best for
+slides, reports, and scripting.}
+\item{\code{"pie"}}{Pie chart. Useful when the match types are
+roughly balanced.}
+}}
 
-\item{...}{Additional arguments passed to \code{\link[graphics:barplot]{graphics::barplot()}} or
-\code{\link[graphics:pie]{graphics::pie()}}.}
+\item{...}{Additional arguments passed on to \code{\link[graphics:barplot]{graphics::barplot()}}
+or \code{\link[graphics:pie]{graphics::pie()}} (e.g. \code{main}, \code{col}, \code{border}).}
 }
 \value{
-\code{x}, invisibly, so the function can be used in a pipeline.
+The input \code{x}, invisibly, so you can use the function in a
+pipe.
 }
 \description{
-Produces a bar chart or pie chart summarising how species names were
-matched during reconciliation. Uses base R graphics only (no ggplot2
-dependency).
+Draw a one-glance bar or pie chart of how species names were
+resolved (exact, normalised, synonym, fuzzy, flagged, manual,
+unresolved). Uses base R graphics only, so no additional packages
+are required.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-reconcile_plot(result)
-reconcile_plot(result, type = "pie")
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+reconcile_plot(rec)
+reconcile_plot(rec, type = "pie")
 
 }
+\seealso{
+\code{\link[=reconcile_summary]{reconcile_summary()}} for a textual breakdown;
+\code{\link[=reconcile_report]{reconcile_report()}} for a full HTML audit trail.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

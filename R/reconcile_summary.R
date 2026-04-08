@@ -1,27 +1,46 @@
-#' Generate a reconciliation summary report
+#' Print a reconciliation summary to the console
 #'
-#' Produces a detailed, human-readable report of the reconciliation results,
-#' breaking down matches by type and listing unresolved names.
+#' Produce a human-readable breakdown of a [reconciliation] object:
+#' how many names matched exactly, how many were rescued by
+#' normalisation, synonymy, or fuzzy matching, and which names remain
+#' unresolved. Usually the second function you call after
+#' [reconcile_tree()] or [reconcile_data()].
 #'
-#' @param x A `reconciliation` object.
-#' @param detail Character(1). Level of detail: `"full"` (default) shows all
-#'   matches by category, `"brief"` shows counts only, `"mismatches_only"`
-#'   shows only non-exact matches and unresolved names.
-#' @param format Character(1). Output format: `"console"` (default) prints
-#'   to screen, `"data.frame"` returns a list of tibbles silently.
-#' @param file Character(1) or NULL. If non-NULL, writes the console report
-#'   to this file path.
+#' @param x A [reconciliation] object.
+#' @param detail Character(1). How much to show:
+#'   \describe{
+#'     \item{`"full"` (default)}{Every match category, with the names
+#'       belonging to each category listed out.}
+#'     \item{`"brief"`}{Counts only --- a one-screen overview.}
+#'     \item{`"mismatches_only"`}{Non-exact matches and unresolved
+#'       names. Useful once the easy cases are out of the way and you
+#'       want to focus on what still needs review.}
+#'   }
+#' @param format Character(1). Where the summary goes:
+#'   \describe{
+#'     \item{`"console"` (default)}{Pretty-printed to the screen.}
+#'     \item{`"data.frame"`}{Returns a list of tibbles silently; useful
+#'       when writing a report or table in a larger script.}
+#'   }
+#' @param file Character(1) or `NULL`. If non-`NULL`, writes the
+#'   console report to this file path in addition to printing it.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return A `reconciliation_summary` object (invisibly for console output).
+#' @return A `reconciliation_summary` object. Printed to the console by
+#'   default; returned invisibly for inspection.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_plot()] for a visual summary;
+#'   [reconcile_report()] for a shareable HTML audit trail;
+#'   [reconcile_mapping()] for the full per-name tibble.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' reconcile_summary(result, detail = "brief")
-#' reconcile_summary(result, detail = "mismatches_only")
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#' reconcile_summary(rec, detail = "brief")
+#' reconcile_summary(rec, detail = "mismatches_only")
 #'
 #' @export
 reconcile_summary <- function(x,

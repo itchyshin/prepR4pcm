@@ -91,22 +91,45 @@ pr_detect_splits_lumps <- function(mapping) {
 }
 
 
-#' Summarise splits and lumps for a reconciliation object
+#' Flag taxonomic splits and lumps in a reconciliation
 #'
-#' User-facing function that wraps [pr_detect_splits_lumps()] with
-#' formatted console output.
+#' Taxonomic revisions often split a single species into several or
+#' lump several into one. When your data and your reference taxonomy
+#' disagree on such cases, the reconciliation mapping will show one
+#' name in one source linked to multiple accepted names in the other.
+#' `reconcile_splits_lumps()` scans a [reconciliation] for these cases
+#' and returns them as two tibbles, one for splits and one for lumps,
+#' so you can decide how to handle each before running your PCM
+#' (e.g. keep only one of the split taxa, pool traits across a lumped
+#' set, or exclude them entirely).
 #'
-#' @param x A `reconciliation` object.
-#' @param quiet Logical. Suppress console output? Default `FALSE`.
+#' Detection relies on the `name_resolved` column populated by
+#' synonym resolution --- so `authority` must have been set (i.e. not
+#' `NULL`) when building the reconciliation.
 #'
-#' @return A list with `$splits` and `$lumps` tibbles, invisibly.
+#' @param x A [reconciliation] object built with a non-`NULL`
+#'   `authority` argument.
+#' @param quiet Logical. Suppress the console summary? Default
+#'   `FALSE`.
+#'
+#' @return Invisibly, a list with two tibbles:
+#'   \describe{
+#'     \item{`splits`}{Cases where one name in `x` corresponds to
+#'       multiple accepted names in `y`.}
+#'     \item{`lumps`}{Cases where several names in `x` share a single
+#'       accepted name in `y`.}
+#'   }
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_diff()] for comparing two reconciliations,
+#'   which surfaces the same splits/lumps across taxonomy versions.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' sl <- reconcile_splits_lumps(result, quiet = TRUE)
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#' sl <- reconcile_splits_lumps(rec, quiet = TRUE)
 #' sl$splits
 #' sl$lumps
 #'

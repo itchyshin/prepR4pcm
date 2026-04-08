@@ -2,26 +2,66 @@
 % Please edit documentation in R/pr_normalize.R
 \name{pr_normalize_names}
 \alias{pr_normalize_names}
-\title{Normalise scientific names}
+\title{Normalise scientific names to a canonical form}
 \usage{
 pr_normalize_names(names, rank = c("species", "subspecies"))
 }
 \arguments{
-\item{names}{Character vector of scientific names.}
+\item{names}{Character vector of scientific names. \code{NA} values are
+preserved as \code{NA}.}
 
-\item{rank}{Character. \code{"species"} (default) strips infraspecific epithets
-to produce binomials. \code{"subspecies"} retains trinomials.}
+\item{rank}{Character(1). Taxonomic rank to normalise to:
+\describe{
+\item{\code{"species"} (default)}{Strip infraspecific epithets so
+trinomials become binomials (\verb{Parus major major} ->
+\verb{Parus major}).}
+\item{\code{"subspecies"}}{Keep trinomials intact.}
+}}
 }
 \value{
-A character vector of normalised names, with an attribute
-\code{"normalisation_log"} — a tibble recording what changed.
+A character vector of normalised names, the same length as
+\code{names}, with an attribute \code{"normalisation_log"} --- a tibble
+recording every non-trivial change, for auditing.
 }
 \description{
-Applies a sequence of deterministic transformations to scientific names so
-that trivial formatting differences (underscores, case, whitespace,
-authority strings, OTT suffixes) are removed.
+Apply a sequence of deterministic text transformations so that
+scientific names which differ only in formatting compare equal.
+This is the same routine used by stage 2 of the matching cascade in
+\code{\link[=reconcile_data]{reconcile_data()}} and \code{\link[=reconcile_tree]{reconcile_tree()}}. Use it directly when you
+want to clean a column of names without running a full
+reconciliation --- for example, when building a crosswalk by hand.
+}
+\details{
+The transformations, applied in order, are:
+\enumerate{
+\item Replace underscores and multiple whitespace with a single
+space (\code{Homo_sapiens} -> \verb{Homo sapiens}).
+\item Strip authority strings and year, including multi-author
+and parenthetical forms (\verb{Corvus corax (Linnaeus, 1758)} ->
+\verb{Corvus corax}).
+\item Fold diacritics to ASCII (\verb{Passer domesticus} stays as
+\verb{Passer domesticus}; accented characters are simplified).
+\item Standardise case: genus capitalised, epithet lowercase.
+\item Strip infraspecific epithets if \code{rank = "species"}.
+\item Trim whitespace and collapse leftover empty tokens.
+}
 }
 \examples{
-pr_normalize_names(c("Homo_sapiens", "homo sapiens", "Parus major major"))
+pr_normalize_names(c("Homo_sapiens",
+                     "homo sapiens",
+                     "Parus major major",
+                     "Corvus corax (Linnaeus, 1758)"))
+
+# Keep trinomials
+pr_normalize_names("Parus major major", rank = "subspecies")
 
 }
+\seealso{
+\code{\link[=reconcile_data]{reconcile_data()}} and \code{\link[=reconcile_tree]{reconcile_tree()}} for the full
+four-stage matching cascade; \code{\link[=pr_extract_tips]{pr_extract_tips()}} for pulling tip
+labels out of a tree prior to normalising them.
+
+Other name utilities: 
+\code{\link{pr_extract_tips}()}
+}
+\concept{name utilities}

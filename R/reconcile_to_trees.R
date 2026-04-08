@@ -15,7 +15,13 @@
 #'   names. Auto-detected if `NULL`.
 #' @inheritParams reconcile_data
 #'
-#' @return A named list of `reconciliation` objects, one per tree.
+#' @return A named list of [reconciliation] objects, one per tree, with
+#'   the same names as `trees`.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_tree()] for the single-tree case;
+#'   [reconcile_diff()] to compare two reconciliations (e.g. to quantify
+#'   how many species are gained or lost by switching taxonomies).
 #'
 #' @examples
 #' data(avonet_subset)

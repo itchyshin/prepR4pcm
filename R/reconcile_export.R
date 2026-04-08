@@ -1,8 +1,11 @@
-#' Export reconciled data and tree to files
+#' Write an aligned dataset, tree, and mapping table to disk
 #'
-#' Applies a reconciliation and writes the aligned dataset, pruned tree,
-#' and full mapping table to disk. This produces publication-ready files
-#' with a documented provenance trail.
+#' Apply a reconciliation and save three files: the aligned CSV, the
+#' pruned tree, and the full mapping tibble. Intended for producing
+#' analysis-ready, archivable outputs --- drop the three files into a
+#' Zenodo deposit or a project's `data-output/` folder alongside the
+#' reconciliation report and you have a fully documented provenance
+#' trail.
 #'
 #' @param x A `reconciliation` object.
 #' @param data A data frame to align. If `NULL`, only the tree and mapping
@@ -19,7 +22,12 @@
 #' @param drop_unresolved Logical. Drop unresolved species? Default `TRUE`.
 #'
 #' @return A named list of file paths (invisibly):
-#'   `$data`, `$tree`, `$mapping`.
+#'   `$data` (CSV), `$tree` (Nexus or Newick), `$mapping` (CSV).
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_apply()] for in-memory alignment without writing
+#'   to disk; [reconcile_report()] for a self-contained HTML audit
+#'   trail.
 #'
 #' @examples
 #' data(avonet_subset)

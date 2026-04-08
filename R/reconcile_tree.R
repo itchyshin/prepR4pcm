@@ -1,17 +1,55 @@
 #' Reconcile species names between a dataset and a phylogenetic tree
 #'
-#' Compares species names in a data frame against tip labels of a phylogenetic
-#' tree. This is the core function for preparing data for phylogenetic
-#' comparative methods (PGLS, phylogenetic mixed models, etc.).
+#' Match the species in a trait data frame (`x`) to the tip labels of a
+#' phylogenetic tree (`tree`), producing a [reconciliation] object ready
+#' to feed into [reconcile_apply()], PGLS, phylogenetic GLMMs, ancestral
+#' state reconstruction, or any other phylogenetic comparative method
+#' (PCM). This is typically the first function you call in a `prepR4pcm`
+#' workflow.
 #'
-#' @param x A data frame.
-#' @param tree An `ape::phylo` object, or a character(1) file path to a
-#'   Newick or Nexus tree file.
-#' @param x_species Character(1). Column name in `x` containing species names.
-#'   Auto-detected if `NULL`.
+#' @details
+#' Internally, `reconcile_tree()` treats the tree's tip labels as the
+#' `y` argument of [reconcile_data()] and runs the same four-stage
+#' matching cascade (exact -> normalized -> synonym -> fuzzy). Tip labels
+#' typically differ from data names only in formatting (underscores,
+#' capitalisation, authority strings), so even with `authority = NULL`
+#' you usually recover most matches at the *normalized* stage. Turn on
+#' `fuzzy = TRUE` to also catch spelling mistakes.
+#'
+#' After reconciliation, the typical workflow is:
+#' \enumerate{
+#'   \item Inspect with [reconcile_summary()] or [reconcile_plot()].
+#'   \item Investigate unresolved names with [reconcile_suggest()] and
+#'     fix them with [reconcile_override()] or
+#'     [reconcile_override_batch()].
+#'   \item Produce an aligned data frame and pruned tree via
+#'     [reconcile_apply()].
+#'   \item Optionally, graft orphan species onto the tree with
+#'     [reconcile_augment()] (exploratory only; always run sensitivity
+#'     analyses).
+#' }
+#'
+#' @param x A data frame containing the trait data. Must have one
+#'   column of scientific names.
+#' @param tree An `ape::phylo` object, or a character(1) path to a
+#'   Newick (`.nwk`, `.tre`, `.tree`) or Nexus (`.nex`, `.nexus`) file.
+#'   File format is auto-detected.
+#' @param x_species Character(1). Column in `x` containing species names.
+#'   Auto-detected (e.g. `species`, `Species1`, `scientific_name`) if
+#'   `NULL`.
 #' @inheritParams reconcile_data
 #'
-#' @return A `reconciliation` object.
+#' @return A [reconciliation] object with `meta$type == "data_tree"`.
+#'   The `mapping` tibble has one row per unique name: matched species
+#'   (`in_x & in_y`), data-only orphans (`in_x & !in_y`, candidates for
+#'   [reconcile_augment()]), and tree-only orphans (`!in_x & in_y`,
+#'   candidates for [reconcile_apply()] to prune).
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_apply()] to produce an aligned data-tree pair;
+#'   [reconcile_augment()] to add orphan species back to the tree;
+#'   [reconcile_to_trees()] to reconcile against several trees at once;
+#'   [reconcile_data()] for the data-only counterpart.
 #'
 #' @references
 #' Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
@@ -19,11 +57,30 @@
 #' 35:526--528. \doi{10.1093/bioinformatics/bty633}
 #'
 #' @examples
+#' # Reconcile the bundled AVONET subset against the Jetz et al. (2012)
+#' # bird tree. `authority = NULL` keeps the example offline; in a real
+#' # analysis you would usually set `authority = "col"` (Catalogue of
+#' # Life) to pick up taxonomic synonyms.
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' print(result)
+#'
+#' rec <- reconcile_tree(
+#'   avonet_subset, tree_jetz,
+#'   x_species = "Species1",
+#'   authority = NULL,
+#'   fuzzy     = TRUE          # also catch typos
+#' )
+#' rec                         # one-line status
+#' reconcile_summary(rec)      # full breakdown by match type
+#'
+#' # Produce aligned data + pruned tree ready for PGLS / PGLMM
+#' aligned <- reconcile_apply(rec,
+#'                            data = avonet_subset,
+#'                            tree = tree_jetz,
+#'                            species_col = "Species1",
+#'                            drop_unresolved = TRUE)
+#' nrow(aligned$data)
+#' ape::Ntip(aligned$tree)
 #'
 #' @export
 reconcile_tree <- function(x, tree,

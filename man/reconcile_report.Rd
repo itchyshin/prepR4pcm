@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_report.R
 \name{reconcile_report}
 \alias{reconcile_report}
-\title{Generate an HTML reconciliation report}
+\title{Write a self-contained HTML reconciliation report}
 \usage{
 reconcile_report(
   x,
@@ -12,30 +12,62 @@ reconcile_report(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
 \item{file}{Character(1). Output file path. Must end in \code{.html}.}
 
-\item{title}{Character(1). Report title. Default uses a generic title.}
+\item{title}{Character(1). Report title shown at the top of the
+page. Default is generic.}
 
-\item{open}{Logical. Open the report in a browser? Default \code{TRUE} in
-interactive sessions.}
+\item{open}{Logical. Open the finished report in the default
+browser? Defaults to \code{TRUE} in interactive sessions, \code{FALSE}
+otherwise (so it does not block scripts).}
 }
 \value{
-The file path (invisibly).
+The file path, invisibly.
 }
 \description{
-Creates a self-contained HTML file documenting the reconciliation
-results. Suitable for sharing with collaborators or archiving
-alongside analysis outputs.
+Produce an HTML file summarising a \link{reconciliation} object: provenance
+metadata, match-type breakdown, full mapping table, and a list of
+unresolved / flagged species. The file has no external dependencies
+(CSS is inlined), so it is suitable for sharing with collaborators,
+pasting into supplementary materials, or archiving next to analysis
+outputs.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
 f <- tempfile(fileext = ".html")
-reconcile_report(result, file = f, open = FALSE)
+reconcile_report(rec, file = f, open = FALSE)
 cat("Report written to:", f, "\n")
 
 }
+\seealso{
+\code{\link[=reconcile_summary]{reconcile_summary()}} for a console equivalent;
+\code{\link[=reconcile_export]{reconcile_export()}} to additionally save aligned data and tree
+files.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

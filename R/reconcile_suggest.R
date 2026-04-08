@@ -1,32 +1,62 @@
 # Suggest matches for unresolved species -----------------------------------
 
-#' Suggest fuzzy matches for unresolved species
+#' Suggest near-miss matches for unresolved species
 #'
-#' For each unresolved species (present in x but not matched to y), finds the
-#' `n` closest matches in source y using Levenshtein-based similarity. This
-#' uses the same component-based approach as [pr_fuzzy_match()] (genus 0.6,
-#' epithet 0.4) but returns the top-`n` candidates per unresolved name rather
-#' than a single best match.
+#' For every species that the four-stage cascade failed to resolve,
+#' `reconcile_suggest()` returns the top-`n` candidate matches in the
+#' reference source (`y`). This is the most efficient way to audit
+#' orphan species: a typo or a species epithet that drifted by one
+#' letter will usually appear near the top of the list, and you can
+#' then feed the fix to [reconcile_override()] or
+#' [reconcile_override_batch()].
 #'
-#' Genus pre-filtering is applied to keep computation tractable for large
-#' datasets: only names whose genus is within 2 edits are compared.
+#' @details
+#' Similarity is computed from the Levenshtein edit distance between
+#' normalised names --- i.e., the minimum number of character insertions,
+#' deletions and substitutions needed to turn one name into the other,
+#' divided by the length of the longer name and subtracted from 1.
+#' The final score is weighted 60% genus, 40% specific epithet, which
+#' heavily penalises genus-level disagreement while tolerating small
+#' epithet differences.
 #'
-#' @param x A `reconciliation` object.
-#' @param n Integer. Maximum number of suggestions per unresolved species.
-#'   Default 3.
-#' @param threshold Numeric (0--1). Minimum similarity score to include a
-#'   suggestion. Default 0.7.
-#' @param quiet Logical. Suppress informational messages? Default `FALSE`.
+#' For computational efficiency on large trees, `reconcile_suggest()`
+#' only compares a query name against reference names whose genus is
+#' within 2 character edits of the query genus. This can very
+#' occasionally miss a match where both the genus and the epithet are
+#' badly misspelled simultaneously; if you suspect that, lower the
+#' `threshold` and inspect manually.
 #'
-#' @return A tibble with columns: `unresolved`, `suggestion`, `score`, sorted
-#'   by `unresolved` (ascending), then `score` (descending).
+#' @param x A [reconciliation] object.
+#' @param n Integer. Maximum number of suggestions to return per
+#'   unresolved species. Default `3`.
+#' @param threshold Numeric in \[0, 1\]. Minimum weighted similarity
+#'   score for a candidate to be listed. Default `0.7` (quite
+#'   permissive, because the idea is to surface candidates for review).
+#'   Raise to `0.85` for a tighter shortlist.
+#' @param quiet Logical. Suppress informational messages? Default
+#'   `FALSE`.
+#'
+#' @return A tibble with one row per (unresolved, suggestion) pair:
+#'   \describe{
+#'     \item{`unresolved`}{The unresolved name from `x`.}
+#'     \item{`suggestion`}{A candidate name from `y`.}
+#'     \item{`score`}{Weighted similarity in \[`threshold`, 1\].}
+#'   }
+#'   Rows are sorted by `unresolved` then descending `score`, so the
+#'   first suggestion for each name is the best candidate.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_override()] / [reconcile_override_batch()] to
+#'   act on suggestions; [reconcile_review()] for an interactive
+#'   alternative.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' suggestions <- reconcile_suggest(result, n = 2)
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#'
+#' suggestions <- reconcile_suggest(rec, n = 2, threshold = 0.85)
 #' head(suggestions, 10)
 #'
 #' @export

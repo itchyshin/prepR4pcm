@@ -2,22 +2,42 @@ url: https://itchyshin.github.io/prepR4pcm/
 
 template:
   bootstrap: 5
+  bslib:
+    primary: "#2c5e4f"
+    bg: "#ffffff"
+    fg: "#222222"
+
+home:
+  title: "prepR4pcm: reconcile species names for phylogenetic comparative methods"
+  description: >
+    Reconcile species names across datasets and phylogenetic trees for
+    ecologists and evolutionary biologists running PGLS, phylogenetic
+    mixed models, and other PCMs.
 
 navbar:
   structure:
     left: [intro, reference, articles, news]
+    right: [search, github]
   components:
     articles:
       text: Articles
       menu:
-      - text: Getting Started
+      - text: "Getting started"
         href: articles/getting-started.html
-      - text: "Bird Trait Workflow"
+      - text: "Bird trait workflow (PGLS + PGLMM)"
         href: articles/bird-workflow.html
 
 reference:
-- title: Core Reconciliation
-  desc: Match species names between datasets and/or trees.
+
+- title: "Package overview"
+  contents:
+  - prepR4pcm-package
+
+- title: "Match species names"
+  desc: >
+    Build a reconciliation between your data and one or more reference
+    sources (a tree, another dataset, or both). This is where most
+    workflows begin.
   contents:
   - reconcile_tree
   - reconcile_data
@@ -25,15 +45,11 @@ reference:
   - reconcile_trees
   - reconcile_multi
 
-- title: Apply & Export
-  desc: Use reconciliation results to align data and trees.
-  contents:
-  - reconcile_apply
-  - reconcile_merge
-  - reconcile_export
-
-- title: Diagnostics & Review
-  desc: Inspect, visualise, and audit matching decisions.
+- title: "Inspect and audit"
+  desc: >
+    Examine the results of a reconciliation: see what matched, what was
+    flagged, and what is still unresolved. Produce reports for
+    collaborators or supplementary materials.
   contents:
   - reconcile_summary
   - reconcile_mapping
@@ -42,27 +58,47 @@ reference:
   - reconcile_diff
   - reconcile_report
   - reconcile_review
+  - reconcile_splits_lumps
 
-- title: Overrides & Crosswalks
-  desc: Manual corrections and taxonomy crosswalk integration.
+- title: "Corrections and crosswalks"
+  desc: >
+    Apply manual corrections by hand, in bulk, or from a published
+    taxonomy crosswalk.
   contents:
   - reconcile_override
   - reconcile_override_batch
   - reconcile_crosswalk
 
-- title: Advanced
-  desc: Tree augmentation and split/lump detection.
+- title: "Apply, merge, export"
+  desc: >
+    Turn a reconciliation into analysis-ready outputs --- aligned data
+    frames, pruned trees, merged datasets, or files on disk.
+  contents:
+  - reconcile_apply
+  - reconcile_merge
+  - reconcile_export
+
+- title: "Augment phylogenies (exploratory)"
+  desc: >
+    Graft unresolved species onto a tree using genus-level placement.
+    For exploratory analyses only --- always run sensitivity analyses
+    with and without augmented tips.
   contents:
   - reconcile_augment
-  - reconcile_splits_lumps
 
-- title: Utilities
+- title: "Name utilities"
+  desc: >
+    Low-level helpers for cleaning scientific names and pulling tip
+    labels off trees. Useful outside a full reconciliation workflow.
   contents:
   - pr_normalize_names
   - pr_extract_tips
 
-- title: Data
-  desc: Bundled example datasets and trees.
+- title: "Bundled example data"
+  desc: >
+    Subsetted datasets and phylogenies used in the examples and
+    vignettes. Full credit to the original data providers ---
+    see the help pages for citations.
   contents:
   - avonet_subset
   - nesttrait_subset

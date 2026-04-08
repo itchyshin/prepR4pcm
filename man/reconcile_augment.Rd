@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_augment.R
 \name{reconcile_augment}
 \alias{reconcile_augment}
-\title{Add missing species to a phylogenetic tree}
+\title{Graft missing species onto a phylogenetic tree (genus-level placement)}
 \usage{
 reconcile_augment(
   x,
@@ -14,30 +14,45 @@ reconcile_augment(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object (from \code{\link[=reconcile_tree]{reconcile_tree()}} or
-similar).}
+\item{x}{A \link{reconciliation} object, typically from \code{\link[=reconcile_tree]{reconcile_tree()}}.}
 
-\item{tree}{An \code{ape::phylo} object. Must be the tree used in the
-reconciliation.}
+\item{tree}{An \code{ape::phylo} object. Must be the same tree used to
+build \code{x} (or a tree with the same tip set).}
 
-\item{where}{Character(1). Placement strategy:
-\itemize{
-\item \code{"genus"} (default): add as sister to a random congener.
-\item \code{"near"}: attach at the MRCA of all congeners in the tree
-(better when the genus has multiple representatives).
+\item{where}{Character(1). Where to attach each new tip:
+\describe{
+\item{\code{"genus"} (default)}{Attach as sister to a single congener
+chosen at random from the genus. Simpler; recommended when the
+genus has only one or two representatives in the tree, or when
+you want variation across runs for sensitivity analyses.}
+\item{\code{"near"}}{Attach at the most recent common ancestor (MRCA)
+of all congeners in the tree. Better when the genus is
+well-represented, because the new tip is not arbitrarily tied
+to one sister taxon.}
 }}
 
-\item{branch_length}{Character(1). How to set the new terminal
-branch length:
-\itemize{
-\item \code{"congener_median"} (default): median terminal branch length of
-congeners in the tree.
-\item \code{"half_terminal"}: half the sister tip's terminal branch.
-\item \code{"zero"}: zero-length branch (creates a polytomy).
+\item{branch_length}{Character(1). How to set the terminal branch
+length of each newly added tip:
+\describe{
+\item{\code{"congener_median"} (default)}{Median terminal branch length
+of the species' congeners. Uses the average "how long since
+this group diverged" for the genus. Recommended for
+time-calibrated trees because it preserves approximate
+branch-length scale.}
+\item{\code{"half_terminal"}}{Half the sister tip's terminal branch.
+A conservative alternative that places the new tip as a recent
+split from its sister. Useful when the genus is sparsely
+sampled and the median is unreliable.}
+\item{\code{"zero"}}{Zero-length branch, producing a polytomy with the
+sister taxon (or MRCA). Use for exploratory sensitivity checks
+where you want to see the effect of adding species without
+assuming any divergence time.}
 }}
 
 \item{seed}{Integer or \code{NULL}. Random seed for reproducibility when
-selecting a congener. Default \code{NULL} (no seed).}
+\code{where = "genus"} picks a congener at random. Set to a fixed
+integer in real analyses so results are reproducible. Default
+\code{NULL}.}
 
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
 }
@@ -45,27 +60,41 @@ selecting a congener. Default \code{NULL} (no seed).}
 A list with:
 \describe{
 \item{tree}{The augmented \code{phylo} object.}
-\item{original}{The original (unmodified) \code{phylo} object.}
+\item{original}{The original (unmodified) \code{phylo} object, for
+easy comparison.}
 \item{augmented}{A tibble documenting each added species:
-\code{species}, \code{genus}, \code{placed_near}, \code{branch_length}, \code{method},
-\code{n_congeners}.}
-\item{skipped}{A tibble of species that could not be placed:
-\code{species}, \code{genus}, \code{reason}.}
-\item{meta}{Provenance metadata.}
+\code{species}, \code{genus}, \code{placed_near} (sister tip or MRCA node),
+\code{branch_length}, \code{method}, \code{n_congeners}.}
+\item{skipped}{A tibble of species that could not be placed,
+with the reason (e.g. "no congener in tree").}
+\item{meta}{Provenance metadata: placement strategy, branch
+length rule, counts.}
 }
 }
 \description{
-When a reconciliation identifies species in the data that are absent
-from the tree, this function grafts them onto the tree using
-genus-level placement. Each missing species is added as sister to a
-congener (a species in the same genus already present in the tree).
+When a reconciliation identifies species that are present in your data
+but missing from the tree, \code{reconcile_augment()} attaches each missing
+species as sister to a congener --- i.e., a species in the same genus
+already present in the tree. The result is a tree that contains every
+species in your dataset, at the cost of making a strong assumption
+about where the new tips sit.
 }
-\details{
-This is a convenience for exploratory analyses. Genus-level placement
-assumes that the missing species diverged similarly to its congeners,
-which may not hold. Always report which species were augmented and
-run sensitivity analyses comparing results with and without them.
+\section{When to use this}{
+
+Genus-level placement is an \emph{exploratory} convenience, not a
+substitute for a properly inferred phylogeny. It assumes the missing
+species diverged in roughly the same way as its congeners, which is
+often wrong in detail. Use it to keep exploratory PCMs running while
+you decide how to handle orphan species, and always:
+\enumerate{
+\item Report exactly which species were augmented (see \verb{$augmented}
+in the return value).
+\item Run sensitivity analyses with and without the augmented tips.
+\item Prefer a published imputed phylogeny (e.g. the PhyloMaker or
+TACT approaches) when grafting many species.
 }
+}
+
 \examples{
 # --- Example 1: genus-level placement with congener_median branch lengths ---
 data(avonet_subset)
@@ -104,3 +133,30 @@ Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
 phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
 35:526--528. \doi{10.1093/bioinformatics/bty633}
 }
+\seealso{
+\code{\link[=reconcile_tree]{reconcile_tree()}} for the reconciliation step;
+\code{\link[=reconcile_apply]{reconcile_apply()}} for the non-augmenting alternative (prune data
+and tree to the intersection).
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

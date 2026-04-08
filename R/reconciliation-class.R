@@ -1,18 +1,55 @@
 # reconciliation S3 class --------------------------------------------------
 
-#' Create a reconciliation object
+#' The `reconciliation` S3 class
 #'
-#' Constructor for the `reconciliation` S3 class. Not intended to be called
-#' directly by users; use [reconcile_data()], [reconcile_tree()], or
-#' [reconcile_trees()] instead.
+#' A `reconciliation` object is the shared data structure that every
+#' matching function in \pkg{prepR4pcm} returns, and that every
+#' downstream function consumes. You will never build one by hand;
+#' call [reconcile_tree()], [reconcile_data()], [reconcile_trees()],
+#' [reconcile_to_trees()], or [reconcile_multi()] instead. This page
+#' documents the structure so you can poke at the internals when
+#' debugging or writing custom helpers.
 #'
-#' @param mapping A tibble with the mapping table (see Details).
+#' @section Structure:
+#' A `reconciliation` is an S3 list with four components:
+#' \describe{
+#'   \item{`mapping`}{A tibble with one row per unique name seen in
+#'     either source. Columns are documented in [reconcile_mapping()]:
+#'     `name_x`, `name_y`, `name_resolved`, `match_type`,
+#'     `match_score`, `match_source`, `in_x`, `in_y`, `notes`.}
+#'   \item{`meta`}{A named list of provenance metadata --- call
+#'     signature, timestamp, source labels, taxonomic authority,
+#'     fuzzy settings, resolve mode, rank, \pkg{prepR4pcm} version.}
+#'   \item{`counts`}{A named list of match-type counts, used by the
+#'     print method and by [reconcile_summary()].}
+#'   \item{`overrides`}{A tibble logging manual corrections applied
+#'     via [reconcile_override()] or [reconcile_override_batch()].}
+#' }
+#'
+#' @section Methods:
+#' Standard S3 methods are defined for `print()`, `summary()` (which
+#' dispatches to [reconcile_summary()]), and `format()`.
+#'
+#' @section Accessing the object:
+#' \itemize{
+#'   \item [reconcile_mapping()] --- extract the per-name tibble.
+#'   \item [reconcile_summary()] --- human-readable breakdown.
+#'   \item [reconcile_apply()] --- align data and tree.
+#'   \item [reconcile_merge()] --- join two datasets.
+#'   \item [reconcile_override()] / [reconcile_override_batch()] ---
+#'     manual corrections.
+#' }
+#'
+#' @param mapping A tibble with the mapping table (see above).
 #' @param meta A named list of provenance metadata.
-#' @param counts A named list of summary counts (computed from `mapping` if
-#'   `NULL`).
+#' @param counts A named list of summary counts. Computed from
+#'   `mapping` if `NULL`.
 #' @param overrides A tibble of manual overrides (empty by default).
 #'
 #' @return An object of class `reconciliation`.
+#'
+#' @aliases reconciliation
+#' @name reconciliation
 #' @keywords internal
 new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL) {
 

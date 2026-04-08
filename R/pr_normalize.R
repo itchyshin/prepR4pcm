@@ -1,20 +1,56 @@
 # Name normalisation -------------------------------------------------------
 
-#' Normalise scientific names
+#' Normalise scientific names to a canonical form
 #'
-#' Applies a sequence of deterministic transformations to scientific names so
-#' that trivial formatting differences (underscores, case, whitespace,
-#' authority strings, OTT suffixes) are removed.
+#' Apply a sequence of deterministic text transformations so that
+#' scientific names which differ only in formatting compare equal.
+#' This is the same routine used by stage 2 of the matching cascade in
+#' [reconcile_data()] and [reconcile_tree()]. Use it directly when you
+#' want to clean a column of names without running a full
+#' reconciliation --- for example, when building a crosswalk by hand.
 #'
-#' @param names Character vector of scientific names.
-#' @param rank Character. `"species"` (default) strips infraspecific epithets
-#'   to produce binomials. `"subspecies"` retains trinomials.
+#' @details
+#' The transformations, applied in order, are:
+#' \enumerate{
+#'   \item Replace underscores and multiple whitespace with a single
+#'     space (`Homo_sapiens` -> `Homo sapiens`).
+#'   \item Strip authority strings and year, including multi-author
+#'     and parenthetical forms (`Corvus corax (Linnaeus, 1758)` ->
+#'     `Corvus corax`).
+#'   \item Fold diacritics to ASCII (`Passer domesticus` stays as
+#'     `Passer domesticus`; accented characters are simplified).
+#'   \item Standardise case: genus capitalised, epithet lowercase.
+#'   \item Strip infraspecific epithets if `rank = "species"`.
+#'   \item Trim whitespace and collapse leftover empty tokens.
+#' }
 #'
-#' @return A character vector of normalised names, with an attribute
-#'   `"normalisation_log"` — a tibble recording what changed.
+#' @param names Character vector of scientific names. `NA` values are
+#'   preserved as `NA`.
+#' @param rank Character(1). Taxonomic rank to normalise to:
+#'   \describe{
+#'     \item{`"species"` (default)}{Strip infraspecific epithets so
+#'       trinomials become binomials (`Parus major major` ->
+#'       `Parus major`).}
+#'     \item{`"subspecies"`}{Keep trinomials intact.}
+#'   }
+#'
+#' @return A character vector of normalised names, the same length as
+#'   `names`, with an attribute `"normalisation_log"` --- a tibble
+#'   recording every non-trivial change, for auditing.
+#'
+#' @family name utilities
+#' @seealso [reconcile_data()] and [reconcile_tree()] for the full
+#'   four-stage matching cascade; [pr_extract_tips()] for pulling tip
+#'   labels out of a tree prior to normalising them.
 #'
 #' @examples
-#' pr_normalize_names(c("Homo_sapiens", "homo sapiens", "Parus major major"))
+#' pr_normalize_names(c("Homo_sapiens",
+#'                      "homo sapiens",
+#'                      "Parus major major",
+#'                      "Corvus corax (Linnaeus, 1758)"))
+#'
+#' # Keep trinomials
+#' pr_normalize_names("Parus major major", rank = "subspecies")
 #'
 #' @export
 pr_normalize_names <- function(names, rank = c("species", "subspecies")) {

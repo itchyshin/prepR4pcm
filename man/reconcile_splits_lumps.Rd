@@ -2,29 +2,75 @@
 % Please edit documentation in R/pr_splits_lumps.R
 \name{reconcile_splits_lumps}
 \alias{reconcile_splits_lumps}
-\title{Summarise splits and lumps for a reconciliation object}
+\title{Flag taxonomic splits and lumps in a reconciliation}
 \usage{
 reconcile_splits_lumps(x, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object built with a non-\code{NULL}
+\code{authority} argument.}
 
-\item{quiet}{Logical. Suppress console output? Default \code{FALSE}.}
+\item{quiet}{Logical. Suppress the console summary? Default
+\code{FALSE}.}
 }
 \value{
-A list with \verb{$splits} and \verb{$lumps} tibbles, invisibly.
+Invisibly, a list with two tibbles:
+\describe{
+\item{\code{splits}}{Cases where one name in \code{x} corresponds to
+multiple accepted names in \code{y}.}
+\item{\code{lumps}}{Cases where several names in \code{x} share a single
+accepted name in \code{y}.}
+}
 }
 \description{
-User-facing function that wraps \code{\link[=pr_detect_splits_lumps]{pr_detect_splits_lumps()}} with
-formatted console output.
+Taxonomic revisions often split a single species into several or
+lump several into one. When your data and your reference taxonomy
+disagree on such cases, the reconciliation mapping will show one
+name in one source linked to multiple accepted names in the other.
+\code{reconcile_splits_lumps()} scans a \link{reconciliation} for these cases
+and returns them as two tibbles, one for splits and one for lumps,
+so you can decide how to handle each before running your PCM
+(e.g. keep only one of the split taxa, pool traits across a lumped
+set, or exclude them entirely).
+}
+\details{
+Detection relies on the \code{name_resolved} column populated by
+synonym resolution --- so \code{authority} must have been set (i.e. not
+\code{NULL}) when building the reconciliation.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-sl <- reconcile_splits_lumps(result, quiet = TRUE)
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+sl <- reconcile_splits_lumps(rec, quiet = TRUE)
 sl$splits
 sl$lumps
 
 }
+\seealso{
+\code{\link[=reconcile_diff]{reconcile_diff()}} for comparing two reconciliations,
+which surfaces the same splits/lumps across taxonomy versions.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

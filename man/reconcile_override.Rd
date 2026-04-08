@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_accessors.R
 \name{reconcile_override}
 \alias{reconcile_override}
-\title{Add a manual override to a reconciliation}
+\title{Manually override a single name in a reconciliation}
 \usage{
 reconcile_override(
   x,
@@ -13,42 +13,93 @@ reconcile_override(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
-\item{name_x}{Character(1). Name from source x.}
+\item{name_x}{Character(1). The name as it appears in source \code{x}
+(your data). Must match a value already present in \code{mapping$name_x}.}
 
-\item{name_y}{Character(1) or NULL. Corrected match in source y. Use \code{NULL}
-to mark the name as deliberately unresolvable.}
+\item{name_y}{Character(1) or \code{NULL}. The name in source \code{y} (the
+tree or reference dataset) that \code{name_x} should be mapped to.
+\code{NULL} is only valid when \code{action = "reject"}.}
 
-\item{action}{Character(1). One of \code{"accept"} (confirm match), \code{"reject"}
-(remove a match), or \code{"replace"} (set a new match).}
+\item{action}{Character(1). What the override does:
+\describe{
+\item{\code{"accept"} (default)}{Confirm a proposed match. Use after
+reviewing a flagged fuzzy or synonym hit.}
+\item{\code{"reject"}}{Remove an existing match and return both names
+to the unresolved pool. Use when the cascade over-matched
+(e.g. an aggressive fuzzy score linked the wrong species).}
+\item{\code{"replace"}}{Set a new match, overwriting whatever the
+cascade produced for \code{name_x}.}
+}}
 
-\item{note}{Character(1). Justification for the override. Stored in the
-provenance log.}
+\item{note}{Character(1). A short justification for the override,
+stored in the provenance log and in \code{mapping$notes}. Strongly
+recommended --- future you will want to know why this decision was
+made.}
 }
 \value{
-An updated \code{reconciliation} object.
+An updated \link{reconciliation} object. The existing row for
+\code{name_x} is replaced with one whose \code{match_type} is \code{"manual"} and
+\code{match_source} is \code{"user_override"}.
 }
 \description{
-Creates an updated reconciliation object with a manual name correction
-applied.
+Apply a single hand-curated decision to a \link{reconciliation} object.
+Use this to accept a match the cascade rejected (typically a flagged
+fuzzy hit), remove a spurious match, or force a new mapping that the
+cascade missed. The override is recorded in the provenance log so
+that you and your reviewers can audit every manual decision.
+}
+\details{
+For applying many overrides at once (e.g. from a curated CSV), see
+\code{\link[=reconcile_override_batch]{reconcile_override_batch()}}; for interactive decisions in the
+console, see \code{\link[=reconcile_review]{reconcile_review()}}; for published taxonomy crosswalks,
+see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-# Manually assign an unresolved species to a tree tip
-unresolved <- reconcile_mapping(result)
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+
+# Pick an unresolved species and hand-assign it for illustration
+unresolved <- reconcile_mapping(rec)
 unresolved <- unresolved[unresolved$match_type == "unresolved" &
                            unresolved$in_x, ]
 if (nrow(unresolved) > 0) {
-  result <- reconcile_override(
-    result,
+  rec <- reconcile_override(
+    rec,
     name_x = unresolved$name_x[1],
     name_y = tree_jetz$tip.label[1],
-    note = "Manual assignment for demonstration"
+    note   = "Demo: manual assignment"
   )
 }
 
 }
+\seealso{
+\code{\link[=reconcile_override_batch]{reconcile_override_batch()}} for bulk overrides;
+\code{\link[=reconcile_suggest]{reconcile_suggest()}} for near-miss candidates;
+\code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}} for published taxonomy crosswalks.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

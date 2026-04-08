@@ -2,33 +2,47 @@
 % Please edit documentation in R/reconcile_diff.R
 \name{reconcile_diff}
 \alias{reconcile_diff}
-\title{Compare two reconciliation objects}
+\title{Diff two reconciliations to see what changed}
 \usage{
 reconcile_diff(x, y, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object (the "before" state).}
+\item{x}{A \link{reconciliation} object --- the "before" state.}
 
-\item{y}{A \code{reconciliation} object (the "after" state).}
+\item{y}{A \link{reconciliation} object --- the "after" state. Must be
+reconciled against the same \code{x} data so that \code{name_x} values are
+comparable.}
 
-\item{quiet}{Logical. If \code{TRUE}, suppress console output. Default \code{FALSE}.}
+\item{quiet}{Logical. Suppress the console summary? Default \code{FALSE}.}
 }
 \value{
 A list with the following components:
 \describe{
-\item{gained}{Tibble of species matched in \code{y} but unresolved in \code{x}.}
-\item{lost}{Tibble of species matched in \code{x} but unresolved in \code{y}.}
-\item{type_changed}{Tibble of species whose \code{match_type} differs.}
-\item{target_changed}{Tibble of species whose \code{name_y} differs.}
-\item{summary}{A one-row tibble with counts: \code{n_gained}, \code{n_lost},
-\code{n_type_changed}, \code{n_target_changed}, \code{n_shared}.}
+\item{\code{gained}}{Tibble of species matched in \code{y} but unresolved
+in \code{x}.}
+\item{\code{lost}}{Tibble of species matched in \code{x} but unresolved in
+\code{y}.}
+\item{\code{type_changed}}{Tibble of species whose \code{match_type}
+differs between the two runs.}
+\item{\code{target_changed}}{Tibble of species whose \code{name_y}
+differs.}
+\item{\code{summary}}{A one-row tibble with counts: \code{n_gained},
+\code{n_lost}, \code{n_type_changed}, \code{n_target_changed}, \code{n_shared}.}
 }
 }
 \description{
-Identifies what changed between two reconciliation runs by comparing
-their mapping tables on \code{name_x}. Reports species that gained or lost
-a match, species whose match type changed, and species whose match
-target changed.
+Compare a "before" and "after" \link{reconciliation} and list every
+species whose outcome differs: newly matched, newly unresolved,
+promoted to a higher-confidence match type, or linked to a different
+target. Useful for:
+\itemize{
+\item checking the effect of adding a taxonomy crosswalk or a
+batch of manual overrides,
+\item comparing two taxonomic authorities (e.g. Catalogue of Life
+vs GBIF),
+\item auditing changes between runs before and after tightening
+the fuzzy threshold.
+}
 }
 \examples{
 data(avonet_subset)
@@ -48,3 +62,30 @@ d <- reconcile_diff(r1, r2)
 cat("Gained:", nrow(d$gained), "| Lost:", nrow(d$lost), "\n")
 
 }
+\seealso{
+\code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}} for building an override table from
+a published taxonomy crosswalk; \code{\link[=reconcile_override_batch]{reconcile_override_batch()}} for
+applying many hand edits.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

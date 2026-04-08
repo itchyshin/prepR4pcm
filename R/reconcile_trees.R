@@ -1,20 +1,31 @@
 #' Reconcile tip labels between two phylogenetic trees
 #'
-#' Compares tip labels of two phylogenetic trees and identifies matching,
-#' normalised, synonym-resolved, and unresolved names.
+#' Compare the tip labels of two phylogenetic trees and report which
+#' species are shared, which differ only in formatting or synonymy, and
+#' which appear in only one of the two trees. Use this when assessing
+#' the impact of switching phylogenies (e.g., Jetz et al. 2012 vs
+#' Clements 2025) before deciding which tree to use in a downstream PCM.
 #'
-#' @param tree1 An `ape::phylo` object, or a file path to a tree file.
-#' @param tree2 An `ape::phylo` object, or a file path to a tree file.
+#' @param tree1 An `ape::phylo` object, or a character(1) path to a
+#'   Newick/Nexus tree file.
+#' @param tree2 An `ape::phylo` object, or a character(1) path to a
+#'   Newick/Nexus tree file.
 #' @inheritParams reconcile_data
 #'
-#' @return A `reconciliation` object.
+#' @return A [reconciliation] object with `meta$type == "tree_tree"`.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_diff()] to quantify gains/losses between two
+#'   reconciliations; [reconcile_to_trees()] when you want to match a
+#'   single dataset against many trees at once.
 #'
 #' @examples
 #' data(tree_jetz)
 #' data(tree_clements25)
-#' result <- reconcile_trees(tree_jetz, tree_clements25,
-#'                           authority = NULL)
-#' print(result)
+#' rec <- reconcile_trees(tree_jetz, tree_clements25, authority = NULL)
+#' rec
+#' # How many tips are shared across both trees?
+#' sum(reconcile_mapping(rec)$in_x & reconcile_mapping(rec)$in_y)
 #'
 #' @export
 reconcile_trees <- function(tree1, tree2,

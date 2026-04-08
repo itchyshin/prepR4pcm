@@ -2,28 +2,87 @@
 % Please edit documentation in R/reconcile_accessors.R
 \name{reconcile_mapping}
 \alias{reconcile_mapping}
-\title{Extract the mapping table from a reconciliation}
+\title{Extract the per-name mapping table from a reconciliation}
 \usage{
 reconcile_mapping(x)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 }
 \value{
-A tibble with columns: \code{name_x}, \code{name_y}, \code{name_resolved},
-\code{match_type}, \code{match_score}, \code{match_source}, \code{in_x}, \code{in_y}, \code{notes}.
+A tibble with one row per unique name seen in either source
+and the following columns:
+\describe{
+\item{\code{name_x}}{The original name as it appeared in \code{x} (your
+data). \code{NA} for rows that exist only in \code{y} (e.g. tree tips
+not in your data).}
+\item{\code{name_y}}{The original name as it appeared in \code{y} (the
+reference dataset or tree). \code{NA} for rows that exist only in
+\code{x}.}
+\item{\code{name_resolved}}{The accepted/canonical name returned by
+the taxonomic authority, when synonym resolution was used.
+\code{NA} when \code{authority = NULL} or no synonym was found.}
+\item{\code{match_type}}{One of \code{"exact"}, \code{"normalized"},
+\code{"synonym"}, \code{"fuzzy"}, \code{"manual"} (set via
+\code{\link[=reconcile_override]{reconcile_override()}}), \code{"flagged"} (low-confidence, needs
+review), or \code{"unresolved"}.}
+\item{\code{match_score}}{Numeric in [0, 1]. \code{1} for
+exact/normalized/synonym/manual matches; a genus-weighted
+Levenshtein score for fuzzy matches; \code{NA} for unresolved.}
+\item{\code{match_source}}{Where the match came from: \code{"exact"},
+\code{"normalisation"}, the taxadb authority code (e.g. \code{"col"}),
+\code{"fuzzy"}, or \code{"user_override"}.}
+\item{\code{in_x}}{Logical. Was this name present in \code{x}?}
+\item{\code{in_y}}{Logical. Was this name present in \code{y}?}
+\item{\code{notes}}{Free-text notes, populated e.g. when a name is
+flagged for review or when an override carries a user comment.}
+}
 }
 \description{
-Returns the full mapping tibble, suitable for downstream joins.
+Returns the mapping tibble inside a \link{reconciliation} object. Use this
+when you want to filter matches programmatically (e.g. pull all
+unresolved species, all fuzzy matches above a given score, or join
+the mapping back to the original data frame).
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-mapping <- reconcile_mapping(result)
-# Filter to matched species
-matched <- mapping[mapping$in_x & mapping$in_y, ]
-nrow(matched)
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+mapping <- reconcile_mapping(rec)
+
+# How many species matched?
+sum(mapping$in_x & mapping$in_y)
+
+# Which species are in the data but missing from the tree?
+head(mapping[mapping$in_x & !mapping$in_y, c("name_x", "match_type")])
 
 }
+\seealso{
+\code{\link[=reconcile_summary]{reconcile_summary()}} for a printed breakdown;
+\code{\link[=reconcile_suggest]{reconcile_suggest()}} for near-miss candidates for unresolved
+names; \code{\link[=reconcile_apply]{reconcile_apply()}} to turn the mapping into an aligned
+data-tree pair.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_summary}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

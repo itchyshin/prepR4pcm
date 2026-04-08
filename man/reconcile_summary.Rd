@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_summary.R
 \name{reconcile_summary}
 \alias{reconcile_summary}
-\title{Generate a reconciliation summary report}
+\title{Print a reconciliation summary to the console}
 \usage{
 reconcile_summary(
   x,
@@ -13,33 +13,74 @@ reconcile_summary(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{x}{A \link{reconciliation} object.}
 
-\item{detail}{Character(1). Level of detail: \code{"full"} (default) shows all
-matches by category, \code{"brief"} shows counts only, \code{"mismatches_only"}
-shows only non-exact matches and unresolved names.}
+\item{detail}{Character(1). How much to show:
+\describe{
+\item{\code{"full"} (default)}{Every match category, with the names
+belonging to each category listed out.}
+\item{\code{"brief"}}{Counts only --- a one-screen overview.}
+\item{\code{"mismatches_only"}}{Non-exact matches and unresolved
+names. Useful once the easy cases are out of the way and you
+want to focus on what still needs review.}
+}}
 
-\item{format}{Character(1). Output format: \code{"console"} (default) prints
-to screen, \code{"data.frame"} returns a list of tibbles silently.}
+\item{format}{Character(1). Where the summary goes:
+\describe{
+\item{\code{"console"} (default)}{Pretty-printed to the screen.}
+\item{\code{"data.frame"}}{Returns a list of tibbles silently; useful
+when writing a report or table in a larger script.}
+}}
 
-\item{file}{Character(1) or NULL. If non-NULL, writes the console report
-to this file path.}
+\item{file}{Character(1) or \code{NULL}. If non-\code{NULL}, writes the
+console report to this file path in addition to printing it.}
 
 \item{...}{Additional arguments (currently unused).}
 }
 \value{
-A \code{reconciliation_summary} object (invisibly for console output).
+A \code{reconciliation_summary} object. Printed to the console by
+default; returned invisibly for inspection.
 }
 \description{
-Produces a detailed, human-readable report of the reconciliation results,
-breaking down matches by type and listing unresolved names.
+Produce a human-readable breakdown of a \link{reconciliation} object:
+how many names matched exactly, how many were rescued by
+normalisation, synonymy, or fuzzy matching, and which names remain
+unresolved. Usually the second function you call after
+\code{\link[=reconcile_tree]{reconcile_tree()}} or \code{\link[=reconcile_data]{reconcile_data()}}.
 }
 \examples{
 data(avonet_subset)
 data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
-reconcile_summary(result, detail = "brief")
-reconcile_summary(result, detail = "mismatches_only")
+rec <- reconcile_tree(avonet_subset, tree_jetz,
+                      x_species = "Species1", authority = NULL)
+reconcile_summary(rec, detail = "brief")
+reconcile_summary(rec, detail = "mismatches_only")
 
 }
+\seealso{
+\code{\link[=reconcile_plot]{reconcile_plot()}} for a visual summary;
+\code{\link[=reconcile_report]{reconcile_report()}} for a shareable HTML audit trail;
+\code{\link[=reconcile_mapping]{reconcile_mapping()}} for the full per-name tibble.
+
+Other reconciliation functions: 
+\code{\link{reconcile_apply}()},
+\code{\link{reconcile_augment}()},
+\code{\link{reconcile_crosswalk}()},
+\code{\link{reconcile_data}()},
+\code{\link{reconcile_diff}()},
+\code{\link{reconcile_export}()},
+\code{\link{reconcile_mapping}()},
+\code{\link{reconcile_merge}()},
+\code{\link{reconcile_multi}()},
+\code{\link{reconcile_override}()},
+\code{\link{reconcile_override_batch}()},
+\code{\link{reconcile_plot}()},
+\code{\link{reconcile_report}()},
+\code{\link{reconcile_review}()},
+\code{\link{reconcile_splits_lumps}()},
+\code{\link{reconcile_suggest}()},
+\code{\link{reconcile_to_trees}()},
+\code{\link{reconcile_tree}()},
+\code{\link{reconcile_trees}()}
+}
+\concept{reconciliation functions}

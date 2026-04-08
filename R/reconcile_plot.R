@@ -1,26 +1,37 @@
 # Base R plots for reconciliation results -----------------------------------
 
-#' Plot reconciliation match composition
+#' Plot the match composition of a reconciliation
 #'
-#' Produces a bar chart or pie chart summarising how species names were
-#' matched during reconciliation. Uses base R graphics only (no ggplot2
-#' dependency).
+#' Draw a one-glance bar or pie chart of how species names were
+#' resolved (exact, normalised, synonym, fuzzy, flagged, manual,
+#' unresolved). Uses base R graphics only, so no additional packages
+#' are required.
 #'
-#' @param x A `reconciliation` object.
-#' @param type Character(1). Plot type: `"bar"` (default) draws a horizontal
-#'   stacked bar chart; `"pie"` draws a pie chart.
-#' @param ... Additional arguments passed to [graphics::barplot()] or
-#'   [graphics::pie()].
+#' @param x A [reconciliation] object.
+#' @param type Character(1). Plot style:
+#'   \describe{
+#'     \item{`"bar"` (default)}{Horizontal stacked bar chart. Best for
+#'       slides, reports, and scripting.}
+#'     \item{`"pie"`}{Pie chart. Useful when the match types are
+#'       roughly balanced.}
+#'   }
+#' @param ... Additional arguments passed on to [graphics::barplot()]
+#'   or [graphics::pie()] (e.g. `main`, `col`, `border`).
 #'
-#' @return `x`, invisibly, so the function can be used in a pipeline.
+#' @return The input `x`, invisibly, so you can use the function in a
+#'   pipe.
+#'
+#' @family reconciliation functions
+#' @seealso [reconcile_summary()] for a textual breakdown;
+#'   [reconcile_report()] for a full HTML audit trail.
 #'
 #' @examples
 #' data(avonet_subset)
 #' data(tree_jetz)
-#' result <- reconcile_tree(avonet_subset, tree_jetz,
-#'                          x_species = "Species1", authority = NULL)
-#' reconcile_plot(result)
-#' reconcile_plot(result, type = "pie")
+#' rec <- reconcile_tree(avonet_subset, tree_jetz,
+#'                       x_species = "Species1", authority = NULL)
+#' reconcile_plot(rec)
+#' reconcile_plot(rec, type = "pie")
 #'
 #' @export
 reconcile_plot <- function(x, type = c("bar", "pie"), ...) {
