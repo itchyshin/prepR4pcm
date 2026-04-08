@@ -5,7 +5,7 @@
 \title{Apply a reconciliation to produce an aligned data-tree pair}
 \usage{
 reconcile_apply(
-  x,
+  reconciliation,
   data = NULL,
   tree = NULL,
   species_col = NULL,
@@ -13,7 +13,8 @@ reconcile_apply(
 )
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{data}{A data frame to align. If \code{NULL}, only the tree is
 returned.}

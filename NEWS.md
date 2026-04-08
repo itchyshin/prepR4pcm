@@ -1,7 +1,34 @@
 # prepR4pcm (development version)
 
+## Breaking changes
+
+* The first argument of 13 exported functions has been renamed from
+  `x` to `reconciliation`: `reconcile_apply()`, `reconcile_augment()`,
+  `reconcile_export()`, `reconcile_mapping()`, `reconcile_merge()`,
+  `reconcile_override()`, `reconcile_override_batch()`,
+  `reconcile_plot()`, `reconcile_report()`, `reconcile_review()`,
+  `reconcile_splits_lumps()`, `reconcile_suggest()`, and
+  `reconcile_summary()`. This fixes #3 (Santiago Ortega), where
+  `reconcile_apply(result = res_tree, ...)` raised an "unused
+  argument" error because the parameter was named `x`. Positional
+  calls (`reconcile_apply(res_tree, ...)`) continue to work
+  unchanged; only code that passed the reconciliation as `x = ...`
+  needs updating to `reconciliation = ...`. `reconcile_diff(x, y)`
+  is intentionally unchanged — both arguments are reconciliation
+  objects in a symmetric comparison, so neither is the
+  "reconciliation".
+
 ## Documentation
 
+* New vignette subsections on **multi-row species** and
+  **asymmetric datasets** in the bird workflow vignette, addressing
+  #1 (Ayumi Mizuno). Shows how to aggregate to species level before
+  merging, how to join the mapping back to a full multi-row dataset,
+  and when to pick `how = "inner"` vs `how = "left"` for focal
+  study × reference database merges.
+* `reconcile_merge()` help page now carries the same guidance in a
+  `@details` block, covering pairwise row expansion warnings and
+  the four join types.
 * Rewrote every exported function's help page for an ecologist /
   evolutionary biologist audience (the primary users running PCM,
   PGLS, and PGLMM analyses). The previous pages read like API

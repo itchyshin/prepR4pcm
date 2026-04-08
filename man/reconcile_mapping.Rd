@@ -4,21 +4,23 @@
 \alias{reconcile_mapping}
 \title{Extract the per-name mapping table from a reconciliation}
 \usage{
-reconcile_mapping(x)
+reconcile_mapping(reconciliation)
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, \code{\link[=reconcile_trees]{reconcile_trees()}},
+\code{\link[=reconcile_to_trees]{reconcile_to_trees()}}, or \code{\link[=reconcile_multi]{reconcile_multi()}}.}
 }
 \value{
 A tibble with one row per unique name seen in either source
 and the following columns:
 \describe{
-\item{\code{name_x}}{The original name as it appeared in \code{x} (your
-data). \code{NA} for rows that exist only in \code{y} (e.g. tree tips
-not in your data).}
-\item{\code{name_y}}{The original name as it appeared in \code{y} (the
-reference dataset or tree). \code{NA} for rows that exist only in
-\code{x}.}
+\item{\code{name_x}}{The original name as it appeared in source \code{x}
+(your data). \code{NA} for rows that exist only in source \code{y}
+(e.g. tree tips not in your data).}
+\item{\code{name_y}}{The original name as it appeared in source \code{y}
+(the reference dataset or tree). \code{NA} for rows that exist only
+in source \code{x}.}
 \item{\code{name_resolved}}{The accepted/canonical name returned by
 the taxonomic authority, when synonym resolution was used.
 \code{NA} when \code{authority = NULL} or no synonym was found.}
@@ -32,8 +34,8 @@ Levenshtein score for fuzzy matches; \code{NA} for unresolved.}
 \item{\code{match_source}}{Where the match came from: \code{"exact"},
 \code{"normalisation"}, the taxadb authority code (e.g. \code{"col"}),
 \code{"fuzzy"}, or \code{"user_override"}.}
-\item{\code{in_x}}{Logical. Was this name present in \code{x}?}
-\item{\code{in_y}}{Logical. Was this name present in \code{y}?}
+\item{\code{in_x}}{Logical. Was this name present in source \code{x}?}
+\item{\code{in_y}}{Logical. Was this name present in source \code{y}?}
 \item{\code{notes}}{Free-text notes, populated e.g. when a name is
 flagged for review or when an override carries a user comment.}
 }

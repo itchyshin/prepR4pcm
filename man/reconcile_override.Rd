@@ -5,7 +5,7 @@
 \title{Manually override a single name in a reconciliation}
 \usage{
 reconcile_override(
-  x,
+  reconciliation,
   name_x,
   name_y = NULL,
   action = c("accept", "reject", "replace"),
@@ -13,7 +13,7 @@ reconcile_override(
 )
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object.}
 
 \item{name_x}{Character(1). The name as it appears in source \code{x}
 (your data). Must match a value already present in \code{mapping$name_x}.}

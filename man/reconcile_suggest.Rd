@@ -4,10 +4,11 @@
 \alias{reconcile_suggest}
 \title{Suggest near-miss matches for unresolved species}
 \usage{
-reconcile_suggest(x, n = 3, threshold = 0.7, quiet = FALSE)
+reconcile_suggest(reconciliation, n = 3, threshold = 0.7, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{n}{Integer. Maximum number of suggestions to return per
 unresolved species. Default \code{3}.}
@@ -23,8 +24,8 @@ Raise to \code{0.85} for a tighter shortlist.}
 \value{
 A tibble with one row per (unresolved, suggestion) pair:
 \describe{
-\item{\code{unresolved}}{The unresolved name from \code{x}.}
-\item{\code{suggestion}}{A candidate name from \code{y}.}
+\item{\code{unresolved}}{The unresolved name from source \code{x}.}
+\item{\code{suggestion}}{A candidate name from source \code{y}.}
 \item{\code{score}}{Weighted similarity in [\code{threshold}, 1].}
 }
 Rows are sorted by \code{unresolved} then descending \code{score}, so the

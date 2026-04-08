@@ -5,14 +5,15 @@
 \title{Interactively review reconciliation matches}
 \usage{
 reconcile_review(
-  x,
+  reconciliation,
   type = c("flagged", "fuzzy", "all_unresolved"),
   suggest = TRUE,
   quiet = FALSE
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{type}{Character(1). Which matches to review:
 \describe{
@@ -41,7 +42,8 @@ or RStudio.
 }
 \details{
 This function requires an interactive session. In non-interactive
-contexts (e.g., scripts, CI), it warns and returns \code{x} unchanged.
+contexts (e.g., scripts, CI), it warns and returns \code{reconciliation}
+unchanged.
 
 At each prompt the user may enter:
 \describe{

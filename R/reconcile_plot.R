@@ -7,7 +7,8 @@
 #' unresolved). Uses base R graphics only, so no additional packages
 #' are required.
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param type Character(1). Plot style:
 #'   \describe{
 #'     \item{`"bar"` (default)}{Horizontal stacked bar chart. Best for
@@ -18,8 +19,8 @@
 #' @param ... Additional arguments passed on to [graphics::barplot()]
 #'   or [graphics::pie()] (e.g. `main`, `col`, `border`).
 #'
-#' @return The input `x`, invisibly, so you can use the function in a
-#'   pipe.
+#' @return The input `reconciliation`, invisibly, so you can use the
+#'   function in a pipe.
 #'
 #' @family reconciliation functions
 #' @seealso [reconcile_summary()] for a textual breakdown;
@@ -34,13 +35,13 @@
 #' reconcile_plot(rec, type = "pie")
 #'
 #' @export
-reconcile_plot <- function(x, type = c("bar", "pie"), ...) {
+reconcile_plot <- function(reconciliation, type = c("bar", "pie"), ...) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
 
   type <- match.arg(type)
 
-  counts <- x$counts
+  counts <- reconciliation$counts
 
   # Categories, colours, and counts (in display order)
   categories <- c(
@@ -78,7 +79,7 @@ reconcile_plot <- function(x, type = c("bar", "pie"), ...) {
     pr_plot_pie(categories, palette, ...)
   }
 
-  invisible(x)
+  invisible(reconciliation)
 }
 
 

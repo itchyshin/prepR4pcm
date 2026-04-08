@@ -107,17 +107,19 @@ pr_detect_splits_lumps <- function(mapping) {
 #' synonym resolution --- so `authority` must have been set (i.e. not
 #' `NULL`) when building the reconciliation.
 #'
-#' @param x A [reconciliation] object built with a non-`NULL`
-#'   `authority` argument.
+#' @param reconciliation A [reconciliation] object built with a
+#'   non-`NULL` `authority` argument. The function inspects the
+#'   `name_resolved` column, which is only populated when synonym
+#'   resolution was performed.
 #' @param quiet Logical. Suppress the console summary? Default
 #'   `FALSE`.
 #'
 #' @return Invisibly, a list with two tibbles:
 #'   \describe{
-#'     \item{`splits`}{Cases where one name in `x` corresponds to
-#'       multiple accepted names in `y`.}
-#'     \item{`lumps`}{Cases where several names in `x` share a single
-#'       accepted name in `y`.}
+#'     \item{`splits`}{Cases where one name in source `x` corresponds
+#'       to multiple accepted names in source `y`.}
+#'     \item{`lumps`}{Cases where several names in source `x` share a
+#'       single accepted name in source `y`.}
 #'   }
 #'
 #' @family reconciliation functions
@@ -134,13 +136,11 @@ pr_detect_splits_lumps <- function(mapping) {
 #' sl$lumps
 #'
 #' @export
-reconcile_splits_lumps <- function(x, quiet = FALSE) {
+reconcile_splits_lumps <- function(reconciliation, quiet = FALSE) {
 
-  if (!inherits(x, "reconciliation")) {
-    abort("`x` must be a <reconciliation> object.", call = caller_env())
-  }
+  validate_reconciliation(reconciliation)
 
-  sl <- pr_detect_splits_lumps(x$mapping)
+  sl <- pr_detect_splits_lumps(reconciliation$mapping)
 
   if (!quiet) {
     n_splits <- nrow(sl$splits)

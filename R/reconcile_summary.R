@@ -6,7 +6,8 @@
 #' unresolved. Usually the second function you call after
 #' [reconcile_tree()] or [reconcile_data()].
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param detail Character(1). How much to show:
 #'   \describe{
 #'     \item{`"full"` (default)}{Every match category, with the names
@@ -43,19 +44,19 @@
 #' reconcile_summary(rec, detail = "mismatches_only")
 #'
 #' @export
-reconcile_summary <- function(x,
+reconcile_summary <- function(reconciliation,
                               detail = c("full", "brief", "mismatches_only"),
                               format = c("console", "data.frame"),
                               file = NULL,
                               ...) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
   detail <- match.arg(detail)
   format <- match.arg(format)
 
-  mapping <- x$mapping
-  meta    <- x$meta
-  counts  <- x$counts
+  mapping <- reconciliation$mapping
+  meta    <- reconciliation$meta
+  counts  <- reconciliation$counts
 
   # Build sub-tables
   by_type <- tibble(

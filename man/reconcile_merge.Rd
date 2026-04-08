@@ -5,7 +5,7 @@
 \title{Merge two reconciled datasets}
 \usage{
 reconcile_merge(
-  x,
+  reconciliation,
   data_x,
   data_y,
   species_col_x = NULL,
@@ -16,7 +16,8 @@ reconcile_merge(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object (typically from \code{\link[=reconcile_data]{reconcile_data()}}).}
+\item{reconciliation}{A \link{reconciliation} object (typically from
+\code{\link[=reconcile_data]{reconcile_data()}}).}
 
 \item{data_x}{The first data frame (source x in the reconciliation).}
 

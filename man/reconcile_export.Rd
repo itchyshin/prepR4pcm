@@ -5,7 +5,7 @@
 \title{Write an aligned dataset, tree, and mapping table to disk}
 \usage{
 reconcile_export(
-  x,
+  reconciliation,
   data = NULL,
   tree = NULL,
   species_col = NULL,
@@ -16,7 +16,8 @@ reconcile_export(
 )
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{data}{A data frame to align. If \code{NULL}, only the tree and mapping
 are written.}

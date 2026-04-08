@@ -5,14 +5,15 @@
 \title{Write a self-contained HTML reconciliation report}
 \usage{
 reconcile_report(
-  x,
+  reconciliation,
   file,
   title = "Reconciliation Report",
   open = interactive()
 )
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{file}{Character(1). Output file path. Must end in \code{.html}.}
 

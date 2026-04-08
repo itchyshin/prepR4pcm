@@ -8,7 +8,8 @@
 #' in place. Useful for auditing fuzzy or flagged matches in the console
 #' or RStudio.
 #'
-#' @param x A `reconciliation` object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param type Character(1). Which matches to review:
 #'   \describe{
 #'     \item{`"flagged"`}{Only flagged matches (default).}
@@ -31,7 +32,8 @@
 #'
 #' @details
 #' This function requires an interactive session. In non-interactive
-#' contexts (e.g., scripts, CI), it warns and returns `x` unchanged.
+#' contexts (e.g., scripts, CI), it warns and returns `reconciliation`
+#' unchanged.
 #'
 #' At each prompt the user may enter:
 #' \describe{
@@ -50,23 +52,24 @@
 #' }
 #'
 #' @export
-reconcile_review <- function(x, type = c("flagged", "fuzzy", "all_unresolved"),
+reconcile_review <- function(reconciliation,
+                             type = c("flagged", "fuzzy", "all_unresolved"),
                              suggest = TRUE, quiet = FALSE) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
   type <- match.arg(type)
 
   if (!interactive()) {
     warn(
       paste0(
         "`reconcile_review()` requires an interactive session. ",
-        "Returning `x` unchanged."
+        "Returning `reconciliation` unchanged."
       )
     )
-    return(x)
+    return(reconciliation)
   }
 
-  mapping <- x$mapping
+  mapping <- reconciliation$mapping
 
   # Select rows to review based on type
   if (type == "flagged") {
@@ -83,7 +86,7 @@ reconcile_review <- function(x, type = c("flagged", "fuzzy", "all_unresolved"),
   n_total <- length(review_idx)
   if (n_total == 0) {
     cli_alert_info("No matches to review for type = '{type}'.")
-    return(x)
+    return(reconciliation)
   }
 
   cli_h1("Interactive review ({type}): {n_total} items")
@@ -94,7 +97,7 @@ reconcile_review <- function(x, type = c("flagged", "fuzzy", "all_unresolved"),
 
  for (i in seq_len(n_total)) {
     # Re-read mapping each iteration because overrides may mutate it
-    mapping <- x$mapping
+    mapping <- reconciliation$mapping
     row <- mapping[review_idx[i], ]
 
     name_x     <- row$name_x
@@ -126,18 +129,22 @@ reconcile_review <- function(x, type = c("flagged", "fuzzy", "all_unresolved"),
       break
     } else if (response == "a") {
       if (!is.na(name_y) && nchar(name_y) > 0) {
-        x <- reconcile_override(x, name_x = name_x, name_y = name_y,
-                                action = "accept",
-                                note = "Accepted during interactive review")
+        reconciliation <- reconcile_override(
+          reconciliation, name_x = name_x, name_y = name_y,
+          action = "accept",
+          note = "Accepted during interactive review"
+        )
         n_accepted <- n_accepted + 1L
       } else {
         cat("  Cannot accept: no target name. Skipping.\n")
         n_skipped <- n_skipped + 1L
       }
     } else if (response == "r") {
-      x <- reconcile_override(x, name_x = name_x,
-                              action = "reject",
-                              note = "Rejected during interactive review")
+      reconciliation <- reconcile_override(
+        reconciliation, name_x = name_x,
+        action = "reject",
+        note = "Rejected during interactive review"
+      )
       n_rejected <- n_rejected + 1L
     } else {
       n_skipped <- n_skipped + 1L
@@ -150,5 +157,5 @@ reconcile_review <- function(x, type = c("flagged", "fuzzy", "all_unresolved"),
     )
   }
 
-  x
+  reconciliation
 }

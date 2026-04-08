@@ -23,9 +23,10 @@
 #'     TACT approaches) when grafting many species.
 #' }
 #'
-#' @param x A [reconciliation] object, typically from [reconcile_tree()].
+#' @param reconciliation A [reconciliation] object, typically from
+#'   [reconcile_tree()].
 #' @param tree An `ape::phylo` object. Must be the same tree used to
-#'   build `x` (or a tree with the same tip set).
+#'   build `reconciliation` (or a tree with the same tip set).
 #' @param where Character(1). Where to attach each new tip:
 #'   \describe{
 #'     \item{`"genus"` (default)}{Attach as sister to a single congener
@@ -117,7 +118,7 @@
 #' head(aug_near$augmented[, c("species", "placed_near", "method")])
 #'
 #' @export
-reconcile_augment <- function(x,
+reconcile_augment <- function(reconciliation,
                                tree,
                                where = c("genus", "near"),
                                branch_length = c("congener_median",
@@ -126,14 +127,14 @@ reconcile_augment <- function(x,
                                seed = NULL,
                                quiet = FALSE) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
   where <- match.arg(where)
   branch_length <- match.arg(branch_length)
   tree <- pr_load_tree(tree)
   original_tree <- tree
 
   # Find unresolved species (in data, not in tree)
-  mapping <- x$mapping
+  mapping <- reconciliation$mapping
   unresolved <- mapping[mapping$match_type == "unresolved" &
                           mapping$in_x & !mapping$in_y, ]
   species_to_add <- unresolved$name_x

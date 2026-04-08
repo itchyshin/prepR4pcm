@@ -4,13 +4,13 @@
 \alias{validate_reconciliation}
 \title{Validate a reconciliation object}
 \usage{
-validate_reconciliation(x)
+validate_reconciliation(reconciliation)
 }
 \arguments{
-\item{x}{A \code{reconciliation} object.}
+\item{reconciliation}{A \code{reconciliation} object.}
 }
 \value{
-\code{x}, invisibly, if valid. Throws an error otherwise.
+\code{reconciliation}, invisibly, if valid. Throws an error otherwise.
 }
 \description{
 Checks that all required components are present and correctly typed.

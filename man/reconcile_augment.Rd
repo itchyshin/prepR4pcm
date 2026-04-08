@@ -5,7 +5,7 @@
 \title{Graft missing species onto a phylogenetic tree (genus-level placement)}
 \usage{
 reconcile_augment(
-  x,
+  reconciliation,
   tree,
   where = c("genus", "near"),
   branch_length = c("congener_median", "half_terminal", "zero"),
@@ -14,10 +14,11 @@ reconcile_augment(
 )
 }
 \arguments{
-\item{x}{A \link{reconciliation} object, typically from \code{\link[=reconcile_tree]{reconcile_tree()}}.}
+\item{reconciliation}{A \link{reconciliation} object, typically from
+\code{\link[=reconcile_tree]{reconcile_tree()}}.}
 
 \item{tree}{An \code{ape::phylo} object. Must be the same tree used to
-build \code{x} (or a tree with the same tip set).}
+build \code{reconciliation} (or a tree with the same tip set).}
 
 \item{where}{Character(1). Where to attach each new tip:
 \describe{

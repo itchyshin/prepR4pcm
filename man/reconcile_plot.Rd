@@ -4,10 +4,11 @@
 \alias{reconcile_plot}
 \title{Plot the match composition of a reconciliation}
 \usage{
-reconcile_plot(x, type = c("bar", "pie"), ...)
+reconcile_plot(reconciliation, type = c("bar", "pie"), ...)
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{type}{Character(1). Plot style:
 \describe{
@@ -21,8 +22,8 @@ roughly balanced.}
 or \code{\link[graphics:pie]{graphics::pie()}} (e.g. \code{main}, \code{col}, \code{border}).}
 }
 \value{
-The input \code{x}, invisibly, so you can use the function in a
-pipe.
+The input \code{reconciliation}, invisibly, so you can use the
+function in a pipe.
 }
 \description{
 Draw a one-glance bar or pie chart of how species names were

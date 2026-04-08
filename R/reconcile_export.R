@@ -7,7 +7,8 @@
 #' reconciliation report and you have a fully documented provenance
 #' trail.
 #'
-#' @param x A `reconciliation` object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param data A data frame to align. If `NULL`, only the tree and mapping
 #'   are written.
 #' @param tree An `ape::phylo` object or file path. If `NULL`, only the
@@ -45,14 +46,14 @@
 #' unlink(out_dir, recursive = TRUE)  # clean up
 #'
 #' @export
-reconcile_export <- function(x, data = NULL, tree = NULL,
+reconcile_export <- function(reconciliation, data = NULL, tree = NULL,
                               species_col = NULL,
                               dir = ".",
                               prefix = "reconciled",
                               tree_format = c("nexus", "newick"),
                               drop_unresolved = TRUE) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
   tree_format <- match.arg(tree_format)
 
   # Create output directory
@@ -62,7 +63,7 @@ reconcile_export <- function(x, data = NULL, tree = NULL,
 
   # Apply the reconciliation
   aligned <- reconcile_apply(
-    x,
+    reconciliation,
     data = data,
     tree = tree,
     species_col = species_col,
@@ -96,7 +97,7 @@ reconcile_export <- function(x, data = NULL, tree = NULL,
   # Write mapping table
   path_mapping <- file.path(dir, paste0(prefix, "_mapping.csv"))
   utils::write.csv(
-    as.data.frame(x$mapping),
+    as.data.frame(reconciliation$mapping),
     path_mapping,
     row.names = FALSE
   )

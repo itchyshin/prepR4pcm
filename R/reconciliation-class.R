@@ -82,16 +82,16 @@ new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL) {
 #'
 #' Checks that all required components are present and correctly typed.
 #'
-#' @param x A `reconciliation` object.
-#' @return `x`, invisibly, if valid. Throws an error otherwise.
+#' @param reconciliation A `reconciliation` object.
+#' @return `reconciliation`, invisibly, if valid. Throws an error otherwise.
 #' @keywords internal
-validate_reconciliation <- function(x) {
-  if (!inherits(x, "reconciliation")) {
-    abort("`x` must be a <reconciliation> object.", call = caller_env())
+validate_reconciliation <- function(reconciliation) {
+  if (!inherits(reconciliation, "reconciliation")) {
+    abort("Input must be a <reconciliation> object.", call = caller_env())
   }
 
   required_fields <- c("mapping", "meta", "counts", "overrides")
-  missing <- setdiff(required_fields, names(x))
+  missing <- setdiff(required_fields, names(reconciliation))
   if (length(missing) > 0) {
     abort(
       paste0("Reconciliation object is missing fields: ",
@@ -102,7 +102,7 @@ validate_reconciliation <- function(x) {
 
   required_cols <- c("name_x", "name_y", "name_resolved", "match_type",
                      "match_score", "match_source", "in_x", "in_y", "notes")
-  missing_cols <- setdiff(required_cols, names(x$mapping))
+  missing_cols <- setdiff(required_cols, names(reconciliation$mapping))
   if (length(missing_cols) > 0) {
     abort(
       paste0("Mapping table is missing columns: ",
@@ -111,7 +111,7 @@ validate_reconciliation <- function(x) {
     )
   }
 
-  invisible(x)
+  invisible(reconciliation)
 }
 
 #' Compute summary counts from a mapping table

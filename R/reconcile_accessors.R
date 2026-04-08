@@ -7,17 +7,19 @@
 #' unresolved species, all fuzzy matches above a given score, or join
 #' the mapping back to the original data frame).
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], [reconcile_trees()],
+#'   [reconcile_to_trees()], or [reconcile_multi()].
 #'
 #' @return A tibble with one row per unique name seen in either source
 #'   and the following columns:
 #'   \describe{
-#'     \item{`name_x`}{The original name as it appeared in `x` (your
-#'       data). `NA` for rows that exist only in `y` (e.g. tree tips
-#'       not in your data).}
-#'     \item{`name_y`}{The original name as it appeared in `y` (the
-#'       reference dataset or tree). `NA` for rows that exist only in
-#'       `x`.}
+#'     \item{`name_x`}{The original name as it appeared in source `x`
+#'       (your data). `NA` for rows that exist only in source `y`
+#'       (e.g. tree tips not in your data).}
+#'     \item{`name_y`}{The original name as it appeared in source `y`
+#'       (the reference dataset or tree). `NA` for rows that exist only
+#'       in source `x`.}
 #'     \item{`name_resolved`}{The accepted/canonical name returned by
 #'       the taxonomic authority, when synonym resolution was used.
 #'       `NA` when `authority = NULL` or no synonym was found.}
@@ -31,8 +33,8 @@
 #'     \item{`match_source`}{Where the match came from: `"exact"`,
 #'       `"normalisation"`, the taxadb authority code (e.g. `"col"`),
 #'       `"fuzzy"`, or `"user_override"`.}
-#'     \item{`in_x`}{Logical. Was this name present in `x`?}
-#'     \item{`in_y`}{Logical. Was this name present in `y`?}
+#'     \item{`in_x`}{Logical. Was this name present in source `x`?}
+#'     \item{`in_y`}{Logical. Was this name present in source `y`?}
 #'     \item{`notes`}{Free-text notes, populated e.g. when a name is
 #'       flagged for review or when an override carries a user comment.}
 #'   }
@@ -57,9 +59,9 @@
 #' head(mapping[mapping$in_x & !mapping$in_y, c("name_x", "match_type")])
 #'
 #' @export
-reconcile_mapping <- function(x) {
-  validate_reconciliation(x)
-  x$mapping
+reconcile_mapping <- function(reconciliation) {
+  validate_reconciliation(reconciliation)
+  reconciliation$mapping
 }
 
 
@@ -76,7 +78,7 @@ reconcile_mapping <- function(x) {
 #' console, see [reconcile_review()]; for published taxonomy crosswalks,
 #' see [reconcile_crosswalk()].
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object.
 #' @param name_x Character(1). The name as it appears in source `x`
 #'   (your data). Must match a value already present in `mapping$name_x`.
 #' @param name_y Character(1) or `NULL`. The name in source `y` (the
@@ -126,11 +128,11 @@ reconcile_mapping <- function(x) {
 #' }
 #'
 #' @export
-reconcile_override <- function(x, name_x, name_y = NULL,
+reconcile_override <- function(reconciliation, name_x, name_y = NULL,
                                action = c("accept", "reject", "replace"),
                                note = "") {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
   action <- match.arg(action)
 
   # Record the override
@@ -141,10 +143,10 @@ reconcile_override <- function(x, name_x, name_y = NULL,
     user_note = note,
     timestamp = Sys.time()
   )
-  x$overrides <- rbind(x$overrides, new_override)
+  reconciliation$overrides <- rbind(reconciliation$overrides, new_override)
 
   # Apply the override to the mapping
-  mapping <- x$mapping
+  mapping <- reconciliation$mapping
 
   if (action == "accept" || action == "replace") {
     if (is.null(name_y)) {
@@ -202,12 +204,12 @@ reconcile_override <- function(x, name_x, name_y = NULL,
     }
   }
 
-  x$mapping <- mapping
-  x$counts <- pr_compute_counts(mapping)
+  reconciliation$mapping <- mapping
+  reconciliation$counts <- pr_compute_counts(mapping)
 
   cli_alert_success("Override applied: '{name_x}' -> '{name_y %||% 'NA'}' ({action})")
 
-  x
+  reconciliation
 }
 
 
@@ -225,7 +227,8 @@ reconcile_override <- function(x, name_x, name_y = NULL,
 #' reconciliation already knows which data name corresponds to which
 #' tree tip, and downstream PCM software looks up tips by label.
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param data A data frame to align. If `NULL`, only the tree is
 #'   returned.
 #' @param tree An `ape::phylo` object to align. If `NULL`, only the
@@ -270,12 +273,12 @@ reconcile_override <- function(x, name_x, name_y = NULL,
 #' #                             aligned$tree, aligned$data, "Species1"))
 #'
 #' @export
-reconcile_apply <- function(x, data = NULL, tree = NULL,
+reconcile_apply <- function(reconciliation, data = NULL, tree = NULL,
                             species_col = NULL,
                             drop_unresolved = FALSE) {
 
-  validate_reconciliation(x)
-  mapping <- x$mapping
+  validate_reconciliation(reconciliation)
+  mapping <- reconciliation$mapping
 
   # Get matched names (in both x and y)
   matched <- mapping[mapping$in_x & mapping$in_y, ]

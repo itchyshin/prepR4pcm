@@ -5,7 +5,7 @@
 \title{Print a reconciliation summary to the console}
 \usage{
 reconcile_summary(
-  x,
+  reconciliation,
   detail = c("full", "brief", "mismatches_only"),
   format = c("console", "data.frame"),
   file = NULL,
@@ -13,7 +13,8 @@ reconcile_summary(
 )
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{detail}{Character(1). How much to show:
 \describe{

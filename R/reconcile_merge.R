@@ -27,7 +27,8 @@
 #' [reconcile_mapping()], then join the mapping back to your full dataset
 #' using the species column as key.
 #'
-#' @param x A `reconciliation` object (typically from [reconcile_data()]).
+#' @param reconciliation A [reconciliation] object (typically from
+#'   [reconcile_data()]).
 #' @param data_x The first data frame (source x in the reconciliation).
 #' @param data_y The second data frame (source y in the reconciliation).
 #' @param species_col_x Character(1). Species column in `data_x`.
@@ -71,14 +72,14 @@
 #' head(merged[, c("species_resolved", "Family1", "Common_name")])
 #'
 #' @export
-reconcile_merge <- function(x, data_x, data_y,
+reconcile_merge <- function(reconciliation, data_x, data_y,
                             species_col_x = NULL,
                             species_col_y = NULL,
                             how = c("inner", "left", "full"),
                             suffix = c("_x", "_y"),
                             drop_unresolved = FALSE) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
   how <- match.arg(how)
 
   if (!is.data.frame(data_x)) abort("`data_x` must be a data frame.", call = caller_env())
@@ -105,7 +106,7 @@ reconcile_merge <- function(x, data_x, data_y,
           call = caller_env())
   }
 
-  mapping <- x$mapping
+  mapping <- reconciliation$mapping
 
   # Build the join key from the mapping table
   matched <- mapping[mapping$in_x & mapping$in_y, ]

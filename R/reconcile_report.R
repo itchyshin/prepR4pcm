@@ -9,7 +9,8 @@
 #' pasting into supplementary materials, or archiving next to analysis
 #' outputs.
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param file Character(1). Output file path. Must end in `.html`.
 #' @param title Character(1). Report title shown at the top of the
 #'   page. Default is generic.
@@ -34,20 +35,20 @@
 #' cat("Report written to:", f, "\n")
 #'
 #' @export
-reconcile_report <- function(x,
+reconcile_report <- function(reconciliation,
                               file,
                               title = "Reconciliation Report",
                               open = interactive()) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
 
   if (!grepl("[.]html$", file, ignore.case = TRUE)) {
     abort("`file` must end in '.html'.", call = caller_env())
   }
 
-  mapping <- x$mapping
-  meta    <- x$meta
-  counts  <- x$counts
+  mapping <- reconciliation$mapping
+  meta    <- reconciliation$meta
+  counts  <- reconciliation$counts
 
   # --- Build sub-tables ---
   matched     <- mapping[mapping$in_x & mapping$in_y, ]

@@ -4,11 +4,13 @@
 \alias{reconcile_splits_lumps}
 \title{Flag taxonomic splits and lumps in a reconciliation}
 \usage{
-reconcile_splits_lumps(x, quiet = FALSE)
+reconcile_splits_lumps(reconciliation, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \link{reconciliation} object built with a non-\code{NULL}
-\code{authority} argument.}
+\item{reconciliation}{A \link{reconciliation} object built with a
+non-\code{NULL} \code{authority} argument. The function inspects the
+\code{name_resolved} column, which is only populated when synonym
+resolution was performed.}
 
 \item{quiet}{Logical. Suppress the console summary? Default
 \code{FALSE}.}
@@ -16,10 +18,10 @@ reconcile_splits_lumps(x, quiet = FALSE)
 \value{
 Invisibly, a list with two tibbles:
 \describe{
-\item{\code{splits}}{Cases where one name in \code{x} corresponds to
-multiple accepted names in \code{y}.}
-\item{\code{lumps}}{Cases where several names in \code{x} share a single
-accepted name in \code{y}.}
+\item{\code{splits}}{Cases where one name in source \code{x} corresponds
+to multiple accepted names in source \code{y}.}
+\item{\code{lumps}}{Cases where several names in source \code{x} share a
+single accepted name in source \code{y}.}
 }
 }
 \description{

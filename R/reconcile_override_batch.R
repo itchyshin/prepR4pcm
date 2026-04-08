@@ -8,14 +8,16 @@
 #' check it into version control, and apply it on every run so the
 #' corrections are reproducible and reviewable.
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param overrides A data frame, or a character(1) file path to a CSV
 #'   with the same columns:
 #'   \describe{
-#'     \item{`name_x` (required)}{The original name in `x` (your data).}
+#'     \item{`name_x` (required)}{The original name in source `x`
+#'       (your data).}
 #'     \item{`action`}{One of `"accept"` (default), `"reject"`,
 #'       `"replace"`. See [reconcile_override()] for the semantics.}
-#'     \item{`name_y`}{The target name in `y`; required for
+#'     \item{`name_y`}{The target name in source `y`; required for
 #'       `"accept"` and `"replace"`.}
 #'     \item{`note`}{Optional free-text justification.}
 #'   }
@@ -51,9 +53,10 @@
 #' }
 #'
 #' @export
-reconcile_override_batch <- function(x, overrides, quiet = FALSE) {
+reconcile_override_batch <- function(reconciliation, overrides,
+                                     quiet = FALSE) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
 
 
   # --- Load overrides from CSV if needed ---
@@ -120,8 +123,8 @@ reconcile_override_batch <- function(x, overrides, quiet = FALSE) {
 
     name_y_val <- if (is.na(row$name_y)) NULL else row$name_y
 
-    x <- reconcile_override(
-      x,
+    reconciliation <- reconcile_override(
+      reconciliation,
       name_x = row$name_x,
       name_y = name_y_val,
       action = row$action,
@@ -135,5 +138,5 @@ reconcile_override_batch <- function(x, overrides, quiet = FALSE) {
     cli_alert_success("Applied {n_applied} override{?s}.")
   }
 
-  x
+  reconciliation
 }

@@ -26,7 +26,8 @@
 #' badly misspelled simultaneously; if you suspect that, lower the
 #' `threshold` and inspect manually.
 #'
-#' @param x A [reconciliation] object.
+#' @param reconciliation A [reconciliation] object returned by
+#'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param n Integer. Maximum number of suggestions to return per
 #'   unresolved species. Default `3`.
 #' @param threshold Numeric in \[0, 1\]. Minimum weighted similarity
@@ -38,8 +39,8 @@
 #'
 #' @return A tibble with one row per (unresolved, suggestion) pair:
 #'   \describe{
-#'     \item{`unresolved`}{The unresolved name from `x`.}
-#'     \item{`suggestion`}{A candidate name from `y`.}
+#'     \item{`unresolved`}{The unresolved name from source `x`.}
+#'     \item{`suggestion`}{A candidate name from source `y`.}
 #'     \item{`score`}{Weighted similarity in \[`threshold`, 1\].}
 #'   }
 #'   Rows are sorted by `unresolved` then descending `score`, so the
@@ -60,11 +61,12 @@
 #' head(suggestions, 10)
 #'
 #' @export
-reconcile_suggest <- function(x, n = 3, threshold = 0.7, quiet = FALSE) {
+reconcile_suggest <- function(reconciliation, n = 3, threshold = 0.7,
+                              quiet = FALSE) {
 
-  validate_reconciliation(x)
+  validate_reconciliation(reconciliation)
 
-  mapping <- x$mapping
+  mapping <- reconciliation$mapping
 
   # Unresolved x-only names
 
@@ -100,7 +102,7 @@ reconcile_suggest <- function(x, n = 3, threshold = 0.7, quiet = FALSE) {
   }
 
   # Normalise for comparison
-  rank <- x$meta$rank %||% "species"
+  rank <- reconciliation$meta$rank %||% "species"
   norm_unresolved <- as.character(pr_normalize_names(unresolved_names, rank = rank))
   norm_y <- as.character(pr_normalize_names(y_names, rank = rank))
 

@@ -4,18 +4,20 @@
 \alias{reconcile_override_batch}
 \title{Apply many manual corrections to a reconciliation at once}
 \usage{
-reconcile_override_batch(x, overrides, quiet = FALSE)
+reconcile_override_batch(reconciliation, overrides, quiet = FALSE)
 }
 \arguments{
-\item{x}{A \link{reconciliation} object.}
+\item{reconciliation}{A \link{reconciliation} object returned by
+\code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{overrides}{A data frame, or a character(1) file path to a CSV
 with the same columns:
 \describe{
-\item{\code{name_x} (required)}{The original name in \code{x} (your data).}
+\item{\code{name_x} (required)}{The original name in source \code{x}
+(your data).}
 \item{\code{action}}{One of \code{"accept"} (default), \code{"reject"},
 \code{"replace"}. See \code{\link[=reconcile_override]{reconcile_override()}} for the semantics.}
-\item{\code{name_y}}{The target name in \code{y}; required for
+\item{\code{name_y}}{The target name in source \code{y}; required for
 \code{"accept"} and \code{"replace"}.}
 \item{\code{note}}{Optional free-text justification.}
 }}
