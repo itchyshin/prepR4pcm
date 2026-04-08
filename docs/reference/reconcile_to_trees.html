@@ -26,8 +26,8 @@ Jetz 2012)."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
-    <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird Trait Workflow</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -89,44 +89,94 @@ names. Auto-detected if <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-authority">authority<a class="anchor" aria-label="anchor" href="#arg-authority"></a></dt>
-<dd><p>Character(1). Taxonomic authority for synonym resolution:
-<code>"col"</code> (default), <code>"itis"</code>, <code>"gbif"</code>, <code>"ncbi"</code>, etc. Set to <code>NULL</code> to
-skip synonym lookup entirely.</p></dd>
+<dd><p>Character(1) or <code>NULL</code>. Taxonomic authority used for
+synonym resolution (stage 3 of the cascade). One of:</p><dl><dt><code>"col"</code> (default)</dt>
+<dd><p>Catalogue of Life — broad, curated,
+frequently updated. A sensible default for most taxa.</p></dd>
+
+<dt><code>"gbif"</code></dt>
+<dd><p>Global Biodiversity Information Facility backbone.
+Wider coverage; includes more recent synonymy.</p></dd>
+
+<dt><code>"itis"</code></dt>
+<dd><p>Integrated Taxonomic Information System — strong
+for North American vertebrates and plants.</p></dd>
+
+<dt><code>"ncbi"</code></dt>
+<dd><p>NCBI Taxonomy — best when working with sequence
+data.</p></dd>
+
+<dt><code>"iucn"</code>, <code>"fb"</code> (FishBase), <code>"slb"</code> (SeaLifeBase), <code>"wd"</code>
+(Wikidata), <code>"tpl"</code> (The Plant List), <code>"itis_test"</code></dt>
+<dd><p>Also supported via <span class="pkg">taxadb</span>.</p></dd>
+
+<dt><code>NULL</code></dt>
+<dd><p>Skip the synonym stage entirely. Useful for quick
+checks or when taxadb is unavailable. Stages 1, 2 and 4 still
+run.</p></dd>
+
+
+</dl></dd>
 
 
 <dt id="arg-rank">rank<a class="anchor" aria-label="anchor" href="#arg-rank"></a></dt>
-<dd><p>Character(1). <code>"species"</code> (default) strips infraspecific
-epithets during normalisation. <code>"subspecies"</code> retains trinomials.</p></dd>
+<dd><p>Character(1). Controls how trinomials are handled during
+normalisation:</p><dl><dt><code>"species"</code> (default)</dt>
+<dd><p>Strip infraspecific epithets so that
+<code>"Parus major major"</code> becomes <code>"Parus major"</code> before matching.</p></dd>
+
+<dt><code>"subspecies"</code></dt>
+<dd><p>Keep trinomials intact. Use this when your
+analysis operates at subspecies level.</p></dd>
+
+
+</dl></dd>
 
 
 <dt id="arg-overrides">overrides<a class="anchor" aria-label="anchor" href="#arg-overrides"></a></dt>
-<dd><p>A data frame with at least columns <code>name_x</code> and <code>name_y</code>
-containing pre-built name corrections, or a file path to a CSV. Optional
-column <code>user_note</code> for documentation. Set to <code>NULL</code> (default) for no
-overrides.</p></dd>
+<dd><p>Optional pre-built corrections. Either a data frame
+with at least columns <code>name_x</code> and <code>name_y</code> (plus an optional
+<code>user_note</code> column), or a file path to a CSV with the same columns.
+Any name listed here bypasses the cascade and is recorded as
+<code>match_type = "manual"</code>. Useful for applying published crosswalks
+(see <code><a href="reconcile_crosswalk.html">reconcile_crosswalk()</a></code>) or for locking down decisions made in a
+previous run.</p></dd>
 
 
 <dt id="arg-db-version">db_version<a class="anchor" aria-label="anchor" href="#arg-db-version"></a></dt>
-<dd><p>Character(1). taxadb database version. <code>NULL</code> uses the
-latest available.</p></dd>
+<dd><p>Character(1). <span class="pkg">taxadb</span> database snapshot to use
+(e.g. <code>"22.12"</code>). <code>NULL</code> (default) uses the latest available.</p></dd>
 
 
 <dt id="arg-fuzzy">fuzzy<a class="anchor" aria-label="anchor" href="#arg-fuzzy"></a></dt>
-<dd><p>Logical. Enable fuzzy matching for likely typos? Default
-<code>FALSE</code>. When <code>TRUE</code>, names that remain unmatched after synonym
-resolution are compared using component-based string similarity.</p></dd>
+<dd><p>Logical. Enable the fuzzy-matching stage? Default <code>FALSE</code>.
+Turn this on to catch likely typos (<em>Corvus brachyrhnchos</em>
+-&gt; <em>Corvus brachyrhynchos</em>). When <code>FALSE</code>, stages 1–3 still run.</p></dd>
 
 
 <dt id="arg-fuzzy-threshold">fuzzy_threshold<a class="anchor" aria-label="anchor" href="#arg-fuzzy-threshold"></a></dt>
-<dd><p>Numeric (0–1). Minimum similarity score for
-fuzzy matches. Default <code>0.9</code> (conservative; catches obvious typos).</p></dd>
+<dd><p>Numeric in [0, 1]. Minimum genus-weighted
+similarity score for a fuzzy match to be accepted. Default <code>0.9</code>
+(roughly "no more than ~10% of characters differ"). Lower values
+(e.g. <code>0.7</code>) are more permissive but produce more false positives;
+always review fuzzy matches with <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code> or
+<code><a href="reconcile_review.html">reconcile_review()</a></code> before trusting them.</p></dd>
 
 
 <dt id="arg-resolve">resolve<a class="anchor" aria-label="anchor" href="#arg-resolve"></a></dt>
-<dd><p>Character(1). How to handle low-confidence matches:
-<code>"flag"</code> (default) marks fuzzy matches below 0.95 and indirect
-synonym matches as <code>match_type = "flagged"</code> for manual review.
-<code>"first"</code> accepts all matches at face value.</p></dd>
+<dd><p>Character(1). What to do with borderline matches:</p><dl><dt><code>"flag"</code> (default)</dt>
+<dd><p>Mark low-confidence fuzzy matches (score
+below 0.95) and names with ambiguous taxadb synonymy as
+<code>match_type = "flagged"</code> so you can audit them with
+<code><a href="reconcile_review.html">reconcile_review()</a></code> or <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code>.</p></dd>
+
+<dt><code>"first"</code></dt>
+<dd><p>Accept the highest-scoring candidate silently,
+without flagging. Faster but riskier; use only when you have
+already reviewed the ambiguities.</p></dd>
+
+
+</dl></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
@@ -135,46 +185,55 @@ synonym matches as <code>match_type = "flagged"</code> for manual review.
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list of <code>reconciliation</code> objects, one per tree.</p>
+    <p>A named list of <a href="reconciliation.html">reconciliation</a> objects, one per tree, with
+the same names as <code>trees</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Species names in <code>x</code> are normalised once and reused across all trees,
 so synonym lookups are not repeated.</p>
     </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="reconcile_tree.html">reconcile_tree()</a></code> for the single-tree case;
+<code><a href="reconcile_diff.html">reconcile_diff()</a></code> to compare two reconciliations (e.g. to quantify
+how many species are gained or lost by switching taxonomies).</p>
+<p>Other reconciliation functions:
+<code><a href="reconcile_apply.html">reconcile_apply</a>()</code>,
+<code><a href="reconcile_augment.html">reconcile_augment</a>()</code>,
+<code><a href="reconcile_crosswalk.html">reconcile_crosswalk</a>()</code>,
+<code><a href="reconcile_data.html">reconcile_data</a>()</code>,
+<code><a href="reconcile_diff.html">reconcile_diff</a>()</code>,
+<code><a href="reconcile_export.html">reconcile_export</a>()</code>,
+<code><a href="reconcile_mapping.html">reconcile_mapping</a>()</code>,
+<code><a href="reconcile_merge.html">reconcile_merge</a>()</code>,
+<code><a href="reconcile_multi.html">reconcile_multi</a>()</code>,
+<code><a href="reconcile_override.html">reconcile_override</a>()</code>,
+<code><a href="reconcile_override_batch.html">reconcile_override_batch</a>()</code>,
+<code><a href="reconcile_plot.html">reconcile_plot</a>()</code>,
+<code><a href="reconcile_report.html">reconcile_report</a>()</code>,
+<code><a href="reconcile_review.html">reconcile_review</a>()</code>,
+<code><a href="reconcile_splits_lumps.html">reconcile_splits_lumps</a>()</code>,
+<code><a href="reconcile_suggest.html">reconcile_suggest</a>()</code>,
+<code><a href="reconcile_summary.html">reconcile_summary</a>()</code>,
+<code><a href="reconcile_tree.html">reconcile_tree</a>()</code>,
+<code><a href="reconcile_trees.html">reconcile_trees</a>()</code></p></div>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_clements25</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">reconcile_to_trees</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">avonet_subset</span>,</span></span>
-<span class="r-in"><span>  trees <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>jetz <span class="op">=</span> <span class="va">tree_jetz</span>, clements <span class="op">=</span> <span class="va">tree_clements25</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
-<span class="r-in"><span>  authority <span class="op">=</span> <span class="cn">NULL</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names against 2 trees</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span>   [jetz] 657 tips</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span>   [jetz] Matched 657/919 names</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span>   [clements] 854 tips</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 854 names through 2 stages...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (854 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (854 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span>   [clements] Matched 854/919 names</span>
-<span class="r-in"><span><span class="co"># Compare overlap across trees</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">results</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="va">r</span><span class="op">$</span><span class="va">counts</span><span class="op">$</span><span class="va">n_exact</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     jetz clements </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        0        0 </span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_clements25</span><span class="op">)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">reconcile_to_trees</span><span class="op">(</span></span>
+<span>  <span class="va">avonet_subset</span>,</span>
+<span>  trees <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>jetz <span class="op">=</span> <span class="va">tree_jetz</span>, clements <span class="op">=</span> <span class="va">tree_clements25</span><span class="op">)</span>,</span>
+<span>  x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span>
+<span>  authority <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Compare overlap across trees</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">results</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="va">r</span><span class="op">$</span><span class="va">counts</span><span class="op">$</span><span class="va">n_exact</span><span class="op">)</span></span>
+<span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

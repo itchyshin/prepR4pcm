@@ -12,7 +12,6 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/delhey_subset.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/index.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/nesttrait_subset.html</loc></url>
-<url><loc>https://itchyshin.github.io/prepR4pcm/reference/new_reconciliation.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_align_tree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_bind_species.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_bind_tip.html</loc></url>
@@ -34,6 +33,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_strip_authority.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_strip_infraspecific.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_valid_authorities.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_validate_tree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/prepR4pcm-package.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_apply.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_augment.html</loc></url>
@@ -55,6 +55,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_to_trees.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_tree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_trees.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconciliation.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/tree_clements25.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/tree_jetz.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/validate_reconciliation.html</loc></url>

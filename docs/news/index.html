@@ -18,8 +18,8 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
-    <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird Trait Workflow</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -37,6 +37,35 @@
       <small>Source: <a href="https://github.com/itchyshin/prepR4pcm/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="prepr4pcm-development-version">prepR4pcm (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-development-version"></a></h2>
+<div class="section level3">
+<h3 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h3>
+<ul><li>Rewrote every exported function’s help page for an ecologist / evolutionary biologist audience (the primary users running PCM, PGLS, and PGLMM analyses). The previous pages read like API reference; the new pages explain the reconciliation workflow, taxadb authority choices, fuzzy matching semantics, and tree augmentation trade-offs in terms the audience actually uses.</li>
+<li>
+<code><a href="../reference/prepR4pcm-package.html">?prepR4pcm</a></code> is now a proper package landing page with a canonical workflow code block, a “Key concepts” section (reconciliation object, four-stage cascade, provenance, splits/lumps, augmentation), and function-family pointers.</li>
+<li>Each taxadb <code>authority</code> option in <code><a href="../reference/reconcile_data.html">reconcile_data()</a></code> and <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> is now glossed in one line (<code>"col"</code> = Catalogue of Life, <code>"gbif"</code> = GBIF Backbone, etc.) to help users choose without consulting the taxadb manual.</li>
+<li>
+<code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> gained a “When to use this” section with explicit cautions about reporting augmented tips, running sensitivity analyses, and preferring PhyloMaker / TACT for publication-grade augmentation.</li>
+<li>
+<code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code> now explains Levenshtein similarity and the 60/40 genus/epithet weighting in plain language.</li>
+<li>
+<code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> documents every column of the returned tibble, including when <code>name_resolved</code> is <code>NA</code> and the full <code>match_type</code> vocabulary.</li>
+<li>New help page for the <code>reconciliation</code> S3 class documenting its four list components (<code>mapping</code>, <code>meta</code>, <code>counts</code>, <code>overrides</code>) and S3 methods. This also clears previous R CMD check “Missing link(s)” warnings from cross-references.</li>
+<li>Reorganised the pkgdown reference index into seven task-oriented groups (Match species names / Inspect and audit / Corrections and crosswalks / Apply, merge, export / Augment phylogenies / Name utilities / Bundled example data), each with a short descriptive line.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="tests-development-version">Tests<a class="anchor" aria-label="anchor" href="#tests-development-version"></a></h3>
+<ul><li>Added a combinatorial test layer that stresses parameter combinations rather than single cases. Three new test files (<code>test-authority-mocked.R</code>, <code>test-workflows.R</code>, <code>test-robustness.R</code>) and parametric grid extensions to nine existing files take the suite from ~311 expectations to <strong>1,868 expectations</strong> across 252 <code>test_that()</code> blocks (0 failures).</li>
+<li>Every historical bug that has shipped — <a href="https://github.com/itchyshin/prepR4pcm/issues/495" class="external-link">#495</a> cartesian merge explosion, the <code>drop_unresolved</code> no-op, the diacritics regex failure, factor coercion, silent multi-phylo handling — lived in parameter combinations that single-axis tests never exercised. The new layer tests combinations and asserts invariants (row counts, NA counts, tree tip counts, set membership, S3 class, idempotence).</li>
+<li>
+<code>test-authority-mocked.R</code> stubs <code><a href="../reference/pr_lookup_authority.html">pr_lookup_authority()</a></code> via <code>local_mocked_bindings()</code> so the synonym-resolution branch is exercised without hitting taxadb or the network, covering accepted→synonym, synonym→accepted, neither-found, and network-error scenarios for <code>col</code> / <code>itis</code> / <code>gbif</code> / <code>ncbi</code>.</li>
+<li>
+<code>test-workflows.R</code> chains functions end-to-end the way real users do, including the <a href="https://github.com/itchyshin/prepR4pcm/issues/495" class="external-link">#495</a> asymmetric pattern (750 shared / 96 only_x / 10,400 only_y).</li>
+<li>
+<code>test-robustness.R</code> covers adversarial inputs: empty data, all-<code>NA</code> species columns, factor columns, Unicode (diacritics and Japanese kana), minimal 1-row/1-tip cases, large-input smoke tests, invalid types, and malformed arguments.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="prepr4pcm-030">prepR4pcm 0.3.0<a class="anchor" aria-label="anchor" href="#prepr4pcm-030"></a></h2>
 <div class="section level3">

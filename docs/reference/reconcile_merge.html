@@ -26,8 +26,8 @@ correctly linked."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
-    <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird Trait Workflow</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -64,7 +64,7 @@ correctly linked.</p>
 <span>  species_col_y <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  how <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"inner"</span>, <span class="st">"left"</span>, <span class="st">"full"</span><span class="op">)</span>,</span>
 <span>  suffix <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"_x"</span>, <span class="st">"_y"</span><span class="op">)</span>,</span>
-<span>  drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  drop_unresolved <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -107,42 +107,82 @@ same name in both datasets. Default <code>c("_x", "_y")</code>.</p></dd>
 
 
 <dt id="arg-drop-unresolved">drop_unresolved<a class="anchor" aria-label="anchor" href="#arg-drop-unresolved"></a></dt>
-<dd><p>Logical. Drop unresolved species? Default <code>TRUE</code>.
-Only relevant for <code>how = "left"</code> or <code>how = "full"</code>.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, rows where <code>species_resolved</code>
+is <code>NA</code> (i.e., species that could not be reconciled) are removed from
+the final result. Default <code>FALSE</code> (keep all rows, fill unmatched
+columns with <code>NA</code>). Only relevant for <code>how = "left"</code> or <code>how = "full"</code>;
+inner joins drop unmatched rows by definition.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with a <code>species_resolved</code> column as the join key,
-plus all columns from both datasets (with suffixes where needed).</p>
+    <p>A data frame with a <code>species_resolved</code> column as the join
+key, plus all columns from both datasets (with suffixes added when
+column names collide).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><strong>One row per species.</strong> <code>reconcile_merge()</code> works best when each dataset
+has exactly one row per species. If a species appears in multiple rows
+(e.g., sex-specific measurements, repeated populations), the merge
+produces all pairwise combinations for that species—the same behaviour
+as base <code><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge()</a></code>. To avoid unexpected row expansion, aggregate to one
+row per species before merging, or be aware that the output will contain
+more rows than either input.</p>
+<p><strong>Asymmetric datasets.</strong> When <code>data_y</code> contains many more species than
+<code>data_x</code> (common when merging against a large reference database), use
+<code>how = "inner"</code> or <code>how = "left"</code>. Inner joins keep only the species
+present in both datasets; left joins keep all <code>data_x</code> rows and fill
+<code>data_y</code> columns with <code>NA</code> for unmatched species. Use <code>how = "full"</code>
+only when you need to retain species unique to either side.</p>
+<p><strong>Recommended workflow for multi-row data.</strong> Reconcile using a
+species-level summary (one row per species), inspect the mapping with
+<code><a href="reconcile_mapping.html">reconcile_mapping()</a></code>, then join the mapping back to your full dataset
+using the species column as key.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="reconcile_data.html">reconcile_data()</a></code> to build the reconciliation;
+<code><a href="reconcile_apply.html">reconcile_apply()</a></code> when you want aligned data + tree instead of a
+single merged data frame.</p>
+<p>Other reconciliation functions:
+<code><a href="reconcile_apply.html">reconcile_apply</a>()</code>,
+<code><a href="reconcile_augment.html">reconcile_augment</a>()</code>,
+<code><a href="reconcile_crosswalk.html">reconcile_crosswalk</a>()</code>,
+<code><a href="reconcile_data.html">reconcile_data</a>()</code>,
+<code><a href="reconcile_diff.html">reconcile_diff</a>()</code>,
+<code><a href="reconcile_export.html">reconcile_export</a>()</code>,
+<code><a href="reconcile_mapping.html">reconcile_mapping</a>()</code>,
+<code><a href="reconcile_multi.html">reconcile_multi</a>()</code>,
+<code><a href="reconcile_override.html">reconcile_override</a>()</code>,
+<code><a href="reconcile_override_batch.html">reconcile_override_batch</a>()</code>,
+<code><a href="reconcile_plot.html">reconcile_plot</a>()</code>,
+<code><a href="reconcile_report.html">reconcile_report</a>()</code>,
+<code><a href="reconcile_review.html">reconcile_review</a>()</code>,
+<code><a href="reconcile_splits_lumps.html">reconcile_splits_lumps</a>()</code>,
+<code><a href="reconcile_suggest.html">reconcile_suggest</a>()</code>,
+<code><a href="reconcile_summary.html">reconcile_summary</a>()</code>,
+<code><a href="reconcile_to_trees.html">reconcile_to_trees</a>()</code>,
+<code><a href="reconcile_tree.html">reconcile_tree</a>()</code>,
+<code><a href="reconcile_trees.html">reconcile_trees</a>()</code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nesttrait_subset</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_data.html">reconcile_data</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span></span>
-<span class="r-in"><span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
-<span class="r-in"><span>                      y_species <span class="op">=</span> <span class="st">"Scientific_name"</span>,</span></span>
-<span class="r-in"><span>                      authority <span class="op">=</span> <span class="cn">NULL</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu">reconcile_merge</span><span class="op">(</span><span class="va">rec</span>, <span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span></span>
-<span class="r-in"><span>                          species_col_x <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
-<span class="r-in"><span>                          species_col_y <span class="op">=</span> <span class="st">"Scientific_name"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Merged 916 species (inner join)</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Merged: %d rows, %d cols\n"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Merged: 916 rows, 31 cols</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species_resolved"</span>, <span class="st">"Family1"</span>, <span class="st">"Common_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           species_resolved      Family1              Common_name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Acanthagenys rufogularis Meliphagidae Spiny-cheeked Honeyeater</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       Acanthiza apicalis Acanthizidae         Inland Thornbill</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    Acanthiza chrysorrhoa Acanthizidae  Yellow-rumped Thornbill</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Acanthiza cinerea Acanthizidae           Grey Thornbill</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Acanthiza ewingii Acanthizidae      Tasmanian Thornbill</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Acanthiza inornata Acanthizidae        Western Thornbill</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nesttrait_subset</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_data.html">reconcile_data</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span>
+<span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span>
+<span>                      y_species <span class="op">=</span> <span class="st">"Scientific_name"</span>,</span>
+<span>                      authority <span class="op">=</span> <span class="cn">NULL</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu">reconcile_merge</span><span class="op">(</span><span class="va">rec</span>, <span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span>
+<span>                          species_col_x <span class="op">=</span> <span class="st">"Species1"</span>,</span>
+<span>                          species_col_y <span class="op">=</span> <span class="st">"Scientific_name"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Merged: %d rows, %d cols\n"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species_resolved"</span>, <span class="st">"Family1"</span>, <span class="st">"Common_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
