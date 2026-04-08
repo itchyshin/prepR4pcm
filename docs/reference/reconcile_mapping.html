@@ -13,7 +13,7 @@ the mapping back to the original data frame)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,29 +53,31 @@ the mapping back to the original data frame).</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_mapping</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_mapping</span><span class="op">(</span><span class="va">reconciliation</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <a href="reconciliation.html">reconciliation</a> object.</p></dd>
+<dl><dt id="arg-reconciliation">reconciliation<a class="anchor" aria-label="anchor" href="#arg-reconciliation"></a></dt>
+<dd><p>A <a href="reconciliation.html">reconciliation</a> object returned by
+<code><a href="reconcile_tree.html">reconcile_tree()</a></code>, <code><a href="reconcile_data.html">reconcile_data()</a></code>, <code><a href="reconcile_trees.html">reconcile_trees()</a></code>,
+<code><a href="reconcile_to_trees.html">reconcile_to_trees()</a></code>, or <code><a href="reconcile_multi.html">reconcile_multi()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with one row per unique name seen in either source
 and the following columns:</p><dl><dt><code>name_x</code></dt>
-<dd><p>The original name as it appeared in <code>x</code> (your
-data). <code>NA</code> for rows that exist only in <code>y</code> (e.g. tree tips
-not in your data).</p></dd>
+<dd><p>The original name as it appeared in source <code>x</code>
+(your data). <code>NA</code> for rows that exist only in source <code>y</code>
+(e.g. tree tips not in your data).</p></dd>
 
 <dt><code>name_y</code></dt>
-<dd><p>The original name as it appeared in <code>y</code> (the
-reference dataset or tree). <code>NA</code> for rows that exist only in
-<code>x</code>.</p></dd>
+<dd><p>The original name as it appeared in source <code>y</code>
+(the reference dataset or tree). <code>NA</code> for rows that exist only
+in source <code>x</code>.</p></dd>
 
 <dt><code>name_resolved</code></dt>
 <dd><p>The accepted/canonical name returned by
@@ -99,10 +101,10 @@ Levenshtein score for fuzzy matches; <code>NA</code> for unresolved.</p></dd>
 <code>"fuzzy"</code>, or <code>"user_override"</code>.</p></dd>
 
 <dt><code>in_x</code></dt>
-<dd><p>Logical. Was this name present in <code>x</code>?</p></dd>
+<dd><p>Logical. Was this name present in source <code>x</code>?</p></dd>
 
 <dt><code>in_y</code></dt>
-<dd><p>Logical. Was this name present in <code>y</code>?</p></dd>
+<dd><p>Logical. Was this name present in source <code>y</code>?</p></dd>
 
 <dt><code>notes</code></dt>
 <dd><p>Free-text notes, populated e.g. when a name is
@@ -140,18 +142,36 @@ data-tree pair.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span>
-<span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="va">mapping</span> <span class="op">&lt;-</span> <span class="fu">reconcile_mapping</span><span class="op">(</span><span class="va">rec</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># How many species matched?</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="va">mapping</span><span class="op">$</span><span class="va">in_y</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Which species are in the data but missing from the tree?</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">mapping</span><span class="op">[</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="op">!</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_y</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name_x"</span>, <span class="st">"match_type"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
+<span class="r-in"><span><span class="va">mapping</span> <span class="op">&lt;-</span> <span class="fu">reconcile_mapping</span><span class="op">(</span><span class="va">rec</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># How many species matched?</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="va">mapping</span><span class="op">$</span><span class="va">in_y</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 657</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Which species are in the data but missing from the tree?</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">mapping</span><span class="op">[</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="op">!</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_y</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"name_x"</span>, <span class="st">"match_type"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   name_x                   match_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Acanthiza cinerea        unresolved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Calamanthus cautus       unresolved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Calamanthus montanellus  unresolved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Calamanthus pyrrhopygius unresolved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Gerygone citrina         unresolved</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Pyrrholaemus sagittatus  unresolved</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

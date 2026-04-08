@@ -15,7 +15,7 @@ Clements 2025) before deciding which tree to use in a downstream PCM."></head><b
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -212,13 +212,41 @@ single dataset against many trees at once.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_clements25</span><span class="op">)</span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_trees</span><span class="op">(</span><span class="va">tree_jetz</span>, <span class="va">tree_clements25</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="va">rec</span></span>
-<span><span class="co"># How many tips are shared across both trees?</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span><span class="op">$</span><span class="va">in_y</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_clements25</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_trees</span><span class="op">(</span><span class="va">tree_jetz</span>, <span class="va">tree_clements25</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 657 tips (tree1) vs 854 tips (tree2)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 657 x 854 names through 2 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (641 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (641 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (641 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 641/657 tips between trees</span>
+<span class="r-in"><span><span class="va">rec</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Reconciliation: tree vs tree</span> <span style="color: #00BBBB;">────────────────────────────────────────────────</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Source x: tree1 (657 tips)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Source y: tree2 (854 tips)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Authority: none</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-04-08 17:31:46</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████████░] 98% (641/657)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Match summary</span> ──</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Exact: <span style="color: #0000BB;">641</span> (97.6%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Normalized: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Synonym: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Fuzzy: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Manual: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Unresolved (x only):<span style="color: #0000BB;">16</span> ( 2.4%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Unresolved (y only):<span style="color: #0000BB;">213</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Flagged for review: <span style="color: #0000BB;">0</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span>
+<span class="r-in"><span><span class="co"># How many tips are shared across both trees?</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span><span class="op">$</span><span class="va">in_y</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 641</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

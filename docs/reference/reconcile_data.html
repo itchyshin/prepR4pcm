@@ -15,7 +15,7 @@ different taxonomies or spellings."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -257,25 +257,81 @@ for multi-input workflows.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># Merge AVONET morphology with nest-site data. Both datasets use</span></span>
-<span><span class="co"># slightly different taxonomies; authority = NULL keeps the example</span></span>
-<span><span class="co"># offline (no taxadb download).</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nesttrait_subset</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_data</span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span>
-<span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>                      y_species <span class="op">=</span> <span class="st">"Scientific_name"</span>,</span>
-<span>                      authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="va">rec</span>                      <span class="co"># concise print method</span></span>
-<span><span class="fu"><a href="reconcile_summary.html">reconcile_summary</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span>   <span class="co"># full breakdown</span></span>
-<span></span>
-<span><span class="co"># Join the two datasets on the reconciled species key</span></span>
-<span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_merge.html">reconcile_merge</a></span><span class="op">(</span><span class="va">rec</span>, <span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span>
-<span>                          species_col_x <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>                          species_col_y <span class="op">=</span> <span class="st">"Scientific_name"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species_resolved"</span>, <span class="st">"Family1"</span>, <span class="st">"Common_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Merge AVONET morphology with nest-site data. Both datasets use</span></span></span>
+<span class="r-in"><span><span class="co"># slightly different taxonomies; authority = NULL keeps the example</span></span></span>
+<span class="r-in"><span><span class="co"># offline (no taxadb download).</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nesttrait_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_data</span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span></span>
+<span class="r-in"><span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>                      y_species <span class="op">=</span> <span class="st">"Scientific_name"</span>,</span></span>
+<span class="r-in"><span>                      authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 names (x) vs 916 names (y)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 916 names through 2 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (916 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (916 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (916 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 916/919 names from x</span>
+<span class="r-in"><span><span class="va">rec</span>                      <span class="co"># concise print method</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Reconciliation: data vs data</span> <span style="color: #00BBBB;">────────────────────────────────────────────────</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Source x: avonet_subset</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Source y: nesttrait_subset</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Authority: none</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-04-08 17:31:30</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/919)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Match summary</span> ──</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Exact: <span style="color: #0000BB;">916</span> (99.7%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Normalized: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Synonym: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Fuzzy: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Manual: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Unresolved (x only):<span style="color: #0000BB;">3</span> ( 0.3%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Unresolved (y only):<span style="color: #0000BB;">0</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Flagged for review: <span style="color: #0000BB;">0</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span>
+<span class="r-in"><span><span class="fu"><a href="reconcile_summary.html">reconcile_summary</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span>   <span class="co"># full breakdown</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-04-08 17:31:30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.3.0.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Match Summary ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exact:       916 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Normalized:  0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Synonym:     0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Fuzzy:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Manual:      0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Unresolved:  3 (x only) + 0 (y only)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Unresolved: In x But Not In y (3) ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Myzomela irianawidodoae</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Myzomela prawiradilagae</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Myzomela wahe</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Join the two datasets on the reconciled species key</span></span></span>
+<span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_merge.html">reconcile_merge</a></span><span class="op">(</span><span class="va">rec</span>, <span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span></span>
+<span class="r-in"><span>                          species_col_x <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>                          species_col_y <span class="op">=</span> <span class="st">"Scientific_name"</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Merged 916 species (inner join)</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species_resolved"</span>, <span class="st">"Family1"</span>, <span class="st">"Common_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           species_resolved      Family1              Common_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Acanthagenys rufogularis Meliphagidae Spiny-cheeked Honeyeater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       Acanthiza apicalis Acanthizidae         Inland Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    Acanthiza chrysorrhoa Acanthizidae  Yellow-rumped Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Acanthiza cinerea Acanthizidae           Grey Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Acanthiza ewingii Acanthizidae      Tasmanian Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Acanthiza inornata Acanthizidae        Western Thornbill</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

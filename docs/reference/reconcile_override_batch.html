@@ -15,7 +15,7 @@ corrections are reproducible and reviewable."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,28 +56,30 @@ corrections are reproducible and reviewable.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_override_batch</span><span class="op">(</span><span class="va">x</span>, <span class="va">overrides</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_override_batch</span><span class="op">(</span><span class="va">reconciliation</span>, <span class="va">overrides</span>, quiet <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <a href="reconciliation.html">reconciliation</a> object.</p></dd>
+<dl><dt id="arg-reconciliation">reconciliation<a class="anchor" aria-label="anchor" href="#arg-reconciliation"></a></dt>
+<dd><p>A <a href="reconciliation.html">reconciliation</a> object returned by
+<code><a href="reconcile_tree.html">reconcile_tree()</a></code>, <code><a href="reconcile_data.html">reconcile_data()</a></code>, or a related matcher.</p></dd>
 
 
 <dt id="arg-overrides">overrides<a class="anchor" aria-label="anchor" href="#arg-overrides"></a></dt>
 <dd><p>A data frame, or a character(1) file path to a CSV
 with the same columns:</p><dl><dt><code>name_x</code> (required)</dt>
-<dd><p>The original name in <code>x</code> (your data).</p></dd>
+<dd><p>The original name in source <code>x</code>
+(your data).</p></dd>
 
 <dt><code>action</code></dt>
 <dd><p>One of <code>"accept"</code> (default), <code>"reject"</code>,
 <code>"replace"</code>. See <code><a href="reconcile_override.html">reconcile_override()</a></code> for the semantics.</p></dd>
 
 <dt><code>name_y</code></dt>
-<dd><p>The target name in <code>y</code>; required for
+<dd><p>The target name in source <code>y</code>; required for
 <code>"accept"</code> and <code>"replace"</code>.</p></dd>
 
 <dt><code>note</code></dt>
@@ -126,25 +128,36 @@ published taxonomy crosswalk.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span>
-<span>                         x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="co"># Create a batch of overrides</span></span>
-<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  name_x <span class="op">=</span> <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">$</span><span class="va">name_x</span><span class="op">[</span></span>
-<span>    <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">$</span><span class="va">match_type</span> <span class="op">==</span> <span class="st">"unresolved"</span> <span class="op">&amp;</span></span>
-<span>    <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">$</span><span class="va">in_x</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>,</span>
-<span>  name_y <span class="op">=</span> <span class="va">tree_jetz</span><span class="op">$</span><span class="va">tip.label</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>,</span>
-<span>  action <span class="op">=</span> <span class="st">"accept"</span>,</span>
-<span>  note <span class="op">=</span> <span class="st">"Batch demo"</span>,</span>
-<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">batch</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">batch</span><span class="op">$</span><span class="va">name_x</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu">reconcile_override_batch</span><span class="op">(</span><span class="va">result</span>, <span class="va">batch</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                         x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
+<span class="r-in"><span><span class="co"># Create a batch of overrides</span></span></span>
+<span class="r-in"><span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  name_x <span class="op">=</span> <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">$</span><span class="va">name_x</span><span class="op">[</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">$</span><span class="va">match_type</span> <span class="op">==</span> <span class="st">"unresolved"</span> <span class="op">&amp;</span></span></span>
+<span class="r-in"><span>    <span class="fu"><a href="reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span><span class="op">$</span><span class="va">in_x</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  name_y <span class="op">=</span> <span class="va">tree_jetz</span><span class="op">$</span><span class="va">tip.label</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>  action <span class="op">=</span> <span class="st">"accept"</span>,</span></span>
+<span class="r-in"><span>  note <span class="op">=</span> <span class="st">"Batch demo"</span>,</span></span>
+<span class="r-in"><span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">batch</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">batch</span><span class="op">$</span><span class="va">name_x</span><span class="op">)</span>, <span class="op">]</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu">reconcile_override_batch</span><span class="op">(</span><span class="va">result</span>, <span class="va">batch</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Override applied: 'Acanthiza cinerea' -&gt; 'Amytornis_barbatus' (accept)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Override applied: 'Calamanthus cautus' -&gt; 'Amytornis_merrotsyi' (accept)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Applied 2 overrides.</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

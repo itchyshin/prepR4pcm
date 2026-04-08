@@ -15,7 +15,7 @@ reconcile_tree() or reconcile_data()."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@ unresolved. Usually the second function you call after
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_summary</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">reconciliation</span>,</span>
 <span>  detail <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"full"</span>, <span class="st">"brief"</span>, <span class="st">"mismatches_only"</span><span class="op">)</span>,</span>
 <span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"console"</span>, <span class="st">"data.frame"</span><span class="op">)</span>,</span>
 <span>  file <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -69,8 +69,9 @@ unresolved. Usually the second function you call after
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <a href="reconciliation.html">reconciliation</a> object.</p></dd>
+<dl><dt id="arg-reconciliation">reconciliation<a class="anchor" aria-label="anchor" href="#arg-reconciliation"></a></dt>
+<dd><p>A <a href="reconciliation.html">reconciliation</a> object returned by
+<code><a href="reconcile_tree.html">reconcile_tree()</a></code>, <code><a href="reconcile_data.html">reconcile_data()</a></code>, or a related matcher.</p></dd>
 
 
 <dt id="arg-detail">detail<a class="anchor" aria-label="anchor" href="#arg-detail"></a></dt>
@@ -145,13 +146,86 @@ default; returned invisibly for inspection.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span>
-<span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="fu">reconcile_summary</span><span class="op">(</span><span class="va">rec</span>, detail <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
-<span><span class="fu">reconcile_summary</span><span class="op">(</span><span class="va">rec</span>, detail <span class="op">=</span> <span class="st">"mismatches_only"</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
+<span class="r-in"><span><span class="fu">reconcile_summary</span><span class="op">(</span><span class="va">rec</span>, detail <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_tree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-04-08 17:31:43</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.3.0.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Match Summary ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exact:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Normalized:  657 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Synonym:     0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Fuzzy:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Manual:      0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Unresolved:  262 (x only) + 0 (y only)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-in"><span><span class="fu">reconcile_summary</span><span class="op">(</span><span class="va">rec</span>, detail <span class="op">=</span> <span class="st">"mismatches_only"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_tree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-04-08 17:31:43</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.3.0.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Match Summary ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exact:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Normalized:  657 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Synonym:     0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Fuzzy:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Manual:      0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Unresolved:  262 (x only) + 0 (y only)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Unresolved: In x But Not In y (262) ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Acanthiza cinerea</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calamanthus cautus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calamanthus montanellus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calamanthus pyrrhopygius</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Gerygone citrina</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pyrrholaemus sagittatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Artamus leucoryn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cracticus argenteus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Melloria quoyi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris caesius</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris cinereus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris cucullatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris graueri</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris pectoralis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Celebesica abbotti</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Coracina dobsoni</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Coracina panayensis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Coracina welchmani</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cyanograucalus azureus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma anale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma ceramense</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma coerulescens</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma dispar</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma dohertyi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma grayi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma holopolium</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma incertum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma insperatum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma melas</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma meyerii</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 232 more</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -15,7 +15,7 @@ reconcile_data() and friends."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -141,15 +141,26 @@ for the bundled example.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">crosswalk_birdlife_birdtree</span><span class="op">)</span></span>
-<span><span class="va">overrides</span> <span class="op">&lt;-</span> <span class="fu">reconcile_crosswalk</span><span class="op">(</span></span>
-<span>  <span class="va">crosswalk_birdlife_birdtree</span>,</span>
-<span>  from_col <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>  to_col <span class="op">=</span> <span class="st">"Species3"</span>,</span>
-<span>  match_type_col <span class="op">=</span> <span class="st">"Match.type"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">overrides</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">crosswalk_birdlife_birdtree</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">overrides</span> <span class="op">&lt;-</span> <span class="fu">reconcile_crosswalk</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">crosswalk_birdlife_birdtree</span>,</span></span>
+<span class="r-in"><span>  from_col <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>  to_col <span class="op">=</span> <span class="st">"Species3"</span>,</span></span>
+<span class="r-in"><span>  match_type_col <span class="op">=</span> <span class="st">"Match.type"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> 1933 many-to-one entries (lumps) included</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> 225 one-to-many entries (splits) included</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Crosswalk: 3039 overrides (8079 identical pairs skipped)</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">overrides</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    name_x               name_y                  user_note</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      Acanthidops bairdi  Acanthidops bairdii     crosswalk [1BL to 1BT]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Acanthis flammea    Carduelis flammea crosswalk [1BL to many BT]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Acanthis flammea Carduelis hornemanni crosswalk [1BL to many BT]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4       Acanthiza cinerea     Gerygone cinerea     crosswalk [1BL to 1BT]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Acanthoptila nipalensis Turdoides nipalensis     crosswalk [1BL to 1BT]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Accipiter bicolor  Accipiter chilensis crosswalk [1BL to many BT]</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

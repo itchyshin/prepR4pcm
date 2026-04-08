@@ -17,7 +17,7 @@ trail."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ trail.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_export</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">reconciliation</span>,</span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tree <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  species_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -75,8 +75,9 @@ trail.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>reconciliation</code> object.</p></dd>
+<dl><dt id="arg-reconciliation">reconciliation<a class="anchor" aria-label="anchor" href="#arg-reconciliation"></a></dt>
+<dd><p>A <a href="reconciliation.html">reconciliation</a> object returned by
+<code><a href="reconcile_tree.html">reconcile_tree()</a></code>, <code><a href="reconcile_data.html">reconcile_data()</a></code>, or a related matcher.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -146,20 +147,36 @@ trail.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span>
-<span>                         x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span><span class="va">out_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"export_"</span><span class="op">)</span></span>
-<span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu">reconcile_export</span><span class="op">(</span><span class="va">result</span>,</span>
-<span>                          data <span class="op">=</span> <span class="va">avonet_subset</span>, tree <span class="op">=</span> <span class="va">tree_jetz</span>,</span>
-<span>                          species_col <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>                          dir <span class="op">=</span> <span class="va">out_dir</span>, prefix <span class="op">=</span> <span class="st">"avonet_jetz"</span><span class="op">)</span></span>
-<span><span class="va">files</span><span class="op">$</span><span class="va">data</span>     <span class="co"># path to CSV</span></span>
-<span><span class="va">files</span><span class="op">$</span><span class="va">tree</span>     <span class="co"># path to Nexus tree</span></span>
-<span><span class="va">files</span><span class="op">$</span><span class="va">mapping</span>  <span class="co"># path to mapping CSV</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">out_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># clean up</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                         x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
+<span class="r-in"><span><span class="va">out_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"export_"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu">reconcile_export</span><span class="op">(</span><span class="va">result</span>,</span></span>
+<span class="r-in"><span>                          data <span class="op">=</span> <span class="va">avonet_subset</span>, tree <span class="op">=</span> <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                          species_col <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>                          dir <span class="op">=</span> <span class="va">out_dir</span>, prefix <span class="op">=</span> <span class="st">"avonet_jetz"</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Dropped 262 rows with unresolved species from data</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Tree has 657 tips after alignment</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmpe9KZmI/export_27522cd0a96/avonet_jetz_data.csv</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Tree written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmpe9KZmI/export_27522cd0a96/avonet_jetz_tree.nex</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Mapping written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmpe9KZmI/export_27522cd0a96/avonet_jetz_mapping.csv</span></span>
+<span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">data</span>     <span class="co"># path to CSV</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmpe9KZmI/export_27522cd0a96/avonet_jetz_data.csv"</span>
+<span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">tree</span>     <span class="co"># path to Nexus tree</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmpe9KZmI/export_27522cd0a96/avonet_jetz_tree.nex"</span>
+<span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">mapping</span>  <span class="co"># path to mapping CSV</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//Rtmpe9KZmI/export_27522cd0a96/avonet_jetz_mapping.csv"</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">out_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># clean up</span></span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -17,7 +17,7 @@ reconciliation — for example, when building a crosswalk by hand."></head><body
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,14 +114,30 @@ labels out of a tree prior to normalising them.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pr_normalize_names</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Homo_sapiens"</span>,</span>
-<span>                     <span class="st">"homo sapiens"</span>,</span>
-<span>                     <span class="st">"Parus major major"</span>,</span>
-<span>                     <span class="st">"Corvus corax (Linnaeus, 1758)"</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Keep trinomials</span></span>
-<span><span class="fu">pr_normalize_names</span><span class="op">(</span><span class="st">"Parus major major"</span>, rank <span class="op">=</span> <span class="st">"subspecies"</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">pr_normalize_names</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Homo_sapiens"</span>,</span></span>
+<span class="r-in"><span>                     <span class="st">"homo sapiens"</span>,</span></span>
+<span class="r-in"><span>                     <span class="st">"Parus major major"</span>,</span></span>
+<span class="r-in"><span>                     <span class="st">"Corvus corax (Linnaeus, 1758)"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Homo sapiens" "Homo sapiens" "Parus major"  "Corvus corax"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"normalisation_log")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   original                      normalised   changed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Homo_sapiens                  Homo sapiens TRUE   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> homo sapiens                  Homo sapiens TRUE   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Parus major major             Parus major  TRUE   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Corvus corax (Linnaeus, 1758) Corvus corax TRUE   </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Keep trinomials</span></span></span>
+<span class="r-in"><span><span class="fu">pr_normalize_names</span><span class="op">(</span><span class="st">"Parus major major"</span>, rank <span class="op">=</span> <span class="st">"subspecies"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Parus major major"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"normalisation_log")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   original          normalised        changed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Parus major major Parus major major FALSE  </span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

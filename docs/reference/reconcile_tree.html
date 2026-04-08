@@ -17,7 +17,7 @@ workflow."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -253,31 +253,134 @@ phylogenetics and evolutionary analyses in R. <em>Bioinformatics</em>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># Reconcile the bundled AVONET subset against the Jetz et al. (2012)</span></span>
-<span><span class="co"># bird tree. `authority = NULL` keeps the example offline; in a real</span></span>
-<span><span class="co"># analysis you would usually set `authority = "col"` (Catalogue of</span></span>
-<span><span class="co"># Life) to pick up taxonomic synonyms.</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_tree</span><span class="op">(</span></span>
-<span>  <span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span>
-<span>  x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>  authority <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fuzzy     <span class="op">=</span> <span class="cn">TRUE</span>          <span class="co"># also catch typos</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">rec</span>                         <span class="co"># one-line status</span></span>
-<span><span class="fu"><a href="reconcile_summary.html">reconcile_summary</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span>      <span class="co"># full breakdown by match type</span></span>
-<span></span>
-<span><span class="co"># Produce aligned data + pruned tree ready for PGLS / PGLMM</span></span>
-<span><span class="va">aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_apply.html">reconcile_apply</a></span><span class="op">(</span><span class="va">rec</span>,</span>
-<span>                           data <span class="op">=</span> <span class="va">avonet_subset</span>,</span>
-<span>                           tree <span class="op">=</span> <span class="va">tree_jetz</span>,</span>
-<span>                           species_col <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>                           drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Reconcile the bundled AVONET subset against the Jetz et al. (2012)</span></span></span>
+<span class="r-in"><span><span class="co"># bird tree. `authority = NULL` keeps the example offline; in a real</span></span></span>
+<span class="r-in"><span><span class="co"># analysis you would usually set `authority = "col"` (Catalogue of</span></span></span>
+<span class="r-in"><span><span class="co"># Life) to pick up taxonomic synonyms.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_tree</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">avonet_subset</span>, <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>  x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>  authority <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
+<span class="r-in"><span>  fuzzy     <span class="op">=</span> <span class="cn">TRUE</span>          <span class="co"># also catch typos</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 3 stages...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
+<span class="r-in"><span><span class="va">rec</span>                         <span class="co"># one-line status</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Reconciliation: data vs tree</span> <span style="color: #00BBBB;">────────────────────────────────────────────────</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Source x: avonet_subset</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Source y: phylo (657 tips)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Authority: none</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-04-08 17:31:46</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Match summary</span> ──</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Exact: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Normalized: <span style="color: #0000BB;">657</span> (71.5%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Synonym: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Fuzzy: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Manual: <span style="color: #0000BB;">0</span> ( 0.0%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Unresolved (x only):<span style="color: #0000BB;">262</span> (28.5%)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Unresolved (y only):<span style="color: #0000BB;">0</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Flagged for review: <span style="color: #0000BB;">0</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span>
+<span class="r-in"><span><span class="fu"><a href="reconcile_summary.html">reconcile_summary</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span>      <span class="co"># full breakdown by match type</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_tree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-04-08 17:31:46</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.3.0.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Match Summary ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Exact:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Normalized:  657 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Synonym:     0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Fuzzy:       0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Manual:      0 / 919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Unresolved:  262 (x only) + 0 (y only)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Normalized Matches (657) ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza apicalis" -&gt; "Acanthiza_apicalis"  ['Acanthiza apicalis' normalised to 'Acanthiza apicalis']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza chrysorrhoa" -&gt; "Acanthiza_chrysorrhoa"  ['Acanthiza chrysorrhoa' normalised to 'Acanthiza chrysorrhoa']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza ewingii" -&gt; "Acanthiza_ewingii"  ['Acanthiza ewingii' normalised to 'Acanthiza ewingii']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza inornata" -&gt; "Acanthiza_inornata"  ['Acanthiza inornata' normalised to 'Acanthiza inornata']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza iredalei" -&gt; "Acanthiza_iredalei"  ['Acanthiza iredalei' normalised to 'Acanthiza iredalei']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza katherina" -&gt; "Acanthiza_katherina"  ['Acanthiza katherina' normalised to 'Acanthiza katherina']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza lineata" -&gt; "Acanthiza_lineata"  ['Acanthiza lineata' normalised to 'Acanthiza lineata']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza murina" -&gt; "Acanthiza_murina"  ['Acanthiza murina' normalised to 'Acanthiza murina']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza nana" -&gt; "Acanthiza_nana"  ['Acanthiza nana' normalised to 'Acanthiza nana']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza pusilla" -&gt; "Acanthiza_pusilla"  ['Acanthiza pusilla' normalised to 'Acanthiza pusilla']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza reguloides" -&gt; "Acanthiza_reguloides"  ['Acanthiza reguloides' normalised to 'Acanthiza reguloides']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza robustirostris" -&gt; "Acanthiza_robustirostris"  ['Acanthiza robustirostris' normalised to 'Acanthiza robustirostris']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthiza uropygialis" -&gt; "Acanthiza_uropygialis"  ['Acanthiza uropygialis' normalised to 'Acanthiza uropygialis']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Acanthornis magna" -&gt; "Acanthornis_magna"  ['Acanthornis magna' normalised to 'Acanthornis magna']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Aphelocephala leucopsis" -&gt; "Aphelocephala_leucopsis"  ['Aphelocephala leucopsis' normalised to 'Aphelocephala leucopsis']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Aphelocephala nigricincta" -&gt; "Aphelocephala_nigricincta"  ['Aphelocephala nigricincta' normalised to 'Aphelocephala nigricincta']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Aphelocephala pectoralis" -&gt; "Aphelocephala_pectoralis"  ['Aphelocephala pectoralis' normalised to 'Aphelocephala pectoralis']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Calamanthus campestris" -&gt; "Calamanthus_campestris"  ['Calamanthus campestris' normalised to 'Calamanthus campestris']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Calamanthus fuliginosus" -&gt; "Calamanthus_fuliginosus"  ['Calamanthus fuliginosus' normalised to 'Calamanthus fuliginosus']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Crateroscelis murina" -&gt; "Crateroscelis_murina"  ['Crateroscelis murina' normalised to 'Crateroscelis murina']</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 637 more</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> --- Unresolved: In x But Not In y (262) ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Acanthiza cinerea</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calamanthus cautus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calamanthus montanellus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Calamanthus pyrrhopygius</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Gerygone citrina</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pyrrholaemus sagittatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Artamus leucoryn</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cracticus argenteus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Melloria quoyi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris caesius</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris cinereus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris cucullatus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris graueri</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Ceblepyris pectoralis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Celebesica abbotti</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Coracina dobsoni</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Coracina panayensis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Coracina welchmani</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cyanograucalus azureus</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma anale</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma ceramense</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma coerulescens</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma dispar</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma dohertyi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma grayi</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma holopolium</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma incertum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma insperatum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma melas</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edolisoma meyerii</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 232 more</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Produce aligned data + pruned tree ready for PGLS / PGLMM</span></span></span>
+<span class="r-in"><span><span class="va">aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_apply.html">reconcile_apply</a></span><span class="op">(</span><span class="va">rec</span>,</span></span>
+<span class="r-in"><span>                           data <span class="op">=</span> <span class="va">avonet_subset</span>,</span></span>
+<span class="r-in"><span>                           tree <span class="op">=</span> <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                           species_col <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>                           drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Dropped 262 rows with unresolved species from data</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Tree has 657 tips after alignment</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 657</span>
+<span class="r-in"><span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 657</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

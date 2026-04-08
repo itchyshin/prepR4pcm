@@ -15,7 +15,7 @@ correctly linked."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@ correctly linked.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">reconcile_merge</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">reconciliation</span>,</span>
 <span>  <span class="va">data_x</span>,</span>
 <span>  <span class="va">data_y</span>,</span>
 <span>  species_col_x <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -72,8 +72,9 @@ correctly linked.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>reconciliation</code> object (typically from <code><a href="reconcile_data.html">reconcile_data()</a></code>).</p></dd>
+<dl><dt id="arg-reconciliation">reconciliation<a class="anchor" aria-label="anchor" href="#arg-reconciliation"></a></dt>
+<dd><p>A <a href="reconciliation.html">reconciliation</a> object (typically from
+<code><a href="reconcile_data.html">reconcile_data()</a></code>).</p></dd>
 
 
 <dt id="arg-data-x">data_x<a class="anchor" aria-label="anchor" href="#arg-data-x"></a></dt>
@@ -169,20 +170,30 @@ single merged data frame.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nesttrait_subset</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_data.html">reconcile_data</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span>
-<span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>                      y_species <span class="op">=</span> <span class="st">"Scientific_name"</span>,</span>
-<span>                      authority <span class="op">=</span> <span class="cn">NULL</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu">reconcile_merge</span><span class="op">(</span><span class="va">rec</span>, <span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span>
-<span>                          species_col_x <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>                          species_col_y <span class="op">=</span> <span class="st">"Scientific_name"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Merged: %d rows, %d cols\n"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species_resolved"</span>, <span class="st">"Family1"</span>, <span class="st">"Common_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">nesttrait_subset</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="reconcile_data.html">reconcile_data</a></span><span class="op">(</span><span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span></span>
+<span class="r-in"><span>                      x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>                      y_species <span class="op">=</span> <span class="st">"Scientific_name"</span>,</span></span>
+<span class="r-in"><span>                      authority <span class="op">=</span> <span class="cn">NULL</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu">reconcile_merge</span><span class="op">(</span><span class="va">rec</span>, <span class="va">avonet_subset</span>, <span class="va">nesttrait_subset</span>,</span></span>
+<span class="r-in"><span>                          species_col_x <span class="op">=</span> <span class="st">"Species1"</span>,</span></span>
+<span class="r-in"><span>                          species_col_y <span class="op">=</span> <span class="st">"Scientific_name"</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Merged 916 species (inner join)</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Merged: %d rows, %d cols\n"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Merged: 916 rows, 31 cols</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species_resolved"</span>, <span class="st">"Family1"</span>, <span class="st">"Common_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           species_resolved      Family1              Common_name</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Acanthagenys rufogularis Meliphagidae Spiny-cheeked Honeyeater</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       Acanthiza apicalis Acanthizidae         Inland Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    Acanthiza chrysorrhoa Acanthizidae  Yellow-rumped Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4        Acanthiza cinerea Acanthizidae           Grey Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5        Acanthiza ewingii Acanthizidae      Tasmanian Thornbill</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6       Acanthiza inornata Acanthizidae        Western Thornbill</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
