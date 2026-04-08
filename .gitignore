@@ -24,6 +24,9 @@
 # Reference manual PDFs built by devtools::build_manual()
 /prepR4pcm_*.pdf
 
+# Stray plots produced by base-graphics examples or tests
+Rplots.pdf
+
 # RStudio files
 .Rproj.user/
 
