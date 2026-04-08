@@ -21,6 +21,9 @@
 # Output files from R CMD check
 /*.Rcheck/
 
+# Reference manual PDFs built by devtools::build_manual()
+/prepR4pcm_*.pdf
+
 # RStudio files
 .Rproj.user/
 

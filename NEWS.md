@@ -1,3 +1,68 @@
+# prepR4pcm (development version)
+
+## Documentation
+
+* Rewrote every exported function's help page for an ecologist /
+  evolutionary biologist audience (the primary users running PCM,
+  PGLS, and PGLMM analyses). The previous pages read like API
+  reference; the new pages explain the reconciliation workflow,
+  taxadb authority choices, fuzzy matching semantics, and tree
+  augmentation trade-offs in terms the audience actually uses.
+* `?prepR4pcm` is now a proper package landing page with a canonical
+  workflow code block, a "Key concepts" section (reconciliation
+  object, four-stage cascade, provenance, splits/lumps, augmentation),
+  and function-family pointers.
+* Each taxadb `authority` option in `reconcile_data()` and
+  `reconcile_tree()` is now glossed in one line (`"col"` = Catalogue
+  of Life, `"gbif"` = GBIF Backbone, etc.) to help users choose
+  without consulting the taxadb manual.
+* `reconcile_augment()` gained a "When to use this" section with
+  explicit cautions about reporting augmented tips, running
+  sensitivity analyses, and preferring PhyloMaker / TACT for
+  publication-grade augmentation.
+* `reconcile_suggest()` now explains Levenshtein similarity and the
+  60/40 genus/epithet weighting in plain language.
+* `reconcile_mapping()` documents every column of the returned
+  tibble, including when `name_resolved` is `NA` and the full
+  `match_type` vocabulary.
+* New help page for the `reconciliation` S3 class documenting its
+  four list components (`mapping`, `meta`, `counts`, `overrides`)
+  and S3 methods. This also clears previous R CMD check
+  "Missing link(s)" warnings from cross-references.
+* Reorganised the pkgdown reference index into seven task-oriented
+  groups (Match species names / Inspect and audit / Corrections and
+  crosswalks / Apply, merge, export / Augment phylogenies /
+  Name utilities / Bundled example data), each with a short
+  descriptive line.
+
+## Tests
+
+* Added a combinatorial test layer that stresses parameter
+  combinations rather than single cases. Three new test files
+  (`test-authority-mocked.R`, `test-workflows.R`,
+  `test-robustness.R`) and parametric grid extensions to nine
+  existing files take the suite from ~311 expectations to
+  **1,868 expectations** across 252 `test_that()` blocks (0 failures).
+* Every historical bug that has shipped — #495 cartesian merge
+  explosion, the `drop_unresolved` no-op, the diacritics regex
+  failure, factor coercion, silent multi-phylo handling — lived in
+  parameter combinations that single-axis tests never exercised.
+  The new layer tests combinations and asserts invariants
+  (row counts, NA counts, tree tip counts, set membership, S3 class,
+  idempotence).
+* `test-authority-mocked.R` stubs `pr_lookup_authority()` via
+  `local_mocked_bindings()` so the synonym-resolution branch is
+  exercised without hitting taxadb or the network, covering
+  accepted→synonym, synonym→accepted, neither-found, and
+  network-error scenarios for `col` / `itis` / `gbif` / `ncbi`.
+* `test-workflows.R` chains functions end-to-end the way real users
+  do, including the #495 asymmetric pattern (750 shared /
+  96 only_x / 10,400 only_y).
+* `test-robustness.R` covers adversarial inputs: empty data,
+  all-`NA` species columns, factor columns, Unicode (diacritics
+  and Japanese kana), minimal 1-row/1-tip cases, large-input
+  smoke tests, invalid types, and malformed arguments.
+
 # prepR4pcm 0.3.0
 
 ## New features
