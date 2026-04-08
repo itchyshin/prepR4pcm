@@ -103,10 +103,17 @@ pr_strip_authority <- function(names) {
     "", names, perl = TRUE
   )
 
-  # Remove non-parenthetical authority: Author, Year or Author Year
-  # Only match if preceded by at least genus + species (two words)
+  # Remove non-parenthetical authority: Author, Year or Author Year.
+  # Author may be a single capitalised token (e.g. "Linnaeus") or multiple
+  # tokens linked by `&` or `and` (e.g. "Blyth & Tegetmeier"). Only match if
+  # preceded by at least genus + species (two words).
   names <- gsub(
-    "^(\\S+\\s+\\S+(?:\\s+\\S+)?)\\s+\\p{Lu}[\\p{L}.&]*(?:\\s*,\\s*|\\s+)\\d{4}\\s*$",
+    paste0(
+      "^(\\S+\\s+\\S+(?:\\s+\\S+)?)",               # binomial or trinomial
+      "\\s+\\p{Lu}[\\p{L}.]*",                      # first author token
+      "(?:\\s*(?:&|and)\\s*\\p{Lu}[\\p{L}.]*)*",    # optional extra authors
+      "(?:\\s*,\\s*|\\s+)\\d{4}\\s*$"               # year
+    ),
     "\\1", names, perl = TRUE
   )
 

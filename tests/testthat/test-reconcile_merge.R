@@ -326,3 +326,156 @@ test_that("drop_unresolved has no effect on inner join", {
   expect_equal(nrow(merged_t), nrow(merged_f))
   expect_equal(nrow(merged_t), 2)
 })
+
+
+# --- M1. reconcile_merge: how × drop_unresolved × suffix × data shape grid --
+
+test_that("M1 grid: merge row counts are correct for every cell", {
+  # Configurable data shapes. Each returns a list(x, y, expected_*) so the
+  # test knows what row counts to expect.
+  shapes <- list(
+    symmetric = function() {
+      x <- fx_df_asymmetric(shared = 5, only_x = 0, only_y = 0)
+      list(x = x$x, y = x$y, shared = 5, only_x = 0, only_y = 0)
+    },
+    x_larger = function() {
+      x <- fx_df_asymmetric(shared = 3, only_x = 7, only_y = 2)
+      list(x = x$x, y = x$y, shared = 3, only_x = 7, only_y = 2)
+    },
+    y_larger = function() {
+      x <- fx_df_asymmetric(shared = 3, only_x = 2, only_y = 15)
+      list(x = x$x, y = x$y, shared = 3, only_x = 2, only_y = 15)
+    },
+    full_overlap = function() {
+      x <- fx_df_asymmetric(shared = 6, only_x = 0, only_y = 0)
+      list(x = x$x, y = x$y, shared = 6, only_x = 0, only_y = 0)
+    }
+    # NB: a "no_overlap" shape would cause reconcile_data to build a mapping
+    # where every row is unresolved; downstream merge behaviour is exercised
+    # by the existing asymmetric regression tests.
+  )
+
+  suffix_options <- list(
+    default = c("_x", "_y"),
+    dotted  = c(".a", ".b")
+  )
+
+  for (shape_name in names(shapes)) {
+    shape <- shapes[[shape_name]]()
+    rec <- reconcile_data(shape$x, shape$y,
+                          x_species = "species", y_species = "species",
+                          authority = NULL, quiet = TRUE)
+
+    for (how in c("inner", "left", "full")) {
+      for (drop in c(TRUE, FALSE)) {
+        for (sfx_name in names(suffix_options)) {
+          sfx <- suffix_options[[sfx_name]]
+
+          merged <- suppressMessages(reconcile_merge(
+            rec, shape$x, shape$y,
+            species_col_x = "species", species_col_y = "species",
+            how = how, suffix = sfx, drop_unresolved = drop
+          ))
+
+          # Predicted row count
+          expected <- switch(
+            how,
+            inner = shape$shared,
+            left  = if (drop) shape$shared else shape$shared + shape$only_x,
+            full  = if (drop) shape$shared else shape$shared + shape$only_x + shape$only_y
+          )
+
+          info <- sprintf(
+            "shape=%s how=%s drop=%s suffix=%s",
+            shape_name, how, drop, sfx_name
+          )
+
+          expect_equal(nrow(merged), expected, info = info)
+
+          # species_resolved is always the first column
+          expect_equal(names(merged)[1], "species_resolved", info = info)
+
+          # NA counts are consistent with drop_unresolved
+          na_count <- sum(is.na(merged$species_resolved))
+          if (drop) {
+            expect_equal(na_count, 0, info = info)
+          }
+
+          # No unexplained cartesian blow-up: row count <= upper bound
+          upper <- shape$shared + shape$only_x + shape$only_y
+          expect_true(nrow(merged) <= upper, info = info)
+        }
+      }
+    }
+  }
+})
+
+
+test_that("M1 suffix option actually renames common columns", {
+  asym <- fx_df_asymmetric(shared = 3, only_x = 0, only_y = 0)
+  # Add a column with the same name in both data frames
+  asym$x$common_col <- letters[seq_len(3)]
+  asym$y$common_col <- LETTERS[seq_len(3)]
+
+  rec <- reconcile_data(asym$x, asym$y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  # Default suffix
+  merged_default <- suppressMessages(reconcile_merge(
+    rec, asym$x, asym$y,
+    species_col_x = "species", species_col_y = "species"
+  ))
+  expect_true("common_col_x" %in% names(merged_default))
+  expect_true("common_col_y" %in% names(merged_default))
+
+  # Custom suffix
+  merged_dot <- suppressMessages(reconcile_merge(
+    rec, asym$x, asym$y,
+    species_col_x = "species", species_col_y = "species",
+    suffix = c(".a", ".b")
+  ))
+  expect_true("common_col.a" %in% names(merged_dot))
+  expect_true("common_col.b" %in% names(merged_dot))
+})
+
+
+test_that("M1 scalability: asymmetric #495-shape with 500+ y-only rows does not explode", {
+  skip_on_cran()
+  asym <- fx_df_asymmetric(shared = 50, only_x = 20, only_y = 500)
+  rec <- reconcile_data(asym$x, asym$y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  t0 <- Sys.time()
+  merged_left <- suppressMessages(reconcile_merge(
+    rec, asym$x, asym$y,
+    species_col_x = "species", species_col_y = "species",
+    how = "left"
+  ))
+  elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+
+  expect_equal(nrow(merged_left), nrow(asym$x))
+  expect_lt(elapsed, 10)  # regression guard for #495
+})
+
+
+test_that("M1 suffix validation rejects wrong length", {
+  asym <- fx_df_asymmetric(shared = 3, only_x = 0, only_y = 0)
+  rec <- reconcile_data(asym$x, asym$y,
+                        x_species = "species", y_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  expect_error(
+    reconcile_merge(rec, asym$x, asym$y,
+                    species_col_x = "species", species_col_y = "species",
+                    suffix = "_only_one"),
+    "suffix"
+  )
+  expect_error(
+    reconcile_merge(rec, asym$x, asym$y,
+                    species_col_x = "species", species_col_y = "species",
+                    suffix = c("a", "b", "c")),
+    "suffix"
+  )
+})
