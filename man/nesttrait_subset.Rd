@@ -25,7 +25,7 @@ A data frame with columns:
 }
 \source{
 Chia et al. (2023) A global database of bird nest traits.
-\emph{Scientific Data} 10:444. \doi{10.1038/s41597-023-02360-9}
+\emph{Scientific Data} 10:923. \doi{10.1038/s41597-023-02837-1}
 }
 \usage{
 nesttrait_subset

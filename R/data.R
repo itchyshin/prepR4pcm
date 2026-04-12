@@ -58,7 +58,7 @@
 #' }
 #'
 #' @source Chia et al. (2023) A global database of bird nest traits.
-#'   *Scientific Data* 10:444. \doi{10.1038/s41597-023-02360-9}
+#'   *Scientific Data* 10:923. \doi{10.1038/s41597-023-02837-1}
 "nesttrait_subset"
 
 

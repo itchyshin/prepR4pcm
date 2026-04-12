@@ -19,3 +19,4 @@
 ^Rplots\.pdf$
 ^scripts$
 ^cran-comments\.md$
+^prepR4pcm_.*\.pdf$

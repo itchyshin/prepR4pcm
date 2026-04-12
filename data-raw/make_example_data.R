@@ -6,7 +6,7 @@
 #
 # Data sources and citations:
 #   AVONET:    Tobias et al. (2022) Ecology Letters 25:581-597
-#   NestTrait: Chia et al. (2023) Scientific Data 10:444
+#   NestTrait: Chia et al. (2023) Scientific Data 10:923
 #   Delhey:    Delhey et al. (2019) American Naturalist 194:13-27
 #   Crosswalk: Tobias et al. (2022) — BirdLife-BirdTree taxonomy crosswalk
 #   Jetz tree: Jetz et al. (2012) Nature 491:444-448
