@@ -96,6 +96,13 @@
 #'       already reviewed the ambiguities.}
 #'   }
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
+#' @param x_label Character(1) or `NULL`. Human-readable label for source `x`
+#'   stored in the reconciliation metadata and shown in `print()` / `format()`.
+#'   Defaults to the expression passed as `x` (via `deparse(substitute())`).
+#'   Set this explicitly when calling `reconcile_data()` inside another function
+#'   so the label reflects the real data source rather than the local argument
+#'   name.
+#' @param y_label Character(1) or `NULL`. Same as `x_label`, for source `y`.
 #'
 #' @return A [reconciliation] object. Common next steps:
 #' \itemize{
@@ -152,7 +159,13 @@ reconcile_data <- function(x, y,
                            fuzzy_threshold = 0.9,
                            flag_threshold = 0.95,
                            resolve = c("flag", "first"),
-                           quiet = FALSE) {
+                           quiet = FALSE,
+                           x_label = NULL,
+                           y_label = NULL) {
+
+  # Capture source labels before any modifications to x/y
+  x_source <- x_label %||% deparse(substitute(x))
+  y_source <- y_label %||% deparse(substitute(y))
 
   rank <- match.arg(rank)
   resolve <- match.arg(resolve)
@@ -245,8 +258,8 @@ reconcile_data <- function(x, y,
     fuzzy_method     = if (fuzzy) "component_levenshtein" else NA_character_,
     resolve          = resolve,
     prepR4pcm_version = as.character(utils::packageVersion("prepR4pcm")),
-    x_source         = deparse(substitute(x)),
-    y_source         = deparse(substitute(y)),
+    x_source         = x_source,
+    y_source         = y_source,
     rank             = rank
   )
 

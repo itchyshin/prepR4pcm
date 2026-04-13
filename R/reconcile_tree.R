@@ -93,7 +93,11 @@ reconcile_tree <- function(x, tree,
                            fuzzy_threshold = 0.9,
                            flag_threshold = 0.95,
                            resolve = c("flag", "first"),
-                           quiet = FALSE) {
+                           quiet = FALSE,
+                           x_label = NULL) {
+
+  # Capture source label before any modifications to x
+  x_source <- x_label %||% deparse(substitute(x))
 
   rank <- match.arg(rank)
   resolve <- match.arg(resolve)
@@ -183,7 +187,7 @@ reconcile_tree <- function(x, tree,
     fuzzy_method     = if (fuzzy) "component_levenshtein" else NA_character_,
     resolve          = resolve,
     prepR4pcm_version = as.character(utils::packageVersion("prepR4pcm")),
-    x_source         = deparse(substitute(x)),
+    x_source         = x_source,
     y_source         = tree_source,
     rank             = rank
   )
