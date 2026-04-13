@@ -110,7 +110,12 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
         provider = authority,
         version = db_version
       ),
-      error = function(e) NULL
+      error = function(e) {
+        cli_alert_warning(
+          "taxadb lookup failed for {.val {authority}}: {conditionMessage(e)}. Names will be recorded as not found."
+        )
+        NULL
+      }
     )
 
     # Process results per name

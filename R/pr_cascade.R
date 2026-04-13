@@ -32,6 +32,7 @@ pr_run_cascade <- function(names_x, names_y,
                            overrides = NULL,
                            fuzzy = FALSE,
                            fuzzy_threshold = 0.9,
+                           flag_threshold = 0.95,
                            resolve = "flag",
                            quiet = FALSE) {
 
@@ -140,28 +141,32 @@ pr_run_cascade <- function(names_x, names_y,
     }
     lookup_y <- stats::setNames(remaining_y, norm_y)
 
-    for (i in seq_along(remaining_x)) {
-      nx <- norm_x[i]
-      if (nx %in% names(lookup_y)) {
-        oy <- lookup_y[nx][[1]]
-        # Check not already matched
-        if (!(remaining_x[i] %in% matched_x) && !(oy %in% matched_y)) {
-          rows[[length(rows) + 1]] <- tibble(
-            name_x        = remaining_x[i],
-            name_y        = oy,
-            name_resolved = NA_character_,
-            match_type    = "normalized",
-            match_score   = 1.0,
-            match_source  = "normalisation",
-            in_x          = TRUE,
-            in_y          = TRUE,
-            notes         = sprintf("'%s' normalised to '%s'",
-                                    remaining_x[i], nx)
-          )
-          matched_x <- c(matched_x, remaining_x[i])
-          matched_y <- c(matched_y, oy)
-        }
-      }
+    # Vectorised: find all remaining_x whose normalised form hits a normalised y
+    hit_mask <- norm_x %in% names(lookup_y)
+    if (any(hit_mask)) {
+      x_hits  <- remaining_x[hit_mask]
+      nx_hits <- as.character(norm_x[hit_mask])
+      y_hits  <- unname(lookup_y[nx_hits])
+
+      # If multiple x names normalise to the same y, keep only the first x
+      dup_y   <- duplicated(y_hits)
+      x_hits  <- x_hits[!dup_y]
+      nx_hits <- nx_hits[!dup_y]
+      y_hits  <- y_hits[!dup_y]
+
+      rows[[length(rows) + 1]] <- tibble(
+        name_x        = x_hits,
+        name_y        = y_hits,
+        name_resolved = NA_character_,
+        match_type    = "normalized",
+        match_score   = 1.0,
+        match_source  = "normalisation",
+        in_x          = TRUE,
+        in_y          = TRUE,
+        notes         = sprintf("'%s' normalised to '%s'", x_hits, nx_hits)
+      )
+      matched_x <- c(matched_x, x_hits)
+      matched_y <- c(matched_y, y_hits)
     }
   }
 
@@ -198,7 +203,8 @@ pr_run_cascade <- function(names_x, names_y,
 
         if (!is.na(orig_x) && !is.na(orig_y) &&
             !(orig_x %in% matched_x) && !(orig_y %in% matched_y)) {
-          # Flag indirect matches (both names are synonyms) when resolve = "flag"
+          # Indirect synonyms (both names required a lookup) are flagged regardless
+          # of score: the chain of inference is longer and warrants manual review.
           is_indirect <- grepl("^Both synonyms", syn_matches$notes[i])
           mtype <- if (resolve == "flag" && is_indirect) "flagged" else "synonym"
 
@@ -243,7 +249,7 @@ pr_run_cascade <- function(names_x, names_y,
         if (!(fx %in% matched_x) && !(fy %in% matched_y)) {
           # Flag low-confidence fuzzy matches when resolve = "flag"
           fscore <- fuzzy_matches$score[i]
-          mtype <- if (resolve == "flag" && fscore < 0.95) "flagged" else "fuzzy"
+          mtype <- if (resolve == "flag" && fscore < flag_threshold) "flagged" else "fuzzy"
 
           rows[[length(rows) + 1]] <- tibble(
             name_x        = fx,

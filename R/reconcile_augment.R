@@ -57,8 +57,10 @@
 #'   }
 #' @param seed Integer or `NULL`. Random seed for reproducibility when
 #'   `where = "genus"` picks a congener at random. Set to a fixed
-#'   integer in real analyses so results are reproducible. Default
-#'   `NULL`.
+#'   integer in real analyses so results are reproducible. The seed is
+#'   scoped to this call: the session RNG state is saved before and
+#'   restored after, so subsequent random draws in your script are
+#'   unaffected. Default `NULL`.
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
 #'
 #' @return A list with:
@@ -155,7 +157,20 @@ reconcile_augment <- function(reconciliation,
     ))
   }
 
-  if (!is.null(seed)) set.seed(seed)
+  if (!is.null(seed)) {
+    old_seed <- if (exists(".Random.seed", envir = globalenv())) {
+      get(".Random.seed", envir = globalenv())
+    } else {
+      NULL
+    }
+    on.exit(
+      if (!is.null(old_seed)) {
+        assign(".Random.seed", old_seed, envir = globalenv())
+      },
+      add = TRUE
+    )
+    set.seed(seed)
+  }
 
   if (!quiet) {
     cli_alert_info(
@@ -166,8 +181,11 @@ reconcile_augment <- function(reconciliation,
   # Extract genera from species names (normalise underscores to match tree tips)
   genera <- pr_extract_genus(gsub("_", " ", species_to_add))
 
-  # Get current tip genera for matching
-  tip_genera <- pr_extract_genus(gsub("_", " ", tree$tip.label))
+  # Pre-compute genus for every tip once; updated incrementally as tips are added
+  tip_genera <- stats::setNames(
+    pr_extract_genus(gsub("_", " ", tree$tip.label)),
+    tree$tip.label
+  )
 
   augmented_rows <- list()
   skipped_rows <- list()
@@ -184,21 +202,16 @@ reconcile_augment <- function(reconciliation,
       next
     }
 
-    # Find congeners in current tree
-    # Update tip_genera after each addition
-    current_tips <- tree$tip.label
-    current_genera <- pr_extract_genus(gsub("_", " ", current_tips))
-    congener_idx <- which(current_genera == genus)
+    # O(1) congener lookup from pre-computed vector
+    congener_tips <- names(tip_genera)[!is.na(tip_genera) & tip_genera == genus]
 
-    if (length(congener_idx) == 0) {
+    if (length(congener_tips) == 0) {
       skipped_rows[[length(skipped_rows) + 1]] <- tibble(
         species = sp, genus = genus,
         reason = "No congener in tree"
       )
       next
     }
-
-    congener_tips <- current_tips[congener_idx]
 
     # Calculate branch length
     bl <- pr_calc_augment_bl(tree, congener_tips, branch_length)
@@ -213,6 +226,9 @@ reconcile_augment <- function(reconciliation,
     sp_label <- gsub(" ", "_", sp)
     result <- pr_bind_species(tree, sp_label, congener_tips, where, bl)
     tree <- result$tree
+
+    # Incrementally update the genus lookup so subsequent iterations see this tip
+    tip_genera[[sp_label]] <- genus
 
     augmented_rows[[length(augmented_rows) + 1]] <- tibble(
       species       = sp,

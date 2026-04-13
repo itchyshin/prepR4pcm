@@ -102,7 +102,7 @@ reconcile_summary <- function(reconciliation,
 
     if (detail != "brief") {
       # Normalised matches
-      if (nrow(normalized) > 0 && detail != "mismatches_only") {
+      if (nrow(normalized) > 0 && detail != "brief") {
         lines <- c(lines, sprintf("--- Normalized Matches (%d) ---", nrow(normalized)))
         for (i in seq_len(min(nrow(normalized), 20))) {
           lines <- c(lines, sprintf('  "%s" -> "%s"  [%s]',
@@ -127,6 +127,22 @@ reconcile_summary <- function(reconciliation,
         }
         if (nrow(synonyms) > 20) {
           lines <- c(lines, sprintf("  ... and %d more", nrow(synonyms) - 20))
+        }
+        lines <- c(lines, "")
+      }
+
+      # Fuzzy matches
+      if (nrow(fuzzy_m) > 0) {
+        lines <- c(lines, sprintf("--- Fuzzy Matches (%d) ---", nrow(fuzzy_m)))
+        for (i in seq_len(min(nrow(fuzzy_m), 20))) {
+          lines <- c(lines, sprintf('  "%s" -> "%s"  [score: %.3f]  [%s]',
+                                     fuzzy_m$name_x[i],
+                                     fuzzy_m$name_y[i],
+                                     fuzzy_m$match_score[i],
+                                     fuzzy_m$notes[i]))
+        }
+        if (nrow(fuzzy_m) > 20) {
+          lines <- c(lines, sprintf("  ... and %d more", nrow(fuzzy_m) - 20))
         }
         lines <- c(lines, "")
       }

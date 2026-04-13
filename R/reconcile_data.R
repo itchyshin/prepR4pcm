@@ -145,6 +145,7 @@ reconcile_data <- function(x, y,
                            db_version = NULL,
                            fuzzy = FALSE,
                            fuzzy_threshold = 0.9,
+                           flag_threshold = 0.95,
                            resolve = c("flag", "first"),
                            quiet = FALSE) {
 
@@ -222,6 +223,7 @@ reconcile_data <- function(x, y,
     overrides       = overrides_df,
     fuzzy           = fuzzy,
     fuzzy_threshold = fuzzy_threshold,
+    flag_threshold  = flag_threshold,
     resolve         = resolve,
     quiet           = quiet
   )

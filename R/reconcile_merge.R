@@ -106,6 +106,16 @@ reconcile_merge <- function(reconciliation, data_x, data_y,
           call = caller_env())
   }
 
+  if ("..join_key.." %in% names(data_x) || "..join_key.." %in% names(data_y)) {
+    abort(
+      c(
+        "Input data contains a reserved column name '..join_key..'.",
+        "i" = "Rename that column before calling `reconcile_merge()`."
+      ),
+      call = caller_env()
+    )
+  }
+
   mapping <- reconciliation$mapping
 
   # Build the join key from the mapping table
