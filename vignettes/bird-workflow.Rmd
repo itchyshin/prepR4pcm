@@ -139,7 +139,7 @@ aligned$data$phylo <- aligned$data$Species1
 # Inverse phylogenetic covariance matrix
 # Replace any zero-length branches (can arise after pruning)
 tree_mcmc <- aligned$tree
-tree_mcmc$edge.length[tree_mcmc$edge.length == 0] <- 1e-6
+tree_mcmc$edge.length[tree_mcmc$edge.length < .Machine$double.eps] <- 1e-6
 inv_phylo <- inverseA(tree_mcmc, nodes = "ALL", scale = FALSE)
 
 # PGLMM: continuous response
@@ -415,22 +415,25 @@ cat(sprintf("Added: %d | Skipped (no congener): %d\n",
 if (nrow(aug$augmented) > 0) head(aug$augmented[, c("species", "placed_near", "branch_length")])
 ```
 
-Use the augmented tree in downstream analyses:
+Use the augmented tree in downstream analyses. Pass the augmented tree
+to `reconcile_apply()` — the existing reconciliation object is still
+valid as the name-mapping key, but the new tree contains the extra tips,
+so `drop_unresolved = FALSE` retains the grafted species:
 
 ```{r augment-apply, eval = FALSE}
 aligned_aug <- reconcile_apply(
   result,
   data = avonet_subset,
-  tree = aug$tree,
+  tree = aug$tree,        # augmented tree, not the original
   species_col = "Species1",
-  drop_unresolved = TRUE
+  drop_unresolved = FALSE  # keep augmented tips (they are now in the tree)
 )
 ```
 
 **Important caveat.** Genus-level placement assumes the missing
 species diverged similarly to its congeners, which may not hold.
-Always report which species were augmented and run sensitivity
-analyses comparing results with and without them.
+Always report which species were augmented (`aug$augmented`) and run
+sensitivity analyses comparing results with and without them.
 
 ## Exporting to files
 

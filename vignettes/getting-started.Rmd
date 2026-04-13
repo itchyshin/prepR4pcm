@@ -120,6 +120,13 @@ result <- reconcile_override(
 )
 ```
 
+`reconcile_override()` updates the existing reconciliation object in
+place — no need to re-run `reconcile_tree()`. The three actions are:
+- `"accept"` — confirm a specific `name_x → name_y` mapping.
+- `"reject"` — mark a name as deliberately excluded.
+- `"replace"` — redirect `name_x` to a different `name_y` than the
+  cascade produced.
+
 ### Produce aligned objects
 
 Once satisfied with the reconciliation, apply it:
@@ -172,7 +179,36 @@ print(result2)
 `Pan_troglodytes` (underscore) in `df1` is matched to `Pan troglodytes`
 (space) in `df2` via normalisation.
 
+## Understanding match types
+
+Every row in `reconcile_mapping()` has a `match_type` column. Here is
+what each value means and what action (if any) it requires:
+
+| `match_type`  | Meaning | Action needed? |
+|---------------|---------|----------------|
+| `exact`       | Verbatim string equality | None |
+| `normalized`  | Names matched after stripping underscores, authority strings, and case differences | None — check the `notes` column if you want to confirm |
+| `synonym`     | Names resolved through a taxonomic authority (e.g., Catalogue of Life) to the same accepted name | Verify the resolved name looks correct |
+| `fuzzy`       | High-confidence character-level match (score ≥ `flag_threshold`, default 0.95) | Check the `match_score` column; review with `reconcile_suggest()` |
+| `flagged`     | Lower-confidence match that needs human review: fuzzy score below `flag_threshold`, or an indirect synonym chain | **Review with `reconcile_review()` or `reconcile_suggest()`** |
+| `manual`      | Set by `reconcile_override()` or the `overrides` argument | None — you decided this |
+| `unresolved`  | No match found after all stages | Investigate; use `reconcile_suggest()` for candidates or `reconcile_override()` to document a decision |
+
+Use `reconcile_summary(result, detail = "mismatches_only")` to see only
+the rows that need attention.
+
 ## Example 3: Using a taxonomic authority
+
+**When should you set `authority`?** Use `authority = NULL` (skip
+synonym lookup) when:
+- You want a quick offline check — no database download required.
+- Your data and tree share the same taxonomy (most formatting differences
+  are caught by the normalisation stage anyway).
+
+Set `authority = "col"` (or another provider) when names differ because
+of genuine taxonomic revisions — species moved to a different genus,
+splits, or lumps. The first run will download a local database (~100 MB);
+subsequent runs are fast because the database is cached.
 
 When names differ due to synonymy, pass an authority to enable synonym
 resolution via taxadb:

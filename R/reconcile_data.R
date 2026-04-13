@@ -80,10 +80,15 @@
 #'   (e.g. `0.7`) are more permissive but produce more false positives;
 #'   always review fuzzy matches with [reconcile_suggest()] or
 #'   [reconcile_review()] before trusting them.
+#' @param flag_threshold Numeric in \[0, 1\]. When `resolve = "flag"`, fuzzy
+#'   matches with a score below this value are recorded as
+#'   `match_type = "flagged"` rather than `"fuzzy"`, marking them for
+#'   manual review. Default `0.95`. Must be >= `fuzzy_threshold` to have
+#'   any effect.
 #' @param resolve Character(1). What to do with borderline matches:
 #'   \describe{
 #'     \item{`"flag"` (default)}{Mark low-confidence fuzzy matches (score
-#'       below 0.95) and names with ambiguous taxadb synonymy as
+#'       below `flag_threshold`) and names with indirect taxadb synonymy as
 #'       `match_type = "flagged"` so you can audit them with
 #'       [reconcile_review()] or [reconcile_suggest()].}
 #'     \item{`"first"`}{Accept the highest-scoring candidate silently,

@@ -216,7 +216,7 @@ reconcile_augment <- function(reconciliation,
     # Calculate branch length
     bl <- pr_calc_augment_bl(tree, congener_tips, branch_length)
 
-    if (bl == 0 && branch_length != "zero") {
+    if (bl < .Machine$double.eps && branch_length != "zero") {
       cli_alert_warning(
         "Branch length is 0 for '{sp}'; added tip creates a polytomy."
       )
