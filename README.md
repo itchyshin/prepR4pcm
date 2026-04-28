@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# prepR4pcm
+# prepR4pcm <img src="man/figures/logo.png" align="right" height="139" alt="prepR4pcm logo" />
 
 <!-- badges: start -->
 
@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-04-08 18:01:01
+#>   Timestamp: 2026-04-24 15:30:00
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
