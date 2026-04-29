@@ -45,7 +45,10 @@ All packages in `Suggests` are used conditionally:
 * `phytools` — guarded in `R/reconcile_augment.R`; a pure-`ape`
   fallback is provided when phytools is unavailable.
 * `caper`, `MCMCglmm` — referenced only in `\donttest{}` / commented
-  example code as downstream PCM workflow illustrations.
+  example code as downstream PCM workflow illustrations. The
+  bird-workflow vignette also illustrates them, with each chunk guarded
+  by `eval = requireNamespace(..., quietly = TRUE)` so the vignette
+  knits cleanly without those packages installed.
 * `knitr`, `rmarkdown` — used by the vignette builder.
 * `dplyr`, `pkgdown`, `testthat` — used only by tests, vignettes, and
   site building.
@@ -61,4 +64,10 @@ This is a new package with no reverse dependencies on CRAN.
   cited in `R/data.R` with source and DOI.
 * Long-running examples are wrapped in `\donttest{}` where applicable.
 * The package uses `cli` for user-facing messages and `rlang` for
-  error handling.
+  error handling. Two error paths in `R/pr_authority.R` were migrated
+  from `rlang::abort()` to `cli::cli_abort()` so that `{.pkg ...}` /
+  `{.code ...}` markup renders correctly (was issue #4 in our GitHub
+  tracker).
+* `authority = "ott"` (Open Tree of Life) was removed from the list
+  of supported taxonomic authorities because the default `taxadb`
+  release does not ship a working OTT schema (was issue #5).

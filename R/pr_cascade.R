@@ -61,6 +61,13 @@ pr_run_cascade <- function(names_x, names_y,
   matched_y <- character()
   rows <- list()
 
+  # Track overrides that could not be applied (issue #8a). Each row has
+  # `name_x`, `name_y`, and `reason` -- one of:
+  #   "name_x_not_in_data"   : ox not present in the input names
+  #   "name_y_not_in_target" : oy not present in the target names
+  #   "already_matched"      : ox or oy was already used by a prior override
+  unused_overrides <- list()
+
   # --- Pre-stage: Apply manual overrides ---
   if (!is.null(overrides) && nrow(overrides) > 0) {
     # Normalise for comparison so overrides with spaces match targets
@@ -80,7 +87,10 @@ pr_run_cascade <- function(names_x, names_y,
       ox_orig <- lookup_orig_ux[ox_norm]
       oy_orig <- lookup_orig_uy[oy_norm]
 
-      if (!is.na(ox_orig) && !is.na(oy_orig) &&
+      ox_missing <- is.na(ox_orig)
+      oy_missing <- is.na(oy_orig)
+
+      if (!ox_missing && !oy_missing &&
           !(ox_orig %in% matched_x) && !(oy_orig %in% matched_y)) {
         rows[[length(rows) + 1]] <- tibble(
           name_x        = unname(ox_orig),
@@ -95,6 +105,19 @@ pr_run_cascade <- function(names_x, names_y,
         )
         matched_x <- c(matched_x, unname(ox_orig))
         matched_y <- c(matched_y, unname(oy_orig))
+      } else {
+        # Record why this override could not be applied. Multiple reasons
+        # can apply at once (e.g. both names absent); we report the most
+        # informative one in priority order.
+        reason <- if (ox_missing && oy_missing) "name_x_not_in_data"
+                  else if (ox_missing) "name_x_not_in_data"
+                  else if (oy_missing) "name_y_not_in_target"
+                  else "already_matched"
+        unused_overrides[[length(unused_overrides) + 1]] <- tibble(
+          name_x = ox,
+          name_y = oy,
+          reason = reason
+        )
       }
     }
   }
@@ -301,15 +324,59 @@ pr_run_cascade <- function(names_x, names_y,
     )
   }
 
+  # Build the unused-overrides table (issue #8a). Always present, even
+  # when no overrides were given, so downstream code can rely on its
+  # shape.
+  if (length(unused_overrides) == 0) {
+    unused_tbl <- tibble(
+      name_x = character(),
+      name_y = character(),
+      reason = character()
+    )
+  } else {
+    unused_tbl <- do.call(rbind, unused_overrides)
+  }
+
   # Combine all rows
   if (length(rows) == 0) {
-    return(tibble(
+    mapping <- tibble(
       name_x = character(), name_y = character(),
       name_resolved = character(), match_type = character(),
       match_score = numeric(), match_source = character(),
       in_x = logical(), in_y = logical(), notes = character()
-    ))
+    )
+  } else {
+    mapping <- do.call(rbind, rows)
   }
 
-  do.call(rbind, rows)
+  attr(mapping, "unused_overrides") <- unused_tbl
+  mapping
+}
+
+
+#' Warn the user that some overrides could not be applied
+#'
+#' Emits a `cli_alert_warning` summarising why each rejected override
+#' was skipped. Pointer to the full table on the result object.
+#'
+#' @param unused A tibble produced by `pr_run_cascade()` with columns
+#'   `name_x`, `name_y`, `reason`.
+#' @return Invisibly `NULL`.
+#' @keywords internal
+pr_warn_unused_overrides <- function(unused) {
+  if (is.null(unused) || nrow(unused) == 0) return(invisible(NULL))
+
+  reason_counts <- table(unused$reason)
+  reason_strs <- vapply(
+    names(reason_counts),
+    function(r) sprintf("%d %s", reason_counts[[r]], r),
+    character(1)
+  )
+
+  n <- nrow(unused)
+  cli_alert_warning(
+    "{n} override{?s} could not be applied: {paste(reason_strs, collapse = '; ')}."
+  )
+  cli_alert_info("See {.code result$unused_overrides} for details.")
+  invisible(NULL)
 }

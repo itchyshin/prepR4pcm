@@ -5,7 +5,13 @@
 \alias{new_reconciliation}
 \title{The \code{reconciliation} S3 class}
 \usage{
-new_reconciliation(mapping, meta, counts = NULL, overrides = NULL)
+new_reconciliation(
+  mapping,
+  meta,
+  counts = NULL,
+  overrides = NULL,
+  unused_overrides = NULL
+)
 }
 \arguments{
 \item{mapping}{A tibble with the mapping table (see above).}
@@ -16,6 +22,11 @@ new_reconciliation(mapping, meta, counts = NULL, overrides = NULL)
 \code{mapping} if \code{NULL}.}
 
 \item{overrides}{A tibble of manual overrides (empty by default).}
+
+\item{unused_overrides}{A tibble of overrides that could not be
+applied, with columns \code{name_x}, \code{name_y}, \code{reason}. If \code{NULL},
+pulled from \code{attr(mapping, "unused_overrides")} when present,
+else initialised empty.}
 }
 \value{
 An object of class \code{reconciliation}.

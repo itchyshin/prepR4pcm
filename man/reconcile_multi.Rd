@@ -41,12 +41,19 @@ for North American vertebrates and plants.}
 \item{\code{"ncbi"}}{NCBI Taxonomy --- best when working with sequence
 data.}
 \item{\code{"iucn"}, \code{"fb"} (FishBase), \code{"slb"} (SeaLifeBase), \code{"wd"}
-(Wikidata), \code{"tpl"} (The Plant List), \code{"itis_test"}}{
-Also supported via \pkg{taxadb}.}
+(Wikidata), \code{"tpl"} (The Plant List)}{
+Also passed through to \pkg{taxadb}. Coverage and current
+availability vary; some may require running
+\code{taxadb::td_create()} manually with a matching \code{version}.}
 \item{\code{NULL}}{Skip the synonym stage entirely. Useful for quick
 checks or when taxadb is unavailable. Stages 1, 2 and 4 still
 run.}
-}}
+}
+
+\code{"ott"} (Open Tree of Life) was previously listed but is \strong{not}
+currently supported because the default \pkg{taxadb} release does
+not ship a working OTT schema. Use a different authority, or skip
+synonym resolution by passing \code{NULL}.}
 
 \item{rank}{Character(1). Controls how trinomials are handled during
 normalisation:
@@ -82,7 +89,7 @@ always review fuzzy matches with \code{\link[=reconcile_suggest]{reconcile_sugge
 \item{resolve}{Character(1). What to do with borderline matches:
 \describe{
 \item{\code{"flag"} (default)}{Mark low-confidence fuzzy matches (score
-below 0.95) and names with ambiguous taxadb synonymy as
+below \code{flag_threshold}) and names with indirect taxadb synonymy as
 \code{match_type = "flagged"} so you can audit them with
 \code{\link[=reconcile_review]{reconcile_review()}} or \code{\link[=reconcile_suggest]{reconcile_suggest()}}.}
 \item{\code{"first"}}{Accept the highest-scoring candidate silently,

@@ -98,6 +98,11 @@ reconcile_summary <- function(reconciliation,
     lines <- c(lines, sprintf("  Manual:      %d / %d", counts$n_manual, counts$n_x))
     lines <- c(lines, sprintf("  Unresolved:  %d (x only) + %d (y only)",
                                counts$n_unresolved_x, counts$n_unresolved_y))
+    n_unused_ov <- if (!is.null(reconciliation$unused_overrides))
+                     nrow(reconciliation$unused_overrides) else 0L
+    if (n_unused_ov > 0) {
+      lines <- c(lines, sprintf("  Overrides unused: %d", n_unused_ov))
+    }
     lines <- c(lines, "")
 
     if (detail != "brief") {
@@ -155,6 +160,25 @@ reconcile_summary <- function(reconciliation,
                                      manual_m$name_x[i],
                                      manual_m$name_y[i],
                                      manual_m$notes[i]))
+        }
+        lines <- c(lines, "")
+      }
+
+      # Unused overrides (issue #8a) -- overrides supplied by the user
+      # but not applied because of missing names or prior matches.
+      unused_ov <- reconciliation$unused_overrides
+      if (!is.null(unused_ov) && nrow(unused_ov) > 0) {
+        lines <- c(lines,
+                   sprintf("--- Unused Overrides (%d) ---", nrow(unused_ov)))
+        show_n <- min(nrow(unused_ov), 20)
+        for (i in seq_len(show_n)) {
+          lines <- c(lines, sprintf('  "%s" -> "%s"  [%s]',
+                                     unused_ov$name_x[i],
+                                     unused_ov$name_y[i],
+                                     unused_ov$reason[i]))
+        }
+        if (nrow(unused_ov) > 20) {
+          lines <- c(lines, sprintf("  ... and %d more", nrow(unused_ov) - 20))
         }
         lines <- c(lines, "")
       }

@@ -52,8 +52,10 @@ assuming any divergence time.}
 
 \item{seed}{Integer or \code{NULL}. Random seed for reproducibility when
 \code{where = "genus"} picks a congener at random. Set to a fixed
-integer in real analyses so results are reproducible. Default
-\code{NULL}.}
+integer in real analyses so results are reproducible. The seed is
+scoped to this call: the session RNG state is saved before and
+restored after, so subsequent random draws in your script are
+unaffected. Default \code{NULL}.}
 
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
 }

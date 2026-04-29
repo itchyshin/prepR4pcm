@@ -11,7 +11,11 @@
 #' depend on \pkg{taxadb} being available, and you can point to the
 #' published source in the methods section of your paper.
 #'
-#' @param crosswalk A data frame or a file path to a CSV.
+#' @param crosswalk A data frame, or a file path. File format is
+#'   inferred from the extension: `.csv` (comma-separated), `.tsv`
+#'   (tab-separated), or `.txt` (tab-separated). For other delimited
+#'   formats, read the file yourself with `read.delim()` or
+#'   `read.table()` and pass the resulting data frame.
 #' @param from_col Character(1). Column name for source names (e.g.,
 #'   `"Species1"` for BirdLife names).
 #' @param to_col Character(1). Column name for target names (e.g.,
@@ -50,7 +54,7 @@ reconcile_crosswalk <- function(crosswalk,
                                  notes_col = NULL,
                                  one_to_one_only = FALSE) {
 
-  # Load from file if needed
+  # Load from file if needed (issue #8b: support CSV, TSV, TXT).
   if (is.character(crosswalk) && length(crosswalk) == 1) {
     if (!file.exists(crosswalk)) {
       abort(
@@ -58,11 +62,23 @@ reconcile_crosswalk <- function(crosswalk,
         call = caller_env()
       )
     }
-    crosswalk <- utils::read.csv(crosswalk, stringsAsFactors = FALSE)
+    ext <- tolower(tools::file_ext(crosswalk))
+    crosswalk <- switch(
+      ext,
+      csv = utils::read.csv(crosswalk, stringsAsFactors = FALSE),
+      tsv = ,
+      txt = utils::read.delim(crosswalk, sep = "\t",
+                              stringsAsFactors = FALSE),
+      cli::cli_abort(
+        c("Unsupported crosswalk file extension: {.val {ext}}.",
+          "i" = "Use {.file .csv}, {.file .tsv}, or {.file .txt}, or pass a data frame."),
+        call = caller_env()
+      )
+    )
   }
 
   if (!is.data.frame(crosswalk)) {
-    abort("`crosswalk` must be a data frame or a file path to a CSV.",
+    abort("`crosswalk` must be a data frame, or a path to a .csv, .tsv, or .txt file.",
           call = caller_env())
   }
 

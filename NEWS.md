@@ -1,5 +1,59 @@
 # prepR4pcm (development version)
 
+## Bug fixes
+
+* `pr_lookup_authority()` and `pr_ensure_db()` no longer print raw
+  `{.pkg ...}` / `{.code ...}` cli template strings in their error
+  messages. The functions now route errors through `cli::cli_abort()`,
+  which interprets the markup. Closes #4 (Eduardo Santos).
+
+* `authority = "ott"` (Open Tree of Life) has been removed from the
+  list of valid authorities returned by `pr_valid_authorities()`. The
+  default `taxadb` release does not ship a working OTT schema and the
+  call would fail deep inside taxadb with a confusing schema error;
+  users are now told up front that `ott` is not supported and given
+  the working alternatives. Closes #5 (Ayumi Mizuno).
+
+* `reconcile_tree()` and `reconcile_data()` previously dropped manual
+  overrides silently when the override's `name_x` was not in the data
+  or `name_y` was not in the target. The reconciliation object now
+  carries an `unused_overrides` slot listing every rejected override
+  with a `reason` (`name_x_not_in_data`, `name_y_not_in_target`, or
+  `already_matched`), and the functions emit a `cli_alert_warning()`
+  pointing the user at it. `reconcile_summary()` includes a count
+  and a per-row listing in the verbose section. Closes #8a
+  (Ayumi Mizuno).
+
+## New features
+
+* `reconcile_crosswalk()` now accepts `.csv`, `.tsv`, or `.txt`
+  (tab-delimited) file paths in addition to data frames. The format
+  is inferred from the file extension. Closes #8b (Ayumi Mizuno).
+
+## Documentation
+
+* Installation instructions are standardised on `pak::pak(...)` across
+  the README and the *Getting started* vignette. Closes #6
+  (Ayumi Mizuno).
+
+* The `@param authority` block in `reconcile_tree()` /
+  `reconcile_data()` now reflects which authorities are actually
+  supported. `tpl`, `slb`, `wd`, `iucn`, `fb` are flagged as
+  experimental ("coverage and current availability vary"); `ott` is
+  documented as not supported in the current default `taxadb` release.
+
+* The `bird-workflow` vignette now guards its `caper` and `MCMCglmm`
+  chunks with `eval = requireNamespace(..., quietly = TRUE)`, so the
+  vignette knits cleanly for users (and CRAN check environments)
+  without those Suggests packages installed.
+
+* Added a hex sticker logo (`man/figures/logo.svg` / `logo.png`) to
+  the README and the pkgdown site.
+
+* pkgdown site rebuilt to fix stale search-index links that pointed
+  to 404 pages for `reconcile_override_batch` and `reconcile_suggest`.
+  Closes #7 (Ayumi Mizuno).
+
 ## Breaking changes
 
 * The first argument of 13 exported functions has been renamed from

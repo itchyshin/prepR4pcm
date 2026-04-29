@@ -14,7 +14,11 @@ reconcile_crosswalk(
 )
 }
 \arguments{
-\item{crosswalk}{A data frame or a file path to a CSV.}
+\item{crosswalk}{A data frame, or a file path. File format is
+inferred from the extension: \code{.csv} (comma-separated), \code{.tsv}
+(tab-separated), or \code{.txt} (tab-separated). For other delimited
+formats, read the file yourself with \code{read.delim()} or
+\code{read.table()} and pass the resulting data frame.}
 
 \item{from_col}{Character(1). Column name for source names (e.g.,
 \code{"Species1"} for BirdLife names).}

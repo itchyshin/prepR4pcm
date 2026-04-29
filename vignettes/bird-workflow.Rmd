@@ -112,7 +112,7 @@ comparative method. Here are two common approaches.
 PGLS accounts for shared evolutionary history when estimating
 regression parameters:
 
-```{r pgls, message = FALSE, warning = FALSE}
+```{r pgls, message = FALSE, warning = FALSE, eval = requireNamespace("caper", quietly = TRUE)}
 library(caper)
 
 # reconcile_apply() aligns names so data$Species1 matches tree tip labels
@@ -130,7 +130,7 @@ When you need random effects beyond phylogeny or want a Bayesian
 framework, use a PGLMM. The MCMCglmm package fits Bayesian
 phylogenetic mixed models:
 
-```{r pglmm, message = FALSE, warning = FALSE, results = "hide"}
+```{r pglmm, message = FALSE, warning = FALSE, results = "hide", eval = requireNamespace("MCMCglmm", quietly = TRUE)}
 library(MCMCglmm)
 
 # Species column as the phylogenetic grouping factor
@@ -158,7 +158,7 @@ model_mcmc <- MCMCglmm(
 )
 ```
 
-```{r pglmm-summary}
+```{r pglmm-summary, eval = requireNamespace("MCMCglmm", quietly = TRUE)}
 summary(model_mcmc)
 ```
 

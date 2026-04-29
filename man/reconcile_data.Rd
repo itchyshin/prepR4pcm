@@ -15,8 +15,11 @@ reconcile_data(
   db_version = NULL,
   fuzzy = FALSE,
   fuzzy_threshold = 0.9,
+  flag_threshold = 0.95,
   resolve = c("flag", "first"),
-  quiet = FALSE
+  quiet = FALSE,
+  x_label = NULL,
+  y_label = NULL
 )
 }
 \arguments{
@@ -45,12 +48,19 @@ for North American vertebrates and plants.}
 \item{\code{"ncbi"}}{NCBI Taxonomy --- best when working with sequence
 data.}
 \item{\code{"iucn"}, \code{"fb"} (FishBase), \code{"slb"} (SeaLifeBase), \code{"wd"}
-(Wikidata), \code{"tpl"} (The Plant List), \code{"itis_test"}}{
-Also supported via \pkg{taxadb}.}
+(Wikidata), \code{"tpl"} (The Plant List)}{
+Also passed through to \pkg{taxadb}. Coverage and current
+availability vary; some may require running
+\code{taxadb::td_create()} manually with a matching \code{version}.}
 \item{\code{NULL}}{Skip the synonym stage entirely. Useful for quick
 checks or when taxadb is unavailable. Stages 1, 2 and 4 still
 run.}
-}}
+}
+
+\code{"ott"} (Open Tree of Life) was previously listed but is \strong{not}
+currently supported because the default \pkg{taxadb} release does
+not ship a working OTT schema. Use a different authority, or skip
+synonym resolution by passing \code{NULL}.}
 
 \item{rank}{Character(1). Controls how trinomials are handled during
 normalisation:
@@ -83,10 +93,16 @@ similarity score for a fuzzy match to be accepted. Default \code{0.9}
 always review fuzzy matches with \code{\link[=reconcile_suggest]{reconcile_suggest()}} or
 \code{\link[=reconcile_review]{reconcile_review()}} before trusting them.}
 
+\item{flag_threshold}{Numeric in [0, 1]. When \code{resolve = "flag"}, fuzzy
+matches with a score below this value are recorded as
+\code{match_type = "flagged"} rather than \code{"fuzzy"}, marking them for
+manual review. Default \code{0.95}. Must be >= \code{fuzzy_threshold} to have
+any effect.}
+
 \item{resolve}{Character(1). What to do with borderline matches:
 \describe{
 \item{\code{"flag"} (default)}{Mark low-confidence fuzzy matches (score
-below 0.95) and names with ambiguous taxadb synonymy as
+below \code{flag_threshold}) and names with indirect taxadb synonymy as
 \code{match_type = "flagged"} so you can audit them with
 \code{\link[=reconcile_review]{reconcile_review()}} or \code{\link[=reconcile_suggest]{reconcile_suggest()}}.}
 \item{\code{"first"}}{Accept the highest-scoring candidate silently,
@@ -95,6 +111,15 @@ already reviewed the ambiguities.}
 }}
 
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
+
+\item{x_label}{Character(1) or \code{NULL}. Human-readable label for source \code{x}
+stored in the reconciliation metadata and shown in \code{print()} / \code{format()}.
+Defaults to the expression passed as \code{x} (via \code{deparse(substitute())}).
+Set this explicitly when calling \code{reconcile_data()} inside another function
+so the label reflects the real data source rather than the local argument
+name.}
+
+\item{y_label}{Character(1) or \code{NULL}. Same as \code{x_label}, for source \code{y}.}
 }
 \value{
 A \link{reconciliation} object. Common next steps:

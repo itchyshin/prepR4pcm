@@ -45,13 +45,18 @@
 #' @param counts A named list of summary counts. Computed from
 #'   `mapping` if `NULL`.
 #' @param overrides A tibble of manual overrides (empty by default).
+#' @param unused_overrides A tibble of overrides that could not be
+#'   applied, with columns `name_x`, `name_y`, `reason`. If `NULL`,
+#'   pulled from `attr(mapping, "unused_overrides")` when present,
+#'   else initialised empty.
 #'
 #' @return An object of class `reconciliation`.
 #'
 #' @aliases reconciliation
 #' @name reconciliation
 #' @keywords internal
-new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL) {
+new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL,
+                               unused_overrides = NULL) {
 
   if (is.null(overrides)) {
     overrides <- tibble(
@@ -63,16 +68,30 @@ new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL) {
     )
   }
 
+  if (is.null(unused_overrides)) {
+    unused_overrides <- attr(mapping, "unused_overrides")
+    if (is.null(unused_overrides)) {
+      unused_overrides <- tibble(
+        name_x = character(),
+        name_y = character(),
+        reason = character()
+      )
+    }
+  }
+  # Strip the attribute from `mapping` so it's not duplicated.
+  attr(mapping, "unused_overrides") <- NULL
+
   if (is.null(counts)) {
     counts <- pr_compute_counts(mapping)
   }
 
   structure(
     list(
-      mapping   = mapping,
-      meta      = meta,
-      counts    = counts,
-      overrides = overrides
+      mapping          = mapping,
+      meta             = meta,
+      counts           = counts,
+      overrides        = overrides,
+      unused_overrides = unused_overrides
     ),
     class = "reconciliation"
   )

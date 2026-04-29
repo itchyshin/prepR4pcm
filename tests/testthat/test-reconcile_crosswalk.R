@@ -65,3 +65,62 @@ test_that("reconcile_crosswalk removes empty rows", {
   result <- reconcile_crosswalk(xw, "from", "to")
   expect_equal(nrow(result), 1L)
 })
+
+# Issue #8b: file-format support beyond CSV ------------------------
+
+test_that("reconcile_crosswalk reads a CSV file path", {
+  path <- tempfile(fileext = ".csv")
+  on.exit(unlink(path), add = TRUE)
+  write.csv(
+    data.frame(
+      from = c("Sp A", "Sp B"),
+      to   = c("Sp A2", "Sp B2"),
+      stringsAsFactors = FALSE
+    ),
+    path, row.names = FALSE
+  )
+  result <- reconcile_crosswalk(path, "from", "to")
+  expect_equal(nrow(result), 2L)
+  expect_equal(result$name_x, c("Sp A", "Sp B"))
+})
+
+test_that("reconcile_crosswalk reads a TSV file path (issue #8b)", {
+  path <- tempfile(fileext = ".tsv")
+  on.exit(unlink(path), add = TRUE)
+  write.table(
+    data.frame(
+      from = c("Sp A", "Sp B"),
+      to   = c("Sp A2", "Sp B2"),
+      stringsAsFactors = FALSE
+    ),
+    path, sep = "\t", row.names = FALSE, quote = FALSE
+  )
+  result <- reconcile_crosswalk(path, "from", "to")
+  expect_equal(nrow(result), 2L)
+  expect_equal(result$name_x, c("Sp A", "Sp B"))
+})
+
+test_that("reconcile_crosswalk reads a TXT (tab-delimited) file path (issue #8b)", {
+  path <- tempfile(fileext = ".txt")
+  on.exit(unlink(path), add = TRUE)
+  write.table(
+    data.frame(
+      from = c("Sp A", "Sp B"),
+      to   = c("Sp A2", "Sp B2"),
+      stringsAsFactors = FALSE
+    ),
+    path, sep = "\t", row.names = FALSE, quote = FALSE
+  )
+  result <- reconcile_crosswalk(path, "from", "to")
+  expect_equal(nrow(result), 2L)
+})
+
+test_that("reconcile_crosswalk errors on unsupported file extension", {
+  path <- tempfile(fileext = ".xls")
+  on.exit(unlink(path), add = TRUE)
+  writeLines("from\tto\nSpA\tSpA2", path)
+  expect_error(
+    reconcile_crosswalk(path, "from", "to"),
+    "Unsupported"
+  )
+})
