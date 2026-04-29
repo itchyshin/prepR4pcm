@@ -194,6 +194,12 @@ reconcile_tree <- function(x, tree,
 
   result <- new_reconciliation(mapping = mapping, meta = meta)
 
+  # Surface unused overrides (issue #8a). Silent drops are surprising;
+  # warn the user and direct them to `result$unused_overrides`.
+  if (!quiet && nrow(result$unused_overrides) > 0) {
+    pr_warn_unused_overrides(result$unused_overrides)
+  }
+
   if (!quiet) {
     n_matched <- sum(mapping$in_x & mapping$in_y, na.rm = TRUE)
     n_total <- result$counts$n_x

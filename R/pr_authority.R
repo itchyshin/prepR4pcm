@@ -5,9 +5,22 @@
 
 #' Valid taxonomic authorities
 #'
+#' Returns the set of authority codes that the package accepts. The
+#' "core" authorities (`col`, `itis`, `gbif`, `ncbi`) are well-tested
+#' and routinely used. The remaining authorities (`tpl`, `fb`, `slb`,
+#' `wd`, `iucn`) are passed through to \pkg{taxadb} but their coverage
+#' and current availability vary -- some may require running
+#' `taxadb::td_create()` manually with a matching `version`.
+#'
+#' `"ott"` (Open Tree of Life) was previously listed as supported but
+#' the current \pkg{taxadb} release does not ship a working OTT schema
+#' under the default provider settings; it has been removed from the
+#' valid list. Re-add it manually if you maintain a working
+#' \pkg{taxadb} OTT installation.
+#'
 #' @keywords internal
 pr_valid_authorities <- function() {
-  c("col", "itis", "gbif", "ncbi", "ott", "tpl", "fb", "slb", "wd", "iucn")
+  c("col", "itis", "gbif", "ncbi", "tpl", "fb", "slb", "wd", "iucn")
 }
 
 #' Ensure the taxadb local database is available
@@ -21,7 +34,7 @@ pr_valid_authorities <- function() {
 #' @keywords internal
 pr_ensure_db <- function(authority, db_version = NULL) {
   if (!requireNamespace("taxadb", quietly = TRUE)) {
-    abort(
+    cli::cli_abort(
       c(
         "Synonym resolution requires the {.pkg taxadb} package.",
         "i" = 'Install with: {.code install.packages("taxadb")}'
@@ -42,11 +55,11 @@ pr_ensure_db <- function(authority, db_version = NULL) {
       do.call(taxadb::td_create, args)
     },
     error = function(e) {
-      abort(
+      cli::cli_abort(
         c(
           "Failed to create/access taxadb database.",
           "x" = conditionMessage(e),
-          "i" = "Try running {.code taxadb::td_create(\"{authority}\")} manually."
+          "i" = 'Try running {.code taxadb::td_create("{authority}")} manually.'
         ),
         call = caller_env()
       )

@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>From Raw Data to PCM: A Complete Bird Trait Workflow • prepR4pcm</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -56,8 +61,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>From Raw Data to PCM: A Complete Bird Trait Workflow</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>From Raw Data to PCM: A Complete Bird Trait Workflow</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/itchyshin/prepR4pcm/blob/HEAD/vignettes/bird-workflow.Rmd" class="external-link"><code>vignettes/bird-workflow.Rmd</code></a></small>
@@ -124,7 +128,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-08 18:06:17</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-28 18:13:38</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -252,7 +256,7 @@ mixed models:</p>
 <span><span class="co"># Inverse phylogenetic covariance matrix</span></span>
 <span><span class="co"># Replace any zero-length branches (can arise after pruning)</span></span>
 <span><span class="va">tree_mcmc</span> <span class="op">&lt;-</span> <span class="va">aligned</span><span class="op">$</span><span class="va">tree</span></span>
-<span><span class="va">tree_mcmc</span><span class="op">$</span><span class="va">edge.length</span><span class="op">[</span><span class="va">tree_mcmc</span><span class="op">$</span><span class="va">edge.length</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1e-6</span></span>
+<span><span class="va">tree_mcmc</span><span class="op">$</span><span class="va">edge.length</span><span class="op">[</span><span class="va">tree_mcmc</span><span class="op">$</span><span class="va">edge.length</span> <span class="op">&lt;</span> <span class="va">.Machine</span><span class="op">$</span><span class="va">double.eps</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1e-6</span></span>
 <span><span class="va">inv_phylo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MCMCglmm/man/inverseA.html" class="external-link">inverseA</a></span><span class="op">(</span><span class="va">tree_mcmc</span>, nodes <span class="op">=</span> <span class="st">"ALL"</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># PGLMM: continuous response</span></span>
@@ -338,7 +342,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-08 18:06:34</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-28 18:13:57</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -481,6 +485,8 @@ example:</p>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (68 matched so far)...</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> 2971 overrides could not be applied: 23 already_matched; 2767 name_x_not_in_data; 181 name_y_not_in_target.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> See `result$unused_overrides` for details.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span></span>
 <span></span>
 <span><span class="co"># Compare: how many more matches with the crosswalk?</span></span>
@@ -603,19 +609,24 @@ tree using genus-level placement:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Calamanthus pyrrhopygius Calamanthus fuliginosus          3.80</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Gerygone citrina         Gerygone magnirostris            2.91</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Pyrrholaemus sagittatus  Pyrrholaemus brunneus           15.5</span></span></code></pre></div>
-<p>Use the augmented tree in downstream analyses:</p>
+<p>Use the augmented tree in downstream analyses. Pass the augmented
+tree to <code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> — the existing reconciliation
+object is still valid as the name-mapping key, but the new tree contains
+the extra tips, so <code>drop_unresolved = FALSE</code> retains the
+grafted species:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aligned_aug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_apply.html">reconcile_apply</a></span><span class="op">(</span></span>
 <span>  <span class="va">result</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">avonet_subset</span>,</span>
-<span>  tree <span class="op">=</span> <span class="va">aug</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>  tree <span class="op">=</span> <span class="va">aug</span><span class="op">$</span><span class="va">tree</span>,        <span class="co"># augmented tree, not the original</span></span>
 <span>  species_col <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>  drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  drop_unresolved <span class="op">=</span> <span class="cn">FALSE</span>  <span class="co"># keep augmented tips (they are now in the tree)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Important caveat.</strong> Genus-level placement assumes the
 missing species diverged similarly to its congeners, which may not hold.
-Always report which species were augmented and run sensitivity analyses
-comparing results with and without them.</p>
+Always report which species were augmented (<code>aug$augmented</code>)
+and run sensitivity analyses comparing results with and without
+them.</p>
 </div>
 <div class="section level3">
 <h3 id="exporting-to-files">Exporting to files<a class="anchor" aria-label="anchor" href="#exporting-to-files"></a>

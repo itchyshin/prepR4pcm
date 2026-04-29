@@ -35,8 +35,11 @@ normalised match → synonym resolution. Every decision is recorded.
 ## Installation
 
 ```{r install, eval = FALSE}
-# Install from GitHub
-remotes::install_github("itchyshin/prepR4pcm")
+# Install pak if you don't have it
+# install.packages("pak")
+
+# Install prepR4pcm from GitHub
+pak::pak("itchyshin/prepR4pcm")
 ```
 
 ```{r setup}

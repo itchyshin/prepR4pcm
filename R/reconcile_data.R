@@ -48,12 +48,19 @@
 #'     \item{`"ncbi"`}{NCBI Taxonomy --- best when working with sequence
 #'       data.}
 #'     \item{`"iucn"`, `"fb"` (FishBase), `"slb"` (SeaLifeBase), `"wd"`
-#'       (Wikidata), `"tpl"` (The Plant List), `"itis_test"`}{
-#'       Also supported via \pkg{taxadb}.}
+#'       (Wikidata), `"tpl"` (The Plant List)}{
+#'       Also passed through to \pkg{taxadb}. Coverage and current
+#'       availability vary; some may require running
+#'       `taxadb::td_create()` manually with a matching `version`.}
 #'     \item{`NULL`}{Skip the synonym stage entirely. Useful for quick
 #'       checks or when taxadb is unavailable. Stages 1, 2 and 4 still
 #'       run.}
 #'   }
+#'
+#'   `"ott"` (Open Tree of Life) was previously listed but is **not**
+#'   currently supported because the default \pkg{taxadb} release does
+#'   not ship a working OTT schema. Use a different authority, or skip
+#'   synonym resolution by passing `NULL`.
 #' @param rank Character(1). Controls how trinomials are handled during
 #'   normalisation:
 #'   \describe{
@@ -264,6 +271,11 @@ reconcile_data <- function(x, y,
   )
 
   result <- new_reconciliation(mapping = mapping, meta = meta)
+
+  # Surface unused overrides (issue #8a).
+  if (!quiet && nrow(result$unused_overrides) > 0) {
+    pr_warn_unused_overrides(result$unused_overrides)
+  }
 
   if (!quiet) {
     n_matched <- sum(mapping$in_x & mapping$in_y, na.rm = TRUE)

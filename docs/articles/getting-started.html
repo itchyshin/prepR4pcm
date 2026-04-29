@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Getting Started with prepR4pcm • prepR4pcm</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -56,8 +61,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Getting Started with prepR4pcm</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>Getting Started with prepR4pcm</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/itchyshin/prepR4pcm/blob/HEAD/vignettes/getting-started.Rmd" class="external-link"><code>vignettes/getting-started.Rmd</code></a></small>
@@ -89,8 +93,11 @@ normalised match → synonym resolution. Every decision is recorded.</p>
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"itchyshin/prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Install pak if you don't have it</span></span>
+<span><span class="co"># install.packages("pak")</span></span>
+<span></span>
+<span><span class="co"># Install prepR4pcm from GitHub</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"itchyshin/prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -144,7 +151,7 @@ mix - <code>Cebus capucinus</code> is in the data but not the tree -
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-08 17:32:18</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-28 18:14:07</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -192,6 +199,13 @@ the analysis. You can document this decision:</p>
 <span>  note <span class="op">=</span> <span class="st">"Not in target phylogeny; exclude from analysis"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Override applied: 'Cebus capucinus' -&gt; 'NA' (reject)</span></span></code></pre></div>
+<p><code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> updates the existing reconciliation
+object in place — no need to re-run <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>. The
+three actions are: - <code>"accept"</code> — confirm a specific
+<code>name_x → name_y</code> mapping. - <code>"reject"</code> — mark a
+name as deliberately excluded. - <code>"replace"</code> — redirect
+<code>name_x</code> to a different <code>name_y</code> than the cascade
+produced.</p>
 </div>
 <div class="section level3">
 <h3 id="produce-aligned-objects">Produce aligned objects<a class="anchor" aria-label="anchor" href="#produce-aligned-objects"></a>
@@ -255,7 +269,7 @@ disagree:</p>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-04-08 17:32:19</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-04-28 18:14:08</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -274,8 +288,87 @@ matched to <code>Pan troglodytes</code> (space) in <code>df2</code> via
 normalisation.</p>
 </div>
 <div class="section level2">
+<h2 id="understanding-match-types">Understanding match types<a class="anchor" aria-label="anchor" href="#understanding-match-types"></a>
+</h2>
+<p>Every row in <code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> has a
+<code>match_type</code> column. Here is what each value means and what
+action (if any) it requires:</p>
+<table class="table">
+<colgroup>
+<col width="37%">
+<col width="22%">
+<col width="40%">
+</colgroup>
+<thead><tr class="header">
+<th><code>match_type</code></th>
+<th>Meaning</th>
+<th>Action needed?</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>exact</code></td>
+<td>Verbatim string equality</td>
+<td>None</td>
+</tr>
+<tr class="even">
+<td><code>normalized</code></td>
+<td>Names matched after stripping underscores, authority strings, and
+case differences</td>
+<td>None — check the <code>notes</code> column if you want to
+confirm</td>
+</tr>
+<tr class="odd">
+<td><code>synonym</code></td>
+<td>Names resolved through a taxonomic authority (e.g., Catalogue of
+Life) to the same accepted name</td>
+<td>Verify the resolved name looks correct</td>
+</tr>
+<tr class="even">
+<td><code>fuzzy</code></td>
+<td>High-confidence character-level match (score ≥
+<code>flag_threshold</code>, default 0.95)</td>
+<td>Check the <code>match_score</code> column; review with
+<code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>flagged</code></td>
+<td>Lower-confidence match that needs human review: fuzzy score below
+<code>flag_threshold</code>, or an indirect synonym chain</td>
+<td><strong>Review with <code><a href="../reference/reconcile_review.html">reconcile_review()</a></code> or
+<code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code></strong></td>
+</tr>
+<tr class="even">
+<td><code>manual</code></td>
+<td>Set by <code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> or the
+<code>overrides</code> argument</td>
+<td>None — you decided this</td>
+</tr>
+<tr class="odd">
+<td><code>unresolved</code></td>
+<td>No match found after all stages</td>
+<td>Investigate; use <code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code> for candidates or
+<code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> to document a decision</td>
+</tr>
+</tbody>
+</table>
+<p>Use
+<code>reconcile_summary(result, detail = "mismatches_only")</code> to
+see only the rows that need attention.</p>
+</div>
+<div class="section level2">
 <h2 id="example-3-using-a-taxonomic-authority">Example 3: Using a taxonomic authority<a class="anchor" aria-label="anchor" href="#example-3-using-a-taxonomic-authority"></a>
 </h2>
+<p><strong>When should you set <code>authority</code>?</strong> Use
+<code>authority = NULL</code> (skip synonym lookup) when: - You want a
+quick offline check — no database download required. - Your data and
+tree share the same taxonomy (most formatting differences are caught by
+the normalisation stage anyway).</p>
+<p>Set <code>authority = "col"</code> (or another provider) when names
+differ because of genuine taxonomic revisions — species moved to a
+different genus, splits, or lumps. The first run will download a local
+database (~100 MB); subsequent runs are fast because the database is
+cached.</p>
 <p>When names differ due to synonymy, pass an authority to enable
 synonym resolution via taxadb:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">

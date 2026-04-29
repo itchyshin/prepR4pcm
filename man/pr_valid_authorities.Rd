@@ -7,6 +7,18 @@
 pr_valid_authorities()
 }
 \description{
-Valid taxonomic authorities
+Returns the set of authority codes that the package accepts. The
+"core" authorities (\code{col}, \code{itis}, \code{gbif}, \code{ncbi}) are well-tested
+and routinely used. The remaining authorities (\code{tpl}, \code{fb}, \code{slb},
+\code{wd}, \code{iucn}) are passed through to \pkg{taxadb} but their coverage
+and current availability vary -- some may require running
+\code{taxadb::td_create()} manually with a matching \code{version}.
+}
+\details{
+\code{"ott"} (Open Tree of Life) was previously listed as supported but
+the current \pkg{taxadb} release does not ship a working OTT schema
+under the default provider settings; it has been removed from the
+valid list. Re-add it manually if you maintain a working
+\pkg{taxadb} OTT installation.
 }
 \keyword{internal}

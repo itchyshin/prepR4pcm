@@ -13,6 +13,7 @@ pr_run_cascade(
   overrides = NULL,
   fuzzy = FALSE,
   fuzzy_threshold = 0.9,
+  flag_threshold = 0.95,
   resolve = "flag",
   quiet = FALSE
 )
