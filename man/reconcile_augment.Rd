@@ -10,7 +10,10 @@ reconcile_augment(
   where = c("genus", "near"),
   branch_length = c("congener_median", "half_terminal", "zero"),
   seed = NULL,
-  quiet = FALSE
+  quiet = FALSE,
+  source = c("internal", "rtrees"),
+  taxon = NULL,
+  ...
 )
 }
 \arguments{
@@ -18,9 +21,12 @@ reconcile_augment(
 \code{\link[=reconcile_tree]{reconcile_tree()}}.}
 
 \item{tree}{An \code{ape::phylo} object. Must be the same tree used to
-build \code{reconciliation} (or a tree with the same tip set).}
+build \code{reconciliation} (or a tree with the same tip set). For
+\code{source = "rtrees"}, this is passed to \pkg{rtrees} as the
+user-supplied backbone (\code{tree_by_user = TRUE}).}
 
-\item{where}{A length-1 character vector. Where to attach each new tip:
+\item{where}{A length-1 character vector. Where to attach each new tip
+(only used when \code{source = "internal"}; ignored otherwise):
 \describe{
 \item{\code{"genus"} (default)}{Attach as sister to a single congener
 chosen at random from the genus. Recommended when the
@@ -33,7 +39,8 @@ to one sister taxon.}
 }}
 
 \item{branch_length}{A length-1 character vector. How to set the terminal branch
-length of each newly added tip:
+length of each newly added tip (only used when \code{source = "internal"};
+ignored otherwise --- \pkg{rtrees} sets its own branch lengths):
 \describe{
 \item{\code{"congener_median"} (default)}{Median terminal branch length
 of the species' congeners. Uses the average "how long since
@@ -50,32 +57,57 @@ where you want to see the effect of adding species without
 assuming any divergence time.}
 }}
 
-\item{seed}{A length-1 integer or \code{NULL}. When non-\code{NULL}, a fixed
-seed for the random congener choice when \code{where = "genus"},
-making the call reproducible. When \code{NULL} (default), the
-session's current RNG state is used so results vary across runs
---- useful for sensitivity analyses that explore the variation
-introduced by the random choice. Set to a fixed integer in real
-analyses so results are reproducible. The seed is
-scoped to this call: the session RNG state is saved before and
-restored after, so subsequent random draws in your script are
-unaffected. Default \code{NULL}.}
+\item{seed}{A length-1 integer or \code{NULL}. When non-\code{NULL} and
+\code{source = "internal"}, a fixed seed for the random congener
+choice when \code{where = "genus"}, making the call reproducible.
+When \code{NULL} (default), the session's current RNG state is used
+so results vary across runs --- useful for sensitivity analyses
+that explore the variation introduced by the random choice. Set
+to a fixed integer in real analyses so results are reproducible.
+The seed is scoped to this call: the session RNG state is saved
+before and restored after, so subsequent random draws in your
+script are unaffected. Default \code{NULL}. (For
+\code{source = "rtrees"}, set the seed in your script before calling
+\code{reconcile_augment()}; \pkg{rtrees} does not accept a seed
+argument.)}
 
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
+
+\item{source}{A length-1 character vector. Which grafting backend
+to use. One of \code{"internal"} (default; the genus-level placement
+strategy described above) or \code{"rtrees"} (delegate to
+\code{rtrees::get_tree(tree_by_user = TRUE)}; see
+\dQuote{Choosing a source}). Default \code{"internal"}.}
+
+\item{taxon}{A length-1 character vector. Required when
+\code{source = "rtrees"}. One of \code{"bird"}, \code{"mammal"}, \code{"fish"},
+\code{"amphibian"}, \code{"reptile"}, \code{"plant"}, \code{"shark_ray"}, \code{"bee"},
+\code{"butterfly"}. See \pkg{rtrees}' help page for \code{get_tree}.
+Ignored when \code{source = "internal"}.}
+
+\item{...}{Additional arguments forwarded to
+\code{rtrees::get_tree()} when \code{source = "rtrees"} (e.g. \code{scenario},
+\code{n_tree}). Ignored when \code{source = "internal"}.}
 }
 \value{
 A list with:
 \describe{
-\item{tree}{The augmented \code{phylo} object.}
+\item{tree}{The augmented \code{phylo} object (or \code{multiPhylo}
+when \code{source = "rtrees"} returns a posterior sample).}
 \item{original}{The original (unmodified) \code{phylo} object, for
 easy comparison.}
 \item{augmented}{A tibble documenting each added species:
-\code{species}, \code{genus}, \code{placed_near} (sister tip or MRCA node),
-\code{branch_length}, \code{method}, \code{n_congeners}.}
+\code{species}, \code{genus}, \code{placed_near} (sister tip / MRCA node /
+\pkg{rtrees} placement note), \code{branch_length}, \code{method},
+\code{n_congeners}. For \code{source = "rtrees"}, \code{branch_length} and
+\code{n_congeners} are \code{NA} because the backend chooses them.}
 \item{skipped}{A tibble of species that could not be placed,
-with the reason (e.g. "no congener in tree").}
-\item{meta}{Provenance metadata: placement strategy, branch
-length rule, counts.}
+with the reason (e.g. "No congener in tree", "rtrees did
+not place this species").}
+\item{meta}{Provenance metadata: source, placement strategy,
+branch length rule, counts; for \code{source = "rtrees"} includes
+a \code{backend_meta} sub-list with the taxon and the number of
+grafted tips.}
 }
 }
 \description{
@@ -88,11 +120,11 @@ about where the new tips sit.
 }
 \section{When to use this}{
 
-Genus-level placement is an \emph{exploratory} convenience, not a
-substitute for a properly inferred phylogeny. It assumes the missing
-species diverged in roughly the same way as its congeners, which is
-often wrong in detail. Use it to keep exploratory PCMs running while
-you decide how to handle orphan species, and always:
+Tip-grafting is an \emph{exploratory} convenience, not a substitute
+for a properly inferred phylogeny. Both source modes (see below)
+make strong placement assumptions that are often wrong in detail.
+Use it to keep exploratory PCMs running while you decide how to
+handle orphan species, and always:
 \enumerate{
 \item Report exactly which species were augmented (see \verb{$augmented}
 in the return value).
@@ -100,6 +132,32 @@ in the return value).
 \item Prefer a published imputed phylogeny (e.g. the PhyloMaker or
 TACT approaches) when grafting many species.
 }
+}
+
+\section{Choosing a source}{
+
+\describe{
+\item{\code{"internal"} (default)}{Genus-level placement using
+only your tree (no external dependencies). Each missing
+species is attached as sister to a congener (or at the
+congeneric MRCA). Fast and reproducible, but only works when
+the genus is already represented in the tree, and assumes the
+new tip diverged in roughly the same way as its congeners.}
+\item{\code{"rtrees"}}{Delegates the grafting to the
+\pkg{rtrees} mega-tree machinery via
+\code{rtrees::get_tree(tree_by_user = TRUE)}. Uses your tree
+as the backbone and lets \pkg{rtrees} place each missing
+species using genus / family information from a taxon-specific
+reference tree. Requires \code{taxon} and the GitHub-only
+\pkg{rtrees} package
+(\url{https://daijiang.github.io/rtrees/}). Helpful when the
+genus is absent from your tree but present in \pkg{rtrees}'
+reference --- which the internal mode would skip.}
+}
+Use \code{\link[=pr_get_tree]{pr_get_tree()}} when you have only a species list and need a
+candidate tree from scratch (rotl, clootl, or rtrees). Use
+\code{reconcile_augment()} when you already have a tree and want to fill
+the gaps.
 }
 
 \examples{
@@ -134,6 +192,18 @@ cat("  Added:", nrow(aug_near$augmented), "\n")
 # Compare: MRCA placement shows genus-level context
 head(aug_near$augmented[, c("species", "placed_near", "method")])
 
+\dontrun{
+  # --- Example 3: delegate grafting to rtrees ---
+  # Useful when the genus is missing from your tree but present in
+  # the rtrees taxon-specific reference tree.
+  aug_rt <- reconcile_augment(result, tree_jetz,
+                               source = "rtrees",
+                               taxon  = "bird",
+                               quiet  = TRUE)
+  nrow(aug_rt$augmented)              # how many were placed
+  aug_rt$meta$backend_meta$n_grafted  # how many at higher rank
+}
+
 }
 \references{
 Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
@@ -143,7 +213,9 @@ phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
 \seealso{
 \code{\link[=reconcile_tree]{reconcile_tree()}} for the reconciliation step;
 \code{\link[=reconcile_apply]{reconcile_apply()}} for the non-augmenting alternative (prune data
-and tree to the intersection).
+and tree to the intersection); \code{\link[=pr_get_tree]{pr_get_tree()}} for retrieving a
+candidate tree from external resources when you don't have a tree
+yet.
 
 Other reconciliation functions: 
 \code{\link{reconcile_apply}()},
