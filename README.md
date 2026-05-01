@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-05-01 08:19:25
+#>   Timestamp: 2026-05-01 09:04:13
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -147,20 +147,48 @@ citation("prepR4pcm")
 
 ## Bundled data sources
 
-The package includes subset datasets for examples and testing. Full
-credit to the original data providers:
+The package includes subset datasets for examples, vignettes, and
+testing. Each is a small sample of a larger published dataset; if you
+use any of them in published work, please cite the original provider.
 
-- **AVONET**: Tobias et al. (2022) *Ecology Letters* 25:581–597.
-  [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)
-- **NestTrait v2**: Chia et al. (2023) *Scientific Data* 10:923.
+**Bird data (used by the bird-workflow vignette):**
+
+- **AVONET** (`avonet_subset`): Tobias et al. (2022) *Ecology Letters*
+  25:581–597. [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)
+- **NestTrait v2** (`nesttrait_subset`): Chia et al. (2023) *Scientific
+  Data* 10:923.
   [doi:10.1038/s41597-023-02837-1](https://doi.org/10.1038/s41597-023-02837-1)
-- **Plumage lightness**: Delhey et al. (2019) *Ecology Letters*
-  22:726–736. [doi:10.1111/ele.13233](https://doi.org/10.1111/ele.13233)
-- **Jetz phylogeny**: Jetz et al. (2012) *Nature* 491:444–448.
+- **Plumage lightness** (`delhey_subset`): Delhey et al. (2019) *Ecology
+  Letters* 22:726–736.
+  [doi:10.1111/ele.13233](https://doi.org/10.1111/ele.13233)
+- **Jetz phylogeny** (`tree_jetz`): Jetz et al. (2012) *Nature*
+  491:444–448.
   [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631)
-- **Clements checklist**: Clements et al. (2025) eBird/Clements
-  Checklist of Birds of the World.
-- **BirdLife-BirdTree crosswalk**: Tobias et al. (2022).
+- **Clements checklist** (`tree_clements25`): Clements et al. (2025)
+  eBird/Clements Checklist of Birds of the World, v2025.
+- **BirdLife-BirdTree crosswalk** (`crosswalk_birdlife_birdtree`):
+  Distributed with AVONET (Tobias et al. 2022); maps BirdLife taxonomy
+  to the BirdTree (Jetz et al. 2012,
+  [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631))
+  taxonomy.
+
+**Mammal data (used by the mammal database-assembly vignette):**
+
+- **Amniote life-history** (`mammal_amniote_example`): Myhrvold et
+  al. (2015) *Ecology* 96:3109.
+  [doi:10.1890/15-0846R.1](https://doi.org/10.1890/15-0846R.1)
+- **PanTHERIA** (`mammal_pantheria_example`): Jones et al. (2009)
+  *Ecology* 90:2648.
+  [doi:10.1890/08-1494.1](https://doi.org/10.1890/08-1494.1)
+- **TetrapodTraits** (`mammal_tetrapodtraits_example`): Moura et al.
+  2024) *PLOS Biology* 22:e3002658.
+        [doi:10.1371/journal.pbio.3002658](https://doi.org/10.1371/journal.pbio.3002658)
+- **Mammal phylogeny** (`mammal_tree_example`): provenance pending
+  confirmation; see [issue
+  \#11](https://github.com/itchyshin/prepR4pcm/issues/11). Bundled as an
+  example object only — if you need a published mammal phylogeny for
+  analysis, see Upham et al. 2019, Faurby & Svenning 2015, or
+  Bininda-Emonds et al. 2007 (full citations in `?mammal_tree_example`).
 
 ## License
 

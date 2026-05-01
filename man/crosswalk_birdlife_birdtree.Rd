@@ -16,9 +16,10 @@ A data frame with ~11,000 rows and 4 columns:
 }
 }
 \source{
-Tobias et al. (2022) AVONET: morphological, ecological and
-geographical data for all birds. \emph{Ecology Letters} 25:581--597.
-\doi{10.1111/ele.13898}
+The crosswalk is distributed as supporting information with
+the AVONET database release (Tobias et al. 2022). It maps two
+underlying taxonomies, both of which should be cited if you use
+the crosswalk in published work --- see the references below.
 }
 \usage{
 crosswalk_birdlife_birdtree
@@ -29,5 +30,14 @@ and the BirdTree (Jetz et al. 2012) taxonomy. This is useful as a
 pre-built override table for reconciling datasets that use BirdLife names
 against phylogenies that use BirdTree names. See
 \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}} to convert this into an overrides table.
+}
+\references{
+Tobias, J.A. et al. (2022) AVONET: morphological, ecological and
+geographical data for all birds. \emph{Ecology Letters}
+25:581--597. \doi{10.1111/ele.13898}
+
+Jetz, W., Thomas, G.H., Joy, J.B., Hartmann, K. & Mooers, A.O.
+(2012) The global diversity of birds in space and time.
+\emph{Nature} 491:444--448. \doi{10.1038/nature11631}
 }
 \keyword{datasets}

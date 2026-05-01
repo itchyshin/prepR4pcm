@@ -106,7 +106,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 08:19:25</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-01 09:04:13</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -194,24 +194,44 @@
 <div class="section level2">
 <h2 id="bundled-data-sources">Bundled data sources<a class="anchor" aria-label="anchor" href="#bundled-data-sources"></a>
 </h2>
-<p>The package includes subset datasets for examples and testing. Full credit to the original data providers:</p>
+<p>The package includes subset datasets for examples, vignettes, and testing. Each is a small sample of a larger published dataset; if you use any of them in published work, please cite the original provider.</p>
+<p><strong>Bird data (used by the bird-workflow vignette):</strong></p>
 <ul>
 <li>
-<strong>AVONET</strong>: Tobias et al. (2022) <em>Ecology Letters</em> 25:581–597. <a href="https://doi.org/10.1111/ele.13898" class="external-link">doi:10.1111/ele.13898</a>
+<strong>AVONET</strong> (<code>avonet_subset</code>): Tobias et al. (2022) <em>Ecology Letters</em> 25:581–597. <a href="https://doi.org/10.1111/ele.13898" class="external-link">doi:10.1111/ele.13898</a>
 </li>
 <li>
-<strong>NestTrait v2</strong>: Chia et al. (2023) <em>Scientific Data</em> 10:923. <a href="https://doi.org/10.1038/s41597-023-02837-1" class="external-link">doi:10.1038/s41597-023-02837-1</a>
+<strong>NestTrait v2</strong> (<code>nesttrait_subset</code>): Chia et al. (2023) <em>Scientific Data</em> 10:923. <a href="https://doi.org/10.1038/s41597-023-02837-1" class="external-link">doi:10.1038/s41597-023-02837-1</a>
 </li>
 <li>
-<strong>Plumage lightness</strong>: Delhey et al. (2019) <em>Ecology Letters</em> 22:726–736. <a href="https://doi.org/10.1111/ele.13233" class="external-link">doi:10.1111/ele.13233</a>
+<strong>Plumage lightness</strong> (<code>delhey_subset</code>): Delhey et al. (2019) <em>Ecology Letters</em> 22:726–736. <a href="https://doi.org/10.1111/ele.13233" class="external-link">doi:10.1111/ele.13233</a>
 </li>
 <li>
-<strong>Jetz phylogeny</strong>: Jetz et al. (2012) <em>Nature</em> 491:444–448. <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>
+<strong>Jetz phylogeny</strong> (<code>tree_jetz</code>): Jetz et al. (2012) <em>Nature</em> 491:444–448. <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>
 </li>
 <li>
-<strong>Clements checklist</strong>: Clements et al. (2025) eBird/Clements Checklist of Birds of the World.</li>
+<strong>Clements checklist</strong> (<code>tree_clements25</code>): Clements et al. (2025) eBird/Clements Checklist of Birds of the World, v2025.</li>
 <li>
-<strong>BirdLife-BirdTree crosswalk</strong>: Tobias et al. (2022).</li>
+<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): Distributed with AVONET (Tobias et al. 2022); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>) taxonomy.</li>
+</ul>
+<p><strong>Mammal data (used by the mammal database-assembly vignette):</strong></p>
+<ul>
+<li>
+<strong>Amniote life-history</strong> (<code>mammal_amniote_example</code>): Myhrvold et al. (2015) <em>Ecology</em> 96:3109. <a href="https://doi.org/10.1890/15-0846R.1" class="external-link">doi:10.1890/15-0846R.1</a>
+</li>
+<li>
+<strong>PanTHERIA</strong> (<code>mammal_pantheria_example</code>): Jones et al. (2009) <em>Ecology</em> 90:2648. <a href="https://doi.org/10.1890/08-1494.1" class="external-link">doi:10.1890/08-1494.1</a>
+</li>
+<li>
+<strong>TetrapodTraits</strong> (<code>mammal_tetrapodtraits_example</code>): Moura et al.
+<ol start="2024" style="list-style-type: decimal">
+<li>
+<em>PLOS Biology</em> 22:e3002658. <a href="https://doi.org/10.1371/journal.pbio.3002658" class="external-link">doi:10.1371/journal.pbio.3002658</a>
+</li>
+</ol>
+</li>
+<li>
+<strong>Mammal phylogeny</strong> (<code>mammal_tree_example</code>): provenance pending confirmation; see <a href="https://github.com/itchyshin/prepR4pcm/issues/11" class="external-link">issue #11</a>. Bundled as an example object only — if you need a published mammal phylogeny for analysis, see Upham et al. 2019, Faurby &amp; Svenning 2015, or Bininda-Emonds et al. 2007 (full citations in <code><a href="reference/mammal_tree_example.html">?mammal_tree_example</a></code>).</li>
 </ul>
 </div>
 <div class="section level2">
