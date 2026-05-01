@@ -25,22 +25,28 @@ are written.}
 \item{tree}{An \code{ape::phylo} object or file path. If \code{NULL}, only the
 data and mapping are written.}
 
-\item{species_col}{Character(1). Column name in \code{data} containing
-species names. Auto-detected if \code{NULL}.}
+\item{species_col}{A length-1 character vector. Column name in \code{data}
+containing species names. Auto-detected when \code{NULL}.}
 
-\item{dir}{Character(1). Output directory. Created if it does not exist.
-Default \code{"."}.}
+\item{dir}{A length-1 character vector. Path to the output directory
+that will receive the exported files (e.g. a project's
+\verb{data-output/} folder, or a staging directory before a Zenodo
+deposit). Created if it does not exist. Default \code{"."}.}
 
-\item{prefix}{Character(1). File name prefix. Default \code{"reconciled"}.}
+\item{prefix}{A length-1 character vector. File name prefix. Default
+\code{"reconciled"}.}
 
-\item{tree_format}{Character(1). Tree output format: \code{"nexus"} (default)
-or \code{"newick"}.}
+\item{tree_format}{A length-1 character vector. Tree output format:
+\code{"nexus"} (default) or \code{"newick"}.}
 
-\item{drop_unresolved}{Logical. Drop unresolved species? Default \code{TRUE}.}
+\item{drop_unresolved}{Logical. Drops unresolved species when \code{TRUE}.
+Default \code{TRUE}.}
 }
 \value{
 A named list of file paths (invisibly):
-\verb{$data} (CSV), \verb{$tree} (Nexus or Newick), \verb{$mapping} (CSV).
+\verb{$data} (CSV), \verb{$tree} (Nexus or Newick), \verb{$mapping} (CSV), and
+\verb{$unused_overrides} (CSV; \code{NULL} when there are no rejected
+overrides on the reconciliation).
 }
 \description{
 Apply a reconciliation and save three files: the aligned CSV, the

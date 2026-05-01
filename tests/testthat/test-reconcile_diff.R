@@ -73,7 +73,9 @@ test_that("reconcile_diff summary has correct structure", {
 
   d <- reconcile_diff(r1, r2, quiet = TRUE)
 
-  expect_equal(ncol(d$summary), 5L)
+  # Round 2 added a sixth column, n_unused_override_diff, surfacing
+  # differences in the unused_overrides slot between two reconciliations.
+  expect_equal(ncol(d$summary), 6L)
   expect_true(d$summary$n_gained >= 1L)
   expect_true(is.integer(d$summary$n_gained) || is.numeric(d$summary$n_gained))
 })

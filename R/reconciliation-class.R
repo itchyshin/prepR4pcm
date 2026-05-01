@@ -11,12 +11,16 @@
 #' debugging or writing custom helpers.
 #'
 #' @section Structure:
-#' A `reconciliation` is an S3 list with four components:
+#' A `reconciliation` is an S3 list with five components:
 #' \describe{
 #'   \item{`mapping`}{A tibble with one row per unique name seen in
 #'     either source. Columns are documented in [reconcile_mapping()]:
-#'     `name_x`, `name_y`, `name_resolved`, `match_type`,
-#'     `match_score`, `match_source`, `in_x`, `in_y`, `notes`.}
+#'     `name_x`, `name_y`, `name_resolved`, `match_type` (one of
+#'     `"exact"`, `"normalized"`, `"synonym"`, `"fuzzy"`, `"manual"`,
+#'     `"flagged"`, `"unresolved"`, or --- when surfaced via
+#'     `reconcile_mapping(include_unused_overrides = TRUE)` ---
+#'     `"override_unused"`), `match_score`, `match_source`, `in_x`,
+#'     `in_y`, `notes`.}
 #'   \item{`meta`}{A named list of provenance metadata --- call
 #'     signature, timestamp, source labels, taxonomic authority,
 #'     fuzzy settings, resolve mode, rank, \pkg{prepR4pcm} version.}
@@ -24,6 +28,14 @@
 #'     print method and by [reconcile_summary()].}
 #'   \item{`overrides`}{A tibble logging manual corrections applied
 #'     via [reconcile_override()] or [reconcile_override_batch()].}
+#'   \item{`unused_overrides`}{A tibble of overrides that the cascade
+#'     could NOT apply, with columns `name_x`, `name_y`, and `reason`
+#'     (one of `name_x_not_in_data`, `name_y_not_in_target`, or
+#'     `already_matched`). Empty when no overrides were supplied or
+#'     when every override applied successfully. Surfaced in
+#'     `reconcile_summary()`, `reconcile_report()` (HTML),
+#'     `reconcile_export()` (as `<prefix>_unused_overrides.csv`), and
+#'     `reconcile_mapping(include_unused_overrides = TRUE)`.}
 #' }
 #'
 #' @section Methods:
@@ -206,7 +218,7 @@ print.reconciliation <- function(x, ...) {
   }
 
   cli_h2("Match summary")
-  cli_bullets(c(
+  bullets <- c(
     "*" = "Exact:              {.val {counts$n_exact}}{pct(counts$n_exact)}",
     "*" = "Normalized:         {.val {counts$n_normalized}}{pct(counts$n_normalized)}",
     "*" = "Synonym:            {.val {counts$n_synonym}}{pct(counts$n_synonym)}",
@@ -215,7 +227,14 @@ print.reconciliation <- function(x, ...) {
     "!" = "Unresolved (x only):{.val {counts$n_unresolved_x}}{pct(counts$n_unresolved_x)}",
     "!" = "Unresolved (y only):{.val {counts$n_unresolved_y}}",
     "!" = "Flagged for review: {.val {counts$n_flagged}}"
-  ))
+  )
+  n_unused_ov <- if (!is.null(x$unused_overrides))
+                   nrow(x$unused_overrides) else 0L
+  if (n_unused_ov > 0) {
+    bullets <- c(bullets,
+                 "!" = "Overrides unused:   {.val {n_unused_ov}}")
+  }
+  cli_bullets(bullets)
 
   cli_alert_info(
     "Use {.fn reconcile_summary} for details, {.fn reconcile_mapping} for the full table."

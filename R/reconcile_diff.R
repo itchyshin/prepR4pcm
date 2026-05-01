@@ -19,7 +19,8 @@
 #' @param y A [reconciliation] object --- the "after" state. Must be
 #'   reconciled against the same `x` data so that `name_x` values are
 #'   comparable.
-#' @param quiet Logical. Suppress the console summary? Default `FALSE`.
+#' @param quiet Logical. Suppresses the console summary when `TRUE`.
+#'   Default `FALSE`.
 #'
 #' @return A list with the following components:
 #'   \describe{
@@ -31,8 +32,13 @@
 #'       differs between the two runs.}
 #'     \item{`target_changed`}{Tibble of species whose `name_y`
 #'       differs.}
+#'     \item{`unused_overrides_diff`}{Tibble of overrides that are in
+#'       the `unused_overrides` slot of one reconciliation but not
+#'       the other; columns `name_x`, `name_y`, `reason`, `side`
+#'       (`"x"` or `"y"`).}
 #'     \item{`summary`}{A one-row tibble with counts: `n_gained`,
-#'       `n_lost`, `n_type_changed`, `n_target_changed`, `n_shared`.}
+#'       `n_lost`, `n_type_changed`, `n_target_changed`, `n_shared`,
+#'       `n_unused_override_diff`.}
 #'   }
 #'
 #' @family reconciliation functions
@@ -128,13 +134,32 @@ reconcile_diff <- function(x, y, quiet = FALSE) {
     name_y_new = my_shared$name_y[target_diff]
   )
 
+  # Unused-overrides diff: overrides in one reconciliation's
+  # unused_overrides slot but not the other. Useful when comparing a
+  # before-and-after run after editing the override table.
+  ux <- x$unused_overrides
+  uy <- y$unused_overrides
+  if (is.null(ux)) ux <- tibble(name_x = character(), name_y = character(),
+                                 reason = character())
+  if (is.null(uy)) uy <- tibble(name_x = character(), name_y = character(),
+                                 reason = character())
+  ux_keys <- paste(ux$name_x, ux$name_y, ux$reason, sep = "\003")
+  uy_keys <- paste(uy$name_x, uy$name_y, uy$reason, sep = "\003")
+  only_in_x <- ux[!(ux_keys %in% uy_keys), , drop = FALSE]
+  only_in_y <- uy[!(uy_keys %in% ux_keys), , drop = FALSE]
+  unused_overrides_diff <- rbind(
+    cbind(only_in_x, side = rep_len("x", nrow(only_in_x))),
+    cbind(only_in_y, side = rep_len("y", nrow(only_in_y)))
+  )
+
   # Summary
   summary_tbl <- tibble(
-    n_gained         = nrow(gained),
-    n_lost           = nrow(lost),
-    n_type_changed   = nrow(type_changed),
-    n_target_changed = nrow(target_changed),
-    n_shared         = length(shared_names)
+    n_gained                = nrow(gained),
+    n_lost                  = nrow(lost),
+    n_type_changed          = nrow(type_changed),
+    n_target_changed        = nrow(target_changed),
+    n_shared                = length(shared_names),
+    n_unused_override_diff  = nrow(unused_overrides_diff)
   )
 
   # Console output
@@ -176,10 +201,11 @@ reconcile_diff <- function(x, y, quiet = FALSE) {
   }
 
   list(
-    gained         = gained,
-    lost           = lost,
-    type_changed   = type_changed,
-    target_changed = target_changed,
-    summary        = summary_tbl
+    gained                = gained,
+    lost                  = lost,
+    type_changed          = type_changed,
+    target_changed        = target_changed,
+    unused_overrides_diff = unused_overrides_diff,
+    summary               = summary_tbl
   )
 }

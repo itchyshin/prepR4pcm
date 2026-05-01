@@ -67,42 +67,35 @@ test_that("every authority listed as supported in ?reconcile_data is in pr_valid
   rd_text <- .read_rd_source("reconcile_data")
   expect_false(is.na(rd_text), info = "reconcile_data.Rd not found")
 
-  # The supported authorities are listed in a \describe{}{...} block
-  # inside \item{authority}{...}. Authorities mentioned in narrative
-  # prose elsewhere in the same @param (e.g. a deprecation note about
-  # codes that used to be advertised) are NOT claims of support, so we
-  # restrict the search to \item{...} entries WITHIN \describe{} blocks
-  # only.
-  describe_pattern <- "\\\\describe\\{((?:[^{}]|\\{[^{}]*\\})*)\\}"
-  describe_blocks <- regmatches(
-    rd_text,
-    gregexpr(describe_pattern, rd_text, perl = TRUE)
-  )[[1]]
-  expect_gt(length(describe_blocks), 0,
-            label = "no \\describe{} blocks found in reconcile_data.Rd; the doc structure may have changed")
-
+  # The supported authorities appear as keys in a \describe{}{...}
+  # list, each as `\item{\code{"X"} ...}{...}`. Mentions in narrative
+  # prose (e.g. a deprecation note listing removed codes via
+  # `\code{"iucn"}` etc.) are NOT in `\item{\code{"X"}`-key position
+  # and so should not be treated as claims of support. We scan for
+  # the key pattern specifically rather than slicing the \describe{}
+  # block, which avoids brace-nesting fragility in the regex.
   candidate_authorities <- c(
     "col", "itis", "gbif", "ncbi", "ott", "iucn", "itis_test",
     "tpl", "fb", "slb", "wd"
   )
 
-  documented <- character()
-  for (block in describe_blocks) {
-    documented <- union(
-      documented,
-      candidate_authorities[
-        vapply(candidate_authorities, function(a) {
-          grepl(paste0('["`]', a, '["`]'), block, perl = TRUE)
-        }, logical(1))
-      ]
-    )
+  key_pattern <- function(a) {
+    # Matches `\item{\code{"a"}` (the key opener of an \item{} entry
+    # in a \describe{} list), allowing optional whitespace.
+    paste0("\\\\item\\{\\\\code\\{\"", a, "\"\\}")
   }
+
+  documented <- candidate_authorities[
+    vapply(candidate_authorities, function(a) {
+      grepl(key_pattern(a), rd_text, perl = TRUE)
+    }, logical(1))
+  ]
 
   for (auth in documented) {
     expect_true(
       auth %in% pr_valid_authorities(),
       info = sprintf(
-        "authority `%s` is listed as supported in a \\describe{} block of ?reconcile_data but is missing from pr_valid_authorities() -- aspirational doc, not backed by code",
+        "authority `%s` is listed as a \\describe{} key in ?reconcile_data (treated as a claim of support) but is missing from pr_valid_authorities() -- aspirational doc, not backed by code",
         auth
       )
     )

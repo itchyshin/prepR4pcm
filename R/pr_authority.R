@@ -73,6 +73,8 @@ pr_validate_authority <- function(authority, call = caller_env()) {
   }
 
   if (authority %in% .pr_removed_authorities()) {
+    removed <- .pr_removed_authorities()
+    valid <- pr_valid_authorities()
     cli::cli_abort(
       c(
         "{.val {authority}} is not a supported authority.",
@@ -81,8 +83,8 @@ pr_validate_authority <- function(authority, call = caller_env()) {
           "package but is not actually supported by {.pkg taxadb} ",
           "v22.12 (the database we test against)."
         ),
-        "i" = "Removed authorities: {.val {.pr_removed_authorities()}}.",
-        ">" = "Switch to one of: {.val {pr_valid_authorities()}}.",
+        "i" = "Removed authorities: {.val {removed}}.",
+        ">" = "Switch to one of: {.val {valid}}.",
         ">" = "Or pass {.code authority = NULL} to skip synonym resolution."
       ),
       call = call
