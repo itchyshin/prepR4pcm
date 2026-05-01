@@ -16,14 +16,24 @@
 #'   (tab-separated), or `.txt` (tab-separated). For other delimited
 #'   formats, read the file yourself with `read.delim()` or
 #'   `read.table()` and pass the resulting data frame.
-#' @param from_col Character(1). Column name for source names (e.g.,
+#' @param from_col A length-1 character vector. Column name for source names (e.g.,
 #'   `"Species1"` for BirdLife names).
-#' @param to_col Character(1). Column name for target names (e.g.,
+#' @param to_col A length-1 character vector. Column name for target names (e.g.,
 #'   `"Species3"` for BirdTree names).
-#' @param match_type_col Character(1) or NULL. Column containing the match
-#'   type (e.g., `"1BL to 1BT"`, `"Many BL to 1BT"`). Used to annotate
-#'   notes and filter.
-#' @param notes_col Character(1) or NULL. Column containing additional
+#' @param match_type_col A length-1 character vector or `NULL`. Name
+#'   of an optional column in `crosswalk` that classifies each row's
+#'   relationship between the two taxonomies --- e.g. `"1BL to 1BT"`
+#'   (one BirdLife species mapped to one BirdTree species; a clean
+#'   one-to-one match), `"Many BL to 1BT"` (a lump: several BirdLife
+#'   species mapped to a single BirdTree species), `"1BL to many BT"`
+#'   (a split). When supplied, the contents of this column are
+#'   appended to each override's `user_note` so the audit trail
+#'   records the relationship; if you also pass
+#'   `one_to_one_only = TRUE`, only the rows whose match type starts
+#'   `"1...to 1..."` are kept. Pass `NULL` (default) when your
+#'   crosswalk has no such classification column --- every row is
+#'   then kept and notes carry no provenance label.
+#' @param notes_col A length-1 character vector or NULL. Column containing additional
 #'   notes.
 #' @param one_to_one_only Logical. If `TRUE`, keeps only one-to-one
 #'   matches (e.g., `"1BL to 1BT"`). Default `FALSE`.

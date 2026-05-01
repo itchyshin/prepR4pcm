@@ -20,17 +20,27 @@ inferred from the extension: \code{.csv} (comma-separated), \code{.tsv}
 formats, read the file yourself with \code{read.delim()} or
 \code{read.table()} and pass the resulting data frame.}
 
-\item{from_col}{Character(1). Column name for source names (e.g.,
+\item{from_col}{A length-1 character vector. Column name for source names (e.g.,
 \code{"Species1"} for BirdLife names).}
 
-\item{to_col}{Character(1). Column name for target names (e.g.,
+\item{to_col}{A length-1 character vector. Column name for target names (e.g.,
 \code{"Species3"} for BirdTree names).}
 
-\item{match_type_col}{Character(1) or NULL. Column containing the match
-type (e.g., \code{"1BL to 1BT"}, \code{"Many BL to 1BT"}). Used to annotate
-notes and filter.}
+\item{match_type_col}{A length-1 character vector or \code{NULL}. Name
+of an optional column in \code{crosswalk} that classifies each row's
+relationship between the two taxonomies --- e.g. \code{"1BL to 1BT"}
+(one BirdLife species mapped to one BirdTree species; a clean
+one-to-one match), \code{"Many BL to 1BT"} (a lump: several BirdLife
+species mapped to a single BirdTree species), \code{"1BL to many BT"}
+(a split). When supplied, the contents of this column are
+appended to each override's \code{user_note} so the audit trail
+records the relationship; if you also pass
+\code{one_to_one_only = TRUE}, only the rows whose match type starts
+\code{"1...to 1..."} are kept. Pass \code{NULL} (default) when your
+crosswalk has no such classification column --- every row is
+then kept and notes carry no provenance label.}
 
-\item{notes_col}{Character(1) or NULL. Column containing additional
+\item{notes_col}{A length-1 character vector or NULL. Column containing additional
 notes.}
 
 \item{one_to_one_only}{Logical. If \code{TRUE}, keeps only one-to-one

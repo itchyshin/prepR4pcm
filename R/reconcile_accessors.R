@@ -108,10 +108,14 @@ reconcile_mapping <- function(reconciliation, include_unused_overrides = FALSE) 
 #' Manually override a single name in a reconciliation
 #'
 #' Apply a single hand-curated decision to a [reconciliation] object.
-#' Use this to accept a match the cascade rejected (typically a flagged
-#' fuzzy hit), remove a spurious match, or force a new mapping that the
-#' cascade missed. The override is recorded in the provenance log so
-#' that you and your reviewers can audit every manual decision.
+#' Use this to accept a match the matching cascade rejected (typically
+#' a flagged fuzzy hit), remove a spurious match, or force a new
+#' mapping that the cascade missed. ("Cascade" here means the
+#' four-stage matching pipeline run by [reconcile_tree()] and
+#' [reconcile_data()] --- exact, normalised, synonym, fuzzy --- as
+#' described in `?prepR4pcm`.) The override is recorded in the
+#' provenance log so that you and your reviewers can audit every
+#' manual decision.
 #'
 #' For applying many overrides at once (e.g. from a curated CSV), see
 #' [reconcile_override_batch()]; for interactive decisions in the
@@ -119,12 +123,12 @@ reconcile_mapping <- function(reconciliation, include_unused_overrides = FALSE) 
 #' see [reconcile_crosswalk()].
 #'
 #' @param reconciliation A [reconciliation] object.
-#' @param name_x Character(1). The name as it appears in source `x`
+#' @param name_x A length-1 character vector. The name as it appears in source `x`
 #'   (your data). Must match a value already present in `mapping$name_x`.
-#' @param name_y Character(1) or `NULL`. The name in source `y` (the
+#' @param name_y A length-1 character vector or `NULL`. The name in source `y` (the
 #'   tree or reference dataset) that `name_x` should be mapped to.
 #'   `NULL` is only valid when `action = "reject"`.
-#' @param action Character(1). What the override does:
+#' @param action A length-1 character vector. What the override does:
 #'   \describe{
 #'     \item{`"accept"` (default)}{Confirm a proposed match. Use after
 #'       reviewing a flagged fuzzy or synonym hit.}
@@ -134,7 +138,7 @@ reconcile_mapping <- function(reconciliation, include_unused_overrides = FALSE) 
 #'     \item{`"replace"`}{Set a new match, overwriting whatever the
 #'       cascade produced for `name_x`.}
 #'   }
-#' @param note Character(1). A short justification for the override,
+#' @param note A length-1 character vector. A short justification for the override,
 #'   stored in the provenance log and in `mapping$notes`. Strongly
 #'   recommended --- future you will want to know why this decision was
 #'   made.
@@ -270,12 +274,18 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param data A data frame to align. If `NULL`, only the tree is
-#'   returned.
-#' @param tree An `ape::phylo` object to align. If `NULL`, only the
-#'   data frame is returned.
-#' @param species_col Character(1). Column in `data` containing species
-#'   names. Auto-detected if `NULL`.
-#' @param drop_unresolved Logical. Drop unmatched rows and tips?
+#'   processed and the returned `data` slot is `NULL`.
+#' @param tree An `ape::phylo` object (or path to a Newick / Nexus
+#'   file) to align. If `NULL`, only the data frame is processed and
+#'   the returned `tree` slot is `NULL`. (Passing both `data = NULL`
+#'   and `tree = NULL` is allowed but produces an empty result; the
+#'   normal use is to pass at least one of them.)
+#' @param species_col A length-1 character vector. Column in `data`
+#'   containing species names. Auto-detected from a small set of
+#'   common heuristics (e.g. `species`, `Species1`, `scientific_name`)
+#'   when `NULL`; the heuristics list is not exhaustive --- pass the
+#'   column name explicitly if your data uses a non-standard label.
+#' @param drop_unresolved Logical. Drops unmatched rows and tips when `TRUE`.
 #'   Defaults to `FALSE` (keep everything and just warn). Set to `TRUE`
 #'   when preparing data for an analysis that cannot tolerate mismatches.
 #'

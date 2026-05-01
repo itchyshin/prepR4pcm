@@ -9,7 +9,7 @@ pr_bind_species(tree, sp_label, congener_tips, where, bl)
 \arguments{
 \item{tree}{phylo object.}
 
-\item{sp_label}{Character(1). Tip label to add (underscore format).}
+\item{sp_label}{A length-1 character vector. Tip label to add (underscore format).}
 
 \item{congener_tips}{Character vector of congener tip labels.}
 

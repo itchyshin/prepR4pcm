@@ -16,7 +16,7 @@ reconcile_summary(
 \item{reconciliation}{A \link{reconciliation} object returned by
 \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
-\item{detail}{Character(1). How much to show:
+\item{detail}{A length-1 character vector. How much to show:
 \describe{
 \item{\code{"full"} (default)}{Every match category, with the names
 belonging to each category listed out.}
@@ -26,14 +26,14 @@ names. Useful once the easy cases are out of the way and you
 want to focus on what still needs review.}
 }}
 
-\item{format}{Character(1). Where the summary goes:
+\item{format}{A length-1 character vector. Where the summary goes:
 \describe{
 \item{\code{"console"} (default)}{Pretty-printed to the screen.}
 \item{\code{"data.frame"}}{Returns a list of tibbles silently; useful
 when writing a report or table in a larger script.}
 }}
 
-\item{file}{Character(1) or \code{NULL}. If non-\code{NULL}, writes the
+\item{file}{A length-1 character vector or \code{NULL}. If non-\code{NULL}, writes the
 console report to this file path in addition to printing it.}
 
 \item{...}{Additional arguments (currently unused).}

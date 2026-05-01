@@ -2,6 +2,13 @@
 
 #' Normalise scientific names to a canonical form
 #'
+#' (Title and prose use British English spelling \emph{normalise},
+#' consistent with the package's `Language: en-GB` declaration.
+#' The function identifier `pr_normalize_names()` keeps the
+#' American-English `z` because R-package function names
+#' conventionally use ASCII identifiers in the form most R users
+#' expect; the two spellings are equivalent and intentional.)
+#'
 #' Apply a sequence of deterministic text transformations so that
 #' scientific names which differ only in formatting compare equal.
 #' This is the same routine used by stage 2 of the matching cascade in
@@ -24,9 +31,10 @@
 #'   \item Trim whitespace and collapse leftover empty tokens.
 #' }
 #'
-#' @param names Character vector of scientific names. `NA` values are
-#'   preserved as `NA`.
-#' @param rank Character(1). Taxonomic rank to normalise to:
+#' @param names A character vector of scientific names (any length;
+#'   each element is a single name). `NA` values are preserved as
+#'   `NA`.
+#' @param rank A length-1 character vector. Taxonomic rank to normalise to:
 #'   \describe{
 #'     \item{`"species"` (default)}{Strip infraspecific epithets so
 #'       trinomials become binomials (`Parus major major` ->

@@ -8,11 +8,11 @@
 #' `tree$tip.label` that also handles file input and multi-tree files
 #' (returns the tips of the first tree).
 #'
-#' @param tree An `ape::phylo` object, or a character(1) path to a
-#'   Newick (`.nwk`, `.tre`, `.tree`, `.newick`) or Nexus (`.nex`,
-#'   `.nexus`) file. Format is auto-detected.
+#' @param tree An `ape::phylo` object, or a length-1 character vector
+#'   giving the path to a Newick (`.nwk`, `.tre`, `.tree`, `.newick`)
+#'   or Nexus (`.nex`, `.nexus`) file. Format is auto-detected.
 #'
-#' @return Character vector of tip labels.
+#' @return A character vector of tip labels (one element per tip).
 #'
 #' @family name utilities
 #' @seealso [pr_normalize_names()] for cleaning tip labels before

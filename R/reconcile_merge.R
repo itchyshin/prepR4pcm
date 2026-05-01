@@ -31,15 +31,15 @@
 #'   [reconcile_data()]).
 #' @param data_x The first data frame (source x in the reconciliation).
 #' @param data_y The second data frame (source y in the reconciliation).
-#' @param species_col_x Character(1). Species column in `data_x`.
+#' @param species_col_x A length-1 character vector. Species column in `data_x`.
 #'   Auto-detected if `NULL`.
-#' @param species_col_y Character(1). Species column in `data_y`.
+#' @param species_col_y A length-1 character vector. Species column in `data_y`.
 #'   Auto-detected if `NULL`.
-#' @param how Character(1). Join type:
+#' @param how A length-1 character vector. Join type:
 #'   - `"inner"` (default): keep only species matched in both datasets.
 #'   - `"left"`: keep all species from `data_x`.
 #'   - `"full"`: keep all species from both datasets.
-#' @param suffix Character(2). Suffixes to disambiguate columns with the
+#' @param suffix A length-2 character vector. Suffixes to disambiguate columns with the
 #'   same name in both datasets. Default `c("_x", "_y")`.
 #' @param drop_unresolved Logical. If `TRUE`, rows where `species_resolved`
 #'   is `NA` (i.e., species that could not be reconciled) are removed from

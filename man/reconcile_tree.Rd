@@ -24,13 +24,18 @@ reconcile_tree(
 \item{x}{A data frame containing the trait data. Must have one
 column of scientific names.}
 
-\item{tree}{An \code{ape::phylo} object, or a character(1) path to a
-Newick (\code{.nwk}, \code{.tre}, \code{.tree}) or Nexus (\code{.nex}, \code{.nexus}) file.
-File format is auto-detected.}
+\item{tree}{An \code{ape::phylo} object, or a length-1 character vector
+giving the path to a Newick (\code{.nwk}, \code{.tre}, \code{.tree}) or Nexus
+(\code{.nex}, \code{.nexus}) file. File format is auto-detected.}
 
-\item{x_species}{Character(1). Column in \code{x} containing species names.
-Auto-detected (e.g. \code{species}, \code{Species1}, \code{scientific_name}) if
-\code{NULL}.}
+\item{x_species}{A length-1 character vector. Name of the column
+in \code{x} containing scientific names (the same column referenced
+by \code{x} above; the term \dQuote{species names} elsewhere in this
+help page is a synonym for the same scientific names). When
+\code{NULL}, the column is auto-detected from a small list of common
+labels (e.g. \code{species}, \code{Species1}, \code{scientific_name}); the list
+is not exhaustive --- pass the column name explicitly if your
+data uses a non-standard label.}
 
 \item{authority}{A length-1 character vector, or \code{NULL}. Taxonomic
 authority used for synonym resolution (stage 3 of the cascade).
@@ -116,7 +121,7 @@ already reviewed the ambiguities.}
 \item{quiet}{Logical. Suppresses progress messages when \code{TRUE}.
 Default \code{FALSE}.}
 
-\item{x_label}{Character(1) or \code{NULL}. Human-readable label for source \code{x}
+\item{x_label}{A length-1 character vector or \code{NULL}. Human-readable label for source \code{x}
 stored in the reconciliation metadata and shown in \code{print()} / \code{format()}.
 Defaults to the expression passed as \code{x} (via \code{deparse(substitute())}).
 Set this explicitly when calling \code{reconcile_data()} inside another function

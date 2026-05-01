@@ -13,7 +13,7 @@ pr_detect_species_column(df, arg_name = "x_species")
 (e.g., \code{"x_species"} or \code{"y_species"}).}
 }
 \value{
-Character(1): the detected column name.
+A length-1 character vector: the detected column name.
 }
 \description{
 Uses a two-stage heuristic: first checks for common column names, then

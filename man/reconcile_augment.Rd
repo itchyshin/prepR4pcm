@@ -20,10 +20,10 @@ reconcile_augment(
 \item{tree}{An \code{ape::phylo} object. Must be the same tree used to
 build \code{reconciliation} (or a tree with the same tip set).}
 
-\item{where}{Character(1). Where to attach each new tip:
+\item{where}{A length-1 character vector. Where to attach each new tip:
 \describe{
 \item{\code{"genus"} (default)}{Attach as sister to a single congener
-chosen at random from the genus. Simpler; recommended when the
+chosen at random from the genus. Recommended when the
 genus has only one or two representatives in the tree, or when
 you want variation across runs for sensitivity analyses.}
 \item{\code{"near"}}{Attach at the most recent common ancestor (MRCA)
@@ -32,7 +32,7 @@ well-represented, because the new tip is not arbitrarily tied
 to one sister taxon.}
 }}
 
-\item{branch_length}{Character(1). How to set the terminal branch
+\item{branch_length}{A length-1 character vector. How to set the terminal branch
 length of each newly added tip:
 \describe{
 \item{\code{"congener_median"} (default)}{Median terminal branch length
@@ -50,9 +50,13 @@ where you want to see the effect of adding species without
 assuming any divergence time.}
 }}
 
-\item{seed}{Integer or \code{NULL}. Random seed for reproducibility when
-\code{where = "genus"} picks a congener at random. Set to a fixed
-integer in real analyses so results are reproducible. The seed is
+\item{seed}{A length-1 integer or \code{NULL}. When non-\code{NULL}, a fixed
+seed for the random congener choice when \code{where = "genus"},
+making the call reproducible. When \code{NULL} (default), the
+session's current RNG state is used so results vary across runs
+--- useful for sensitivity analyses that explore the variation
+introduced by the random choice. Set to a fixed integer in real
+analyses so results are reproducible. The seed is
 scoped to this call: the session RNG state is saved before and
 restored after, so subsequent random draws in your script are
 unaffected. Default \code{NULL}.}

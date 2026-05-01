@@ -12,14 +12,14 @@
 #'   authority for the synonym-resolution stage. One of `"col"`,
 #'   `"itis"`, `"gbif"`, `"ncbi"`, `"ott"`, or `"itis_test"`. `NULL`
 #'   skips stage 3.
-#' @param db_version Character(1) or NULL.
-#' @param rank Character(1). `"species"` or `"subspecies"`.
+#' @param db_version A length-1 character vector or NULL.
+#' @param rank A length-1 character vector. `"species"` or `"subspecies"`.
 #' @param overrides A data.frame with columns `name_x` and `name_y` for
 #'   pre-built overrides, or NULL.
-#' @param fuzzy Logical. Enable fuzzy matching? Default `FALSE`.
+#' @param fuzzy Logical. Enables the fuzzy-matching stage when `TRUE`. Default `FALSE`.
 #' @param fuzzy_threshold Numeric. Minimum similarity (0--1) for fuzzy
 #'   matches. Default `0.9` (conservative).
-#' @param resolve Character(1). How to handle low-confidence matches:
+#' @param resolve A length-1 character vector. How to handle low-confidence matches:
 #'   `"flag"` (default) marks fuzzy matches below 0.95 and indirect
 #'   synonym matches as `match_type = "flagged"` for manual review.
 #'   `"first"` accepts all matches at face value.

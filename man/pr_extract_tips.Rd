@@ -7,12 +7,12 @@
 pr_extract_tips(tree)
 }
 \arguments{
-\item{tree}{An \code{ape::phylo} object, or a character(1) path to a
-Newick (\code{.nwk}, \code{.tre}, \code{.tree}, \code{.newick}) or Nexus (\code{.nex},
-\code{.nexus}) file. Format is auto-detected.}
+\item{tree}{An \code{ape::phylo} object, or a length-1 character vector
+giving the path to a Newick (\code{.nwk}, \code{.tre}, \code{.tree}, \code{.newick})
+or Nexus (\code{.nex}, \code{.nexus}) file. Format is auto-detected.}
 }
 \value{
-Character vector of tip labels.
+A character vector of tip labels (one element per tip).
 }
 \description{
 Return the tip labels of a tree as a character vector, whether the

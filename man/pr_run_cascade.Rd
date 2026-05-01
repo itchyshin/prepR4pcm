@@ -28,19 +28,19 @@ authority for the synonym-resolution stage. One of \code{"col"},
 \code{"itis"}, \code{"gbif"}, \code{"ncbi"}, \code{"ott"}, or \code{"itis_test"}. \code{NULL}
 skips stage 3.}
 
-\item{db_version}{Character(1) or NULL.}
+\item{db_version}{A length-1 character vector or NULL.}
 
-\item{rank}{Character(1). \code{"species"} or \code{"subspecies"}.}
+\item{rank}{A length-1 character vector. \code{"species"} or \code{"subspecies"}.}
 
 \item{overrides}{A data.frame with columns \code{name_x} and \code{name_y} for
 pre-built overrides, or NULL.}
 
-\item{fuzzy}{Logical. Enable fuzzy matching? Default \code{FALSE}.}
+\item{fuzzy}{Logical. Enables the fuzzy-matching stage when \code{TRUE}. Default \code{FALSE}.}
 
 \item{fuzzy_threshold}{Numeric. Minimum similarity (0--1) for fuzzy
 matches. Default \code{0.9} (conservative).}
 
-\item{resolve}{Character(1). How to handle low-confidence matches:
+\item{resolve}{A length-1 character vector. How to handle low-confidence matches:
 \code{"flag"} (default) marks fuzzy matches below 0.95 and indirect
 synonym matches as \code{match_type = "flagged"} for manual review.
 \code{"first"} accepts all matches at face value.}

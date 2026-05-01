@@ -31,12 +31,17 @@
 #'
 #' @param x A data frame containing the trait data. Must have one
 #'   column of scientific names.
-#' @param tree An `ape::phylo` object, or a character(1) path to a
-#'   Newick (`.nwk`, `.tre`, `.tree`) or Nexus (`.nex`, `.nexus`) file.
-#'   File format is auto-detected.
-#' @param x_species Character(1). Column in `x` containing species names.
-#'   Auto-detected (e.g. `species`, `Species1`, `scientific_name`) if
-#'   `NULL`.
+#' @param tree An `ape::phylo` object, or a length-1 character vector
+#'   giving the path to a Newick (`.nwk`, `.tre`, `.tree`) or Nexus
+#'   (`.nex`, `.nexus`) file. File format is auto-detected.
+#' @param x_species A length-1 character vector. Name of the column
+#'   in `x` containing scientific names (the same column referenced
+#'   by `x` above; the term \dQuote{species names} elsewhere in this
+#'   help page is a synonym for the same scientific names). When
+#'   `NULL`, the column is auto-detected from a small list of common
+#'   labels (e.g. `species`, `Species1`, `scientific_name`); the list
+#'   is not exhaustive --- pass the column name explicitly if your
+#'   data uses a non-standard label.
 #' @inheritParams reconcile_data
 #'
 #' @return A [reconciliation] object with `meta$type == "data_tree"`.

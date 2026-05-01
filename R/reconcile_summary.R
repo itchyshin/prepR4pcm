@@ -8,7 +8,7 @@
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
-#' @param detail Character(1). How much to show:
+#' @param detail A length-1 character vector. How much to show:
 #'   \describe{
 #'     \item{`"full"` (default)}{Every match category, with the names
 #'       belonging to each category listed out.}
@@ -17,13 +17,13 @@
 #'       names. Useful once the easy cases are out of the way and you
 #'       want to focus on what still needs review.}
 #'   }
-#' @param format Character(1). Where the summary goes:
+#' @param format A length-1 character vector. Where the summary goes:
 #'   \describe{
 #'     \item{`"console"` (default)}{Pretty-printed to the screen.}
 #'     \item{`"data.frame"`}{Returns a list of tibbles silently; useful
 #'       when writing a report or table in a larger script.}
 #'   }
-#' @param file Character(1) or `NULL`. If non-`NULL`, writes the
+#' @param file A length-1 character vector or `NULL`. If non-`NULL`, writes the
 #'   console report to this file path in addition to printing it.
 #' @param ... Additional arguments (currently unused).
 #'

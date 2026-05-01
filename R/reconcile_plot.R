@@ -9,7 +9,7 @@
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
-#' @param type Character(1). Plot style:
+#' @param type A length-1 character vector. Plot style:
 #'   \describe{
 #'     \item{`"bar"` (default)}{Horizontal stacked bar chart. Best for
 #'       slides, reports, and scripting.}

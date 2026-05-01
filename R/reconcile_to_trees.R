@@ -11,7 +11,7 @@
 #'
 #' @param x A data frame.
 #' @param trees A named list of `ape::phylo` objects or file paths.
-#' @param x_species Character(1). Column name in `x` containing species
+#' @param x_species A length-1 character vector. Column name in `x` containing species
 #'   names. Auto-detected if `NULL`.
 #' @inheritParams reconcile_data
 #'

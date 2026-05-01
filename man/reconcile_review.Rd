@@ -15,7 +15,7 @@ reconcile_review(
 \item{reconciliation}{A \link{reconciliation} object returned by
 \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
-\item{type}{Character(1). Which matches to review:
+\item{type}{A length-1 character vector. Which matches to review:
 \describe{
 \item{\code{"flagged"}}{Only flagged matches (default).}
 \item{\code{"fuzzy"}}{Fuzzy and flagged matches.}

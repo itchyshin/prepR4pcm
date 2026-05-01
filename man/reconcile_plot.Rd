@@ -10,7 +10,7 @@ reconcile_plot(reconciliation, type = c("bar", "pie"), ...)
 \item{reconciliation}{A \link{reconciliation} object returned by
 \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
-\item{type}{Character(1). Plot style:
+\item{type}{A length-1 character vector. Plot style:
 \describe{
 \item{\code{"bar"} (default)}{Horizontal stacked bar chart. Best for
 slides, reports, and scripting.}
