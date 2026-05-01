@@ -69,7 +69,7 @@
   even when they were skipped. Closes #13 (Ayumi Mizuno).
 
 * `reconcile_tree()` and `reconcile_data()` previously dropped manual
-  overrides silently when the override's `name_x` was not in the data
+  overrides silently when the override `name_x` was not in the data
   or `name_y` was not in the target. The reconciliation object now
   carries an `unused_overrides` slot listing every rejected override
   with a `reason` (`name_x_not_in_data`, `name_y_not_in_target`, or

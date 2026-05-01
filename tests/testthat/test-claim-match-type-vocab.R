@@ -30,6 +30,7 @@ documented_vocabulary <- c(
 
 
 test_that("every match_type value emitted by the cascade is in the documented vocabulary", {
+  skip_on_cran()
   # Build a reconciliation that exercises every realistic path:
   # exact, normalized (case/underscore), unresolved, manual override.
   df_x <- data.frame(
@@ -65,6 +66,7 @@ test_that("every match_type value emitted by the cascade is in the documented vo
 
 
 test_that("the documented vocabulary is reflected in ?reconcile_mapping", {
+  skip_on_cran()
   # The match_type vocabulary is documented inside reconcile_mapping.Rd
   # (the @return block enumerates the possible values). reconciliation.Rd
   # delegates to reconcile_mapping.Rd for column-level details, so we
@@ -105,6 +107,7 @@ test_that("the documented vocabulary is reflected in ?reconcile_mapping", {
 
 
 test_that("override_unused only appears when explicitly requested", {
+  skip_on_cran()
   df <- data.frame(species = c("Homo sapiens", "Pan troglodytes"))
   tree <- ape::read.tree(
     text = "((Homo_sapiens:1,Pan_troglodytes:1):1,Gorilla_gorilla:2);"

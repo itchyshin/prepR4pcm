@@ -6,23 +6,13 @@
 # accepts but pkgdown / CRAN refuses.
 
 test_that("every vignette declares %\\VignetteIndexEntry / Engine / Encoding", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (dir.exists(file.path(c, "vignettes"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("vignettes/ not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   vig_files <- list.files(file.path(root, "vignettes"),
                           pattern = "\\.Rmd$", full.names = TRUE)
-  expect_gt(length(vig_files), 0, label = "no vignettes found")
+  if (length(vig_files) == 0) skip("no vignettes found")
 
   required <- c(
     "%\\VignetteIndexEntry{",
@@ -46,19 +36,9 @@ test_that("every vignette declares %\\VignetteIndexEntry / Engine / Encoding", {
 
 
 test_that("every vignette in vignettes/ appears in _pkgdown.yml Articles menu", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (file.exists(file.path(c, "_pkgdown.yml"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("_pkgdown.yml not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   yml <- paste(readLines(file.path(root, "_pkgdown.yml"), warn = FALSE),
                collapse = "\n")

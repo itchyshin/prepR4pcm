@@ -4,19 +4,9 @@
 # is GPL, etc.) and ensures the LICENSE / LICENSE.md files exist.
 
 test_that("LICENSE files exist and the DESCRIPTION License field matches", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (file.exists(file.path(c, "DESCRIPTION"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("package root not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   desc_license <- unname(
     read.dcf(file.path(root, "DESCRIPTION"),

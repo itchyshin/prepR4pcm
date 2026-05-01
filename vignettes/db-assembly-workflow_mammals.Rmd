@@ -9,10 +9,29 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+# This vignette uses dplyr / readr / stringr (and ape, which is in
+# Imports). The first three are in Suggests because they're only used
+# here, not by the R/ code itself. Set a single eval gate so every
+# chunk skips cleanly if any are absent -- the vignette still knits
+# and the rest of the package is unaffected.
+have_vignette_deps <- requireNamespace("dplyr",   quietly = TRUE) &&
+                      requireNamespace("readr",   quietly = TRUE) &&
+                      requireNamespace("stringr", quietly = TRUE) &&
+                      requireNamespace("ape",     quietly = TRUE)
+
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment  = "#>"
+  comment  = "#>",
+  eval     = have_vignette_deps
 )
+
+if (!have_vignette_deps) {
+  message(
+    "This vignette requires dplyr, readr, stringr, and ape. ",
+    "Skipping all code chunks; install the missing package(s) to ",
+    "see the worked example."
+  )
+}
 ```
 
 Comparative analyses often begin well before model fitting. Trait

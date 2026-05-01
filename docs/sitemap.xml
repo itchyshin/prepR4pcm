@@ -2,6 +2,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/404.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/LICENSE-text.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/getting-started.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/index.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/authors.html</loc></url>
@@ -11,6 +12,10 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/crosswalk_birdlife_birdtree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/delhey_subset.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/index.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/mammal_amniote_example.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/mammal_pantheria_example.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/mammal_tetrapodtraits_example.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/mammal_tree_example.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/nesttrait_subset.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_align_tree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_bind_species.html</loc></url>
@@ -33,6 +38,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_strip_authority.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_strip_infraspecific.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_valid_authorities.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_validate_authority.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_validate_tree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_warn_unused_overrides.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/prepR4pcm-package.html</loc></url>

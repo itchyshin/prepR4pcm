@@ -41,6 +41,7 @@ allowlisted <- c("knitr", "rmarkdown", "testthat", "pkgdown", "spelling")
 
 
 test_that("every Suggests package is conditionally guarded", {
+  skip_on_cran()
   root <- .find_root_with_dirs(c("R", "vignettes"))
   if (is.na(root)) skip("package R/ or vignettes/ not found")
 
@@ -117,17 +118,24 @@ test_that("every Suggests package is conditionally guarded", {
                  vig_blob, perl = TRUE)
       )[[1]]
       if (length(bare) > 0) {
-        # The actual presence of an eval guard requires per-chunk
-        # parsing. Conservative check: at least one chunk header in the
-        # vignette text contains `eval = requireNamespace(<pkg>`.
-        guarded_anywhere <- grepl(
+        # Two acceptable patterns for the eval guard:
+        #   (a) chunk-level `eval = requireNamespace("<pkg>", ...)`
+        #   (b) global gate via knitr::opts_chunk$set(eval = <flag>)
+        #       where <flag> is set from `requireNamespace("<pkg>", ...)`
+        #       earlier in the document.
+        guarded_explicit <- grepl(
           paste0("eval\\s*=\\s*requireNamespace\\([\"']", pkg, "[\"']"),
           vig_blob, perl = TRUE
         )
+        guarded_via_global_gate <-
+          grepl("opts_chunk\\$set\\([^)]*eval\\s*=", vig_blob, perl = TRUE) &&
+          grepl(paste0("requireNamespace\\([\"']", pkg, "[\"']"),
+                vig_blob, perl = TRUE)
+        guarded_anywhere <- guarded_explicit || guarded_via_global_gate
         expect_true(
           guarded_anywhere,
           info = sprintf(
-            "`%s` is referenced in a vignette but no chunk has eval = requireNamespace(\"%s\", quietly = TRUE). Add the guard so the vignette knits without %s installed.",
+            "`%s` is referenced in a vignette but no chunk has eval = requireNamespace(\"%s\", ...), and no global knitr::opts_chunk$set(eval = ...) gate checks for it either. Add a guard so the vignette knits without %s installed.",
             pkg, pkg, pkg
           )
         )

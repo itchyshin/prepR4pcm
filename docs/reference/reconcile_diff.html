@@ -29,7 +29,7 @@ the fuzzy threshold.
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,7 @@ the fuzzy threshold.
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
+    <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -91,7 +92,8 @@ comparable.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical. Suppress the console summary? Default <code>FALSE</code>.</p></dd>
+<dd><p>Logical. Suppresses the console summary when <code>TRUE</code>.
+Default <code>FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -112,9 +114,16 @@ differs between the two runs.</p></dd>
 <dd><p>Tibble of species whose <code>name_y</code>
 differs.</p></dd>
 
+<dt><code>unused_overrides_diff</code></dt>
+<dd><p>Tibble of overrides that are in
+the <code>unused_overrides</code> slot of one reconciliation but not
+the other; columns <code>name_x</code>, <code>name_y</code>, <code>reason</code>, <code>side</code>
+(<code>"x"</code> or <code>"y"</code>).</p></dd>
+
 <dt><code>summary</code></dt>
 <dd><p>A one-row tibble with counts: <code>n_gained</code>,
-<code>n_lost</code>, <code>n_type_changed</code>, <code>n_target_changed</code>, <code>n_shared</code>.</p></dd>
+<code>n_lost</code>, <code>n_type_changed</code>, <code>n_target_changed</code>, <code>n_shared</code>,
+<code>n_unused_override_diff</code>.</p></dd>
 
 
 </dl></div>
@@ -154,10 +163,8 @@ applying many hand edits.</p>
 <span class="r-in"><span>                     x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/2: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/2: Normalised matching (0 matched so far)...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
 <span class="r-in"><span><span class="co"># With crosswalk overrides</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">crosswalk_birdlife_birdtree</span><span class="op">)</span></span></span>
@@ -172,10 +179,8 @@ applying many hand edits.</p>
 <span class="r-in"><span>                     overrides <span class="op">=</span> <span class="va">overrides</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (68 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/2: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/2: Normalised matching (68 matched so far)...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> 2971 overrides could not be applied: 23 already_matched; 2767 name_x_not_in_data; 181 name_y_not_in_target.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> See `result$unused_overrides` for details.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>

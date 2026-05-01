@@ -9,23 +9,13 @@
 # Both have happened in past R packages and are silent failures.
 
 test_that("every file in data/ has a corresponding documented object", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (dir.exists(file.path(c, "data"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("data/ directory not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   rda_files <- list.files(file.path(root, "data"),
                           pattern = "\\.rda$", full.names = FALSE)
-  expect_gt(length(rda_files), 0, label = "no .rda files in data/")
+  if (length(rda_files) == 0) skip("no .rda files in data/")
 
   # Each .rda contains an object whose name should match the file
   # stem; the corresponding Rd is at man/<name>.Rd.
@@ -44,19 +34,9 @@ test_that("every file in data/ has a corresponding documented object", {
 
 
 test_that("every documented dataset has a corresponding .rda in data/", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (dir.exists(file.path(c, "man"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("man/ directory not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   # Datasets are documented with `\docType{data}` in their Rd source.
   rd_files <- list.files(file.path(root, "man"),

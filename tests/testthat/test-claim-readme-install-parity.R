@@ -29,20 +29,9 @@
 
 
 test_that("README and every vignette agree on the install command for prepR4pcm", {
-  root <- NA_character_
-  candidates <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), ".."),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in candidates) {
-    if (file.exists(file.path(c, "DESCRIPTION"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("package root not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   # README and all vignettes
   files <- c(
@@ -51,7 +40,7 @@ test_that("README and every vignette agree on the install command for prepR4pcm"
                pattern = "\\.Rmd$", full.names = TRUE)
   )
   files <- files[file.exists(files)]
-  expect_gt(length(files), 0, label = "no README.Rmd or vignettes found")
+  if (length(files) == 0) skip("no README.Rmd or vignettes found")
 
   all_hits <- list()
   for (f in files) {

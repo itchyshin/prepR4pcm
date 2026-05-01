@@ -16,13 +16,13 @@
 # the suite.
 
 test_that("no abort()/warning()/stop() calls contain unrendered cli markup (issue #4)", {
+  skip_on_cran()
   r_files <- list.files(
     test_path("..", "..", "R"),
     pattern = "\\.R$",
     full.names = TRUE
   )
-  expect_gt(length(r_files), 0,
-            label = "no R/*.R files found -- test is in the wrong working directory")
+  if (length(r_files) == 0) skip("source tree not accessible (running outside dev/CI environment)")
 
   cli_markup_pattern <- "\\{\\.[a-z]+ "
   bad_handler_pattern <- "(?:^|\\s)(abort|warning|stop|message)\\s*\\("

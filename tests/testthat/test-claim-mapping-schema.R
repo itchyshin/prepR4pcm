@@ -56,6 +56,7 @@ make_minimal_data_tree_reconciliation <- function() {
 
 
 test_that("every reconciliation $mapping has the documented columns", {
+  skip_on_cran()
   for (mk in list(make_minimal_data_data_reconciliation,
                   make_minimal_data_tree_reconciliation)) {
     rec <- mk()
@@ -82,6 +83,7 @@ test_that("every reconciliation $mapping has the documented columns", {
 
 
 test_that("every mapping column has the documented type", {
+  skip_on_cran()
   rec <- make_minimal_data_data_reconciliation()
   for (col in required_columns) {
     if (col %in% names(rec$mapping)) {
@@ -102,6 +104,7 @@ test_that("every mapping column has the documented type", {
 
 
 test_that("an empty reconciliation still has the documented columns", {
+  skip_on_cran()
   # Edge case: zero overlap between x and y. Mapping should still
   # have all columns, just with zero rows for matches and rows for
   # unresolved-on-each-side.

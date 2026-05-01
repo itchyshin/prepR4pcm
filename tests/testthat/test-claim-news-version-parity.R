@@ -21,6 +21,7 @@
 
 
 test_that("the top NEWS.md header version is consistent with DESCRIPTION", {
+  skip_on_cran()
   root <- .find_pkg_root()
   if (is.na(root)) skip("package root not found")
 

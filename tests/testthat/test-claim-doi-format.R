@@ -8,19 +8,9 @@
 # is now structurally caught).
 
 test_that("every DOI in user-facing files is well-formed", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (file.exists(file.path(c, "DESCRIPTION"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("package root not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   files <- c(
     file.path(root, "README.Rmd"),

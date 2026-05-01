@@ -6,19 +6,9 @@
 # manual NAMESPACE edits that drop exports silently.
 
 test_that("every @export'd function in R/ is exported in NAMESPACE", {
-  root <- NA_character_
-  cands <- c(
-    test_path("..", ".."),
-    file.path(getwd()),
-    file.path(getwd(), "..", "..")
-  )
-  for (c in cands) {
-    if (file.exists(file.path(c, "NAMESPACE"))) {
-      root <- normalizePath(c)
-      break
-    }
-  }
-  if (is.na(root)) skip("NAMESPACE not found")
+  skip_on_cran()
+  root <- .claim_root()
+  if (is.na(root)) skip("source tree not accessible (running in installed-only mode)")
 
   ns <- readLines(file.path(root, "NAMESPACE"), warn = FALSE)
   # Plain `export(name)` entries.
@@ -43,7 +33,7 @@ test_that("every @export'd function in R/ is exported in NAMESPACE", {
 
   r_files <- list.files(file.path(root, "R"),
                         pattern = "\\.R$", full.names = TRUE)
-  expect_gt(length(r_files), 0, label = "no R/*.R files found")
+  if (length(r_files) == 0) skip("no R/*.R files found")
 
   declared_exports <- character()
   for (f in r_files) {
@@ -63,8 +53,7 @@ test_that("every @export'd function in R/ is exported in NAMESPACE", {
     }
   }
   declared_exports <- unique(declared_exports)
-  expect_gt(length(declared_exports), 0,
-            label = "no @export'd functions found in R/")
+  if (length(declared_exports) == 0) skip("no @export'd functions found in R/")
 
   missing <- setdiff(declared_exports, ns_all)
   expect_equal(

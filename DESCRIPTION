@@ -42,19 +42,19 @@ Depends:
 Imports:
     ape,
     cli,
-    dplyr,
-    readr,
     rlang,
-    stringr,
     tibble
 Suggests:
     caper,
+    dplyr,
     knitr,
     MCMCglmm,
     phytools,
     pkgdown,
+    readr,
     rmarkdown,
     spelling,
+    stringr,
     taxadb,
     testthat (>= 3.0.0)
 LazyData: true

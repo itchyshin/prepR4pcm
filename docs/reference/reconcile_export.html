@@ -17,7 +17,7 @@ trail."><meta property="og:image" content="https://itchyshin.github.io/prepR4pcm
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,6 +30,7 @@ trail."><meta property="og:image" content="https://itchyshin.github.io/prepR4pcm
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
+    <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -90,32 +91,38 @@ data and mapping are written.</p></dd>
 
 
 <dt id="arg-species-col">species_col<a class="anchor" aria-label="anchor" href="#arg-species-col"></a></dt>
-<dd><p>Character(1). Column name in <code>data</code> containing
-species names. Auto-detected if <code>NULL</code>.</p></dd>
+<dd><p>A length-1 character vector. Column name in <code>data</code>
+containing species names. Auto-detected when <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-dir">dir<a class="anchor" aria-label="anchor" href="#arg-dir"></a></dt>
-<dd><p>Character(1). Output directory. Created if it does not exist.
-Default <code>"."</code>.</p></dd>
+<dd><p>A length-1 character vector. Path to the output directory
+that will receive the exported files (e.g. a project's
+<code>data-output/</code> folder, or a staging directory before a Zenodo
+deposit). Created if it does not exist. Default <code>"."</code>.</p></dd>
 
 
 <dt id="arg-prefix">prefix<a class="anchor" aria-label="anchor" href="#arg-prefix"></a></dt>
-<dd><p>Character(1). File name prefix. Default <code>"reconciled"</code>.</p></dd>
+<dd><p>A length-1 character vector. File name prefix. Default
+<code>"reconciled"</code>.</p></dd>
 
 
 <dt id="arg-tree-format">tree_format<a class="anchor" aria-label="anchor" href="#arg-tree-format"></a></dt>
-<dd><p>Character(1). Tree output format: <code>"nexus"</code> (default)
-or <code>"newick"</code>.</p></dd>
+<dd><p>A length-1 character vector. Tree output format:
+<code>"nexus"</code> (default) or <code>"newick"</code>.</p></dd>
 
 
 <dt id="arg-drop-unresolved">drop_unresolved<a class="anchor" aria-label="anchor" href="#arg-drop-unresolved"></a></dt>
-<dd><p>Logical. Drop unresolved species? Default <code>TRUE</code>.</p></dd>
+<dd><p>Logical. Drops unresolved species when <code>TRUE</code>.
+Default <code>TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list of file paths (invisibly):
-<code>$data</code> (CSV), <code>$tree</code> (Nexus or Newick), <code>$mapping</code> (CSV).</p>
+<code>$data</code> (CSV), <code>$tree</code> (Nexus or Newick), <code>$mapping</code> (CSV), and
+<code>$unused_overrides</code> (CSV; <code>NULL</code> when there are no rejected
+overrides on the reconciliation).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -152,10 +159,8 @@ trail.</p>
 <span class="r-in"><span>                         x_species <span class="op">=</span> <span class="st">"Species1"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (0 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (657 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (657 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/2: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/2: Normalised matching (0 matched so far)...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span>
 <span class="r-in"><span><span class="va">out_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"export_"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu">reconcile_export</span><span class="op">(</span><span class="va">result</span>,</span></span>
@@ -164,15 +169,15 @@ trail.</p>
 <span class="r-in"><span>                          dir <span class="op">=</span> <span class="va">out_dir</span>, prefix <span class="op">=</span> <span class="st">"avonet_jetz"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Dropped 262 rows with unresolved species from data</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Tree has 657 tips after alignment</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpDV2hCe/export_82f575f613b4/avonet_jetz_data.csv</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Tree written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpDV2hCe/export_82f575f613b4/avonet_jetz_tree.nex</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Mapping written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpDV2hCe/export_82f575f613b4/avonet_jetz_mapping.csv</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpVNTPFf/export_da0c7c9da494/avonet_jetz_data.csv</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Tree written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpVNTPFf/export_da0c7c9da494/avonet_jetz_tree.nex</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Mapping written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpVNTPFf/export_da0c7c9da494/avonet_jetz_mapping.csv</span></span>
 <span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">data</span>     <span class="co"># path to CSV</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpDV2hCe/export_82f575f613b4/avonet_jetz_data.csv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpVNTPFf/export_da0c7c9da494/avonet_jetz_data.csv"</span>
 <span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">tree</span>     <span class="co"># path to Nexus tree</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpDV2hCe/export_82f575f613b4/avonet_jetz_tree.nex"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpVNTPFf/export_da0c7c9da494/avonet_jetz_tree.nex"</span>
 <span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">mapping</span>  <span class="co"># path to mapping CSV</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpDV2hCe/export_82f575f613b4/avonet_jetz_mapping.csv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpVNTPFf/export_da0c7c9da494/avonet_jetz_mapping.csv"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">out_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># clean up</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
