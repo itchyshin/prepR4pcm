@@ -77,6 +77,24 @@ The print method shows three pairwise matrices. Reading them:
   edge lengths after pruning to the shared subtree. Useful as a
   rough check on whether two chronograms agree on rate scale.
 
+## What actually works (status table)
+
+The retrieval surface is wider than what's been verified end-to-end
+on a clean install. Here's the honest score (last run: 2026-05-01):
+
+| Backend | Single tree | Multi-tree (`n_tree > 1`) | Notes |
+|---|---|---|---|
+| `rotl` | likely ✅ | n/a (synthesis is single) | Untested locally because `rotl` ↔ `rncl` ↔ `Rcpp` incompatibility on dev box |
+| `rtrees` | ✅ | ⚠️ partial | Returns whatever the chosen mega-tree provides (e.g. `mammal_tree = "vertlife"` → 100). **`n_tree` is informational only — it does NOT cap the count.** |
+| `clootl` | ❌ | ❌ | Needs the AvesData repo set up via `clootl::get_avesdata_repo()` first; without it, `extractTree`/`sampleTrees` error with `object 'clootl_data' not found`. Once set up, `n_tree > 1` routes to `clootl::sampleTrees(count = …)` (capped at 100 upstream). |
+| `fishtree` | ✅ | ✅ | `n_tree > 1` switches to `fishtree::fishtree_complete_phylogeny()` which returns the requested count. |
+| `datelife` | likely ✅ | likely ✅ | Untested locally because datelife is `Enhances` (GitHub-only, heavy bold/Bioc deps). Install with `pak::pak("phylotastic/datelife")`. |
+| `pr_date_tree()` | likely ✅ | likely ✅ | Untested same reason as datelife. |
+
+If you hit a **broken** row above, please open an issue at
+[itchyshin/prepR4pcm](https://github.com/itchyshin/prepR4pcm/issues)
+with your `pr_get_tree_status()` output and the error.
+
 ## What to do with the result
 
 ### When all three agree (Jaccard ≈ 1, RF small)

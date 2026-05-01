@@ -179,13 +179,26 @@ back-compat). Each backend negotiates this differently:</p><dl><dt><code>"rotl"<
 one-shot warning is emitted if <code>n_tree &gt; 1</code>.</p></dd>
 
 <dt><code>"rtrees"</code></dt>
-<dd><p>Passes through to
-<code>rtrees::get_tree(n_tree = ...)</code>. Requires <code>taxon</code>.</p></dd>
+<dd><p><strong><code>n_tree</code> is informational only here.</strong>
+<code>rtrees::get_tree()</code> does not have an <code>n_tree</code> argument;
+the multi-tree count is fixed by which mega-tree was
+selected. Reference trees rtrees uses internally:
+birds = Jetz et al. 2012
+(<a href="https://birdtree.org" class="external-link">https://birdtree.org</a>, 100 posterior trees);
+mammals = Upham et al. 2019 (VertLife, 100 by default;
+set <code>mammal_tree = "phylacine"</code> for the PHYLACINE set);
+amphibians + squamates = VertLife; fish = Rabosky et al. 2018
+(also wrapped by <code>source = "fishtree"</code>); plants =
+V.PhyloMaker; bees = Bee Tree of Life. Override which
+mega-tree is used via <code>...</code> (e.g. <code>bee_tree = "bootstrap"</code>
+for 100 bee trees instead of the single ML tree).
+Requires <code>taxon</code>.</p></dd>
 
 <dt><code>"clootl"</code></dt>
-<dd><p>Passes through to
-<code>clootl::extractTree(sample.size = n_tree)</code> so you get
-multiple Clements posterior samples.</p></dd>
+<dd><p><code>n_tree = 1</code> calls <code>clootl::extractTree()</code>;
+<code>n_tree &gt; 1</code> calls <code>clootl::sampleTrees(count = n_tree)</code>
+(capped at 100 upstream). <strong>Both require the AvesData
+repo to be set up via <code>clootl::get_avesdata_repo()</code> first.</strong></p></dd>
 
 <dt><code>"fishtree"</code></dt>
 <dd><p>Single phylo via <code>fishtree_phylogeny()</code>

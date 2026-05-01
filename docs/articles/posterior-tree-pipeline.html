@@ -226,6 +226,65 @@ narrower intervals were always overconfident.</p>
 <div class="section level2">
 <h2 id="choosing-a-backend">Choosing a backend<a class="anchor" aria-label="anchor" href="#choosing-a-backend"></a>
 </h2>
+<p>The “Status” column is the verified state on a clean macOS R 4.4
+install as of 2026-05-01. See the <a href="comparing-tree-backends.html">Comparing tree backends</a> vignette
+for the full status table including caveats.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>If your taxon is…</th>
+<th>And you want…</th>
+<th>Use</th>
+<th>Status</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Universal</td>
+<td>A single best-guess tree</td>
+<td><code>pr_get_tree(source = "rotl")</code></td>
+<td>likely ✅ (untested locally — rotl/Rcpp install issue on dev
+box)</td>
+</tr>
+<tr class="even">
+<td>Universal</td>
+<td>A posterior of dated trees</td>
+<td><code>pr_get_tree(source = "datelife", n_tree = 50)</code></td>
+<td>likely ✅ (datelife is <code>Enhances</code>, install separately
+with <code>pak::pak("phylotastic/datelife")</code>)</td>
+</tr>
+<tr class="odd">
+<td>Birds</td>
+<td>Time-calibrated, current Clements</td>
+<td><code>pr_get_tree(source = "clootl", n_tree = 50)</code></td>
+<td>❌ requires <code>clootl::get_avesdata_repo()</code> first;
+otherwise errors with <code>object 'clootl_data' not found</code>
+</td>
+</tr>
+<tr class="even">
+<td>Fish</td>
+<td>Time-calibrated, posterior</td>
+<td><code>pr_get_tree(source = "fishtree", n_tree = 50)</code></td>
+<td>✅ verified — returns <code>multiPhylo[50]</code>
+</td>
+</tr>
+<tr class="odd">
+<td>Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly</td>
+<td>Taxon-specific mega-tree, possibly grafted</td>
+<td><code>pr_get_tree(source = "rtrees", taxon = "&lt;group&gt;")</code></td>
+<td>✅ works; ⚠️ <code>n_tree</code> is <strong>informational
+only</strong> — <code>rtrees::get_tree()</code> has no
+<code>n_tree</code> argument, the count is fixed by the chosen mega-tree
+(e.g. <code>mammal_tree = "vertlife"</code> → 100, <code>bird</code>
+default → 100, single-tree mega-trees → 1).</td>
+</tr>
+</tbody>
+</table>
+<p>For the dating-only case (you already have a topology):</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -233,47 +292,14 @@ narrower intervals were always overconfident.</p>
 <col width="33%">
 </colgroup>
 <thead><tr class="header">
-<th>If your taxon is…</th>
-<th>And you want…</th>
-<th>Use</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Universal</td>
-<td>A single best-guess tree</td>
-<td><code>pr_get_tree(source = "rotl")</code></td>
-</tr>
-<tr class="even">
-<td>Universal</td>
-<td>A posterior of dated trees</td>
-<td><code>pr_get_tree(source = "datelife", n_tree = 50)</code></td>
-</tr>
-<tr class="odd">
-<td>Birds</td>
-<td>Time-calibrated, current Clements</td>
-<td><code>pr_get_tree(source = "clootl", n_tree = 50)</code></td>
-</tr>
-<tr class="even">
-<td>Fish</td>
-<td>Time-calibrated, posterior</td>
-<td><code>pr_get_tree(source = "fishtree", n_tree = 50)</code></td>
-</tr>
-<tr class="odd">
-<td>Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly</td>
-<td>Taxon-specific mega-tree, possibly grafted</td>
-<td><code>pr_get_tree(source = "rtrees", taxon = "&lt;group&gt;", n_tree = 50)</code></td>
-</tr>
-</tbody>
-</table>
-<p>For the dating-only case (you already have a topology):</p>
-<table class="table">
-<thead><tr class="header">
 <th>If your topology is…</th>
 <th>Use</th>
+<th>Status</th>
 </tr></thead>
 <tbody><tr class="odd">
 <td>Universal taxa</td>
 <td><code>pr_date_tree(my_tree, n_dated = 50)</code></td>
+<td>likely ✅ (untested locally — datelife not installed)</td>
 </tr></tbody>
 </table>
 </div>
