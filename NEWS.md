@@ -1,5 +1,61 @@
 # prepR4pcm 0.3.1.9000 (development version)
 
+## Round 5: posterior-tree support and the prepR4pcm -> pigauto pipeline
+
+* **`pr_get_tree()` gains a unified `n_tree` parameter** so users can
+  request a posterior sample (`multiPhylo`) when a backend supports
+  one. Default `n_tree = 1L` (back-compat). When `n_tree > 1`:
+  - `"rotl"` -- still returns 1 (the synthesis tree); a one-shot
+    warning explains that no posterior is available.
+  - `"rtrees"` -- pass-through to `rtrees::get_tree(n_tree = ...)`.
+  - `"clootl"` -- pass-through to
+    `clootl::extractTree(sample.size = n_tree)` for multiple
+    Clements posterior samples.
+  - `"fishtree"` -- switches to `fishtree_complete_phylogeny()` for
+    a multi-tree stochastic polytomy resolution.
+  - `"datelife"` -- (new backend; see below) returns one chronogram
+    per database source, capped at `n_tree`.
+
+* **New backend: `pr_get_tree(source = "datelife")`.** Universal
+  database of pre-computed chronograms (Sanchez Reyes et al. 2024,
+  *Syst. Biol.* 73:470). Returns a single SDM-summary chronogram
+  by default; `n_tree > 1` returns a multiPhylo of per-source
+  candidate chronograms. Backend lives in `Suggests` + `Remotes`
+  (datelife was archived from CRAN in 2024 -- install with
+  `pak::pak("phylotastic/datelife")`).
+
+* **New function: `pr_date_tree(tree, n_dated, ...)`.** Wraps
+  `datelife::datelife_use()` to time-calibrate an existing topology.
+  Returns the same `pr_tree_result` shape as `pr_get_tree()` so
+  downstream consumers (notably
+  [pigauto](https://itchyshin.github.io/pigauto/)) treat retrieved
+  and dated trees interchangeably.
+
+* **New function: `pr_cite_tree(result, format = ...)`.** Formats a
+  citation block (text / markdown / bibtex) for a `pr_tree_result`,
+  including per-tree source citations when the result is a
+  multi-tree posterior. Helpful for paper methods sections, figure
+  legends, and PR descriptions.
+
+* **Per-tree provenance metadata.** Every `pr_tree_result` now
+  carries `backend_meta$tree_provenance`: a list with one entry per
+  returned tree (citation, calibration method, tip count). For
+  `multiPhylo` results, `tree[[i]]` pairs naturally with
+  `backend_meta$tree_provenance[[i]]`. Designed to feed
+  `pigauto::multi_impute_trees()`.
+
+* **Cross-package vignette: "From species names to a phylogenetic
+  posterior -- prepR4pcm + pigauto".** End-to-end walkthrough showing
+  how to chain `reconcile_data()` -> `pr_get_tree()` (or
+  `pr_date_tree()`) -> `pigauto::multi_impute_trees()` -> pooled
+  inference via Rubin's rules. The vignette uses mock data and
+  `eval = FALSE` chunks for the parts that need pigauto / datelife
+  installed.
+
+* **Cross-link with `pigauto`.** `?pr_get_tree`, `?pr_date_tree`,
+  and `?reconcile_augment` mention pigauto in `@seealso`. The
+  pkgdown reference index gains a "Sister package: pigauto" callout.
+
 ## New features
 
 * `reconcile_augment()` gains `source = c("internal", "rtrees")`
