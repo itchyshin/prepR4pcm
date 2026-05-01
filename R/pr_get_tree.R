@@ -296,16 +296,30 @@ pr_get_tree <- function(x,
     ...
   )
 
+  # rtrees returns a phylo when only one source tree was used, and a
+  # multiPhylo when many were sampled (e.g. 100 trees from the bird /
+  # mammal posterior). Pull the tip-label set from whichever shape we
+  # got -- for a multiPhylo all trees share the same tip set so the
+  # first one is enough.
+  ref_tips <- if (inherits(tree, "multiPhylo")) {
+    tree[[1]]$tip.label
+  } else {
+    tree$tip.label
+  }
+
   # Determine matched / unmatched. rtrees may graft species at higher
   # taxonomic nodes (genus/family); we report both placement types.
+  # Strip the trailing `*` rtrees adds to grafted tips before
+  # normalising.
+  ref_tips_clean <- sub("\\*$", "", ref_tips)
   norm_req <- pr_normalize_names(species)
-  norm_tip <- pr_normalize_names(tree$tip.label)
+  norm_tip <- pr_normalize_names(ref_tips_clean)
   in_tree  <- norm_req %in% norm_tip
 
   # If show_grafted = TRUE rtrees flags grafted tips with a `*`. Surface
   # the grafted set so users can see which species were placed on
   # higher-rank stand-ins rather than at their actual position.
-  grafted <- grep("\\*$", tree$tip.label, value = TRUE)
+  grafted <- grep("\\*$", ref_tips, value = TRUE)
 
   list(
     tree         = tree,
@@ -327,13 +341,30 @@ pr_get_tree <- function(x,
 #' @export
 print.pr_tree_result <- function(x, ...) {
   cli::cli_h1("Tree retrieval result")
+
+  # Some backends (rtrees, clootl) can return a multiPhylo when more
+  # than one source tree was used. Print a one-tree summary if it's a
+  # single phylo, else summarise the list.
+  is_multi <- inherits(x$tree, "multiPhylo")
+  n_tips_str <- if (is_multi) {
+    sprintf("%d tree%s", length(x$tree),
+            if (length(x$tree) == 1) "" else "s")
+  } else {
+    n_tips <- ape::Ntip(x$tree)
+    sprintf("%d tip%s",
+            n_tips, if (n_tips == 1) "" else "s")
+  }
+  n_matched <- length(x$matched)
+  n_unmatched <- length(x$unmatched)
+
   cli::cli_bullets(c(
-    "*" = "Source:        {.val {x$source}}",
-    "*" = "Tree:          {.val {ape::Ntip(x$tree)}} tip{?s}, {.val {x$tree$Nnode}} internal node{?s}",
-    "*" = "Matched:       {length(x$matched)} species",
-    "!" = "Unmatched:     {length(x$unmatched)} species"
+    "*" = "Source:    {.val {x$source}}",
+    "*" = "Tree:      {n_tips_str}",
+    "*" = "Matched:   {.val {n_matched}} species",
+    "!" = "Unmatched: {.val {n_unmatched}} species"
   ))
-  if (length(x$unmatched) > 0) {
+
+  if (n_unmatched > 0) {
     show <- utils::head(x$unmatched, 5)
     cli::cli_alert_info(
       "First {length(show)} unmatched: {.val {show}}"

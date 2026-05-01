@@ -41,6 +41,10 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # The DESCRIPTION's `Remotes:` field points pak at
+          # `eliotmiller/clootl` and `daijiang/rtrees` (GitHub-only
+          # backends for `pr_get_tree()`), so they install correctly
+          # during dependency resolution.
           extra-packages: any::rcmdcheck
           needs: check
 

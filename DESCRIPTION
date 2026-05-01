@@ -63,6 +63,9 @@ Suggests:
 Additional_repositories:
     https://eliotmiller.r-universe.dev,
     https://daijiang.r-universe.dev
+Remotes:
+    github::eliotmiller/clootl,
+    github::daijiang/rtrees
 LazyData: true
 Config/testthat/edition: 3
 VignetteBuilder: knitr
