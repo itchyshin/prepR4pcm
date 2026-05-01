@@ -211,3 +211,75 @@ test_that("M11: mocked authority integrates with reconcile_tree", {
   expect_equal(res$counts$n_synonym, 1L)
   expect_equal(res$counts$n_unresolved_x, 0L)
 })
+
+
+# Bundle D ---------------------------------------------------------------
+#
+# Parameterised mock-test that loops over every entry in
+# pr_valid_authorities() and asserts that the cascade integrates cleanly
+# with each one. Catches the next "X claims to work but doesn't" bug
+# the moment a new authority is added to the valid list, without
+# requiring the live taxadb network round-trip in CI.
+
+test_that("each authority on the valid list integrates cleanly with the cascade", {
+  for (auth in pr_valid_authorities()) {
+    table <- c(
+      "Parus caeruleus"     = "Cyanistes caeruleus",
+      "Cyanistes caeruleus" = "Cyanistes caeruleus"
+    )
+    testthat::local_mocked_bindings(
+      pr_lookup_authority = mock_lookup(table),
+      .package = "prepR4pcm"
+    )
+
+    df_x <- data.frame(species = "Parus caeruleus", stringsAsFactors = FALSE)
+    df_y <- data.frame(species = "Cyanistes caeruleus",
+                       stringsAsFactors = FALSE)
+
+    res <- tryCatch(
+      reconcile_data(df_x, df_y,
+                     x_species = "species", y_species = "species",
+                     authority = auth, quiet = TRUE),
+      error = function(e) e
+    )
+
+    expect_false(
+      inherits(res, "error"),
+      info = sprintf(
+        "reconcile_data() crashes for authority `%s`: %s",
+        auth,
+        if (inherits(res, "error")) conditionMessage(res) else ""
+      )
+    )
+
+    if (!inherits(res, "error")) {
+      expect_s3_class(res, "reconciliation")
+      # Sanity: the synonym row was matched.
+      expect_equal(res$counts$n_synonym, 1L,
+                   label = sprintf("synonym match count for authority `%s`", auth))
+      # Provenance: meta records the authority we asked for.
+      expect_equal(res$meta$authority, auth)
+    }
+  }
+})
+
+
+test_that("removed authorities trigger the migration error, not a generic one", {
+  # Locks in the helpful error introduced in Bundle C. If someone later
+  # re-adds e.g. `iucn` to pr_valid_authorities() without checking it
+  # really works, the live test catches it; if someone removes one of
+  # `iucn`/`tpl`/`fb`/`slb`/`wd` from .pr_removed_authorities(), this
+  # test catches that too because the migration path is no longer
+  # exercised.
+  for (bad in c("iucn", "tpl", "fb", "slb", "wd")) {
+    err <- tryCatch(pr_validate_authority(bad), error = function(e) e)
+    expect_s3_class(err, "error")
+    msg <- conditionMessage(err)
+    expect_true(grepl("not.*supported", msg, ignore.case = TRUE),
+                info = sprintf("error for `%s` should say 'not supported'; got: %s",
+                               bad, msg))
+    expect_true(grepl("col|itis|gbif|ncbi|ott", msg, ignore.case = TRUE),
+                info = sprintf("error for `%s` should suggest a working authority; got: %s",
+                               bad, msg))
+  }
+})
