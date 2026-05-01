@@ -11,8 +11,9 @@ reconcile_augment(
   branch_length = c("congener_median", "half_terminal", "zero"),
   seed = NULL,
   quiet = FALSE,
-  source = c("internal", "rtrees"),
+  source = c("internal", "rtrees", "vphylomaker", "uphylomaker"),
   taxon = NULL,
+  check_ultrametric = TRUE,
   ...
 )
 }
@@ -74,20 +75,30 @@ argument.)}
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
 
 \item{source}{A length-1 character vector. Which grafting backend
-to use. One of \code{"internal"} (default; the genus-level placement
-strategy described above) or \code{"rtrees"} (delegate to
-\code{rtrees::get_tree(tree_by_user = TRUE)}; see
-\dQuote{Choosing a source}). Default \code{"internal"}.}
+to use. One of \code{"internal"} (default), \code{"rtrees"}, or
+\code{"vphylomaker"}. See \dQuote{Choosing a source}.}
 
 \item{taxon}{A length-1 character vector. Required when
 \code{source = "rtrees"}. One of \code{"bird"}, \code{"mammal"}, \code{"fish"},
 \code{"amphibian"}, \code{"reptile"}, \code{"plant"}, \code{"shark_ray"}, \code{"bee"},
-\code{"butterfly"}. See \pkg{rtrees}' help page for \code{get_tree}.
-Ignored when \code{source = "internal"}.}
+\code{"butterfly"}. Ignored for \code{"internal"} and \code{"vphylomaker"}.}
 
-\item{...}{Additional arguments forwarded to
-\code{rtrees::get_tree()} when \code{source = "rtrees"} (e.g. \code{scenario},
-\code{n_tree}). Ignored when \code{source = "internal"}.}
+\item{check_ultrametric}{Logical. After grafting, check that the
+result is ultrametric and warn if not. Default \code{TRUE}. The
+\code{"rtrees"}, \code{"vphylomaker"}, and \code{"uphylomaker"} backends produce
+ultrametric trees by design; the \code{"internal"} backend does too
+when the input tree was ultrametric and \code{branch_length} is
+\code{"congener_median"} or \code{"half_terminal"}, but not when
+\code{branch_length = "zero"} (which produces zero-length tip edges
+that break ultrametricity by construction).}
+
+\item{...}{Additional arguments forwarded to the chosen backend:
+\code{rtrees::get_tree()} for \code{source = "rtrees"} (e.g. \code{scenario},
+\code{n_tree}); \code{V.PhyloMaker3::phylo.maker()} for
+\code{source = "vphylomaker"} (e.g. \code{scenarios = "S3"},
+\code{nodes.type}); \code{U.PhyloMaker::phylo.maker()} for
+\code{source = "uphylomaker"} (e.g. \code{gen.list}, \code{scenario}).
+Ignored when \code{source = "internal"}.}
 }
 \value{
 A list with:
@@ -153,6 +164,25 @@ reference tree. Requires \code{taxon} and the GitHub-only
 (\url{https://daijiang.github.io/rtrees/}). Helpful when the
 genus is absent from your tree but present in \pkg{rtrees}'
 reference --- which the internal mode would skip.}
+\item{\code{"vphylomaker"}}{Plant-only alternative to
+\code{"rtrees"} via either of the GitHub packages
+\pkg{V.PhyloMaker3}
+(\url{https://github.com/jinyizju/V.PhyloMaker3}, preferred
+when installed) or \pkg{V.PhyloMaker2}
+(\url{https://github.com/jinyizju/V.PhyloMaker2}, used as a
+fallback). Calls \code{phylo.maker(sp.list, tree, scenarios = ...)}
+with your tree as the backbone. Use this when you want
+explicit control over the V.PhyloMaker placement scenario
+(\code{"S1"}, \code{"S2"}, or \code{"S3"} --- see Jin & Qian
+2019, \emph{Ecography} 42:1353); otherwise \code{"rtrees"}
+with \code{taxon = "plant"} is simpler.}
+\item{\code{"uphylomaker"}}{Universal (plants + animals) variant
+of V.PhyloMaker, via the GitHub package \pkg{U.PhyloMaker}
+(\url{https://github.com/jinyizju/U.PhyloMaker}). Same
+\code{phylo.maker} convention but takes a \code{gen.list} (a
+genus-family lookup) so it can graft non-plant taxa as well
+as plants. Use this when your tree spans multiple kingdoms
+and you want the V.PhyloMaker placement strategy.}
 }
 Use \code{\link[=pr_get_tree]{pr_get_tree()}} when you have only a species list and need a
 candidate tree from scratch (rotl, clootl, or rtrees). Use

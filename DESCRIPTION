@@ -1,6 +1,6 @@
 Package: prepR4pcm
 Title: Prepare Data and Trees for Phylogenetic Comparative Methods
-Version: 0.3.1.9000
+Version: 0.4.0
 Authors@R: c(
     person("Shinichi", "Nakagawa",
            email = "s.nakagawa@unsw.edu.au",
@@ -62,15 +62,22 @@ Suggests:
     spelling,
     stringr,
     taxadb,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    U.PhyloMaker,
+    V.PhyloMaker2,
+    V.PhyloMaker3
 Additional_repositories:
     https://eliotmiller.r-universe.dev,
     https://daijiang.r-universe.dev,
-    https://phylotastic.r-universe.dev
+    https://phylotastic.r-universe.dev,
+    https://jinyizju.r-universe.dev
 Remotes:
     eliotmiller/clootl,
     daijiang/rtrees,
-    phylotastic/datelife
+    phylotastic/datelife,
+    jinyizju/V.PhyloMaker3,
+    jinyizju/V.PhyloMaker2,
+    jinyizju/U.PhyloMaker
 LazyData: true
 Config/testthat/edition: 3
 VignetteBuilder: knitr

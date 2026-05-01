@@ -1,4 +1,60 @@
-# prepR4pcm 0.3.1.9000 (development version)
+# prepR4pcm 0.4.0
+
+This release closes out the multi-round tree-handling overhaul started
+at issue #42 (Ayumi Mizuno) and tracked at issue #48. Across Rounds
+4 - 8 the package gained:
+
+- Five tree-retrieval backends (rotl, rtrees, clootl, fishtree, datelife)
+  unified under `pr_get_tree(..., n_tree, source = "auto")`.
+- Three augmentation backends (rtrees, V.PhyloMaker3/V.PhyloMaker2, U.PhyloMaker)
+  on `reconcile_augment()`.
+- A standalone dating function (`pr_date_tree()`) for adding chronogram
+  calibrations to existing topologies.
+- Per-tree provenance metadata that pairs every tree in a multiPhylo
+  with its citation, calibration method, and tip count -- designed
+  for downstream consumption by
+  [pigauto](https://itchyshin.github.io/pigauto/)`::multi_impute_trees()`.
+- `pr_cite_tree()` for formatting citations (text / markdown / bibtex).
+- `pr_tree_compare()` with bipartition-matched branch-length correlation.
+- `pr_get_tree_status()` for backend health probing.
+- An on-disk cache (`pr_tree_cache_*`) for repeat retrievals.
+- Three vignettes covering the cross-package pipeline, backend
+  comparison, and the original workflows.
+
+## Round 8: V.PhyloMaker / U.PhyloMaker + bipartition correlation + ultrametric check
+
+* **`reconcile_augment()` gains two new sources:**
+  - `source = "vphylomaker"` -- plant-only alternative to `rtrees`,
+    via the GitHub packages `V.PhyloMaker3` (preferred) or
+    `V.PhyloMaker2` (fallback). Both share the same
+    `phylo.maker(sp.list, tree, scenarios)` API. Use this when you
+    want explicit V.PhyloMaker scenario control (S1 / S2 / S3, see
+    Jin & Qian 2019/2022).
+  - `source = "uphylomaker"` -- universal (plants + animals)
+    alternative via `U.PhyloMaker` (Jin & Qian 2023, *Plant
+    Diversity*). Same `phylo.maker` convention plus a `gen.list`
+    argument; the helper auto-loads `U.PhyloMaker::nodes.info.1`
+    when not supplied.
+* **Bipartition-matched branch-length correlation in
+  `pr_tree_compare()`.** The previous Pearson-on-sorted-edges
+  approximation is replaced with a proper bipartition match: for
+  each edge in tree A, the corresponding edge in tree B is the one
+  splitting the same set of tips. Edges whose bipartition isn't
+  shared are dropped from the correlation.
+* **`check_ultrametric = TRUE` argument on `pr_get_tree()`,
+  `pr_date_tree()`, and `reconcile_augment()`.** After producing the
+  tree, runs `ape::is.ultrametric()` and warns if the backend was
+  expected to produce an ultrametric tree but didn't. Skipped for
+  `rotl` (synthesis topology, no real branch lengths) and for the
+  internal augment with `branch_length = "zero"` (which breaks
+  ultrametricity by design). Does not modify the tree -- to force
+  ultrametricity, call `phytools::force.ultrametric()` or
+  `ape::chronos()` on the result yourself.
+* **TimeTree.org REST client deferred** as a non-goal. TimeTree's
+  TOS restricts bulk querying for non-commercial use; a REST wrapper
+  isn't a clean fit for prepR4pcm's "install-and-go" backend model.
+  Users who need TimeTree data can fetch it manually and feed the
+  resulting topology into `pr_date_tree()` (or skip dating entirely).
 
 ## Round 7: documentation polish and CI cleanup
 

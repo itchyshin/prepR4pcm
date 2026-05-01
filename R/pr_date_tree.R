@@ -34,6 +34,10 @@
 #'   `datelife::datelife_use()`. One of `"bladj"` (default; fast,
 #'   no calibration uncertainty) or `"mrbayes"` (Bayesian; slower,
 #'   produces credible intervals).
+#' @param check_ultrametric Logical. After dating, check that the
+#'   result is ultrametric and warn if not. Default `TRUE`.
+#'   `datelife::datelife_use()` is supposed to produce ultrametric
+#'   chronograms; this catches regressions.
 #' @param ... Additional arguments forwarded to
 #'   \code{datelife::datelife_use()}.
 #'
@@ -84,7 +88,8 @@
 #'
 #' @export
 pr_date_tree <- function(tree, n_dated = 1L,
-                          dating_method = "bladj", ...) {
+                          dating_method = "bladj",
+                          check_ultrametric = TRUE, ...) {
   if (!inherits(tree, "phylo") && !inherits(tree, "multiPhylo")) {
     cli::cli_abort(c(
       "{.arg tree} must be a {.cls phylo} or {.cls multiPhylo} object.",
@@ -117,6 +122,10 @@ pr_date_tree <- function(tree, n_dated = 1L,
     backend_meta = res$backend_meta
   )
   class(out) <- "pr_tree_result"
+
+  if (isTRUE(check_ultrametric)) {
+    .pr_check_tree_ultrametric(out$tree, source = "datelife")
+  }
   out
 }
 
