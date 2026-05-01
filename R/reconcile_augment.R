@@ -43,16 +43,18 @@
 #'     reference --- which the internal mode would skip.}
 #'   \item{\code{"vphylomaker"}}{Plant-only alternative to
 #'     \code{"rtrees"} via either of the GitHub packages
-#'     \pkg{V.PhyloMaker3}
-#'     (\url{https://github.com/jinyizju/V.PhyloMaker3}, preferred
-#'     when installed) or \pkg{V.PhyloMaker2}
-#'     (\url{https://github.com/jinyizju/V.PhyloMaker2}, used as a
-#'     fallback). Calls \code{phylo.maker(sp.list, tree, scenarios = ...)}
-#'     with your tree as the backbone. Use this when you want
-#'     explicit control over the V.PhyloMaker placement scenario
-#'     (\code{"S1"}, \code{"S2"}, or \code{"S3"} --- see Jin & Qian
-#'     2019, \emph{Ecography} 42:1353); otherwise \code{"rtrees"}
-#'     with \code{taxon = "plant"} is simpler.}
+#'     \pkg{V.PhyloMaker2}
+#'     (\url{https://github.com/jinyizju/V.PhyloMaker2}, preferred
+#'     when installed; updated and enlarged version) or
+#'     \pkg{V.PhyloMaker}
+#'     (\url{https://github.com/jinyizju/V.PhyloMaker}, used as a
+#'     fallback; original 2019 version). Calls
+#'     \code{phylo.maker(sp.list, tree, scenarios = ...)} with your
+#'     tree as the backbone. Use this when you want explicit control
+#'     over the V.PhyloMaker placement scenario (\code{"S1"},
+#'     \code{"S2"}, or \code{"S3"} --- see Jin & Qian 2019/2022);
+#'     otherwise \code{"rtrees"} with \code{taxon = "plant"} is
+#'     simpler.}
 #'   \item{\code{"uphylomaker"}}{Universal (plants + animals) variant
 #'     of V.PhyloMaker, via the GitHub package \pkg{U.PhyloMaker}
 #'     (\url{https://github.com/jinyizju/U.PhyloMaker}). Same
@@ -133,7 +135,7 @@
 #'   that break ultrametricity by construction).
 #' @param ... Additional arguments forwarded to the chosen backend:
 #'   `rtrees::get_tree()` for `source = "rtrees"` (e.g. `scenario`,
-#'   `n_tree`); `V.PhyloMaker3::phylo.maker()` for
+#'   `n_tree`); `V.PhyloMaker2::phylo.maker()` for
 #'   `source = "vphylomaker"` (e.g. `scenarios = "S3"`,
 #'   `nodes.type`); `U.PhyloMaker::phylo.maker()` for
 #'   `source = "uphylomaker"` (e.g. `gen.list`, `scenario`).
@@ -728,40 +730,41 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
 }
 
 
-#' Internal: delegate grafting to V.PhyloMaker3::phylo.maker()
+#' Internal: delegate grafting to V.PhyloMaker2::phylo.maker()
 #'
 #' Plant-only alternative to the rtrees backend. Wraps
-#' `V.PhyloMaker3::phylo.maker()` so the user can pick a specific
+#' `V.PhyloMaker2::phylo.maker()` so the user can pick a specific
 #' V.PhyloMaker scenario (S1 / S2 / S3, see Jin & Qian 2019).
 #'
 #' @param species_to_add Character vector of binomials to graft.
 #' @param tree The user's backbone phylo.
 #' @param scenarios Character. One of "S1", "S2", "S3" (default
-#'   "S3"). Forwarded to `V.PhyloMaker3::phylo.maker()`.
+#'   "S3"). Forwarded to `V.PhyloMaker2::phylo.maker()`.
 #' @param quiet Logical.
-#' @param ... Forwarded to `V.PhyloMaker3::phylo.maker()`.
+#' @param ... Forwarded to `V.PhyloMaker2::phylo.maker()`.
 #' @return A list with `tree`, `augmented`, `skipped`, `backend_meta`.
 #' @keywords internal
 .pr_augment_vphylomaker <- function(species_to_add, tree,
                                       scenarios = "S3",
                                       quiet = FALSE, ...) {
-  # Prefer V.PhyloMaker3 when available; fall back to V.PhyloMaker2.
-  # Both packages expose `phylo.maker()` with the same calling
-  # convention, so the dispatch is just choosing the namespace.
-  pkg <- if (requireNamespace("V.PhyloMaker3", quietly = TRUE)) {
-    "V.PhyloMaker3"
-  } else if (requireNamespace("V.PhyloMaker2", quietly = TRUE)) {
+  # Prefer V.PhyloMaker2 when available; fall back to V.PhyloMaker
+  # (the original). Both packages expose `phylo.maker()` with the
+  # same calling convention, so the dispatch is just choosing the
+  # namespace.
+  pkg <- if (requireNamespace("V.PhyloMaker2", quietly = TRUE)) {
     "V.PhyloMaker2"
+  } else if (requireNamespace("V.PhyloMaker", quietly = TRUE)) {
+    "V.PhyloMaker"
   } else {
     cli::cli_abort(
-      c("{.code source = \"vphylomaker\"} requires either {.pkg V.PhyloMaker3} or {.pkg V.PhyloMaker2}.",
-        "i" = 'Install V3 (preferred) with: {.code pak::pak("jinyizju/V.PhyloMaker3")}.',
-        "i" = 'Or install V2 with: {.code pak::pak("jinyizju/V.PhyloMaker2")}.',
-        ">" = "See {.url https://github.com/jinyizju/V.PhyloMaker3} for details.")
+      c("{.code source = \"vphylomaker\"} requires either {.pkg V.PhyloMaker2} or {.pkg V.PhyloMaker}.",
+        "i" = 'Install V2 (preferred) with: {.code pak::pak("jinyizju/V.PhyloMaker2")}.',
+        "i" = 'Or install V1 with: {.code pak::pak("jinyizju/V.PhyloMaker")}.',
+        ">" = "See {.url https://github.com/jinyizju/V.PhyloMaker2} for details.")
     )
   }
   if (!quiet) {
-    cli::cli_alert_info("Using {.pkg {pkg}} (preferred when both are installed: V3).")
+    cli::cli_alert_info("Using {.pkg {pkg}} (preferred when both are installed: V2).")
   }
 
   # V.PhyloMaker (both 2 and 3) wants a sp.list data.frame with cols
@@ -791,14 +794,14 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
     cand <- pm[vapply(pm, inherits, logical(1), what = "phylo")]
     if (length(cand) == 0L) {
       cli::cli_abort(c(
-        "Unexpected return type from {.code V.PhyloMaker3::phylo.maker()}.",
+        "Unexpected return type from {.code V.PhyloMaker2::phylo.maker()}.",
         "i" = "Got names: {.val {names(pm)}}.")
       )
     }
     cand[[1]]
   } else {
     cli::cli_abort(
-      "Unexpected return type from {.code V.PhyloMaker3::phylo.maker()}: {.cls {class(pm)[1]}}."
+      "Unexpected return type from {.code V.PhyloMaker2::phylo.maker()}: {.cls {class(pm)[1]}}."
     )
   }
 
@@ -846,8 +849,8 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
       package    = pkg,
       scenarios  = scenarios,
       references = c(
-        v3_v2 = "Jin Y & Qian H (2022) V.PhyloMaker2: an updated and enlarged R package that can generate very large phylogenies for vascular plants. Plant Diversity 44:335-339. doi:10.1016/j.pld.2022.05.005",
-        v1    = "Jin Y & Qian H (2019) V.PhyloMaker: an R package that can generate very large phylogenies for vascular plants. Ecography 42:1353-1359. doi:10.1111/ecog.04434"
+        v2 = "Jin Y & Qian H (2022) V.PhyloMaker2: an updated and enlarged R package that can generate very large phylogenies for vascular plants. Plant Diversity 44:335-339. doi:10.1016/j.pld.2022.05.005",
+        v1 = "Jin Y & Qian H (2019) V.PhyloMaker: an R package that can generate very large phylogenies for vascular plants. Ecography 42:1353-1359. doi:10.1111/ecog.04434"
       )
     )
   )

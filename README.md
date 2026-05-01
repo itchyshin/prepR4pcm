@@ -9,14 +9,30 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-Species names in your data rarely match the tip labels in your tree.
-Formatting differences (`Homo_sapiens` vs `Homo sapiens`), taxonomic
-synonyms, and simple typos silently drop species from phylogenetic
-comparative analyses. **prepR4pcm** detects and resolves these
-mismatches through a multi-stage matching cascade (exact, normalised,
-synonym, fuzzy), documents every decision, and produces aligned
-data–tree pairs ready for PGLS, phylogenetic mixed models, or any other
-PCM.
+Species names in your data rarely match the tip labels in your
+phylogenetic tree exactly. Such mismatches prevent you from combining
+species traits (data tables) with their evolutionary relationships (the
+phylogenetic tree) — which is what phylogenetic comparative methods
+(PCMs, e.g. studies of trait evolution, niche conservatism, or
+correlated trait change) need. Three kinds of mismatch silently drop
+species from these analyses:
+
+- **Formatting differences**, e.g. `Homo_sapiens` vs `Homo sapiens`,
+  trailing whitespace, capitalisation
+- **Taxonomic synonyms / different ranks**, e.g. `Homo sapiens` vs
+  `Homo sapiens sapiens`, or a recent name vs the historical synonym
+  used in the tree
+- **Simple typos**, e.g. `Homo sapiens` vs `Hamo sapiens`
+
+**prepR4pcm** detects and resolves all three through a multi-stage
+matching cascade (exact → normalised → synonym → fuzzy), documents every
+decision so the choices are auditable, and produces aligned data–tree
+pairs ready for phylogenetic generalised least squares (PGLS),
+phylogenetic mixed models (PGLMMs), or any other PCM.
+
+Below you’ll find: how to install, a quick example, the typical
+workflow, vignettes covering realistic pipelines, citation information,
+and a list of the bundled example datasets.
 
 ## Installation
 
@@ -25,59 +41,6 @@ Install the development version from GitHub:
 ``` r
 # install.packages("pak")
 pak::pak("itchyshin/prepR4pcm")
-```
-
-## Quick example
-
-``` r
-library(prepR4pcm)
-library(ape)
-
-# Reconcile a dataset against a phylogenetic tree
-rec <- reconcile_tree(
-  x         = avonet_subset,
-  tree      = tree_jetz,
-  x_species = "Species1",
-  fuzzy     = TRUE,
-  resolve   = "flag"
-)
-#> ℹ Reconciling 919 data names vs 657 tree tips
-#> ℹ Matching 919 x 657 names through 4 stages...
-#> ℹ Stage 1/4: Exact matching...
-#> ℹ Stage 2/4: Normalised matching (0 matched so far)...
-#> ℹ Stage 3/4: Synonym resolution (657 matched so far)...
-#> ℹ Stage 4/4: Fuzzy matching (657 matched so far)...
-#> ✔ Matched 657/919 data names to tree tips
-rec
-#> 
-#> ── Reconciliation: data vs tree ────────────────────────────────────────────────
-#>   Source x: avonet_subset
-#>   Source y: phylo (657 tips)
-#>   Authority: col
-#>   Timestamp: 2026-05-01 09:04:13
-#> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
-#> 
-#> ── Match summary ──
-#> 
-#> • Exact: 0 ( 0.0%)
-#> • Normalized: 657 (71.5%)
-#> • Synonym: 0 ( 0.0%)
-#> • Fuzzy: 0 ( 0.0%)
-#> • Manual: 0 ( 0.0%)
-#> ! Unresolved (x only):262 (28.5%)
-#> ! Unresolved (y only):0
-#> ! Flagged for review: 0
-#> ℹ Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.
-
-# Apply the reconciliation: aligned data + pruned tree
-aligned <- reconcile_apply(rec, data = avonet_subset, tree = tree_jetz,
-                           species_col = "Species1", drop_unresolved = TRUE)
-#> ! Dropped 262 rows with unresolved species from data
-#> ℹ Tree has 657 tips after alignment
-nrow(aligned$data)
-#> [1] 657
-ape::Ntip(aligned$tree)
-#> [1] 657
 ```
 
 ## Features
@@ -112,6 +75,74 @@ ape::Ntip(aligned$tree)
            |
       Aligned data + pruned tree --> PGLS / PGLMM
 
+## Quick example
+
+This minimal example reconciles a small bird trait dataset
+(`avonet_subset`, a sample of AVONET) against a small bird phylogeny
+(`tree_jetz`, a sample of the Jetz et al. 2012 phylogeny) and produces a
+model-ready aligned data frame plus a pruned tree.
+
+``` r
+library(prepR4pcm)
+library(ape)
+
+# Reconcile a dataset against a phylogenetic tree
+rec <- reconcile_tree(
+  x         = avonet_subset,
+  tree      = tree_jetz,
+  x_species = "Species1",
+  fuzzy     = TRUE,
+  resolve   = "flag"
+)
+#> ℹ Reconciling 919 data names vs 657 tree tips
+#> ℹ Matching 919 x 657 names through 4 stages...
+#> ℹ Stage 1/4: Exact matching...
+#> ℹ Stage 2/4: Normalised matching (0 matched so far)...
+#> ℹ Stage 3/4: Synonym resolution (657 matched so far)...
+#> ℹ Stage 4/4: Fuzzy matching (657 matched so far)...
+#> ✔ Matched 657/919 data names to tree tips
+rec
+#> 
+#> ── Reconciliation: data vs tree ────────────────────────────────────────────────
+#>   Source x: avonet_subset
+#>   Source y: phylo (657 tips)
+#>   Authority: col
+#>   Timestamp: 2026-05-01 14:18:01
+#> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
+#> 
+#> ── Match summary ──
+#> 
+#> • Exact: 0 ( 0.0%)
+#> • Normalized: 657 (71.5%)
+#> • Synonym: 0 ( 0.0%)
+#> • Fuzzy: 0 ( 0.0%)
+#> • Manual: 0 ( 0.0%)
+#> ! Unresolved (x only):262 (28.5%)
+#> ! Unresolved (y only):0
+#> ! Flagged for review: 0
+#> ℹ Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.
+
+# Apply the reconciliation: aligned data + pruned tree
+aligned <- reconcile_apply(rec, data = avonet_subset, tree = tree_jetz,
+                           species_col = "Species1", drop_unresolved = TRUE)
+#> ! Dropped 262 rows with unresolved species from data
+#> ℹ Tree has 657 tips after alignment
+nrow(aligned$data)
+#> [1] 657
+ape::Ntip(aligned$tree)
+#> [1] 657
+```
+
+What just happened: `reconcile_tree()` matched every species name in
+`avonet_subset$Species1` against the tip labels of `tree_jetz`, trying
+exact matches first and falling back through normalised, synonym, and
+fuzzy matches as needed. The printed `rec` object shows the count in
+each match category. `reconcile_apply()` then takes that reconciliation
+and produces (a) a data frame with rows restricted to species that
+resolved to a tree tip, and (b) the tree pruned to those tips. The
+`nrow()` and `ape::Ntip()` calls confirm the two sides agree on species
+count — the precondition for any downstream PGLS or PGLMM call.
+
 ## Vignettes
 
 - [Getting
@@ -131,7 +162,32 @@ ape::Ntip(aligned$tree)
 
 ## Citation
 
-If you use prepR4pcm in your research, please cite the package:
+If you use prepR4pcm in your research, please cite the package and the
+original publication for any bundled example dataset you used (see
+*Bundled data sources* below).
+
+For the package itself:
+
+> Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Celeste J, Poo
+> Hernandez S (2026). *prepR4pcm: Prepare Data and Trees for
+> Phylogenetic Comparative Methods.* R package version 0.4.0.
+> <https://github.com/itchyshin/prepR4pcm>
+
+BibTeX:
+
+``` bibtex
+@Manual{,
+  title  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},
+  author = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and
+            Eduardo S.A. Santos and Malgorzata Lagisz and Jimuel Jr Celeste and
+            Sergio {Poo Hernandez}},
+  year   = {2026},
+  note   = {R package version 0.4.0},
+  url    = {https://github.com/itchyshin/prepR4pcm},
+}
+```
+
+Or run in R to get the same entry programmatically:
 
 ``` r
 citation("prepR4pcm")
@@ -147,9 +203,12 @@ citation("prepR4pcm")
 
 ## Bundled data sources
 
-The package includes subset datasets for examples, vignettes, and
-testing. Each is a small sample of a larger published dataset; if you
-use any of them in published work, please cite the original provider.
+The package ships small sample datasets — each is a *subset* (a few
+hundred rows or tips) of a larger published dataset, used only for the
+package’s examples, vignettes, and tests. They are not full versions: if
+you want to *do science* with these data, download the full original
+dataset from the source listed below. If you use any of these examples
+in published work, please cite the original provider.
 
 **Bird data (used by the bird-workflow vignette):**
 
@@ -165,10 +224,12 @@ use any of them in published work, please cite the original provider.
   491:444–448.
   [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631)
 - **Clements checklist** (`tree_clements25`): Clements et al. (2025)
-  eBird/Clements Checklist of Birds of the World, v2025.
+  eBird/Clements Checklist of Birds of the World, v2025
+  (<https://www.birds.cornell.edu/clementschecklist/>).
 - **BirdLife-BirdTree crosswalk** (`crosswalk_birdlife_birdtree`):
-  Distributed with AVONET (Tobias et al. 2022); maps BirdLife taxonomy
-  to the BirdTree (Jetz et al. 2012,
+  distributed with AVONET (Tobias et al. 2022,
+  [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)); maps
+  BirdLife taxonomy to the BirdTree (Jetz et al. 2012,
   [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631))
   taxonomy.
 

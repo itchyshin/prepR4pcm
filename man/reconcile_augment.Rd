@@ -94,7 +94,7 @@ that break ultrametricity by construction).}
 
 \item{...}{Additional arguments forwarded to the chosen backend:
 \code{rtrees::get_tree()} for \code{source = "rtrees"} (e.g. \code{scenario},
-\code{n_tree}); \code{V.PhyloMaker3::phylo.maker()} for
+\code{n_tree}); \code{V.PhyloMaker2::phylo.maker()} for
 \code{source = "vphylomaker"} (e.g. \code{scenarios = "S3"},
 \code{nodes.type}); \code{U.PhyloMaker::phylo.maker()} for
 \code{source = "uphylomaker"} (e.g. \code{gen.list}, \code{scenario}).
@@ -166,16 +166,18 @@ genus is absent from your tree but present in \pkg{rtrees}'
 reference --- which the internal mode would skip.}
 \item{\code{"vphylomaker"}}{Plant-only alternative to
 \code{"rtrees"} via either of the GitHub packages
-\pkg{V.PhyloMaker3}
-(\url{https://github.com/jinyizju/V.PhyloMaker3}, preferred
-when installed) or \pkg{V.PhyloMaker2}
-(\url{https://github.com/jinyizju/V.PhyloMaker2}, used as a
-fallback). Calls \code{phylo.maker(sp.list, tree, scenarios = ...)}
-with your tree as the backbone. Use this when you want
-explicit control over the V.PhyloMaker placement scenario
-(\code{"S1"}, \code{"S2"}, or \code{"S3"} --- see Jin & Qian
-2019, \emph{Ecography} 42:1353); otherwise \code{"rtrees"}
-with \code{taxon = "plant"} is simpler.}
+\pkg{V.PhyloMaker2}
+(\url{https://github.com/jinyizju/V.PhyloMaker2}, preferred
+when installed; updated and enlarged version) or
+\pkg{V.PhyloMaker}
+(\url{https://github.com/jinyizju/V.PhyloMaker}, used as a
+fallback; original 2019 version). Calls
+\code{phylo.maker(sp.list, tree, scenarios = ...)} with your
+tree as the backbone. Use this when you want explicit control
+over the V.PhyloMaker placement scenario (\code{"S1"},
+\code{"S2"}, or \code{"S3"} --- see Jin & Qian 2019/2022);
+otherwise \code{"rtrees"} with \code{taxon = "plant"} is
+simpler.}
 \item{\code{"uphylomaker"}}{Universal (plants + animals) variant
 of V.PhyloMaker, via the GitHub package \pkg{U.PhyloMaker}
 (\url{https://github.com/jinyizju/U.PhyloMaker}). Same

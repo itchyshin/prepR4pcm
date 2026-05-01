@@ -2,7 +2,7 @@
 % Please edit documentation in R/reconcile_augment.R
 \name{.pr_augment_vphylomaker}
 \alias{.pr_augment_vphylomaker}
-\title{Internal: delegate grafting to V.PhyloMaker3::phylo.maker()}
+\title{Internal: delegate grafting to V.PhyloMaker2::phylo.maker()}
 \usage{
 .pr_augment_vphylomaker(
   species_to_add,
@@ -18,18 +18,18 @@
 \item{tree}{The user's backbone phylo.}
 
 \item{scenarios}{Character. One of "S1", "S2", "S3" (default
-"S3"). Forwarded to \code{V.PhyloMaker3::phylo.maker()}.}
+"S3"). Forwarded to \code{V.PhyloMaker2::phylo.maker()}.}
 
 \item{quiet}{Logical.}
 
-\item{...}{Forwarded to \code{V.PhyloMaker3::phylo.maker()}.}
+\item{...}{Forwarded to \code{V.PhyloMaker2::phylo.maker()}.}
 }
 \value{
 A list with \code{tree}, \code{augmented}, \code{skipped}, \code{backend_meta}.
 }
 \description{
 Plant-only alternative to the rtrees backend. Wraps
-\code{V.PhyloMaker3::phylo.maker()} so the user can pick a specific
+\code{V.PhyloMaker2::phylo.maker()} so the user can pick a specific
 V.PhyloMaker scenario (S1 / S2 / S3, see Jin & Qian 2019).
 }
 \keyword{internal}
