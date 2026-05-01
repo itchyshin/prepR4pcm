@@ -85,11 +85,13 @@ test_that("every non-CRAN Suggests / Imports has a matching Remotes entry", {
 # package even when our package doesn't directly Import / Suggest
 # it. This allowlist holds those transitive-only Remotes; add
 # entries when you add a Remotes that backs a transitive dep.
-.transitive_remotes_allowlist <- c(
-  # `rtrees` (Suggests) depends on `megatrees`. Listed in our
-  # Remotes so pak can fetch megatrees when installing rtrees on CI.
-  "megatrees"
-)
+#
+# As of 2026-05, `rtrees` 1.0+ ships its own `Remotes: daijiang/megatrees`
+# entry upstream (see daijiang/rtrees#10), so we no longer carry
+# `megatrees` here. Add new entries if a future Suggests' GitHub-only
+# package has a transitive dep that pak still can't resolve from the
+# upstream's Remotes.
+.transitive_remotes_allowlist <- character(0)
 
 
 test_that("every Remotes entry corresponds to a real Imports / Suggests / Depends or is allowlisted as transitive", {

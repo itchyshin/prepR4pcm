@@ -70,7 +70,6 @@ Additional_repositories:
 Remotes:
     eliotmiller/clootl,
     daijiang/rtrees,
-    daijiang/megatrees@main,
     phylotastic/datelife
 LazyData: true
 Config/testthat/edition: 3

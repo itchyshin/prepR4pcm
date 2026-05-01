@@ -1,5 +1,31 @@
 # prepR4pcm 0.3.1.9000 (development version)
 
+## Round 7: documentation polish and CI cleanup
+
+* **New vignette: "Comparing tree backends -- when do they agree?"**
+  Walks through `pr_tree_compare()` end-to-end, including how to
+  read the pairwise Jaccard / Robinson-Foulds / branch-length
+  matrices and what to do for each disagreement pattern. Closes
+  the docs gap left by Round 6.
+* **`Remotes:` simplification.** Daijiang Li merged a
+  `Remotes: daijiang/megatrees` entry upstream in `rtrees`
+  ([daijiang/rtrees#10](https://github.com/daijiang/rtrees/issues/10)),
+  so we no longer need to carry the megatrees Remotes entry
+  ourselves. Dropped from `DESCRIPTION` and the
+  `.transitive_remotes_allowlist` test fixture.
+* **One-shot rotl-missing TNRS warning.** Previously the warning
+  fired once per backend call; now it fires once per session via
+  `options(prepR4pcm.tnrs_warning_shown = TRUE)`. Mainly a fix for
+  `source = "auto"`, which calls each candidate backend in turn.
+* **Round 7 edge-case + integration tests.** New tests cover
+  corrupt cache files, missing-key reads, cache invalidation by
+  `taxon` and `n_tree`, tree comparisons across exotic shapes
+  (no edge lengths, 3+ trees, named arguments), `min_match`
+  boundary values, end-to-end pipelines including
+  `pr_get_tree -> pr_cite_tree`, multi-tree provenance preservation,
+  cache save/load round-trip, and the `auto` dispatcher's
+  `auto_attempts` / `auto_chose` metadata.
+
 ## Round 6: tree-handling UX polish
 
 * **Local on-disk cache for `pr_get_tree()`.** Pass `cache = TRUE`

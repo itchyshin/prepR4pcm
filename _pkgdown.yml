@@ -33,6 +33,8 @@ navbar:
         href: articles/db-assembly-workflow_mammals.html
       - text: "Posterior-tree pipeline (prepR4pcm + pigauto)"
         href: articles/posterior-tree-pipeline.html
+      - text: "Comparing tree backends"
+        href: articles/comparing-tree-backends.html
 
 reference:
 

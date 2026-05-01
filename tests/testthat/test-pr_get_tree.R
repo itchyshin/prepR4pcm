@@ -546,7 +546,12 @@ test_that(".pr_tnrs_preflight skips for non-TNRS-default backends with tnrs = 'a
 })
 
 
-test_that(".pr_tnrs_preflight warns when rotl is missing", {
+test_that(".pr_tnrs_preflight warns once when rotl is missing", {
+  # Reset the one-shot flag so we can deterministically observe the warn
+  prev <- getOption("prepR4pcm.tnrs_warning_shown", default = NULL)
+  on.exit(options(prepR4pcm.tnrs_warning_shown = prev), add = TRUE)
+  options(prepR4pcm.tnrs_warning_shown = NULL)
+
   testthat::local_mocked_bindings(
     requireNamespace = function(package, ..., quietly = TRUE) {
       if (identical(package, "rotl")) FALSE else TRUE
@@ -559,6 +564,11 @@ test_that(".pr_tnrs_preflight warns when rotl is missing", {
     "rotl"
   )
   expect_equal(out, c("Salmo salar"))
+  # Second call: no warning (one-shot)
+  expect_no_warning(
+    .pr_tnrs_preflight(c("Salmo salar"), source = "clootl",
+                       tnrs = "auto")
+  )
 })
 
 
