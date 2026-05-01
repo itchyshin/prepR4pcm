@@ -55,6 +55,12 @@
 #'       (\url{https://github.com/eliotmiller/clootl}). Calls
 #'       \code{extractTree()}. Install with
 #'       \code{pak::pak("eliotmiller/clootl")}.}
+#'     \item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
+#'       (Rabosky et al. 2018), via the CRAN package \pkg{fishtree}.
+#'       Calls \code{fishtree_phylogeny()}. Requires exact name
+#'       matches against the Fish Tree of Life taxonomy --- pre-clean
+#'       with [reconcile_data()] (with a `taxadb` authority) for best
+#'       results.}
 #'   }
 #' @param species_col A length-1 character vector. Required when `x`
 #'   is a data frame; ignored otherwise.
@@ -67,7 +73,8 @@
 #'   call. See the help page of the underlying function in the
 #'   relevant backend package (\code{tol_induced_subtree} in
 #'   \pkg{rotl}, \code{extractTree} in \pkg{clootl},
-#'   \code{get_tree} in \pkg{rtrees}) for the full list.
+#'   \code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} in
+#'   \pkg{fishtree}) for the full list.
 #'
 #' @return A list with class `pr_tree_result` and components:
 #' \describe{
@@ -82,13 +89,16 @@
 #'   \item{`backend_meta`}{A backend-specific named list of
 #'     diagnostic information (e.g. `clootl::getCitations()` output
 #'     for the `clootl` backend; OTT tip-id table for the `rotl`
-#'     backend).}
+#'     backend; the `fishtree_phylogeny()` warning text and tree
+#'     `type` for the `fishtree` backend).}
 #' }
 #'
 #' @seealso [reconcile_tree()] / [reconcile_data()] for producing the
 #'   reconciled species list that feeds this function;
 #'   [reconcile_apply()] for combining the returned `phylo` with the
-#'   data frame ready for analysis.
+#'   data frame ready for analysis;
+#'   [reconcile_augment()] for filling gaps in an existing tree
+#'   (a tree-aware alternative to retrieving a fresh tree).
 #'
 #' @examples
 #' \dontrun{
@@ -108,14 +118,18 @@
 #'   res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
 #'                      source = "rtrees", taxon = "fish")
 #'
-#'   # Example 4: from a data frame with custom species column
+#'   # Example 4: fish via fishtree (Rabosky et al. 2018, time-calibrated)
+#'   res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
+#'                      source = "fishtree")
+#'
+#'   # Example 5: from a data frame with custom species column
 #'   res <- pr_get_tree(my_df, source = "rotl",
 #'                      species_col = "scientific_name")
 #' }
 #'
 #' @export
 pr_get_tree <- function(x,
-                        source = c("rotl", "rtrees", "clootl"),
+                        source = c("rotl", "rtrees", "clootl", "fishtree"),
                         species_col = NULL,
                         taxon = NULL,
                         ...) {
@@ -131,9 +145,10 @@ pr_get_tree <- function(x,
 
   result <- switch(
     source,
-    rotl   = .pr_get_tree_rotl(species, ...),
-    rtrees = .pr_get_tree_rtrees(species, taxon = taxon, ...),
-    clootl = .pr_get_tree_clootl(species, ...)
+    rotl     = .pr_get_tree_rotl(species, ...),
+    rtrees   = .pr_get_tree_rtrees(species, taxon = taxon, ...),
+    clootl   = .pr_get_tree_clootl(species, ...),
+    fishtree = .pr_get_tree_fishtree(species, ...)
   )
 
   out <- list(
@@ -331,6 +346,56 @@ pr_get_tree <- function(x,
       n_matched   = sum(in_tree),
       n_grafted   = length(grafted),
       grafted_tips = grafted
+    )
+  )
+}
+
+
+# fishtree backend: fish-only, time-calibrated --------------------------
+
+.pr_get_tree_fishtree <- function(species, ...) {
+  if (!requireNamespace("fishtree", quietly = TRUE)) {
+    cli::cli_abort(
+      c("The {.val fishtree} backend requires the {.pkg fishtree} package.",
+        "i" = 'Install with: {.code install.packages("fishtree")}.',
+        ">" = "Reference: Rabosky et al. (2018) {.emph Nature} 559:392 ({.href [doi:10.1038/s41586-018-0273-1](https://doi.org/10.1038/s41586-018-0273-1)}).")
+    )
+  }
+
+  # fishtree::fishtree_phylogeny() returns a single phylo (chronogram by
+  # default). It silently drops unmatched species and emits a warning
+  # naming each missed name --- capture that warning so the matched/
+  # unmatched report is honest.
+  warns <- character()
+  tree <- withCallingHandlers(
+    fishtree::fishtree_phylogeny(species = species, ...),
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  # fishtree uses underscore-form tip labels; normalise both sides.
+  tip_sp    <- gsub("_", " ", tree$tip.label)
+  norm_req  <- pr_normalize_names(species)
+  norm_tip  <- pr_normalize_names(tip_sp)
+  in_tree   <- norm_req %in% norm_tip
+
+  # Pull `type` from the call if user supplied it; default is chronogram.
+  call_args <- list(...)
+  type_used <- if (!is.null(call_args$type)) call_args$type else "chronogram"
+
+  list(
+    tree         = tree,
+    matched      = species[in_tree],
+    unmatched    = species[!in_tree],
+    backend_meta = list(
+      backend    = "fishtree",
+      type       = type_used,
+      n_queried  = length(species),
+      n_matched  = sum(in_tree),
+      warnings   = warns,
+      reference  = "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
     )
   )
 }

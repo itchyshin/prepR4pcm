@@ -6,7 +6,7 @@
 \usage{
 pr_get_tree(
   x,
-  source = c("rotl", "rtrees", "clootl"),
+  source = c("rotl", "rtrees", "clootl", "fishtree"),
   species_col = NULL,
   taxon = NULL,
   ...
@@ -42,6 +42,12 @@ Clements taxonomy, via the GitHub package \pkg{clootl}
 (\url{https://github.com/eliotmiller/clootl}). Calls
 \code{extractTree()}. Install with
 \code{pak::pak("eliotmiller/clootl")}.}
+\item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
+(Rabosky et al. 2018), via the CRAN package \pkg{fishtree}.
+Calls \code{fishtree_phylogeny()}. Requires exact name
+matches against the Fish Tree of Life taxonomy --- pre-clean
+with \code{\link[=reconcile_data]{reconcile_data()}} (with a \code{taxadb} authority) for best
+results.}
 }}
 
 \item{species_col}{A length-1 character vector. Required when \code{x}
@@ -57,7 +63,8 @@ is a data frame; ignored otherwise.}
 call. See the help page of the underlying function in the
 relevant backend package (\code{tol_induced_subtree} in
 \pkg{rotl}, \code{extractTree} in \pkg{clootl},
-\code{get_tree} in \pkg{rtrees}) for the full list.}
+\code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} in
+\pkg{fishtree}) for the full list.}
 }
 \value{
 A list with class \code{pr_tree_result} and components:
@@ -73,7 +80,8 @@ them back through \code{\link[=reconcile_suggest]{reconcile_suggest()}} / a manu
 \item{\code{backend_meta}}{A backend-specific named list of
 diagnostic information (e.g. \code{clootl::getCitations()} output
 for the \code{clootl} backend; OTT tip-id table for the \code{rotl}
-backend).}
+backend; the \code{fishtree_phylogeny()} warning text and tree
+\code{type} for the \code{fishtree} backend).}
 }
 }
 \description{
@@ -109,7 +117,11 @@ to install if you ask for a backend you don't have.
   res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
                      source = "rtrees", taxon = "fish")
 
-  # Example 4: from a data frame with custom species column
+  # Example 4: fish via fishtree (Rabosky et al. 2018, time-calibrated)
+  res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
+                     source = "fishtree")
+
+  # Example 5: from a data frame with custom species column
   res <- pr_get_tree(my_df, source = "rotl",
                      species_col = "scientific_name")
 }
@@ -119,5 +131,7 @@ to install if you ask for a backend you don't have.
 \code{\link[=reconcile_tree]{reconcile_tree()}} / \code{\link[=reconcile_data]{reconcile_data()}} for producing the
 reconciled species list that feeds this function;
 \code{\link[=reconcile_apply]{reconcile_apply()}} for combining the returned \code{phylo} with the
-data frame ready for analysis.
+data frame ready for analysis;
+\code{\link[=reconcile_augment]{reconcile_augment()}} for filling gaps in an existing tree
+(a tree-aware alternative to retrieving a fresh tree).
 }

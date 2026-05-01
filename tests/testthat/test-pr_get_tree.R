@@ -170,6 +170,23 @@ test_that("source = 'rtrees' calls the rtrees backend with taxon", {
   expect_equal(res$backend_meta$taxon, "fish")
 })
 
+test_that("source = 'fishtree' calls the fishtree backend", {
+  called <- FALSE
+  testthat::local_mocked_bindings(
+    .pr_get_tree_fishtree = function(species, ...) {
+      called <<- TRUE
+      list(tree = mini_phylo(gsub(" ", "_", species)),
+           matched = species, unmatched = character(),
+           backend_meta = list(backend = "fishtree", type = "chronogram"))
+    },
+    .package = "prepR4pcm"
+  )
+  res <- pr_get_tree(c("Salmo salar", "Esox lucius"), source = "fishtree")
+  expect_true(called)
+  expect_equal(res$source, "fishtree")
+  expect_equal(res$backend_meta$backend, "fishtree")
+})
+
 
 # 3. Helpful errors -----------------------------------------------------
 
@@ -215,6 +232,22 @@ test_that("missing clootl package mentions the GitHub URL", {
   msg <- conditionMessage(err)
   expect_true(grepl("clootl", msg, fixed = TRUE))
   expect_true(grepl("eliotmiller", msg, fixed = TRUE))
+})
+
+
+test_that("missing fishtree package gives a helpful CRAN install hint", {
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (identical(package, "fishtree")) FALSE else TRUE
+    },
+    .package = "base"
+  )
+  err <- tryCatch(.pr_get_tree_fishtree("Salmo salar"),
+                  error = function(e) e)
+  expect_s3_class(err, "error")
+  msg <- conditionMessage(err)
+  expect_true(grepl("fishtree", msg, fixed = TRUE))
+  expect_true(grepl("install.packages", msg, fixed = TRUE))
 })
 
 

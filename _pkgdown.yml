@@ -99,7 +99,10 @@ reference:
 - title: "Tree retrieval (external backends)"
   desc: >
     Retrieve a candidate phylogeny for a reconciled species list by
-    querying an external R package. Backends live in `Suggests` (or
+    querying an external R package. Backends include rotl (CRAN, Open
+    Tree of Life), rtrees (GitHub, taxon-specific mega-trees), clootl
+    (GitHub, bird Clements taxonomy), and fishtree (CRAN, Rabosky et
+    al. 2018 fish chronogram). Backends live in `Suggests` (or
     GitHub) and are installed on demand.
   contents:
   - pr_get_tree

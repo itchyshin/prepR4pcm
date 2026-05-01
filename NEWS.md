@@ -2,10 +2,28 @@
 
 ## New features
 
+* `reconcile_augment()` gains `source = c("internal", "rtrees")`
+  (default `"internal"`, the existing genus-level grafting behaviour)
+  and `taxon` arguments. With `source = "rtrees"`, grafting is
+  delegated to `rtrees::get_tree(tree_by_user = TRUE)`, which uses
+  your tree as the backbone and lets `rtrees`' taxon-specific
+  reference tree place each missing species via genus / family
+  information. Helpful when the genus is absent from your tree but
+  present in `rtrees`' reference -- the internal mode would skip
+  these. Returns the same result shape (with `meta$source` recording
+  which backend was used). Refs #42 (Ayumi Mizuno).
+
+* `pr_get_tree()` gains a fourth backend, `source = "fishtree"`,
+  exposing the time-calibrated fish-only phylogeny of Rabosky et al.
+  (2018, *Nature* 559:392) via the CRAN package \pkg{fishtree}.
+  Returns a chronogram by default; pass `type = "phylogram"` for the
+  uncalibrated version. Captures `fishtree`'s own warning text into
+  `backend_meta$warnings` so the matched/unmatched report is honest.
+
 * `pr_get_tree()` connects a reconciled species list to an external
   phylogenetic resource and returns a pruned candidate tree plus a
   matching report (matched / unmatched / source / backend metadata).
-  Three backends ship initially:
+  Four backends ship:
   - `"rotl"` -- Open Tree of Life synthesis tree (universal coverage,
     via the CRAN package \pkg{rotl}).
   - `"rtrees"` -- taxon-specific mega-trees (bird, mammal, fish,
@@ -14,11 +32,13 @@
   - `"clootl"` -- bird-only phylogenies in current Clements
     taxonomy, via the GitHub package \pkg{clootl}
     (`pak::pak("eliotmiller/clootl")`).
+  - `"fishtree"` -- fish-only time-calibrated phylogeny, via the
+    CRAN package \pkg{fishtree}.
 
   Accepts a reconciliation object, a character vector, or a data
   frame as input. Each backend is loaded only on demand --
   asking for a backend you don't have installed produces a helpful
-  migration error with the install command. Closes #42 (Ayumi
+  migration error with the install command. Refs #42 (Ayumi
   Mizuno).
 
 ## What's NOT in this round (deferred work)
@@ -41,6 +61,14 @@ For honesty / handoff so future contributors don't lose track:
 * The remaining 22 of 37 Tier-4 defence-in-depth claim-parity tests
   outlined in the round-2 plan; they're documented but not yet
   written.
+* **Round 5 work** (separate tracking issue): a unified `n_tree`
+  parameter on `pr_get_tree()` so each backend can return a posterior
+  sample (multiPhylo) when one is available; a new `pr_date_tree()`
+  function wrapping `datelife::datelife_use()` for time-calibrating
+  user topologies; a `datelife` retrieval backend on `pr_get_tree()`;
+  per-tree provenance metadata; and a cross-package vignette
+  documenting the prepR4pcm -> pigauto pipeline for posterior-tree
+  PCMs.
 
 ## New vignette and example data
 
