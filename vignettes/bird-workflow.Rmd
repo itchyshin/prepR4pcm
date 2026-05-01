@@ -502,13 +502,13 @@ The report includes match counts, detail tables for each match type
 ## Data sources
 
 - **AVONET**: Tobias et al. (2022) *Ecology Letters* 25:581--597.
-  doi:10.1111/ele.13898
+  [doi:10.1111/ele](https://doi.org/10.1111/ele).13898
 - **NestTrait v2**: Chia et al. (2023) *Scientific Data* 10:923.
-  doi:10.1038/s41597-023-02837-1
-- **Plumage lightness**: Delhey et al. (2019) *American Naturalist*
-  194:13--27. doi:10.1086/703588
+  [doi:10.1038/s41597-023-02837-1](https://doi.org/10.1038/s41597-023-02837-1)
+- **Plumage lightness**: Delhey et al. (2019) *Ecology Letters*
+  22:726--736. [doi:10.1111/ele](https://doi.org/10.1111/ele).13233
 - **Jetz tree**: Jetz et al. (2012) *Nature* 491:444--448.
-  doi:10.1038/nature11631
+  [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631)
 - **Clements 2025**: Clements et al. (2025) eBird/Clements Checklist.
 - **BirdLife-BirdTree crosswalk**: Tobias et al. (2022).
 
@@ -516,25 +516,25 @@ The report includes match counts, detail tables for each match type
 
 - Hadfield, J.D. (2010) MCMC methods for multi-response generalized
   linear mixed models: the MCMCglmm R package. *Journal of Statistical
-  Software* 33:1--22. doi:10.18637/jss.v033.i02
+  Software* 33:1--22. [doi:10.18637/jss](https://doi.org/10.18637/jss).v033.i02
 - Hadfield, J.D. & Nakagawa, S. (2010) General quantitative genetic
   methods for comparative biology: phylogenies, taxonomies and
   multi-trait models for continuous and categorical characters.
   *Journal of Evolutionary Biology* 23:494--508.
-  doi:10.1111/j.1420-9101.2009.01915.x
+  [doi:10.1111/j](https://doi.org/10.1111/j).1420-9101.2009.01915.x
 - Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. & Nakagawa, S.
   (2025) Promoting the use of phylogenetic multinomial generalised
   mixed-effects model to understand the evolution of discrete traits.
   *Journal of Evolutionary Biology* 38:1699--1715.
-  doi:10.1093/jeb/voaf116.
+  [doi:10.1093/jeb/voaf116](https://doi.org/10.1093/jeb/voaf116).
   Tutorial: <https://ayumi-495.github.io/multinomial-GLMM-tutorial/>
 - Norman, K.E., Chamberlain, S. & Boettiger, C. (2020) taxadb: A
   high-performance local taxonomic database interface. *Methods in
-  Ecology and Evolution* 11:1153--1159. doi:10.1111/2041-210X.13440
+  Ecology and Evolution* 11:1153--1159. [doi:10.1111/2041-210X](https://doi.org/10.1111/2041-210X).13440
 - Orme, D., Freckleton, R., Thomas, G., Petzoldt, T., Fritz, S.,
   Isaac, N. & Pearse, W. (2025) caper: Comparative Analyses of
   Phylogenetics and Evolution in R. R package version 1.0.4.
-  doi:10.32614/CRAN.package.caper
+  [doi:10.32614/CRAN](https://doi.org/10.32614/CRAN).package.caper
 - Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
   phylogenetics and evolutionary analyses in R. *Bioinformatics*
-  35:526--528. doi:10.1093/bioinformatics/bty633
+  35:526--528. [doi:10.1093/bioinformatics/bty633](https://doi.org/10.1093/bioinformatics/bty633)

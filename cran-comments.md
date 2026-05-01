@@ -27,7 +27,7 @@ Press rate-limiting anonymous bots; the DOIs are real and resolve in
 a browser. Specifically:
 
 * `10.1111/ele.13898` — Tobias et al. 2022 (AVONET), Wiley (403 bot-blocked)
-* `10.1086/703588` — Delhey et al. 2019, UChicago Press (403 bot-blocked)
+* `10.1111/ele.13233` — Delhey et al. 2019 (Ecology Letters), Wiley (403 bot-blocked)
 * `10.1093/bioinformatics/bty633` — Paradis & Schliep 2019 (ape), OUP (403 bot-blocked)
 * `10.1111/2041-210X.13440` — Norman et al. 2020 (taxadb), Wiley (403 bot-blocked)
 

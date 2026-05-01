@@ -83,7 +83,7 @@
 #'
 #' @source Delhey et al. (2019) Reconciling ecogeographical rules: rainfall
 #'   and temperature predict global colour variation in the largest bird
-#'   radiation. *American Naturalist* 194:13--27. \doi{10.1086/703588}
+#'   radiation. *Ecology Letters* 22:726--736. \doi{10.1111/ele.13233}
 "delhey_subset"
 
 
