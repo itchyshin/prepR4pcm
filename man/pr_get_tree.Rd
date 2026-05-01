@@ -6,9 +6,10 @@
 \usage{
 pr_get_tree(
   x,
-  source = c("rotl", "rtrees", "clootl", "fishtree"),
+  source = c("rotl", "rtrees", "clootl", "fishtree", "datelife"),
   species_col = NULL,
   taxon = NULL,
+  n_tree = 1L,
   ...
 )
 }
@@ -44,10 +45,21 @@ Clements taxonomy, via the GitHub package \pkg{clootl}
 \code{pak::pak("eliotmiller/clootl")}.}
 \item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
 (Rabosky et al. 2018), via the CRAN package \pkg{fishtree}.
-Calls \code{fishtree_phylogeny()}. Requires exact name
+Calls \code{fishtree_phylogeny()} (single tree) or
+\code{fishtree_complete_phylogeny()} (multi-tree posterior;
+triggered by \code{n_tree > 1}). Requires exact name
 matches against the Fish Tree of Life taxonomy --- pre-clean
 with \code{\link[=reconcile_data]{reconcile_data()}} (with a \code{taxadb} authority) for best
 results.}
+\item{\code{"datelife"}}{Universal database of pre-computed
+chronograms (Sanchez Reyes et al. 2024, \emph{Syst. Biol.}
+73:470), via the GitHub package \pkg{datelife}
+(\url{https://github.com/phylotastic/datelife}). Returns a
+single SDM-summary chronogram by default; with
+\code{n_tree > 1}, returns a multiPhylo of up to that many
+per-source candidate chronograms. Install with
+\code{pak::pak("phylotastic/datelife")} (the package was
+archived from CRAN in 2024).}
 }}
 
 \item{species_col}{A length-1 character vector. Required when \code{x}
@@ -59,12 +71,36 @@ is a data frame; ignored otherwise.}
 \code{"butterfly"} (see the \pkg{rtrees} package help for
 \code{get_tree}). Ignored for other backends.}
 
+\item{n_tree}{A length-1 positive integer. How many trees to
+request from the backend. Default \code{1L} (single phylo for
+back-compat). Each backend negotiates this differently:
+\describe{
+\item{\code{"rotl"}}{Always returns 1 (the synthesis tree). A
+one-shot warning is emitted if \code{n_tree > 1}.}
+\item{\code{"rtrees"}}{Passes through to
+\code{rtrees::get_tree(n_tree = ...)}. Requires \code{taxon}.}
+\item{\code{"clootl"}}{Passes through to
+\code{clootl::extractTree(sample.size = n_tree)} so you get
+multiple Clements posterior samples.}
+\item{\code{"fishtree"}}{Single phylo via \code{fishtree_phylogeny()}
+when \code{n_tree = 1}; switches to
+\code{fishtree_complete_phylogeny()} returning a multiPhylo of
+stochastically polytomy-resolved trees when \code{n_tree > 1}.}
+\item{\code{"datelife"}}{\code{summary_format = "phylo_sdm"} (single
+summary chronogram) when \code{n_tree = 1}; switches to
+\code{summary_format = "phylo_all"} (one chronogram per source,
+capped at \code{n_tree}) when \code{n_tree > 1}.}
+}
+When the request returns a multiPhylo, the result's \code{tree} slot
+is \code{multiPhylo}; otherwise \code{phylo}.}
+
 \item{...}{Backend-specific arguments forwarded to the underlying
 call. See the help page of the underlying function in the
 relevant backend package (\code{tol_induced_subtree} in
 \pkg{rotl}, \code{extractTree} in \pkg{clootl},
-\code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} in
-\pkg{fishtree}) for the full list.}
+\code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} /
+\code{fishtree_complete_phylogeny} in \pkg{fishtree},
+\code{datelife_search} in \pkg{datelife}) for the full list.}
 }
 \value{
 A list with class \code{pr_tree_result} and components:
@@ -81,7 +117,11 @@ them back through \code{\link[=reconcile_suggest]{reconcile_suggest()}} / a manu
 diagnostic information (e.g. \code{clootl::getCitations()} output
 for the \code{clootl} backend; OTT tip-id table for the \code{rotl}
 backend; the \code{fishtree_phylogeny()} warning text and tree
-\code{type} for the \code{fishtree} backend).}
+\code{type} for the \code{fishtree} backend; the chronogram source
+citations for the \code{datelife} backend). Always contains
+\code{tree_provenance}, a list with one entry per returned tree
+(so \code{tree[[i]]} pairs with \code{backend_meta$tree_provenance[[i]]}
+when \code{tree} is a \code{multiPhylo}).}
 }
 }
 \description{
@@ -133,5 +173,11 @@ reconciled species list that feeds this function;
 \code{\link[=reconcile_apply]{reconcile_apply()}} for combining the returned \code{phylo} with the
 data frame ready for analysis;
 \code{\link[=reconcile_augment]{reconcile_augment()}} for filling gaps in an existing tree
-(a tree-aware alternative to retrieving a fresh tree).
+(a tree-aware alternative to retrieving a fresh tree);
+\code{\link[=pr_date_tree]{pr_date_tree()}} for time-calibrating an existing topology;
+\code{\link[=pr_cite_tree]{pr_cite_tree()}} for formatting citations for a tree result.
+The companion package
+\href{https://itchyshin.github.io/pigauto/}{pigauto} consumes a
+\code{multiPhylo} directly via \code{multi_impute_trees()} for posterior-
+tree PCMs --- request a posterior sample with \code{n_tree > 1}.
 }

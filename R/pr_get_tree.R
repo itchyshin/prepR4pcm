@@ -57,10 +57,21 @@
 #'       \code{pak::pak("eliotmiller/clootl")}.}
 #'     \item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
 #'       (Rabosky et al. 2018), via the CRAN package \pkg{fishtree}.
-#'       Calls \code{fishtree_phylogeny()}. Requires exact name
+#'       Calls \code{fishtree_phylogeny()} (single tree) or
+#'       \code{fishtree_complete_phylogeny()} (multi-tree posterior;
+#'       triggered by \code{n_tree > 1}). Requires exact name
 #'       matches against the Fish Tree of Life taxonomy --- pre-clean
 #'       with [reconcile_data()] (with a `taxadb` authority) for best
 #'       results.}
+#'     \item{\code{"datelife"}}{Universal database of pre-computed
+#'       chronograms (Sanchez Reyes et al. 2024, *Syst. Biol.*
+#'       73:470), via the GitHub package \pkg{datelife}
+#'       (\url{https://github.com/phylotastic/datelife}). Returns a
+#'       single SDM-summary chronogram by default; with
+#'       \code{n_tree > 1}, returns a multiPhylo of up to that many
+#'       per-source candidate chronograms. Install with
+#'       \code{pak::pak("phylotastic/datelife")} (the package was
+#'       archived from CRAN in 2024).}
 #'   }
 #' @param species_col A length-1 character vector. Required when `x`
 #'   is a data frame; ignored otherwise.
@@ -69,12 +80,35 @@
 #'   `"amphibian"`, `"reptile"`, `"plant"`, `"shark_ray"`, `"bee"`,
 #'   `"butterfly"` (see the \pkg{rtrees} package help for
 #'   \code{get_tree}). Ignored for other backends.
+#' @param n_tree A length-1 positive integer. How many trees to
+#'   request from the backend. Default `1L` (single phylo for
+#'   back-compat). Each backend negotiates this differently:
+#'   \describe{
+#'     \item{`"rotl"`}{Always returns 1 (the synthesis tree). A
+#'       one-shot warning is emitted if `n_tree > 1`.}
+#'     \item{`"rtrees"`}{Passes through to
+#'       `rtrees::get_tree(n_tree = ...)`. Requires `taxon`.}
+#'     \item{`"clootl"`}{Passes through to
+#'       `clootl::extractTree(sample.size = n_tree)` so you get
+#'       multiple Clements posterior samples.}
+#'     \item{`"fishtree"`}{Single phylo via `fishtree_phylogeny()`
+#'       when `n_tree = 1`; switches to
+#'       `fishtree_complete_phylogeny()` returning a multiPhylo of
+#'       stochastically polytomy-resolved trees when `n_tree > 1`.}
+#'     \item{`"datelife"`}{`summary_format = "phylo_sdm"` (single
+#'       summary chronogram) when `n_tree = 1`; switches to
+#'       `summary_format = "phylo_all"` (one chronogram per source,
+#'       capped at `n_tree`) when `n_tree > 1`.}
+#'   }
+#'   When the request returns a multiPhylo, the result's `tree` slot
+#'   is `multiPhylo`; otherwise `phylo`.
 #' @param ... Backend-specific arguments forwarded to the underlying
 #'   call. See the help page of the underlying function in the
 #'   relevant backend package (\code{tol_induced_subtree} in
 #'   \pkg{rotl}, \code{extractTree} in \pkg{clootl},
-#'   \code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} in
-#'   \pkg{fishtree}) for the full list.
+#'   \code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} /
+#'   \code{fishtree_complete_phylogeny} in \pkg{fishtree},
+#'   \code{datelife_search} in \pkg{datelife}) for the full list.
 #'
 #' @return A list with class `pr_tree_result` and components:
 #' \describe{
@@ -90,7 +124,11 @@
 #'     diagnostic information (e.g. `clootl::getCitations()` output
 #'     for the `clootl` backend; OTT tip-id table for the `rotl`
 #'     backend; the `fishtree_phylogeny()` warning text and tree
-#'     `type` for the `fishtree` backend).}
+#'     `type` for the `fishtree` backend; the chronogram source
+#'     citations for the `datelife` backend). Always contains
+#'     `tree_provenance`, a list with one entry per returned tree
+#'     (so `tree[[i]]` pairs with `backend_meta$tree_provenance[[i]]`
+#'     when `tree` is a `multiPhylo`).}
 #' }
 #'
 #' @seealso [reconcile_tree()] / [reconcile_data()] for producing the
@@ -98,7 +136,13 @@
 #'   [reconcile_apply()] for combining the returned `phylo` with the
 #'   data frame ready for analysis;
 #'   [reconcile_augment()] for filling gaps in an existing tree
-#'   (a tree-aware alternative to retrieving a fresh tree).
+#'   (a tree-aware alternative to retrieving a fresh tree);
+#'   [pr_date_tree()] for time-calibrating an existing topology;
+#'   [pr_cite_tree()] for formatting citations for a tree result.
+#'   The companion package
+#'   \href{https://itchyshin.github.io/pigauto/}{pigauto} consumes a
+#'   `multiPhylo` directly via `multi_impute_trees()` for posterior-
+#'   tree PCMs --- request a posterior sample with `n_tree > 1`.
 #'
 #' @examples
 #' \dontrun{
@@ -129,11 +173,20 @@
 #'
 #' @export
 pr_get_tree <- function(x,
-                        source = c("rotl", "rtrees", "clootl", "fishtree"),
+                        source = c("rotl", "rtrees", "clootl",
+                                   "fishtree", "datelife"),
                         species_col = NULL,
                         taxon = NULL,
+                        n_tree = 1L,
                         ...) {
   source <- match.arg(source)
+  if (!is.numeric(n_tree) || length(n_tree) != 1L || n_tree < 1L) {
+    cli::cli_abort(
+      c("{.arg n_tree} must be a length-1 positive integer.",
+        "i" = "Got: {.val {n_tree}}.")
+    )
+  }
+  n_tree <- as.integer(n_tree)
   species <- .pr_extract_species_for_tree(x, species_col)
 
   if (length(species) == 0) {
@@ -145,10 +198,19 @@ pr_get_tree <- function(x,
 
   result <- switch(
     source,
-    rotl     = .pr_get_tree_rotl(species, ...),
-    rtrees   = .pr_get_tree_rtrees(species, taxon = taxon, ...),
-    clootl   = .pr_get_tree_clootl(species, ...),
-    fishtree = .pr_get_tree_fishtree(species, ...)
+    rotl     = .pr_get_tree_rotl(species, n_tree = n_tree, ...),
+    rtrees   = .pr_get_tree_rtrees(species, n_tree = n_tree,
+                                    taxon = taxon, ...),
+    clootl   = .pr_get_tree_clootl(species, n_tree = n_tree, ...),
+    fishtree = .pr_get_tree_fishtree(species, n_tree = n_tree, ...),
+    datelife = .pr_get_tree_datelife(species, n_tree = n_tree, ...)
+  )
+
+  # Ensure backend_meta$tree_provenance is always present as a list with
+  # one entry per returned tree, so downstream consumers (e.g. pigauto)
+  # can pair tree[[i]] with backend_meta$tree_provenance[[i]].
+  result$backend_meta <- .pr_ensure_tree_provenance(
+    result$tree, result$backend_meta, source
   )
 
   out <- list(
@@ -201,12 +263,20 @@ pr_get_tree <- function(x,
 
 # rotl backend: resolve names via TNRS, then induced subtree -------------
 
-.pr_get_tree_rotl <- function(species, ...) {
+.pr_get_tree_rotl <- function(species, n_tree = 1L, ...) {
   if (!requireNamespace("rotl", quietly = TRUE)) {
     cli::cli_abort(
       c("The {.val rotl} backend requires the {.pkg rotl} package.",
         "i" = 'Install with: {.code install.packages("rotl")}.')
     )
+  }
+
+  if (n_tree > 1L) {
+    cli::cli_warn(c(
+      "{.pkg rotl} returns the Open Tree of Life {.emph synthesis} tree (single).",
+      "i" = "{.arg n_tree} = {n_tree} ignored; returning n = 1.",
+      ">" = "For posterior samples, try {.code source = \"datelife\"} or {.code source = \"rtrees\"}."
+    ))
   }
 
   # Step 1: TNRS name match -> OTT ids.
@@ -240,7 +310,7 @@ pr_get_tree <- function(x,
 
 # clootl backend: bird-only, Clements taxonomy --------------------------
 
-.pr_get_tree_clootl <- function(species, ...) {
+.pr_get_tree_clootl <- function(species, n_tree = 1L, ...) {
   if (!requireNamespace("clootl", quietly = TRUE)) {
     cli::cli_abort(
       c("The {.val clootl} backend requires the {.pkg clootl} package.",
@@ -249,21 +319,34 @@ pr_get_tree <- function(x,
     )
   }
 
-  # clootl::extractTree returns a phylo (or list of phylo if multiple
-  # versions). The default `force = FALSE` returns only exact matches.
-  tree <- clootl::extractTree(species = species, ...)
+  # When n_tree > 1, request multiple posterior samples via
+  # clootl::extractTree(sample.size = n_tree). Default sample.size = 1.
+  call_args <- list(...)
+  if (n_tree > 1L && is.null(call_args$sample.size)) {
+    call_args$sample.size <- n_tree
+  }
+  call_args$species <- species
+
+  tree <- do.call(clootl::extractTree, call_args)
 
   # Determine matched / unmatched by intersecting the requested species
-  # against the returned tree's tip labels. clootl uses underscores in
-  # tip labels; normalise both sides for comparison.
+  # against the returned tree's tip labels. For multiPhylo, all trees
+  # share the same tip set, so the first one suffices.
+  ref_tips <- if (inherits(tree, "multiPhylo")) {
+    tree[[1]]$tip.label
+  } else {
+    tree$tip.label
+  }
   norm_req <- pr_normalize_names(species)
-  norm_tip <- pr_normalize_names(tree$tip.label)
+  norm_tip <- pr_normalize_names(ref_tips)
   in_tree  <- norm_req %in% norm_tip
 
   # Gather citation block via clootl::getCitations() if present.
   citations <- tryCatch(
     if (exists("getCitations", envir = asNamespace("clootl"), inherits = FALSE)) {
-      get("getCitations", envir = asNamespace("clootl"))(tree)
+      get("getCitations", envir = asNamespace("clootl"))(
+        if (inherits(tree, "multiPhylo")) tree[[1]] else tree
+      )
     } else {
       NULL
     },
@@ -275,9 +358,10 @@ pr_get_tree <- function(x,
     matched      = species[in_tree],
     unmatched    = species[!in_tree],
     backend_meta = list(
-      n_queried  = length(species),
-      n_matched  = sum(in_tree),
-      citations  = citations
+      n_queried   = length(species),
+      n_matched   = sum(in_tree),
+      n_returned  = if (inherits(tree, "multiPhylo")) length(tree) else 1L,
+      citations   = citations
     )
   )
 }
@@ -285,7 +369,7 @@ pr_get_tree <- function(x,
 
 # rtrees backend: taxon-specific mega-trees ------------------------------
 
-.pr_get_tree_rtrees <- function(species, taxon = NULL, ...) {
+.pr_get_tree_rtrees <- function(species, taxon = NULL, n_tree = 1L, ...) {
   if (!requireNamespace("rtrees", quietly = TRUE)) {
     cli::cli_abort(
       c("The {.val rtrees} backend requires the {.pkg rtrees} package.",
@@ -302,14 +386,16 @@ pr_get_tree <- function(x,
     )
   }
 
-  # rtrees::get_tree wants a character vector OR a data.frame with cols
-  # `species`, `genus`, `family`. We pass the simple character form.
-  tree <- rtrees::get_tree(
-    sp_list      = species,
-    taxon        = taxon,
-    show_grafted = TRUE,
-    ...
-  )
+  # rtrees::get_tree has its own n_tree argument. Pass it through if the
+  # user didn't already set it via ... so n_tree on pr_get_tree() works
+  # uniformly across backends.
+  call_args <- list(...)
+  if (is.null(call_args$n_tree)) call_args$n_tree <- n_tree
+  call_args$sp_list      <- species
+  call_args$taxon        <- taxon
+  call_args$show_grafted <- TRUE
+
+  tree <- do.call(rtrees::get_tree, call_args)
 
   # rtrees returns a phylo when only one source tree was used, and a
   # multiPhylo when many were sampled (e.g. 100 trees from the bird /
@@ -353,7 +439,7 @@ pr_get_tree <- function(x,
 
 # fishtree backend: fish-only, time-calibrated --------------------------
 
-.pr_get_tree_fishtree <- function(species, ...) {
+.pr_get_tree_fishtree <- function(species, n_tree = 1L, ...) {
   if (!requireNamespace("fishtree", quietly = TRUE)) {
     cli::cli_abort(
       c("The {.val fishtree} backend requires the {.pkg fishtree} package.",
@@ -362,21 +448,39 @@ pr_get_tree <- function(x,
     )
   }
 
-  # fishtree::fishtree_phylogeny() returns a single phylo (chronogram by
-  # default). It silently drops unmatched species and emits a warning
-  # naming each missed name --- capture that warning so the matched/
-  # unmatched report is honest.
+  # When n_tree > 1, switch to fishtree_complete_phylogeny() which
+  # returns a multiPhylo of stochastically polytomy-resolved trees.
+  # Otherwise fishtree_phylogeny() returns the single best-guess
+  # chronogram.
   warns <- character()
+  multi <- n_tree > 1L
+
   tree <- withCallingHandlers(
-    fishtree::fishtree_phylogeny(species = species, ...),
+    if (multi) {
+      fishtree::fishtree_complete_phylogeny(species = species, ...)
+    } else {
+      fishtree::fishtree_phylogeny(species = species, ...)
+    },
     warning = function(w) {
       warns <<- c(warns, conditionMessage(w))
       invokeRestart("muffleWarning")
     }
   )
 
-  # fishtree uses underscore-form tip labels; normalise both sides.
-  tip_sp    <- gsub("_", " ", tree$tip.label)
+  # If the user requested fewer than fishtree_complete_phylogeny()
+  # produced, cap to n_tree.
+  if (multi && inherits(tree, "multiPhylo") && length(tree) > n_tree) {
+    tree <- tree[seq_len(n_tree)]
+  }
+
+  # fishtree uses underscore-form tip labels; for multiPhylo all trees
+  # share the same tip set so the first one is enough for matching.
+  ref_tips <- if (inherits(tree, "multiPhylo")) {
+    tree[[1]]$tip.label
+  } else {
+    tree$tip.label
+  }
+  tip_sp    <- gsub("_", " ", ref_tips)
   norm_req  <- pr_normalize_names(species)
   norm_tip  <- pr_normalize_names(tip_sp)
   in_tree   <- norm_req %in% norm_tip
@@ -394,10 +498,156 @@ pr_get_tree <- function(x,
       type       = type_used,
       n_queried  = length(species),
       n_matched  = sum(in_tree),
+      n_returned = if (inherits(tree, "multiPhylo")) length(tree) else 1L,
       warnings   = warns,
       reference  = "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
     )
   )
+}
+
+
+# datelife backend: chronograms from a published database --------------
+
+.pr_get_tree_datelife <- function(species, n_tree = 1L,
+                                   summary_format = NULL,
+                                   use_tnrs = FALSE, ...) {
+  if (!requireNamespace("datelife", quietly = TRUE)) {
+    cli::cli_abort(
+      c("The {.val datelife} backend requires the {.pkg datelife} package.",
+        "i" = 'Install with: {.code pak::pak("phylotastic/datelife")} (GitHub-only; archived from CRAN in 2024).',
+        ">" = "See {.url https://github.com/phylotastic/datelife} for details.")
+    )
+  }
+
+  # Default summary_format: single SDM tree when n_tree = 1; all per-source
+  # candidates when n_tree > 1.
+  if (is.null(summary_format)) {
+    summary_format <- if (n_tree > 1L) "phylo_all" else "phylo_sdm"
+  }
+
+  # Build a make_datelife_query result so we know the matched / unmatched
+  # set independent of which summary format is used. use_tnrs = FALSE
+  # keeps this offline; users who want TNRS pass use_tnrs = TRUE.
+  query <- datelife::make_datelife_query(input = species,
+                                          use_tnrs = use_tnrs)
+  matched_names <- query$cleaned_names
+  if (is.null(matched_names)) matched_names <- character()
+  unmatched <- setdiff(species, matched_names)
+
+  res <- datelife::datelife_search(
+    input          = query,
+    summary_format = summary_format,
+    use_tnrs       = use_tnrs,
+    ...
+  )
+
+  # Coerce return to phylo or multiPhylo per our contract.
+  tree <- if (inherits(res, "phylo")) {
+    res
+  } else if (inherits(res, "multiPhylo")) {
+    if (length(res) > n_tree) res[seq_len(n_tree)] else res
+  } else if (is.list(res) &&
+             all(vapply(res, inherits, logical(1), what = "phylo"))) {
+    # phylo_all returns a named list of phylo: coerce to multiPhylo
+    out <- res
+    if (length(out) > n_tree) out <- out[seq_len(n_tree)]
+    class(out) <- "multiPhylo"
+    out
+  } else {
+    cli::cli_abort(c(
+      "Unexpected return type from {.code datelife::datelife_search}.",
+      "i" = "Got class: {.cls {class(res)[1]}}.",
+      ">" = "Expected: {.cls phylo}, {.cls multiPhylo}, or a list of {.cls phylo}."
+    ))
+  }
+
+  # Per-source citations come from the names of the multiPhylo (datelife
+  # uses the source citation as the name).
+  source_citations <- if (inherits(tree, "multiPhylo") &&
+                          !is.null(names(tree))) {
+    names(tree)
+  } else {
+    NULL
+  }
+
+  list(
+    tree         = tree,
+    matched      = matched_names,
+    unmatched    = unmatched,
+    backend_meta = list(
+      backend          = "datelife",
+      version          = as.character(utils::packageVersion("datelife")),
+      summary_format   = summary_format,
+      n_queried        = length(species),
+      n_matched        = length(matched_names),
+      n_returned       = if (inherits(tree, "multiPhylo")) length(tree) else 1L,
+      source_citations = source_citations,
+      reference        = "Sanchez Reyes et al. (2024) Syst. Biol. 73:470 (doi:10.1093/sysbio/syae015)"
+    )
+  )
+}
+
+
+# Per-tree provenance helper --------------------------------------------
+#
+# Build a per-tree provenance list so downstream consumers (e.g. pigauto)
+# can pair tree[[i]] with backend_meta$tree_provenance[[i]]. For a
+# single phylo, the list has one element; for a multiPhylo, one per tree.
+
+.pr_ensure_tree_provenance <- function(tree, backend_meta, source) {
+  is_multi <- inherits(tree, "multiPhylo")
+  n <- if (is_multi) length(tree) else 1L
+
+  # Helper: pick first non-null. Local closure, not a global operator.
+  null_or <- function(a, b) if (is.null(a)) b else a
+
+  base_ref <- switch(
+    source,
+    rotl     = "Open Tree of Life synthesis (OTT)",
+    rtrees   = "Daijiang Li, rtrees package (taxon-specific reference)",
+    clootl   = null_or(backend_meta$citations, "Clements taxonomy (clootl)"),
+    fishtree = null_or(backend_meta$reference,
+                       "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"),
+    datelife = null_or(backend_meta$reference,
+                       "Sanchez Reyes et al. (2024) Syst. Biol. 73:470"),
+    "(unknown)"
+  )
+
+  # For datelife multiPhylo, prefer the per-source citation (in tree names).
+  per_tree_citations <- if (source == "datelife" && is_multi) {
+    citations <- names(tree)
+    if (is.null(citations) || length(citations) != n) {
+      rep(base_ref, n)
+    } else {
+      citations
+    }
+  } else {
+    rep(base_ref, n)
+  }
+
+  calibration_method <- switch(
+    source,
+    rotl     = "topology only (no calibration)",
+    rtrees   = "graft / no recalibration",
+    clootl   = "Clements posterior sample",
+    fishtree = if (n > 1) "stochastic polytomy resolution" else "best-guess chronogram",
+    datelife = null_or(backend_meta$summary_format, "datelife summary"),
+    NA_character_
+  )
+
+  prov <- vector("list", n)
+  for (i in seq_len(n)) {
+    prov[[i]] <- list(
+      source_index       = i,
+      citation           = per_tree_citations[[i]],
+      calibration_method = calibration_method,
+      n_tips             = if (is_multi) ape::Ntip(tree[[i]])
+                            else ape::Ntip(tree)
+    )
+  }
+
+  backend_meta$tree_provenance <- prov
+  backend_meta
 }
 
 
