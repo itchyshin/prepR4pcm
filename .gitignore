@@ -65,3 +65,6 @@ data-raw/sources/
 scripts/output/
 /doc/
 /Meta/
+
+# Claude Code runtime state
+.claude/
