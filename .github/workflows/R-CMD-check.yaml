@@ -75,7 +75,7 @@ jobs:
           # doesn't try. Users who want the datelife backend install
           # it manually following the runtime install hint.
           extra-packages: any::rcmdcheck
-          dependencies: '"Imports", "Depends", "LinkingTo", "Suggests"'
+          dependencies: 'c("Imports", "Depends", "LinkingTo", "Suggests")'
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
