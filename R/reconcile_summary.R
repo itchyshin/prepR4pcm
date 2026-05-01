@@ -27,8 +27,14 @@
 #'   console report to this file path in addition to printing it.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return A `reconciliation_summary` object. Printed to the console by
-#'   default; returned invisibly for inspection.
+#' @return A `reconciliation_summary` object. The formatted report
+#'   is attached to the object and rendered by
+#'   [print.reconciliation_summary()]. R's REPL auto-printing means
+#'   that calling the function at the prompt without assignment shows
+#'   the full report; assigning the result to a variable shows
+#'   nothing until you `print(x)` (or auto-print `x`). Use
+#'   `invisible(reconcile_summary(rec))` to suppress display at the
+#'   prompt entirely.
 #'
 #' @family reconciliation functions
 #' @seealso [reconcile_plot()] for a visual summary;
@@ -214,18 +220,21 @@ reconcile_summary <- function(reconciliation,
       }
     }
 
-    # Print or write
+    # Capture the formatted report text. Don't print directly --- the
+    # cat() lives in print.reconciliation_summary() so assignment
+    # doesn't trigger a side effect (issue #12).
     text <- paste(lines, collapse = "\n")
 
     if (!is.null(file)) {
       writeLines(text, file)
       cli_alert_success("Report written to {.path {file}}")
-    } else {
-      cat(text, "\n")
     }
+  } else {
+    text <- ""
   }
 
-  # Build summary object
+  # Build summary object. The formatted text is attached so the print
+  # method can render it.
   summary_obj <- structure(
     list(
       tables = list(
@@ -235,7 +244,9 @@ reconcile_summary <- function(reconciliation,
         synonyms   = synonyms,
         normalized = normalized
       ),
-      meta = meta
+      meta            = meta,
+      formatted_text  = text,
+      file_written_to = file
     ),
     class = "reconciliation_summary"
   )
@@ -244,17 +255,36 @@ reconcile_summary <- function(reconciliation,
     return(summary_obj)
   }
 
-  invisible(summary_obj)
+  # NOTE: returning visibly (not invisibly) so R's REPL auto-print
+  # fires print.reconciliation_summary() when the user calls this at
+  # the prompt without assignment. When the user assigns the result
+  # to a variable, no auto-print happens and the summary stays quiet.
+  # See issue #12.
+  summary_obj
 }
 
 
+#' Print a reconciliation summary
+#'
+#' Renders the formatted report attached to the object. Triggered
+#' automatically by R's REPL when the object is auto-printed (i.e.
+#' when `reconcile_summary(rec)` is called without assignment).
+#'
+#' @param x A `reconciliation_summary` from [reconcile_summary()].
+#' @param ... Additional arguments (currently unused).
+#' @return The object, invisibly.
 #' @export
 print.reconciliation_summary <- function(x, ...) {
-  cat("Reconciliation summary object\n")
-  cat(sprintf("  Match types: %s\n",
-              paste(x$tables$by_type$match_type[x$tables$by_type$count > 0],
-                    collapse = ", ")))
-  cat(sprintf("  Unresolved: %d names\n", nrow(x$tables$unresolved)))
-  cat("Use $tables to access individual match tables.\n")
+  if (!is.null(x$formatted_text) && nzchar(x$formatted_text)) {
+    cat(x$formatted_text, "\n")
+  } else {
+    # Fallback when format = "data.frame": show the brief summary.
+    cat("Reconciliation summary object\n")
+    cat(sprintf("  Match types: %s\n",
+                paste(x$tables$by_type$match_type[x$tables$by_type$count > 0],
+                      collapse = ", ")))
+    cat(sprintf("  Unresolved: %d names\n", nrow(x$tables$unresolved)))
+    cat("Use $tables to access individual match tables.\n")
+  }
   invisible(x)
 }

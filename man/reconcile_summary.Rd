@@ -39,8 +39,14 @@ console report to this file path in addition to printing it.}
 \item{...}{Additional arguments (currently unused).}
 }
 \value{
-A \code{reconciliation_summary} object. Printed to the console by
-default; returned invisibly for inspection.
+A \code{reconciliation_summary} object. The formatted report
+is attached to the object and rendered by
+\code{\link[=print.reconciliation_summary]{print.reconciliation_summary()}}. R's REPL auto-printing means
+that calling the function at the prompt without assignment shows
+the full report; assigning the result to a variable shows
+nothing until you \code{print(x)} (or auto-print \code{x}). Use
+\code{invisible(reconcile_summary(rec))} to suppress display at the
+prompt entirely.
 }
 \description{
 Produce a human-readable breakdown of a \link{reconciliation} object:
