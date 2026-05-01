@@ -33,22 +33,22 @@ its unique non-NA values are used.}
 to use. One of:
 \describe{
 \item{\code{"rotl"}}{Open Tree of Life synthesis tree, via the
-CRAN package \pkg{rotl}. Universal taxonomic coverage; calls
+CRAN package \code{rotl}. Universal taxonomic coverage; calls
 \code{tnrs_match_names()} to resolve names to OTT ids and
 then \code{tol_induced_subtree()}.}
 \item{\code{"rtrees"}}{Taxon-specific mega-trees (bird, mammal,
 fish, amphibian, reptile, plant, shark/ray, bee, butterfly)
-via the GitHub package \pkg{rtrees}
+via the GitHub package \code{rtrees}
 (\url{https://daijiang.github.io/rtrees/}). Requires
 \code{taxon = "<group>"}. Calls \code{get_tree()}. Install
 with \code{pak::pak("daijiang/rtrees")} (GitHub-only).}
 \item{\code{"clootl"}}{Bird-only phylogenies in current
-Clements taxonomy, via the GitHub package \pkg{clootl}
+Clements taxonomy, via the GitHub package \code{clootl}
 (\url{https://github.com/eliotmiller/clootl}). Calls
 \code{extractTree()}. Install with
 \code{pak::pak("eliotmiller/clootl")}.}
 \item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
-(Rabosky et al. 2018), via the CRAN package \pkg{fishtree}.
+(Rabosky et al. 2018), via the CRAN package \code{fishtree}.
 Calls \code{fishtree_phylogeny()} (single tree) or
 \code{fishtree_complete_phylogeny()} (multi-tree posterior;
 triggered by \code{n_tree > 1}). Requires exact name
@@ -80,7 +80,7 @@ is a data frame; ignored otherwise.}
 \item{taxon}{A length-1 character vector. Required when
 \code{source = "rtrees"}. One of \code{"bird"}, \code{"mammal"}, \code{"fish"},
 \code{"amphibian"}, \code{"reptile"}, \code{"plant"}, \code{"shark_ray"}, \code{"bee"},
-\code{"butterfly"} (see the \pkg{rtrees} package help for
+\code{"butterfly"} (see the \code{rtrees} package help for
 \code{get_tree}). Ignored for other backends.}
 
 \item{n_tree}{A length-1 positive integer. How many trees to
@@ -144,9 +144,9 @@ tree silently.}
 \item{...}{Backend-specific arguments forwarded to the underlying
 call. See the help page of the underlying function in the
 relevant backend package (\code{tol_induced_subtree} in
-\pkg{rotl}, \code{extractTree} in \pkg{clootl},
-\code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} /
-\code{fishtree_complete_phylogeny} in \pkg{fishtree},
+\code{rotl}, \code{extractTree} in \code{clootl},
+\code{get_tree} in \code{rtrees}, \code{fishtree_phylogeny} /
+\code{fishtree_complete_phylogeny} in \code{fishtree},
 \code{datelife_search} in \code{datelife}) for the full list.}
 }
 \value{

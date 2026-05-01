@@ -23,7 +23,7 @@ reconcile_augment(
 
 \item{tree}{An \code{ape::phylo} object. Must be the same tree used to
 build \code{reconciliation} (or a tree with the same tip set). For
-\code{source = "rtrees"}, this is passed to \pkg{rtrees} as the
+\code{source = "rtrees"}, this is passed to \code{rtrees} as the
 user-supplied backbone (\code{tree_by_user = TRUE}).}
 
 \item{where}{A length-1 character vector. Where to attach each new tip
@@ -41,7 +41,7 @@ to one sister taxon.}
 
 \item{branch_length}{A length-1 character vector. How to set the terminal branch
 length of each newly added tip (only used when \code{source = "internal"};
-ignored otherwise --- \pkg{rtrees} sets its own branch lengths):
+ignored otherwise --- \code{rtrees} sets its own branch lengths):
 \describe{
 \item{\code{"congener_median"} (default)}{Median terminal branch length
 of the species' congeners. Uses the average "how long since
@@ -69,7 +69,7 @@ The seed is scoped to this call: the session RNG state is saved
 before and restored after, so subsequent random draws in your
 script are unaffected. Default \code{NULL}. (For
 \code{source = "rtrees"}, set the seed in your script before calling
-\code{reconcile_augment()}; \pkg{rtrees} does not accept a seed
+\code{reconcile_augment()}; \code{rtrees} does not accept a seed
 argument.)}
 
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
@@ -109,7 +109,7 @@ when \code{source = "rtrees"} returns a posterior sample).}
 easy comparison.}
 \item{augmented}{A tibble documenting each added species:
 \code{species}, \code{genus}, \code{placed_near} (sister tip / MRCA node /
-\pkg{rtrees} placement note), \code{branch_length}, \code{method},
+\code{rtrees} placement note), \code{branch_length}, \code{method},
 \code{n_congeners}. For \code{source = "rtrees"}, \code{branch_length} and
 \code{n_congeners} are \code{NA} because the backend chooses them.}
 \item{skipped}{A tibble of species that could not be placed,
@@ -155,14 +155,14 @@ congeneric MRCA). Fast and reproducible, but only works when
 the genus is already represented in the tree, and assumes the
 new tip diverged in roughly the same way as its congeners.}
 \item{\code{"rtrees"}}{Delegates the grafting to the
-\pkg{rtrees} mega-tree machinery via
+\code{rtrees} mega-tree machinery via
 \code{rtrees::get_tree(tree_by_user = TRUE)}. Uses your tree
-as the backbone and lets \pkg{rtrees} place each missing
+as the backbone and lets \code{rtrees} place each missing
 species using genus / family information from a taxon-specific
 reference tree. Requires \code{taxon} and the GitHub-only
-\pkg{rtrees} package
+\code{rtrees} package
 (\url{https://daijiang.github.io/rtrees/}). Helpful when the
-genus is absent from your tree but present in \pkg{rtrees}'
+genus is absent from your tree but present in \code{rtrees}'
 reference --- which the internal mode would skip.}
 \item{\code{"vphylomaker"}}{Plant-only alternative to
 \code{"rtrees"} via either of the GitHub packages

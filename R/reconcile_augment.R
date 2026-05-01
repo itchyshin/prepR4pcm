@@ -32,14 +32,14 @@
 #'     the genus is already represented in the tree, and assumes the
 #'     new tip diverged in roughly the same way as its congeners.}
 #'   \item{\code{"rtrees"}}{Delegates the grafting to the
-#'     \pkg{rtrees} mega-tree machinery via
+#'     \code{rtrees} mega-tree machinery via
 #'     \code{rtrees::get_tree(tree_by_user = TRUE)}. Uses your tree
-#'     as the backbone and lets \pkg{rtrees} place each missing
+#'     as the backbone and lets \code{rtrees} place each missing
 #'     species using genus / family information from a taxon-specific
 #'     reference tree. Requires \code{taxon} and the GitHub-only
-#'     \pkg{rtrees} package
+#'     \code{rtrees} package
 #'     (\url{https://daijiang.github.io/rtrees/}). Helpful when the
-#'     genus is absent from your tree but present in \pkg{rtrees}'
+#'     genus is absent from your tree but present in \code{rtrees}'
 #'     reference --- which the internal mode would skip.}
 #'   \item{\code{"vphylomaker"}}{Plant-only alternative to
 #'     \code{"rtrees"} via either of the GitHub packages
@@ -72,7 +72,7 @@
 #'   [reconcile_tree()].
 #' @param tree An `ape::phylo` object. Must be the same tree used to
 #'   build `reconciliation` (or a tree with the same tip set). For
-#'   `source = "rtrees"`, this is passed to \pkg{rtrees} as the
+#'   `source = "rtrees"`, this is passed to \code{rtrees} as the
 #'   user-supplied backbone (`tree_by_user = TRUE`).
 #' @param where A length-1 character vector. Where to attach each new tip
 #'   (only used when `source = "internal"`; ignored otherwise):
@@ -88,7 +88,7 @@
 #'   }
 #' @param branch_length A length-1 character vector. How to set the terminal branch
 #'   length of each newly added tip (only used when `source = "internal"`;
-#'   ignored otherwise --- \pkg{rtrees} sets its own branch lengths):
+#'   ignored otherwise --- \code{rtrees} sets its own branch lengths):
 #'   \describe{
 #'     \item{`"congener_median"` (default)}{Median terminal branch length
 #'       of the species' congeners. Uses the average "how long since
@@ -115,7 +115,7 @@
 #'   before and restored after, so subsequent random draws in your
 #'   script are unaffected. Default `NULL`. (For
 #'   `source = "rtrees"`, set the seed in your script before calling
-#'   `reconcile_augment()`; \pkg{rtrees} does not accept a seed
+#'   `reconcile_augment()`; \code{rtrees} does not accept a seed
 #'   argument.)
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
 #' @param source A length-1 character vector. Which grafting backend
@@ -149,7 +149,7 @@
 #'       easy comparison.}
 #'     \item{augmented}{A tibble documenting each added species:
 #'       `species`, `genus`, `placed_near` (sister tip / MRCA node /
-#'       \pkg{rtrees} placement note), `branch_length`, `method`,
+#'       \code{rtrees} placement note), `branch_length`, `method`,
 #'       `n_congeners`. For `source = "rtrees"`, `branch_length` and
 #'       `n_congeners` are `NA` because the backend chooses them.}
 #'     \item{skipped}{A tibble of species that could not be placed,

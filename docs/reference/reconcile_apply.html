@@ -15,7 +15,7 @@ in data and tree."><meta property="og:image" content="https://itchyshin.github.i
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,6 +29,8 @@ in data and tree."><meta property="og:image" content="https://itchyshin.github.i
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -49,8 +51,8 @@ in data and tree."><meta property="og:image" content="https://itchyshin.github.i
     <div class="ref-description section level2">
     <p>Turn a <a href="reconciliation.html">reconciliation</a> object into an analysis-ready data frame and
 pruned phylogenetic tree whose species labels agree. This is the step
-that feeds directly into <code><a href="https://rdrr.io/pkg/caper/man/pgls.html" class="external-link">caper::pgls()</a></code>, <code><a href="https://rdrr.io/pkg/MCMCglmm/man/MCMCglmm.html" class="external-link">MCMCglmm::MCMCglmm()</a></code>,
-<code><a href="https://rdrr.io/pkg/phytools/man/fastAnc.html" class="external-link">phytools::fastAnc()</a></code>, or any other PCM that expects matching names
+that feeds directly into <code>caper::pgls()</code>, <code><a href="https://rdrr.io/pkg/MCMCglmm/man/MCMCglmm.html" class="external-link">MCMCglmm::MCMCglmm()</a></code>,
+<code>phytools::fastAnc()</code>, or any other PCM that expects matching names
 in data and tree.</p>
     </div>
 
@@ -76,21 +78,27 @@ in data and tree.</p>
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame to align. If <code>NULL</code>, only the tree is
-returned.</p></dd>
+processed and the returned <code>data</code> slot is <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-tree">tree<a class="anchor" aria-label="anchor" href="#arg-tree"></a></dt>
-<dd><p>An <code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code> object to align. If <code>NULL</code>, only the
-data frame is returned.</p></dd>
+<dd><p>An <code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code> object (or path to a Newick / Nexus
+file) to align. If <code>NULL</code>, only the data frame is processed and
+the returned <code>tree</code> slot is <code>NULL</code>. (Passing both <code>data = NULL</code>
+and <code>tree = NULL</code> is allowed but produces an empty result; the
+normal use is to pass at least one of them.)</p></dd>
 
 
 <dt id="arg-species-col">species_col<a class="anchor" aria-label="anchor" href="#arg-species-col"></a></dt>
-<dd><p>Character(1). Column in <code>data</code> containing species
-names. Auto-detected if <code>NULL</code>.</p></dd>
+<dd><p>A length-1 character vector. Column in <code>data</code>
+containing species names. Auto-detected from a small set of
+common heuristics (e.g. <code>species</code>, <code>Species1</code>, <code>scientific_name</code>)
+when <code>NULL</code>; the heuristics list is not exhaustive — pass the
+column name explicitly if your data uses a non-standard label.</p></dd>
 
 
 <dt id="arg-drop-unresolved">drop_unresolved<a class="anchor" aria-label="anchor" href="#arg-drop-unresolved"></a></dt>
-<dd><p>Logical. Drop unmatched rows and tips?
+<dd><p>Logical. Drops unmatched rows and tips when <code>TRUE</code>.
 Defaults to <code>FALSE</code> (keep everything and just warn). Set to <code>TRUE</code>
 when preparing data for an analysis that cannot tolerate mismatches.</p></dd>
 

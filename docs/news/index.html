@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -21,6 +21,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -38,22 +40,131 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.3.1.9000" id="prepr4pcm-0319000-development-version">prepR4pcm 0.3.1.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0319000-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
 <div class="section level3">
-<h3 id="new-features-0-3-1-9000">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000"></a></h3>
+<h3 id="ci-cleanup-0-4-0-9000">CI cleanup<a class="anchor" aria-label="anchor" href="#ci-cleanup-0-4-0-9000"></a></h3>
 <ul><li>
-<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> connects a reconciled species list to an external phylogenetic resource and returns a pruned candidate tree plus a matching report (matched / unmatched / source / backend metadata). Three backends ship initially:
+<strong>CI workflow trimmed</strong> to <code>pull_request</code> + <code>workflow_dispatch</code> only (was: <code>push</code> + <code>pull_request</code>), Linux-only by default (was: full macOS / Windows / Linux x 3 R-version matrix). The <code>workflow_dispatch</code> trigger has an <code>os</code> input – set it to <code>full</code> before a release / CRAN submission to re-run the full matrix manually. Saves GitHub Actions minutes (~85% reduction) and matches the team’s “local checks over CI” preference per <code>CLAUDE.md</code>.</li>
+<li>
+<strong><code>datelife</code> moved from <code>Suggests</code> + <code>Remotes</code> to <code>Enhances</code></strong> in <code>DESCRIPTION</code>. Reason: datelife was archived from CRAN in 2024 and has a heavy transitive dep tree (<code>bold</code>, <code>phylobase</code>, Bioconductor packages) that pak’s resolver cannot install on clean CI images. <code>Enhances</code> declares the relationship so R CMD check is happy, but pak doesn’t try to auto-install it. Users who want the datelife backend run <code>pak::pak("phylotastic/datelife")</code> themselves; the runtime <code><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace("datelife")</a></code> guard in <code>.pr_get_tree_datelife()</code> and <code>.pr_date_tree_datelife()</code> produces a clear install hint when datelife is missing.</li>
+<li>
+<code>\pkg{datelife}</code> references in roxygen replaced with <code>\code{datelife}</code> to match the new dependency status.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-and-documentation-polish-0-4-0-9000">Bug fixes and documentation polish<a class="anchor" aria-label="anchor" href="#bug-fixes-and-documentation-polish-0-4-0-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code> no longer undercounts dataset-specific matches when the same species appears in different formats across datasets (e.g. <code>Homo_sapiens</code> in one dataset and <code>Homo sapiens</code> in another). The cascade gains a <code>multi_x = TRUE</code> mode that allows multiple x names to resolve to the same tree tip via normalisation, which <code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code> now uses. The mapping also gains the documented <code>in_&lt;dataset&gt;</code> logical columns (one per input dataset) that were missing from the implementation. With these changes the per-dataset join <code>match(your_data$species, mapping$name_x)</code> is reliable: every species in every input dataset finds its row. Refs <a href="https://github.com/itchyshin/prepR4pcm/issues/10" class="external-link">#10</a> (Ayumi Mizuno).</li>
+<li>
+<code><a href="../reference/reconcile_summary.html">reconcile_summary()</a></code> no longer prints to the console when its result is assigned to a variable. The formatted report now lives on the returned object’s <code>formatted_text</code> slot and renders via the <code><a href="../reference/print.reconciliation_summary.html">print.reconciliation_summary()</a></code> method, so R’s REPL auto-prints the report only when the function is called at the prompt without assignment. Refs <a href="https://github.com/itchyshin/prepR4pcm/issues/12" class="external-link">#12</a> (Ayumi Mizuno).</li>
+<li>README: rewritten the introduction to spell out <em>why</em> species-name mismatches matter for PCMs, expanded the worked examples for each mismatch type (formatting, synonymy, typos), expanded the PGLS / PCM acronyms, moved the Quick example after Typical workflow, added inline framing prose around the Quick example, fixed broken / missing links for the Clements checklist and BirdLife-BirdTree crosswalk, added an inline citation block (text + BibTeX) so users don’t need to run <code>citation("prepR4pcm")</code> to see what to cite, and clarified that bundled datasets are <em>subsets</em> of the full upstream sources. Refs <a href="https://github.com/itchyshin/prepR4pcm/issues/53" class="external-link">#53</a> (Malgorzata Lagisz).</li>
+<li>Fixed: removed <code>V.PhyloMaker3</code> from <code>Suggests</code> and <code>Remotes</code> – the repo was hallucinated in Round 8 and doesn’t exist on GitHub (<code>jinyizju/V.PhyloMaker3</code> returns 404). The <code>vphylomaker</code> augment backend now prefers <code>V.PhyloMaker2</code> (the actual current version) with a fallback to the original <code>V.PhyloMaker</code>. The fix preserves the public API of <code>reconcile_augment(source = "vphylomaker")</code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="prepr4pcm-040">prepR4pcm 0.4.0<a class="anchor" aria-label="anchor" href="#prepr4pcm-040"></a></h2>
+<p>This release closes out the multi-round tree-handling overhaul started at issue <a href="https://github.com/itchyshin/prepR4pcm/issues/42" class="external-link">#42</a> (Ayumi Mizuno) and tracked at issue <a href="https://github.com/itchyshin/prepR4pcm/issues/48" class="external-link">#48</a>. Across Rounds 4 - 8 the package gained:</p>
+<ul><li>Five tree-retrieval backends (rotl, rtrees, clootl, fishtree, datelife) unified under <code>pr_get_tree(..., n_tree, source = "auto")</code>.</li>
+<li>Three augmentation backends (rtrees, V.PhyloMaker3/V.PhyloMaker2, U.PhyloMaker) on <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>.</li>
+<li>A standalone dating function (<code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code>) for adding chronogram calibrations to existing topologies.</li>
+<li>Per-tree provenance metadata that pairs every tree in a multiPhylo with its citation, calibration method, and tip count – designed for downstream consumption by <a href="https://itchyshin.github.io/pigauto/" class="external-link">pigauto</a><code>::multi_impute_trees()</code>.</li>
+<li>
+<code><a href="../reference/pr_cite_tree.html">pr_cite_tree()</a></code> for formatting citations (text / markdown / bibtex).</li>
+<li>
+<code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code> with bipartition-matched branch-length correlation.</li>
+<li>
+<code><a href="../reference/pr_get_tree_status.html">pr_get_tree_status()</a></code> for backend health probing.</li>
+<li>An on-disk cache (<code>pr_tree_cache_*</code>) for repeat retrievals.</li>
+<li>Three vignettes covering the cross-package pipeline, backend comparison, and the original workflows.</li>
+</ul><div class="section level3">
+<h3 id="round-vphylomaker--uphylomaker--bipartition-correlation--ultrametric-check-0-4-0">Round 8: V.PhyloMaker / U.PhyloMaker + bipartition correlation + ultrametric check<a class="anchor" aria-label="anchor" href="#round-vphylomaker--uphylomaker--bipartition-correlation--ultrametric-check-0-4-0"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> gains two new sources:</strong>
+<ul><li>
+<code>source = "vphylomaker"</code> – plant-only alternative to <code>rtrees</code>, via the GitHub packages <code>V.PhyloMaker3</code> (preferred) or <code>V.PhyloMaker2</code> (fallback). Both share the same <code>phylo.maker(sp.list, tree, scenarios)</code> API. Use this when you want explicit V.PhyloMaker scenario control (S1 / S2 / S3, see Jin &amp; Qian 2019/2022).</li>
+<li>
+<code>source = "uphylomaker"</code> – universal (plants + animals) alternative via <code>U.PhyloMaker</code> (Jin &amp; Qian 2023, <em>Plant Diversity</em>). Same <code>phylo.maker</code> convention plus a <code>gen.list</code> argument; the helper auto-loads <code>U.PhyloMaker::nodes.info.1</code> when not supplied.</li>
+</ul></li>
+<li>
+<strong>Bipartition-matched branch-length correlation in <code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code>.</strong> The previous Pearson-on-sorted-edges approximation is replaced with a proper bipartition match: for each edge in tree A, the corresponding edge in tree B is the one splitting the same set of tips. Edges whose bipartition isn’t shared are dropped from the correlation.</li>
+<li>
+<strong><code>check_ultrametric = TRUE</code> argument on <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>, <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code>, and <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>.</strong> After producing the tree, runs <code><a href="https://rdrr.io/pkg/ape/man/is.ultrametric.html" class="external-link">ape::is.ultrametric()</a></code> and warns if the backend was expected to produce an ultrametric tree but didn’t. Skipped for <code>rotl</code> (synthesis topology, no real branch lengths) and for the internal augment with <code>branch_length = "zero"</code> (which breaks ultrametricity by design). Does not modify the tree – to force ultrametricity, call <code>phytools::force.ultrametric()</code> or <code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> on the result yourself.</li>
+<li>
+<strong>TimeTree.org REST client deferred</strong> as a non-goal. TimeTree’s TOS restricts bulk querying for non-commercial use; a REST wrapper isn’t a clean fit for prepR4pcm’s “install-and-go” backend model. Users who need TimeTree data can fetch it manually and feed the resulting topology into <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> (or skip dating entirely).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="round-documentation-polish-and-ci-cleanup-0-4-0">Round 7: documentation polish and CI cleanup<a class="anchor" aria-label="anchor" href="#round-documentation-polish-and-ci-cleanup-0-4-0"></a></h3>
+<ul><li>
+<strong>New vignette: “Comparing tree backends – when do they agree?”</strong> Walks through <code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code> end-to-end, including how to read the pairwise Jaccard / Robinson-Foulds / branch-length matrices and what to do for each disagreement pattern. Closes the docs gap left by Round 6.</li>
+<li>
+<strong><code>Remotes:</code> simplification.</strong> Daijiang Li merged a <code>Remotes: daijiang/megatrees</code> entry upstream in <code>rtrees</code> (<a href="https://github.com/daijiang/rtrees/issues/10" class="external-link">daijiang/rtrees#10</a>), so we no longer need to carry the megatrees Remotes entry ourselves. Dropped from <code>DESCRIPTION</code> and the <code>.transitive_remotes_allowlist</code> test fixture.</li>
+<li>
+<strong>One-shot rotl-missing TNRS warning.</strong> Previously the warning fired once per backend call; now it fires once per session via <code>options(prepR4pcm.tnrs_warning_shown = TRUE)</code>. Mainly a fix for <code>source = "auto"</code>, which calls each candidate backend in turn.</li>
+<li>
+<strong>Round 7 edge-case + integration tests.</strong> New tests cover corrupt cache files, missing-key reads, cache invalidation by <code>taxon</code> and <code>n_tree</code>, tree comparisons across exotic shapes (no edge lengths, 3+ trees, named arguments), <code>min_match</code> boundary values, end-to-end pipelines including <code>pr_get_tree -&gt; pr_cite_tree</code>, multi-tree provenance preservation, cache save/load round-trip, and the <code>auto</code> dispatcher’s <code>auto_attempts</code> / <code>auto_chose</code> metadata.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="round-tree-handling-ux-polish-0-4-0">Round 6: tree-handling UX polish<a class="anchor" aria-label="anchor" href="#round-tree-handling-ux-polish-0-4-0"></a></h3>
+<ul><li>
+<strong>Local on-disk cache for <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>.</strong> Pass <code>cache = TRUE</code> to memoise the request on disk; subsequent identical calls are instant. New companion functions:
+<ul><li>
+<code>pr_tree_cache_dir(path = NULL)</code> – get/set the cache directory. Defaults to <code><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">tools::R_user_dir()</a></code>; can be set to a project-local path so the cache travels with the analysis.</li>
+<li>
+<code><a href="../reference/pr_tree_cache_status.html">pr_tree_cache_status()</a></code> – list cache entries with timestamps and sizes.</li>
+<li>
+<code>pr_tree_cache_clear(confirm, source)</code> – wipe the cache; optionally restrict to a single backend.</li>
+</ul></li>
+<li>
+<strong><code>pr_get_tree_status(check_network)</code> health probe.</strong> One-call report listing every backend with installed / version / needs_network / reachable / install hint. Useful for first-time users figuring out which backends are available.</li>
+<li>
+<strong><code>pr_tree_compare(...)</code> for comparing trees.</strong> Tip-set Jaccard, Robinson-Foulds distance on the shared subtree, branch-length agreement. Accepts <code>phylo</code>, <code>multiPhylo</code>, or <code>pr_tree_result</code> inputs (positional or named).</li>
+<li>
+<strong>TNRS preflight for non-TNRS backends.</strong> New <code>tnrs</code> argument on <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>: <code>"auto"</code> (default; runs TNRS for clootl + fishtree to lift their match rates), <code>"always"</code> (run regardless), <code>"never"</code> (skip). Silently skipped with a one-shot warning when <code>rotl</code> is not installed.</li>
+<li>
+<strong><code>source = "auto"</code> fall-through dispatcher.</strong> Tries installed backends in priority order; returns the first that resolves at least <code>min_match</code> of the species (default 0.8) or the best of the lot if none meets the threshold. New <code>min_match</code> argument controls the threshold.</li>
+<li>
+<code>digest</code> added to <code>Suggests</code> (used by the new cache-key hashing).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="round-posterior-tree-support-and-the-prepr4pcm---pigauto-pipeline-0-4-0">Round 5: posterior-tree support and the prepR4pcm -&gt; pigauto pipeline<a class="anchor" aria-label="anchor" href="#round-posterior-tree-support-and-the-prepr4pcm---pigauto-pipeline-0-4-0"></a></h3>
+<ul><li>
+<p><strong><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> gains a unified <code>n_tree</code> parameter</strong> so users can request a posterior sample (<code>multiPhylo</code>) when a backend supports one. Default <code>n_tree = 1L</code> (back-compat). When <code>n_tree &gt; 1</code>:</p>
+<ul><li>
+<code>"rotl"</code> – still returns 1 (the synthesis tree); a one-shot warning explains that no posterior is available.</li>
+<li>
+<code>"rtrees"</code> – pass-through to <code>rtrees::get_tree(n_tree = ...)</code>.</li>
+<li>
+<code>"clootl"</code> – pass-through to <code>clootl::extractTree(sample.size = n_tree)</code> for multiple Clements posterior samples.</li>
+<li>
+<code>"fishtree"</code> – switches to <code>fishtree_complete_phylogeny()</code> for a multi-tree stochastic polytomy resolution.</li>
+<li>
+<code>"datelife"</code> – (new backend; see below) returns one chronogram per database source, capped at <code>n_tree</code>.</li>
+</ul></li>
+<li><p><strong>New backend: <code>pr_get_tree(source = "datelife")</code>.</strong> Universal database of pre-computed chronograms (Sanchez Reyes et al. 2024, <em>Syst. Biol.</em> 73:470). Returns a single SDM-summary chronogram by default; <code>n_tree &gt; 1</code> returns a multiPhylo of per-source candidate chronograms. Backend lives in <code>Suggests</code> + <code>Remotes</code> (datelife was archived from CRAN in 2024 – install with <code>pak::pak("phylotastic/datelife")</code>).</p></li>
+<li><p><strong>New function: <code>pr_date_tree(tree, n_dated, ...)</code>.</strong> Wraps <code>datelife::datelife_use()</code> to time-calibrate an existing topology. Returns the same <code>pr_tree_result</code> shape as <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> so downstream consumers (notably <a href="https://itchyshin.github.io/pigauto/" class="external-link">pigauto</a>) treat retrieved and dated trees interchangeably.</p></li>
+<li><p><strong>New function: <code>pr_cite_tree(result, format = ...)</code>.</strong> Formats a citation block (text / markdown / bibtex) for a <code>pr_tree_result</code>, including per-tree source citations when the result is a multi-tree posterior. Helpful for paper methods sections, figure legends, and PR descriptions.</p></li>
+<li><p><strong>Per-tree provenance metadata.</strong> Every <code>pr_tree_result</code> now carries <code>backend_meta$tree_provenance</code>: a list with one entry per returned tree (citation, calibration method, tip count). For <code>multiPhylo</code> results, <code>tree[[i]]</code> pairs naturally with <code>backend_meta$tree_provenance[[i]]</code>. Designed to feed <code>pigauto::multi_impute_trees()</code>.</p></li>
+<li><p><strong>Cross-package vignette: “From species names to a phylogenetic posterior – prepR4pcm + pigauto”.</strong> End-to-end walkthrough showing how to chain <code><a href="../reference/reconcile_data.html">reconcile_data()</a></code> -&gt; <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> (or <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code>) -&gt; <code>pigauto::multi_impute_trees()</code> -&gt; pooled inference via Rubin’s rules. The vignette uses mock data and <code>eval = FALSE</code> chunks for the parts that need pigauto / datelife installed.</p></li>
+<li><p><strong>Cross-link with <code>pigauto</code>.</strong> <code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code>, <code><a href="../reference/pr_date_tree.html">?pr_date_tree</a></code>, and <code><a href="../reference/reconcile_augment.html">?reconcile_augment</a></code> mention pigauto in <code>@seealso</code>. The pkgdown reference index gains a “Sister package: pigauto” callout.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-4-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0"></a></h3>
+<ul><li><p><code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> gains <code>source = c("internal", "rtrees")</code> (default <code>"internal"</code>, the existing genus-level grafting behaviour) and <code>taxon</code> arguments. With <code>source = "rtrees"</code>, grafting is delegated to <code>rtrees::get_tree(tree_by_user = TRUE)</code>, which uses your tree as the backbone and lets <code>rtrees</code>’ taxon-specific reference tree place each missing species via genus / family information. Helpful when the genus is absent from your tree but present in <code>rtrees</code>’ reference – the internal mode would skip these. Returns the same result shape (with <code>meta$source</code> recording which backend was used). Refs <a href="https://github.com/itchyshin/prepR4pcm/issues/42" class="external-link">#42</a> (Ayumi Mizuno).</p></li>
+<li><p><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> gains a fourth backend, <code>source = "fishtree"</code>, exposing the time-calibrated fish-only phylogeny of Rabosky et al. (2018, <em>Nature</em> 559:392) via the CRAN package . Returns a chronogram by default; pass <code>type = "phylogram"</code> for the uncalibrated version. Captures <code>fishtree</code>’s own warning text into <code>backend_meta$warnings</code> so the matched/unmatched report is honest.</p></li>
+<li>
+<p><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> connects a reconciled species list to an external phylogenetic resource and returns a pruned candidate tree plus a matching report (matched / unmatched / source / backend metadata). Four backends ship:</p>
 <ul><li>
 <code>"rotl"</code> – Open Tree of Life synthesis tree (universal coverage, via the CRAN package ).</li>
 <li>
 <code>"rtrees"</code> – taxon-specific mega-trees (bird, mammal, fish, amphibian, reptile, plant, shark/ray, bee, butterfly), via the GitHub package  (<code>pak::pak("daijiang/rtrees")</code>).</li>
 <li>
 <code>"clootl"</code> – bird-only phylogenies in current Clements taxonomy, via the GitHub package  (<code>pak::pak("eliotmiller/clootl")</code>).</li>
-</ul>
-Accepts a reconciliation object, a character vector, or a data frame as input. Each backend is loaded only on demand – asking for a backend you don’t have installed produces a helpful migration error with the install command. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/42" class="external-link">#42</a> (Ayumi Mizuno).</li>
+<li>
+<code>"fishtree"</code> – fish-only time-calibrated phylogeny, via the CRAN package .</li>
+</ul><p>Accepts a reconciliation object, a character vector, or a data frame as input. Each backend is loaded only on demand – asking for a backend you don’t have installed produces a helpful migration error with the install command. Refs <a href="https://github.com/itchyshin/prepR4pcm/issues/42" class="external-link">#42</a> (Ayumi Mizuno).</p>
+</li>
 </ul></div>
 <div class="section level3">
-<h3 id="whats-not-in-this-round-deferred-work-0-3-1-9000">What’s NOT in this round (deferred work)<a class="anchor" aria-label="anchor" href="#whats-not-in-this-round-deferred-work-0-3-1-9000"></a></h3>
+<h3 id="whats-not-in-this-round-deferred-work-0-4-0">What’s NOT in this round (deferred work)<a class="anchor" aria-label="anchor" href="#whats-not-in-this-round-deferred-work-0-4-0"></a></h3>
 <p>For honesty / handoff so future contributors don’t lose track:</p>
 <ul><li>
 <strong>#10</strong> – <code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code> may undercount dataset-specific matches when names differ only by formatting (Round 4 candidate; needs root-cause debug).</li>
@@ -66,38 +177,40 @@ Accepts a reconciliation object, a character vector, or a data frame as input. E
 <li>
 <strong>#16</strong> – Suggested Delhey citation correction. Requires verification before changing; current citation may already be correct.</li>
 <li>The remaining 22 of 37 Tier-4 defence-in-depth claim-parity tests outlined in the round-2 plan; they’re documented but not yet written.</li>
+<li>
+<strong>Round 5 work</strong> (separate tracking issue): a unified <code>n_tree</code> parameter on <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> so each backend can return a posterior sample (multiPhylo) when one is available; a new <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> function wrapping <code>datelife::datelife_use()</code> for time-calibrating user topologies; a <code>datelife</code> retrieval backend on <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>; per-tree provenance metadata; and a cross-package vignette documenting the prepR4pcm -&gt; pigauto pipeline for posterior-tree PCMs.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-vignette-and-example-data-0-3-1-9000">New vignette and example data<a class="anchor" aria-label="anchor" href="#new-vignette-and-example-data-0-3-1-9000"></a></h3>
+<h3 id="new-vignette-and-example-data-0-4-0">New vignette and example data<a class="anchor" aria-label="anchor" href="#new-vignette-and-example-data-0-4-0"></a></h3>
 <ul><li><p>New vignette <strong>“Assembling mammal trait databases for phylogenetic comparative models”</strong> (<code>db-assembly-workflow_mammals</code>), contributed by Santiago Ortega. Walks through combining three mammal trait sources (Amniote, PanTHERIA, TetrapodTraits), reconciling the unique species names against a phylogenetic tree, applying manual corrections, and collapsing the matched records into a model-ready species-level data frame aligned with a pruned tree. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/11" class="external-link">#11</a>.</p></li>
 <li><p>Four new bundled example datasets used by the new vignette: <code>mammal_amniote_example</code> (Myhrvold et al. 2015), <code>mammal_pantheria_example</code> (Jones et al. 2009), <code>mammal_tetrapodtraits_example</code> (Moura et al. 2024), and <code>mammal_tree_example</code> (a 5,987-tip mammal phylogeny, source to be confirmed with the contributor).</p></li>
 <li><p><code>dplyr</code>, <code>readr</code>, and <code>stringr</code> moved from <code>Suggests</code> to <code>Imports</code>, reflecting that they are used routinely in the package’s vignettes and R code rather than being optional.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="breaking-changes-0-3-1-9000">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-3-1-9000"></a></h3>
+<h3 id="breaking-changes-0-4-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-4-0"></a></h3>
 <ul><li>
 <p><code><a href="../reference/pr_valid_authorities.html">pr_valid_authorities()</a></code> no longer lists <code>iucn</code>, <code>tpl</code>, <code>fb</code>, <code>slb</code>, or <code>wd</code>. Empirical testing against <code>taxadb</code> v22.12 (the database the package depends on) showed that <code>iucn</code> errors with a schema mismatch and the other four are not <code>taxadb</code> providers at all. Anyone passing one of these values was getting a hard error from inside <code>taxadb</code>; the call sites now produce a targeted migration message pointing users at the working authorities. (Identified in follow-up to <a href="https://github.com/itchyshin/prepR4pcm/issues/5" class="external-link">#5</a>, Ayumi Mizuno.)</p>
 <p>If you were passing one of the removed authorities, switch to one of <code>"col"</code>, <code>"itis"</code>, <code>"gbif"</code>, <code>"ncbi"</code>, or <code>"ott"</code>, or pass <code>authority = NULL</code> to skip synonym resolution.</p>
 </li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-0-3-1-9000-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000-1"></a></h3>
-<ul><li><p><code>authority = "ott"</code> (Open Tree of Life) is supported again, after Round 1 dropped it on incomplete diagnosis. The original failure was at <code><a href="https://rdrr.io/pkg/taxadb/man/td_create.html" class="external-link">taxadb::td_create()</a></code> with the default schema set <code>c("dwc", "common")</code> — <code>taxadb</code> v22.12 does not ship a <code>common</code> schema for OTT. We now restrict the schema to <code>"dwc"</code> (the only schema the cascade actually consumes), unblocking OTT and potentially other providers that lack a <code>common</code> schema. Re-closes <a href="https://github.com/itchyshin/prepR4pcm/issues/5" class="external-link">#5</a> properly.</p></li>
+<h3 id="new-features-0-4-0-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0-1"></a></h3>
+<ul><li><p><code>authority = "ott"</code> (Open Tree of Life) is supported again, after Round 1 dropped it on incomplete diagnosis. The original failure was at <code>taxadb::td_create()</code> with the default schema set <code>c("dwc", "common")</code> — <code>taxadb</code> v22.12 does not ship a <code>common</code> schema for OTT. We now restrict the schema to <code>"dwc"</code> (the only schema the cascade actually consumes), unblocking OTT and potentially other providers that lack a <code>common</code> schema. Re-closes <a href="https://github.com/itchyshin/prepR4pcm/issues/5" class="external-link">#5</a> properly.</p></li>
 <li><p><code>authority = "itis_test"</code> exposes <code>taxadb</code>’s small bundled testing dataset. Useful for examples and unit tests without a network round-trip.</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-0-3-1-9000">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-1-9000"></a></h3>
+<h3 id="bug-fixes-0-4-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-4-0"></a></h3>
 <ul><li><p><code><a href="../reference/pr_lookup_authority.html">pr_lookup_authority()</a></code> and <code><a href="../reference/pr_ensure_db.html">pr_ensure_db()</a></code> no longer print raw <code>{.pkg ...}</code> / <code>{.code ...}</code> cli template strings in their error messages. The functions now route errors through <code><a href="https://cli.r-lib.org/reference/cli_abort.html" class="external-link">cli::cli_abort()</a></code>, which interprets the markup. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/4" class="external-link">#4</a> (Eduardo Santos).</p></li>
 <li><p>The matching cascade no longer prints <code>Stage 3/4: Synonym resolution (...)</code> when <code>authority = NULL</code>, or <code>Stage 4/4: Fuzzy matching (...)</code> when <code>fuzzy = FALSE</code>. Stage numbering is computed from the active stages only, so a call with <code>authority = NULL, fuzzy = FALSE</code> reports <code>Stage 1/2: Exact ...</code> and <code>Stage 2/2: Normalised ...</code>. Previously, the fixed <code>Stage X/4</code> labels suggested matches were being made at synonym/fuzzy stages even when they were skipped. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/13" class="external-link">#13</a> (Ayumi Mizuno).</p></li>
 <li><p><code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> and <code><a href="../reference/reconcile_data.html">reconcile_data()</a></code> previously dropped manual overrides silently when the override <code>name_x</code> was not in the data or <code>name_y</code> was not in the target. The reconciliation object now carries an <code>unused_overrides</code> slot listing every rejected override with a <code>reason</code> (<code>name_x_not_in_data</code>, <code>name_y_not_in_target</code>, or <code>already_matched</code>), and the functions emit a <code>cli_alert_warning()</code> pointing the user at it. <code><a href="../reference/reconcile_summary.html">reconcile_summary()</a></code> includes a count and a per-row listing in the verbose section. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/8" class="external-link">#8</a>a (Ayumi Mizuno).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-0-3-1-9000-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000-2"></a></h3>
+<h3 id="new-features-0-4-0-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0-2"></a></h3>
 <ul><li>
 <code><a href="../reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> now accepts <code>.csv</code>, <code>.tsv</code>, or <code>.txt</code> (tab-delimited) file paths in addition to data frames. The format is inferred from the file extension. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/8" class="external-link">#8</a>b (Ayumi Mizuno).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="documentation-0-3-1-9000">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-3-1-9000"></a></h3>
+<h3 id="documentation-0-4-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-4-0"></a></h3>
 <ul><li><p>Installation instructions are standardised on <code>pak::pak(...)</code> across the README and the <em>Getting started</em> vignette. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/6" class="external-link">#6</a> (Ayumi Mizuno).</p></li>
 <li><p>The <code>@param authority</code> block in <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> / <code><a href="../reference/reconcile_data.html">reconcile_data()</a></code> now reflects which authorities are actually supported. <code>tpl</code>, <code>slb</code>, <code>wd</code>, <code>iucn</code>, <code>fb</code> are flagged as experimental (“coverage and current availability vary”); <code>ott</code> is documented as not supported in the current default <code>taxadb</code> release.</p></li>
 <li><p>The <code>bird-workflow</code> vignette now guards its <code>caper</code> and <code>MCMCglmm</code> chunks with <code>eval = requireNamespace(..., quietly = TRUE)</code>, so the vignette knits cleanly for users (and CRAN check environments) without those Suggests packages installed.</p></li>
@@ -105,11 +218,11 @@ Accepts a reconciliation object, a character vector, or a data frame as input. E
 <li><p>pkgdown site rebuilt to fix stale search-index links that pointed to 404 pages for <code>reconcile_override_batch</code> and <code>reconcile_suggest</code>. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/7" class="external-link">#7</a> (Ayumi Mizuno).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="breaking-changes-0-3-1-9000-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-3-1-9000-1"></a></h3>
+<h3 id="breaking-changes-0-4-0-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-4-0-1"></a></h3>
 <ul><li>The first argument of 13 exported functions has been renamed from <code>x</code> to <code>reconciliation</code>: <code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code>, <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>, <code><a href="../reference/reconcile_export.html">reconcile_export()</a></code>, <code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code>, <code><a href="../reference/reconcile_merge.html">reconcile_merge()</a></code>, <code><a href="../reference/reconcile_override.html">reconcile_override()</a></code>, <code><a href="../reference/reconcile_override_batch.html">reconcile_override_batch()</a></code>, <code><a href="../reference/reconcile_plot.html">reconcile_plot()</a></code>, <code><a href="../reference/reconcile_report.html">reconcile_report()</a></code>, <code><a href="../reference/reconcile_review.html">reconcile_review()</a></code>, <code><a href="../reference/reconcile_splits_lumps.html">reconcile_splits_lumps()</a></code>, <code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code>, and <code><a href="../reference/reconcile_summary.html">reconcile_summary()</a></code>. This fixes <a href="https://github.com/itchyshin/prepR4pcm/issues/3" class="external-link">#3</a> (Santiago Ortega), where <code>reconcile_apply(result = res_tree, ...)</code> raised an “unused argument” error because the parameter was named <code>x</code>. Positional calls (<code>reconcile_apply(res_tree, ...)</code>) continue to work unchanged; only code that passed the reconciliation as <code>x = ...</code> needs updating to <code>reconciliation = ...</code>. <code>reconcile_diff(x, y)</code> is intentionally unchanged — both arguments are reconciliation objects in a symmetric comparison, so neither is the “reconciliation”.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="documentation-0-3-1-9000-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-3-1-9000-1"></a></h3>
+<h3 id="documentation-0-4-0-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-4-0-1"></a></h3>
 <ul><li>New vignette subsections on <strong>multi-row species</strong> and <strong>asymmetric datasets</strong> in the bird workflow vignette, addressing <a href="https://github.com/itchyshin/prepR4pcm/issues/1" class="external-link">#1</a> (Ayumi Mizuno). Shows how to aggregate to species level before merging, how to join the mapping back to a full multi-row dataset, and when to pick <code>how = "inner"</code> vs <code>how = "left"</code> for focal study × reference database merges.</li>
 <li>
 <code><a href="../reference/reconcile_merge.html">reconcile_merge()</a></code> help page now carries the same guidance in a <code>@details</code> block, covering pairwise row expansion warnings and the four join types.</li>
@@ -127,7 +240,7 @@ Accepts a reconciliation object, a character vector, or a data frame as input. E
 <li>Reorganised the pkgdown reference index into seven task-oriented groups (Match species names / Inspect and audit / Corrections and crosswalks / Apply, merge, export / Augment phylogenies / Name utilities / Bundled example data), each with a short descriptive line.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="tests-0-3-1-9000">Tests<a class="anchor" aria-label="anchor" href="#tests-0-3-1-9000"></a></h3>
+<h3 id="tests-0-4-0">Tests<a class="anchor" aria-label="anchor" href="#tests-0-4-0"></a></h3>
 <ul><li>Added a combinatorial test layer that stresses parameter combinations rather than single cases. Three new test files (<code>test-authority-mocked.R</code>, <code>test-workflows.R</code>, <code>test-robustness.R</code>) and parametric grid extensions to nine existing files take the suite from ~311 expectations to <strong>1,868 expectations</strong> across 252 <code>test_that()</code> blocks (0 failures).</li>
 <li>Every historical bug that has shipped — <a href="https://github.com/itchyshin/prepR4pcm/issues/495" class="external-link">#495</a> cartesian merge explosion, the <code>drop_unresolved</code> no-op, the diacritics regex failure, factor coercion, silent multi-phylo handling — lived in parameter combinations that single-axis tests never exercised. The new layer tests combinations and asserts invariants (row counts, NA counts, tree tip counts, set membership, S3 class, idempotence).</li>
 <li>

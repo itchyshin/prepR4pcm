@@ -19,7 +19,7 @@ get back a phylo ready for reconcile_apply()."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,8 @@ get back a phylo ready for reconcile_apply()."><meta property="og:image" content
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -64,9 +66,14 @@ get back a <code>phylo</code> ready for <code><a href="reconcile_apply.html">rec
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pr_get_tree</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
-<span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rotl"</span>, <span class="st">"rtrees"</span>, <span class="st">"clootl"</span><span class="op">)</span>,</span>
+<span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rotl"</span>, <span class="st">"rtrees"</span>, <span class="st">"clootl"</span>, <span class="st">"fishtree"</span>, <span class="st">"datelife"</span>, <span class="st">"auto"</span><span class="op">)</span>,</span>
 <span>  species_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  taxon <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_tree <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  cache <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  tnrs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"always"</span>, <span class="st">"never"</span><span class="op">)</span>,</span>
+<span>  min_match <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  check_ultrametric <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -97,24 +104,55 @@ its unique non-NA values are used.</p></dd>
 <dd><p>A length-1 character vector. Which external backend
 to use. One of:</p><dl><dt><code>"rotl"</code></dt>
 <dd><p>Open Tree of Life synthesis tree, via the
-CRAN package <span class="pkg">rotl</span>. Universal taxonomic coverage; calls
+CRAN package <code>rotl</code>. Universal taxonomic coverage; calls
 <code>tnrs_match_names()</code> to resolve names to OTT ids and
 then <code>tol_induced_subtree()</code>.</p></dd>
 
 <dt><code>"rtrees"</code></dt>
 <dd><p>Taxon-specific mega-trees (bird, mammal,
 fish, amphibian, reptile, plant, shark/ray, bee, butterfly)
-via the GitHub package <span class="pkg">rtrees</span>
+via the GitHub package <code>rtrees</code>
 (<a href="https://daijiang.github.io/rtrees/" class="external-link">https://daijiang.github.io/rtrees/</a>). Requires
 <code>taxon = "&lt;group&gt;"</code>. Calls <code>get_tree()</code>. Install
 with <code>pak::pak("daijiang/rtrees")</code> (GitHub-only).</p></dd>
 
 <dt><code>"clootl"</code></dt>
 <dd><p>Bird-only phylogenies in current
-Clements taxonomy, via the GitHub package <span class="pkg">clootl</span>
+Clements taxonomy, via the GitHub package <code>clootl</code>
 (<a href="https://github.com/eliotmiller/clootl" class="external-link">https://github.com/eliotmiller/clootl</a>). Calls
 <code>extractTree()</code>. Install with
 <code>pak::pak("eliotmiller/clootl")</code>.</p></dd>
+
+<dt><code>"fishtree"</code></dt>
+<dd><p>Fish-only time-calibrated phylogeny
+(Rabosky et al. 2018), via the CRAN package <code>fishtree</code>.
+Calls <code>fishtree_phylogeny()</code> (single tree) or
+<code>fishtree_complete_phylogeny()</code> (multi-tree posterior;
+triggered by <code>n_tree &gt; 1</code>). Requires exact name
+matches against the Fish Tree of Life taxonomy — pre-clean
+with <code><a href="reconcile_data.html">reconcile_data()</a></code> (with a <code>taxadb</code> authority) for best
+results.</p></dd>
+
+<dt><code>"datelife"</code></dt>
+<dd><p>Universal database of pre-computed
+chronograms (Sanchez Reyes et al. 2024, <em>Syst. Biol.</em>
+73:470), via the GitHub package <code>datelife</code>
+(<a href="https://github.com/phylotastic/datelife" class="external-link">https://github.com/phylotastic/datelife</a>). Returns a
+single SDM-summary chronogram by default; with
+<code>n_tree &gt; 1</code>, returns a multiPhylo of up to that many
+per-source candidate chronograms. <strong>Install before use</strong>
+with <code>pak::pak("phylotastic/datelife")</code> — the package
+is GitHub-only (archived from CRAN in 2024 with a heavy
+transitive dep tree pak can't auto-resolve), so <span class="pkg">prepR4pcm</span>
+does NOT pull it in via <code>Suggests</code>.</p></dd>
+
+<dt><code>"auto"</code></dt>
+<dd><p>Fall-through dispatcher: try installed
+backends in priority order (rtrees if <code>taxon</code> provided,
+then rotl, fishtree, clootl, datelife), return the first
+result that resolves at least <code>min_match</code> of the
+species. Useful for first-pass exploration when you don't
+yet know which backend covers your taxa.</p></dd>
 
 
 </dl></dd>
@@ -129,16 +167,98 @@ is a data frame; ignored otherwise.</p></dd>
 <dd><p>A length-1 character vector. Required when
 <code>source = "rtrees"</code>. One of <code>"bird"</code>, <code>"mammal"</code>, <code>"fish"</code>,
 <code>"amphibian"</code>, <code>"reptile"</code>, <code>"plant"</code>, <code>"shark_ray"</code>, <code>"bee"</code>,
-<code>"butterfly"</code> (see the <span class="pkg">rtrees</span> package help for
+<code>"butterfly"</code> (see the <code>rtrees</code> package help for
 <code>get_tree</code>). Ignored for other backends.</p></dd>
+
+
+<dt id="arg-n-tree">n_tree<a class="anchor" aria-label="anchor" href="#arg-n-tree"></a></dt>
+<dd><p>A length-1 positive integer. How many trees to
+request from the backend. Default <code>1L</code> (single phylo for
+back-compat). Each backend negotiates this differently:</p><dl><dt><code>"rotl"</code></dt>
+<dd><p>Always returns 1 (the synthesis tree). A
+one-shot warning is emitted if <code>n_tree &gt; 1</code>.</p></dd>
+
+<dt><code>"rtrees"</code></dt>
+<dd><p>Passes through to
+<code>rtrees::get_tree(n_tree = ...)</code>. Requires <code>taxon</code>.</p></dd>
+
+<dt><code>"clootl"</code></dt>
+<dd><p>Passes through to
+<code>clootl::extractTree(sample.size = n_tree)</code> so you get
+multiple Clements posterior samples.</p></dd>
+
+<dt><code>"fishtree"</code></dt>
+<dd><p>Single phylo via <code>fishtree_phylogeny()</code>
+when <code>n_tree = 1</code>; switches to
+<code>fishtree_complete_phylogeny()</code> returning a multiPhylo of
+stochastically polytomy-resolved trees when <code>n_tree &gt; 1</code>.</p></dd>
+
+<dt><code>"datelife"</code></dt>
+<dd><p><code>summary_format = "phylo_sdm"</code> (single
+summary chronogram) when <code>n_tree = 1</code>; switches to
+<code>summary_format = "phylo_all"</code> (one chronogram per source,
+capped at <code>n_tree</code>) when <code>n_tree &gt; 1</code>.</p></dd>
+
+
+</dl><p>When the request returns a multiPhylo, the result's <code>tree</code> slot
+is <code>multiPhylo</code>; otherwise <code>phylo</code>.</p></dd>
+
+
+<dt id="arg-cache">cache<a class="anchor" aria-label="anchor" href="#arg-cache"></a></dt>
+<dd><p>Logical. Cache the result on disk and reuse it on
+subsequent identical calls? Default <code>FALSE</code>. When <code>TRUE</code>, the
+request is keyed by <code>(species, source, n_tree, taxon, ...)</code> and
+stored at <code><a href="pr_tree_cache_dir.html">pr_tree_cache_dir()</a></code>. See <code><a href="pr_tree_cache_status.html">pr_tree_cache_status()</a></code>
+and <code><a href="pr_tree_cache_clear.html">pr_tree_cache_clear()</a></code> for inspecting / wiping the cache.</p></dd>
+
+
+<dt id="arg-tnrs">tnrs<a class="anchor" aria-label="anchor" href="#arg-tnrs"></a></dt>
+<dd><p>A length-1 character vector. Run a TNRS preflight
+(Open Tree of Life name resolution via <code><a href="https://docs.ropensci.org/rotl/reference/tnrs_match_names.html" class="external-link">rotl::tnrs_match_names</a></code>)
+on the species list before calling the backend? One of:</p><dl><dt><code>"auto"</code> (default)</dt>
+<dd><p>Run TNRS only for backends that don't
+do it themselves — currently <code>clootl</code> and <code>fishtree</code>.
+Improves their match rate substantially.</p></dd>
+
+<dt><code>"always"</code></dt>
+<dd><p>Run TNRS regardless of backend.</p></dd>
+
+<dt><code>"never"</code></dt>
+<dd><p>Skip TNRS even when the backend would benefit.</p></dd>
+
+
+</dl><p>When <code>rotl</code> is not installed, TNRS is silently skipped with a
+one-shot warning.</p></dd>
+
+
+<dt id="arg-min-match">min_match<a class="anchor" aria-label="anchor" href="#arg-min-match"></a></dt>
+<dd><p>A length-1 numeric in <code>[0, 1]</code>. Only used when
+<code>source = "auto"</code>. The minimum fraction of input species a
+backend must resolve for the dispatcher to accept its result;
+if no backend meets the threshold, the best available is
+returned with a warning. Default <code>0.8</code>.</p></dd>
+
+
+<dt id="arg-check-ultrametric">check_ultrametric<a class="anchor" aria-label="anchor" href="#arg-check-ultrametric"></a></dt>
+<dd><p>Logical. After producing the tree, check
+that it's ultrametric (all tips equidistant from the root) and
+warn if not. Default <code>TRUE</code>. Only enforced for backends that
+normally return chronograms (<code>rtrees</code>, <code>clootl</code>, <code>fishtree</code>,
+<code>datelife</code>); <code>rotl</code> returns a topology without real branch
+lengths, so the check is skipped. To force ultrametricity on a
+non-ultrametric result, use <code>phytools::force.ultrametric()</code> or
+<code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> directly — prepR4pcm does not modify the
+tree silently.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Backend-specific arguments forwarded to the underlying
 call. See the help page of the underlying function in the
 relevant backend package (<code>tol_induced_subtree</code> in
-<span class="pkg">rotl</span>, <code>extractTree</code> in <span class="pkg">clootl</span>,
-<code>get_tree</code> in <span class="pkg">rtrees</span>) for the full list.</p></dd>
+<code>rotl</code>, <code>extractTree</code> in <code>clootl</code>,
+<code>get_tree</code> in <code>rtrees</code>, <code>fishtree_phylogeny</code> /
+<code>fishtree_complete_phylogeny</code> in <code>fishtree</code>,
+<code>datelife_search</code> in <code>datelife</code>) for the full list.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -161,9 +281,14 @@ them back through <code><a href="reconcile_suggest.html">reconcile_suggest()</a>
 
 <dt><code>backend_meta</code></dt>
 <dd><p>A backend-specific named list of
-diagnostic information (e.g. <code><a href="https://rdrr.io/pkg/clootl/man/getCitations.html" class="external-link">clootl::getCitations()</a></code> output
+diagnostic information (e.g. <code>clootl::getCitations()</code> output
 for the <code>clootl</code> backend; OTT tip-id table for the <code>rotl</code>
-backend).</p></dd>
+backend; the <code>fishtree_phylogeny()</code> warning text and tree
+<code>type</code> for the <code>fishtree</code> backend; the chronogram source
+citations for the <code>datelife</code> backend). Always contains
+<code>tree_provenance</code>, a list with one entry per returned tree
+(so <code>tree[[i]]</code> pairs with <code>backend_meta$tree_provenance[[i]]</code>
+when <code>tree</code> is a <code>multiPhylo</code>).</p></dd>
 
 
 </dl></div>
@@ -179,7 +304,20 @@ to install if you ask for a backend you don't have.</p>
     <div class="dont-index"><p><code><a href="reconcile_tree.html">reconcile_tree()</a></code> / <code><a href="reconcile_data.html">reconcile_data()</a></code> for producing the
 reconciled species list that feeds this function;
 <code><a href="reconcile_apply.html">reconcile_apply()</a></code> for combining the returned <code>phylo</code> with the
-data frame ready for analysis.</p></div>
+data frame ready for analysis;
+<code><a href="reconcile_augment.html">reconcile_augment()</a></code> for filling gaps in an existing tree
+(a tree-aware alternative to retrieving a fresh tree);
+<code><a href="pr_date_tree.html">pr_date_tree()</a></code> for time-calibrating an existing topology;
+<code><a href="pr_cite_tree.html">pr_cite_tree()</a></code> for formatting citations for a tree result;
+<code><a href="pr_tree_compare.html">pr_tree_compare()</a></code> for comparing two or more retrieved trees;
+<code><a href="pr_get_tree_status.html">pr_get_tree_status()</a></code> for checking which backends are installed
+and reachable;
+<code><a href="pr_tree_cache_dir.html">pr_tree_cache_dir()</a></code> / <code><a href="pr_tree_cache_status.html">pr_tree_cache_status()</a></code> /
+<code><a href="pr_tree_cache_clear.html">pr_tree_cache_clear()</a></code> for managing the on-disk cache.
+The companion package
+<a href="https://itchyshin.github.io/pigauto/" class="external-link">pigauto</a> consumes a
+<code>multiPhylo</code> directly via <code>multi_impute_trees()</code> for posterior-
+tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></div>
     </div>
 
     <div class="section level2">
@@ -201,7 +339,11 @@ data frame ready for analysis.</p></div>
 <span class="r-in"><span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">pr_get_tree</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox lucius"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                     source <span class="op">=</span> <span class="st">"rtrees"</span>, taxon <span class="op">=</span> <span class="st">"fish"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Example 4: from a data frame with custom species column</span></span></span>
+<span class="r-in"><span>  <span class="co"># Example 4: fish via fishtree (Rabosky et al. 2018, time-calibrated)</span></span></span>
+<span class="r-in"><span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">pr_get_tree</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox lucius"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                     source <span class="op">=</span> <span class="st">"fishtree"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Example 5: from a data frame with custom species column</span></span></span>
 <span class="r-in"><span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">pr_get_tree</span><span class="op">(</span><span class="va">my_df</span>, source <span class="op">=</span> <span class="st">"rotl"</span>,</span></span>
 <span class="r-in"><span>                     species_col <span class="op">=</span> <span class="st">"scientific_name"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

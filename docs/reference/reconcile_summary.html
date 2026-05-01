@@ -15,7 +15,7 @@ reconcile_tree() or reconcile_data()."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,6 +29,8 @@ reconcile_tree() or reconcile_data()."><meta property="og:image" content="https:
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -75,7 +77,7 @@ unresolved. Usually the second function you call after
 
 
 <dt id="arg-detail">detail<a class="anchor" aria-label="anchor" href="#arg-detail"></a></dt>
-<dd><p>Character(1). How much to show:</p><dl><dt><code>"full"</code> (default)</dt>
+<dd><p>A length-1 character vector. How much to show:</p><dl><dt><code>"full"</code> (default)</dt>
 <dd><p>Every match category, with the names
 belonging to each category listed out.</p></dd>
 
@@ -92,7 +94,7 @@ want to focus on what still needs review.</p></dd>
 
 
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>
-<dd><p>Character(1). Where the summary goes:</p><dl><dt><code>"console"</code> (default)</dt>
+<dd><p>A length-1 character vector. Where the summary goes:</p><dl><dt><code>"console"</code> (default)</dt>
 <dd><p>Pretty-printed to the screen.</p></dd>
 
 <dt><code>"data.frame"</code></dt>
@@ -104,7 +106,7 @@ when writing a report or table in a larger script.</p></dd>
 
 
 <dt id="arg-file">file<a class="anchor" aria-label="anchor" href="#arg-file"></a></dt>
-<dd><p>Character(1) or <code>NULL</code>. If non-<code>NULL</code>, writes the
+<dd><p>A length-1 character vector or <code>NULL</code>. If non-<code>NULL</code>, writes the
 console report to this file path in addition to printing it.</p></dd>
 
 
@@ -114,8 +116,14 @@ console report to this file path in addition to printing it.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>reconciliation_summary</code> object. Printed to the console by
-default; returned invisibly for inspection.</p>
+    <p>A <code>reconciliation_summary</code> object. The formatted report
+is attached to the object and rendered by
+<code><a href="print.reconciliation_summary.html">print.reconciliation_summary()</a></code>. R's REPL auto-printing means
+that calling the function at the prompt without assignment shows
+the full report; assigning the result to a variable shows
+nothing until you <code>print(x)</code> (or auto-print <code>x</code>). Use
+<code>invisible(reconcile_summary(rec))</code> to suppress display at the
+prompt entirely.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -159,8 +167,8 @@ default; returned invisibly for inspection.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_tree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-05-01 09:51:16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.3.1.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-05-01 15:21:51</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.4.0.9000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -176,8 +184,8 @@ default; returned invisibly for inspection.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_tree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-05-01 09:51:16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.3.1.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-05-01 15:21:51</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 0.4.0.9000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

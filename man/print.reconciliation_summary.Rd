@@ -19,3 +19,4 @@ Renders the formatted report attached to the object. Triggered
 automatically by R's REPL when the object is auto-printed (i.e.
 when \code{reconcile_summary(rec)} is called without assignment).
 }
+\keyword{internal}

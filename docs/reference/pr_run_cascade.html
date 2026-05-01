@@ -11,7 +11,7 @@ synonym -&amp;gt; fuzzy. Each stage only operates on names not yet matched."><me
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,6 +25,8 @@ synonym -&amp;gt; fuzzy. Each stage only operates on names not yet matched."><me
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -61,6 +63,7 @@ synonym -&gt; fuzzy. Each stage only operates on names not yet matched.</p>
 <span>  fuzzy_threshold <span class="op">=</span> <span class="fl">0.9</span>,</span>
 <span>  flag_threshold <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  resolve <span class="op">=</span> <span class="st">"flag"</span>,</span>
+<span>  multi_x <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,11 +88,11 @@ skips stage 3.</p></dd>
 
 
 <dt id="arg-db-version">db_version<a class="anchor" aria-label="anchor" href="#arg-db-version"></a></dt>
-<dd><p>Character(1) or NULL.</p></dd>
+<dd><p>A length-1 character vector or NULL.</p></dd>
 
 
 <dt id="arg-rank">rank<a class="anchor" aria-label="anchor" href="#arg-rank"></a></dt>
-<dd><p>Character(1). <code>"species"</code> or <code>"subspecies"</code>.</p></dd>
+<dd><p>A length-1 character vector. <code>"species"</code> or <code>"subspecies"</code>.</p></dd>
 
 
 <dt id="arg-overrides">overrides<a class="anchor" aria-label="anchor" href="#arg-overrides"></a></dt>
@@ -98,7 +101,7 @@ pre-built overrides, or NULL.</p></dd>
 
 
 <dt id="arg-fuzzy">fuzzy<a class="anchor" aria-label="anchor" href="#arg-fuzzy"></a></dt>
-<dd><p>Logical. Enable fuzzy matching? Default <code>FALSE</code>.</p></dd>
+<dd><p>Logical. Enables the fuzzy-matching stage when <code>TRUE</code>. Default <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-fuzzy-threshold">fuzzy_threshold<a class="anchor" aria-label="anchor" href="#arg-fuzzy-threshold"></a></dt>
@@ -107,10 +110,21 @@ matches. Default <code>0.9</code> (conservative).</p></dd>
 
 
 <dt id="arg-resolve">resolve<a class="anchor" aria-label="anchor" href="#arg-resolve"></a></dt>
-<dd><p>Character(1). How to handle low-confidence matches:
+<dd><p>A length-1 character vector. How to handle low-confidence matches:
 <code>"flag"</code> (default) marks fuzzy matches below 0.95 and indirect
 synonym matches as <code>match_type = "flagged"</code> for manual review.
 <code>"first"</code> accepts all matches at face value.</p></dd>
+
+
+<dt id="arg-multi-x">multi_x<a class="anchor" aria-label="anchor" href="#arg-multi-x"></a></dt>
+<dd><p>Logical. Allow multiple x names to resolve to the
+same y? Default <code>FALSE</code> (each y is matched at most once).
+<code><a href="reconcile_multi.html">reconcile_multi()</a></code> sets this to <code>TRUE</code> because the same species
+may legitimately appear in different formats (e.g. underscore
+vs space) across datasets, and both formats should resolve to
+the same tree tip. With <code>multi_x = TRUE</code>, the normalised and
+synonym stages do not exclude already-matched y's from their
+lookup space.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
