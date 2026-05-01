@@ -136,7 +136,12 @@
 #'   [reconcile_apply()] for the non-augmenting alternative (prune data
 #'   and tree to the intersection); [pr_get_tree()] for retrieving a
 #'   candidate tree from external resources when you don't have a tree
-#'   yet.
+#'   yet; [pr_date_tree()] for time-calibrating an existing topology;
+#'   [pr_cite_tree()] for formatting tree provenance citations. The
+#'   companion package
+#'   \href{https://itchyshin.github.io/pigauto/}{pigauto} consumes the
+#'   resulting tree (or `multiPhylo`) directly via
+#'   `multi_impute_trees()` for posterior-tree PCMs.
 #'
 #' @references
 #' Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern

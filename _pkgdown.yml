@@ -12,7 +12,10 @@ home:
   description: >
     Reconcile species names across datasets and phylogenetic trees for
     ecologists and evolutionary biologists running PGLS, phylogenetic
-    mixed models, and other PCMs.
+    mixed models, and other PCMs. Sister package
+    [pigauto](https://itchyshin.github.io/pigauto/) consumes the
+    posterior of trees that prepR4pcm produces and propagates both
+    tree- and imputation-uncertainty into pooled estimates.
 
 navbar:
   structure:
@@ -28,6 +31,8 @@ navbar:
         href: articles/bird-workflow.html
       - text: "Mammal database-assembly workflow"
         href: articles/db-assembly-workflow_mammals.html
+      - text: "Posterior-tree pipeline (prepR4pcm + pigauto)"
+        href: articles/posterior-tree-pipeline.html
 
 reference:
 
@@ -96,16 +101,23 @@ reference:
   - pr_normalize_names
   - pr_extract_tips
 
-- title: "Tree retrieval (external backends)"
+- title: "Tree retrieval, dating, and citation"
   desc: >
-    Retrieve a candidate phylogeny for a reconciled species list by
-    querying an external R package. Backends include rotl (CRAN, Open
-    Tree of Life), rtrees (GitHub, taxon-specific mega-trees), clootl
-    (GitHub, bird Clements taxonomy), and fishtree (CRAN, Rabosky et
-    al. 2018 fish chronogram). Backends live in `Suggests` (or
-    GitHub) and are installed on demand.
+    Retrieve a candidate phylogeny for a reconciled species list,
+    time-calibrate an existing topology, or format the citations for
+    a tree result. Five `pr_get_tree()` backends ship: rotl (CRAN,
+    Open Tree of Life synthesis), rtrees (GitHub, taxon-specific
+    mega-trees), clootl (GitHub, bird Clements taxonomy), fishtree
+    (CRAN, Rabosky et al. 2018 fish chronogram), and datelife
+    (GitHub, Sanchez Reyes et al. 2024 chronogram database). Each
+    backend supports `n_tree > 1` for posterior samples to feed
+    [pigauto](https://itchyshin.github.io/pigauto/) and similar
+    multi-tree consumers. Backends live in `Suggests` (or GitHub)
+    and are installed on demand.
   contents:
   - pr_get_tree
+  - pr_date_tree
+  - pr_cite_tree
 
 - title: "Bundled bird data"
   desc: >

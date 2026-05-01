@@ -215,7 +215,12 @@ phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
 \code{\link[=reconcile_apply]{reconcile_apply()}} for the non-augmenting alternative (prune data
 and tree to the intersection); \code{\link[=pr_get_tree]{pr_get_tree()}} for retrieving a
 candidate tree from external resources when you don't have a tree
-yet.
+yet; \code{\link[=pr_date_tree]{pr_date_tree()}} for time-calibrating an existing topology;
+\code{\link[=pr_cite_tree]{pr_cite_tree()}} for formatting tree provenance citations. The
+companion package
+\href{https://itchyshin.github.io/pigauto/}{pigauto} consumes the
+resulting tree (or \code{multiPhylo}) directly via
+\code{multi_impute_trees()} for posterior-tree PCMs.
 
 Other reconciliation functions: 
 \code{\link{reconcile_apply}()},
