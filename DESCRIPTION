@@ -65,7 +65,8 @@ Additional_repositories:
     https://daijiang.r-universe.dev
 Remotes:
     github::eliotmiller/clootl,
-    github::daijiang/rtrees
+    github::daijiang/rtrees,
+    github::daijiang/megatrees
 LazyData: true
 Config/testthat/edition: 3
 VignetteBuilder: knitr
