@@ -1,0 +1,204 @@
+---
+title: "Comparing tree backends — when do they agree?"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing tree backends — when do they agree?}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+`prepR4pcm` ships five tree-retrieval backends. They draw on
+different reference trees, different taxonomies, and different
+calibration approaches. So they disagree. The question is *how
+much*, and *where*.
+
+This vignette walks through `pr_tree_compare()` and shows how to
+use it to make a defensible backend choice for your dataset — or to
+report which backend choice you made and what the alternatives
+would have given.
+
+## Setup
+
+```{r setup, eval = TRUE}
+library(prepR4pcm)
+# install.packages(c("rotl", "fishtree"))
+# pak::pak(c("eliotmiller/clootl", "daijiang/rtrees", "phylotastic/datelife"))
+```
+
+Check what's installed and reachable in your session:
+
+```{r status, eval = TRUE}
+pr_get_tree_status()
+```
+
+## The recipe
+
+Pick a small species list. Retrieve the same set from two or three
+backends. Compare.
+
+```{r retrieve}
+species <- c("Salmo salar", "Esox lucius", "Oncorhynchus mykiss",
+             "Gadus morhua", "Thunnus thynnus")
+
+# Three backends that all cover fish
+res_rotl     <- pr_get_tree(species, source = "rotl")
+res_fishtree <- pr_get_tree(species, source = "fishtree")
+res_rtrees   <- pr_get_tree(species, source = "rtrees", taxon = "fish")
+```
+
+The three results are independent. Now compare:
+
+```{r compare}
+cmp <- pr_tree_compare(
+  rotl     = res_rotl,
+  fishtree = res_fishtree,
+  rtrees   = res_rtrees
+)
+cmp
+```
+
+The print method shows three pairwise matrices. Reading them:
+
+- **Tip-set Jaccard** — fraction of species both trees place. 1.0 =
+  same species set. 0.0 = no overlap. If any pairwise value is < 1,
+  you're not comparing apples to apples.
+- **Robinson-Foulds distance** — number of internal edges that
+  differ between the two trees, restricted to their shared tip set.
+  Lower = trees agree more.
+- **Branch-length correlation** — Pearson correlation of sorted
+  edge lengths after pruning to the shared subtree. Useful as a
+  rough check on whether two chronograms agree on rate scale.
+
+## What to do with the result
+
+### When all three agree (Jaccard ≈ 1, RF small)
+
+Great. Use whichever backend best matches your taxonomic / temporal
+needs. Document the choice. Call `pr_cite_tree()` to capture the
+citation:
+
+```{r cite}
+pr_cite_tree(res_fishtree, format = "markdown")
+```
+
+### When tip sets differ (Jaccard < 1)
+
+The backends disagree on which species are valid. Inspect the
+unique-to lists:
+
+```{r unique-to}
+cmp$unique_to$rotl     # species rotl placed but the others didn't
+cmp$unique_to$fishtree # species fishtree placed but the others didn't
+cmp$shared_tips        # species placed by all backends
+```
+
+Common causes:
+- **Taxonomy difference.** rotl uses Open Tree taxonomy; fishtree
+  uses its own; clootl uses Clements. The *same* species may have
+  different canonical names.
+- **Coverage gap.** A species is in one reference tree but not
+  another (often a recently described species).
+- **Synonymy.** One backend matches via synonymy, another doesn't.
+
+Mitigation: re-run with `tnrs = "always"` to harmonise names via
+Open Tree's TNRS first. See `?pr_get_tree`.
+
+### When topologies disagree (RF large)
+
+The trees agree on which species exist but disagree on how they're
+related. This is the genuinely interesting case.
+
+- For exploratory PCMs, run your model on each tree and report the
+  range of estimates.
+- For a definitive analysis, pick the backend with the strongest
+  underlying paper for your taxon (fishtree for fish, clootl for
+  birds, datelife for everything else when you need calibration).
+
+The companion package
+[pigauto](https://itchyshin.github.io/pigauto/) is built for this:
+hand it the multiPhylo of every backend's tree, fit your model on
+each, and pool the results via Rubin's rules. The resulting
+intervals reflect the tree-choice uncertainty honestly.
+
+```{r pigauto-multi-backend}
+# Fitting across backends (not just within a backend's posterior)
+all_trees <- structure(list(res_rotl$tree, res_fishtree$tree,
+                            res_rtrees$tree[[1]]),
+                       class = "multiPhylo")
+# pigauto::multi_impute_trees(rec$aligned, all_trees, m_per_tree = 5)
+```
+
+### When branch-length correlation is low
+
+The trees agree on topology but not on rate scale. Usually one is
+time-calibrated and the other isn't:
+
+- `rotl` returns the synthesis tree with no calibration.
+- `rtrees` grafts onto a reference tree; calibration is whatever the
+  reference uses.
+- `fishtree` and `clootl` and `datelife` all return time-calibrated
+  trees.
+
+If your downstream model expects calibrated branches (most BM /
+OU / lambda models do), use a calibrated backend. If the only
+calibrated option for your taxon is `datelife`, see
+`?pr_date_tree` for dating an existing topology.
+
+## Caching the comparisons
+
+Each retrieval is slow. If you're going to compare backends, set
+`cache = TRUE` so re-running the vignette is instant:
+
+```{r cache}
+res_rotl     <- pr_get_tree(species, source = "rotl",
+                             cache = TRUE)
+res_fishtree <- pr_get_tree(species, source = "fishtree",
+                             cache = TRUE)
+res_rtrees   <- pr_get_tree(species, source = "rtrees",
+                             taxon  = "fish", cache = TRUE)
+
+# See what's cached
+pr_tree_cache_status()
+
+# Wipe just the rotl entries (e.g. after an OTT version refresh)
+pr_tree_cache_clear(source = "rotl", confirm = FALSE)
+```
+
+By default the cache lives at `tools::R_user_dir()`. Pass a
+project-local directory if you want the cache committed alongside
+the analysis:
+
+```{r project-cache}
+pr_tree_cache_dir("./.tree-cache")
+```
+
+## What `pr_tree_compare()` doesn't do (yet)
+
+- **Bipartition-matched branch-length correlation.** The current
+  implementation correlates *sorted* edge lengths, which is a coarse
+  but defensible "do they agree on rate scale" check. A proper
+  bipartition-matched correlation is a future-round refinement.
+- **Visualisation.** Pair with `phytools::cophyloplot()` or
+  `phangorn::densiTree()` for visual comparison of two or many
+  trees.
+- **Three-or-more-tree consensus.** For "what's the median tree
+  across these three backends?", use
+  `phangorn::consensus(c(res_rotl$tree, res_fishtree$tree, res_rtrees$tree[[1]]))`.
+
+## See also
+
+- `?pr_tree_compare` — full reference for the comparison function.
+- `?pr_get_tree` — retrieval entry point.
+- `?pr_get_tree_status` — backend health probe.
+- `?pr_tree_cache_dir` — cache management.
+- The
+  [posterior-tree pipeline vignette](posterior-tree-pipeline.html)
+  for the prepR4pcm → pigauto integration.

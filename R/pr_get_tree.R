@@ -317,12 +317,19 @@ pr_get_tree <- function(x,
   )
   if (!do_it) return(species)
   if (!requireNamespace("rotl", quietly = TRUE)) {
-    # Don't error: silently skip preflight, report in a warning so the
-    # user knows coverage may be lower than expected.
-    cli::cli_warn(c(
-      "TNRS preflight requires {.pkg rotl}; skipping.",
-      "i" = 'Install with {.code install.packages("rotl")} for higher match rates with backends like {.val {source}}.'
-    ))
+    # Silently skip preflight. Emit a one-shot warning the first time
+    # in a session so the user knows coverage may be lower than
+    # expected, but don't repeat it on every subsequent call (the
+    # auto dispatcher calls preflight per candidate backend, which
+    # would multiply the noise).
+    if (!isTRUE(getOption("prepR4pcm.tnrs_warning_shown"))) {
+      cli::cli_warn(c(
+        "TNRS preflight requires {.pkg rotl}; skipping.",
+        "i" = 'Install with {.code install.packages("rotl")} for higher match rates with backends like {.val {source}}.',
+        ">" = "(This warning appears once per session.)"
+      ))
+      options(prepR4pcm.tnrs_warning_shown = TRUE)
+    }
     return(species)
   }
   tnrs_res <- tryCatch(
