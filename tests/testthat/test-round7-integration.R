@@ -81,8 +81,16 @@ test_that("pr_tree_compare on two pr_tree_result inputs works end-to-end", {
     },
     .package = "prepR4pcm"
   )
-  r1 <- pr_get_tree(c("a", "b", "c", "d"), source = "rotl")
-  r2 <- pr_get_tree(c("a", "b", "c", "d"), source = "fishtree")
+  # tnrs = "never": prevents the preflight from rewriting the toy
+  # species list against the live OToL server when rotl is installed
+  # (CI Linux but not the bare-bones macOS dev box). Without this,
+  # r1's tree has tips "a","b","c","d" but r2's tree has tips like
+  # "Anolis...","Beta..." (rotl's TNRS partial-matches) and the
+  # intersection is empty.
+  r1 <- pr_get_tree(c("a", "b", "c", "d"), source = "rotl",
+                    tnrs = "never")
+  r2 <- pr_get_tree(c("a", "b", "c", "d"), source = "fishtree",
+                    tnrs = "never")
   cmp <- pr_tree_compare(rotl = r1, fishtree = r2)
   expect_s3_class(cmp, "pr_tree_compare")
   expect_equal(cmp$n_shared, 4L)
@@ -138,7 +146,9 @@ test_that("auto dispatcher records its attempts in backend_meta", {
     },
     .package = "prepR4pcm"
   )
-  res <- pr_get_tree(c("a", "b"), source = "auto", min_match = 1.0)
+  # tnrs = "never" same reason as above (Linux-CI rotl preflight)
+  res <- pr_get_tree(c("a", "b"), source = "auto", min_match = 1.0,
+                     tnrs = "never")
   expect_equal(res$source, "fishtree")
   expect_true(!is.null(res$backend_meta$auto_attempts))
   expect_true("rotl" %in% names(res$backend_meta$auto_attempts))

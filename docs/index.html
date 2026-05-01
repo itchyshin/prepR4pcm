@@ -16,9 +16,9 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="prepR4pcm: reconcile species names for phylogenetic comparative methods">
-<meta name="description" content="Reconcile species names across datasets and phylogenetic trees for ecologists and evolutionary biologists running PGLS, phylogenetic mixed models, and other PCMs.
+<meta name="description" content="Reconcile species names across datasets and phylogenetic trees for ecologists and evolutionary biologists running PGLS, phylogenetic mixed models, and other PCMs. Sister package [pigauto](https://itchyshin.github.io/pigauto/) consumes the posterior of trees that prepR4pcm produces and propagates both tree- and imputation-uncertainty into pooled estimates.
 ">
-<meta property="og:description" content="Reconcile species names across datasets and phylogenetic trees for ecologists and evolutionary biologists running PGLS, phylogenetic mixed models, and other PCMs.
+<meta property="og:description" content="Reconcile species names across datasets and phylogenetic trees for ecologists and evolutionary biologists running PGLS, phylogenetic mixed models, and other PCMs. Sister package [pigauto](https://itchyshin.github.io/pigauto/) consumes the posterior of trees that prepR4pcm produces and propagates both tree- and imputation-uncertainty into pooled estimates.
 ">
 <meta property="og:image" content="https://itchyshin.github.io/prepR4pcm/logo.svg">
 </head>
@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,6 +46,8 @@
 <li><a class="dropdown-item" href="articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -69,20 +71,63 @@
 </div>
 <!-- badges: start -->
 
-<p>Species names in your data rarely match the tip labels in your tree. Formatting differences (<code>Homo_sapiens</code> vs <code>Homo sapiens</code>), taxonomic synonyms, and simple typos silently drop species from phylogenetic comparative analyses. <strong>prepR4pcm</strong> detects and resolves these mismatches through a multi-stage matching cascade (exact, normalised, synonym, fuzzy), documents every decision, and produces aligned data–tree pairs ready for PGLS, phylogenetic mixed models, or any other PCM.</p>
+<p>Species names in your data rarely match the tip labels in your phylogenetic tree exactly. Such mismatches prevent you from combining species traits (data tables) with their evolutionary relationships (the phylogenetic tree) — which is what phylogenetic comparative methods (PCMs, e.g. studies of trait evolution, niche conservatism, or correlated trait change) need. Three kinds of mismatch silently drop species from these analyses:</p>
+<ul>
+<li>
+<strong>Formatting differences</strong>, e.g. <code>Homo_sapiens</code> vs <code>Homo sapiens</code>, trailing whitespace, capitalisation</li>
+<li>
+<strong>Taxonomic synonyms / different ranks</strong>, e.g. <code>Homo sapiens</code> vs <code>Homo sapiens sapiens</code>, or a recent name vs the historical synonym used in the tree</li>
+<li>
+<strong>Simple typos</strong>, e.g. <code>Homo sapiens</code> vs <code>Hamo sapiens</code>
+</li>
+</ul>
+<p><strong>prepR4pcm</strong> detects and resolves all three through a multi-stage matching cascade (exact → normalised → synonym → fuzzy), documents every decision so the choices are auditable, and produces aligned data–tree pairs ready for phylogenetic generalised least squares (PGLS), phylogenetic mixed models (PGLMMs), or any other PCM.</p>
+<p>Below you’ll find: how to install, a quick example, the typical workflow, vignettes covering realistic pipelines, citation information, and a list of the bundled example datasets.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>Install the development version from GitHub:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
-<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"itchyshin/prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu">pak</span><span class="op">(</span><span class="st">"itchyshin/prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
+</h2>
+<ul>
+<li>
+<strong>Four-stage matching cascade</strong>: exact match, normalised match (case, whitespace, underscores), synonym resolution via <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> (Norman et al. 2020), and fuzzy matching with genus pre-filtering for typos.</li>
+<li>
+<strong>Full provenance</strong>: every name-matching decision is recorded. <code><a href="reference/reconcile_summary.html">reconcile_summary()</a></code>, <code><a href="reference/reconcile_plot.html">reconcile_plot()</a></code>, <code><a href="reference/reconcile_report.html">reconcile_report()</a></code>, and <code><a href="reference/reconcile_suggest.html">reconcile_suggest()</a></code> help you audit matches and find near-misses.</li>
+<li>
+<strong>Multi-tree support</strong>: <code><a href="reference/reconcile_to_trees.html">reconcile_to_trees()</a></code> matches a dataset against several trees at once; <code><a href="reference/reconcile_diff.html">reconcile_diff()</a></code> compares results.</li>
+<li>
+<strong>Crosswalks and overrides</strong>: <code><a href="reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> converts published taxonomy crosswalks (e.g., BirdLife–BirdTree) into override tables.</li>
+<li>
+<strong>Tree augmentation</strong>: <code><a href="reference/reconcile_augment.html">reconcile_augment()</a></code> grafts unresolved species onto a tree using genus-level placement (always run sensitivity analyses with and without augmented tips).</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>Load data <span class="sc">+</span> tree</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>       <span class="sc">|</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="fu">reconcile_tree</span>()</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>       <span class="sc">|</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  Review<span class="sc">:</span> <span class="fu">reconcile_summary</span>(), <span class="fu">reconcile_plot</span>(), <span class="fu">reconcile_report</span>()</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>       <span class="sc">|</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  Fix<span class="sc">:</span> <span class="fu">reconcile_override</span>(), <span class="fu">reconcile_suggest</span>()</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>       <span class="sc">|</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="fu">reconcile_apply</span>()</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>       <span class="sc">|</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  Aligned data <span class="sc">+</span> pruned tree <span class="sc">-</span><span class="ot">-&gt;</span> PGLS <span class="sc">/</span> PGLMM</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-example">Quick example<a class="anchor" aria-label="anchor" href="#quick-example"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
+<p>This minimal example reconciles a small bird trait dataset (<code>avonet_subset</code>, a sample of AVONET) against a small bird phylogeny (<code>tree_jetz</code>, a sample of the Jetz et al. 2012 phylogeny) and produces a model-ready aligned data frame plus a pruned tree.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">prepR4pcm</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/emmanuelparadis/ape" class="external-link">ape</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reconcile a dataset against a phylogenetic tree</span></span>
@@ -106,7 +151,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 09:04:13</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-01 14:18:01</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -130,37 +175,7 @@
 <span><span class="co">#&gt; [1] 657</span></span>
 <span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 657</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
-</h2>
-<ul>
-<li>
-<strong>Four-stage matching cascade</strong>: exact match, normalised match (case, whitespace, underscores), synonym resolution via <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> (Norman et al. 2020), and fuzzy matching with genus pre-filtering for typos.</li>
-<li>
-<strong>Full provenance</strong>: every name-matching decision is recorded. <code><a href="reference/reconcile_summary.html">reconcile_summary()</a></code>, <code><a href="reference/reconcile_plot.html">reconcile_plot()</a></code>, <code><a href="reference/reconcile_report.html">reconcile_report()</a></code>, and <code><a href="reference/reconcile_suggest.html">reconcile_suggest()</a></code> help you audit matches and find near-misses.</li>
-<li>
-<strong>Multi-tree support</strong>: <code><a href="reference/reconcile_to_trees.html">reconcile_to_trees()</a></code> matches a dataset against several trees at once; <code><a href="reference/reconcile_diff.html">reconcile_diff()</a></code> compares results.</li>
-<li>
-<strong>Crosswalks and overrides</strong>: <code><a href="reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> converts published taxonomy crosswalks (e.g., BirdLife–BirdTree) into override tables.</li>
-<li>
-<strong>Tree augmentation</strong>: <code><a href="reference/reconcile_augment.html">reconcile_augment()</a></code> grafts unresolved species onto a tree using genus-level placement (always run sensitivity analyses with and without augmented tips).</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
-</h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>Load data <span class="sc">+</span> tree</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>       <span class="sc">|</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">reconcile_tree</span>()</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>       <span class="sc">|</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  Review<span class="sc">:</span> <span class="fu">reconcile_summary</span>(), <span class="fu">reconcile_plot</span>(), <span class="fu">reconcile_report</span>()</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>       <span class="sc">|</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  Fix<span class="sc">:</span> <span class="fu">reconcile_override</span>(), <span class="fu">reconcile_suggest</span>()</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>       <span class="sc">|</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="fu">reconcile_apply</span>()</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>       <span class="sc">|</span></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  Aligned data <span class="sc">+</span> pruned tree <span class="sc">-</span><span class="ot">-&gt;</span> PGLS <span class="sc">/</span> PGLMM</span></code></pre></div>
+<p>What just happened: <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> matched every species name in <code>avonet_subset$Species1</code> against the tip labels of <code>tree_jetz</code>, trying exact matches first and falling back through normalised, synonym, and fuzzy matches as needed. The printed <code>rec</code> object shows the count in each match category. <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> then takes that reconciliation and produces (a) a data frame with rows restricted to species that resolved to a tree tip, and (b) the tree pruned to those tips. The <code><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow()</a></code> and <code><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">ape::Ntip()</a></code> calls confirm the two sides agree on species count — the precondition for any downstream PGLS or PGLMM call.</p>
 </div>
 <div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
@@ -177,8 +192,23 @@
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<p>If you use prepR4pcm in your research, please cite the package:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>If you use prepR4pcm in your research, please cite the package and the original publication for any bundled example dataset you used (see <em>Bundled data sources</em> below).</p>
+<p>For the package itself:</p>
+<blockquote>
+<p>Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Celeste J, Poo Hernandez S (2026). <em>prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.</em> R package version 0.4.0. <a href="https://github.com/itchyshin/prepR4pcm" class="external-link uri">https://github.com/itchyshin/prepR4pcm</a></p>
+</blockquote>
+<p>BibTeX:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Jimuel Jr Celeste and</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>            Sergio {Poo Hernandez}},</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>}</span></code></pre></div>
+<p>Or run in R to get the same entry programmatically:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -194,7 +224,7 @@
 <div class="section level2">
 <h2 id="bundled-data-sources">Bundled data sources<a class="anchor" aria-label="anchor" href="#bundled-data-sources"></a>
 </h2>
-<p>The package includes subset datasets for examples, vignettes, and testing. Each is a small sample of a larger published dataset; if you use any of them in published work, please cite the original provider.</p>
+<p>The package ships small sample datasets — each is a <em>subset</em> (a few hundred rows or tips) of a larger published dataset, used only for the package’s examples, vignettes, and tests. They are not full versions: if you want to <em>do science</em> with these data, download the full original dataset from the source listed below. If you use any of these examples in published work, please cite the original provider.</p>
 <p><strong>Bird data (used by the bird-workflow vignette):</strong></p>
 <ul>
 <li>
@@ -210,9 +240,9 @@
 <strong>Jetz phylogeny</strong> (<code>tree_jetz</code>): Jetz et al. (2012) <em>Nature</em> 491:444–448. <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>
 </li>
 <li>
-<strong>Clements checklist</strong> (<code>tree_clements25</code>): Clements et al. (2025) eBird/Clements Checklist of Birds of the World, v2025.</li>
+<strong>Clements checklist</strong> (<code>tree_clements25</code>): Clements et al. (2025) eBird/Clements Checklist of Birds of the World, v2025 (<a href="https://www.birds.cornell.edu/clementschecklist/" class="external-link uri">https://www.birds.cornell.edu/clementschecklist/</a>).</li>
 <li>
-<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): Distributed with AVONET (Tobias et al. 2022); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>) taxonomy.</li>
+<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): distributed with AVONET (Tobias et al. 2022, <a href="https://doi.org/10.1111/ele.13898" class="external-link">doi:10.1111/ele.13898</a>); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>) taxonomy.</li>
 </ul>
 <p><strong>Mammal data (used by the mammal database-assembly vignette):</strong></p>
 <ul>

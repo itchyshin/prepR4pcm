@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,8 @@
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -127,7 +129,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 09:51:21</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-01 15:22:30</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -209,36 +211,12 @@ regression parameters:</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">caper</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># reconcile_apply() aligns names so data$Species1 matches tree tip labels</span></span>
-<span><span class="va">cd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caper/man/comparative.data.html" class="external-link">comparative.data</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span>, <span class="va">aligned</span><span class="op">$</span><span class="va">data</span>,</span>
+<span><span class="va">cd</span> <span class="op">&lt;-</span> <span class="fu">comparative.data</span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span>, <span class="va">aligned</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>                       names.col <span class="op">=</span> <span class="st">"Species1"</span>, vcv <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># PGLS: body mass ~ wing length</span></span>
-<span><span class="va">model_pgls</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caper/man/pgls.html" class="external-link">pgls</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">Mass</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">Wing.Length</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">cd</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model_pgls</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Call:</span></span>
-<span><span class="co">#&gt; pgls(formula = log(Mass) ~ log(Wing.Length), data = cd)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Residuals:</span></span>
-<span><span class="co">#&gt;      Min       1Q   Median       3Q      Max </span></span>
-<span><span class="co">#&gt; -0.53264 -0.04823 -0.00130  0.04332  0.50941 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Branch length transformations:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; kappa  [Fix]  : 1.000</span></span>
-<span><span class="co">#&gt; lambda [Fix]  : 1.000</span></span>
-<span><span class="co">#&gt; delta  [Fix]  : 1.000</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Coefficients:</span></span>
-<span><span class="co">#&gt;                   Estimate Std. Error t value  Pr(&gt;|t|)    </span></span>
-<span><span class="co">#&gt; (Intercept)      -5.781917   0.381775 -15.145 &lt; 2.2e-16 ***</span></span>
-<span><span class="co">#&gt; log(Wing.Length)  2.054361   0.065135  31.540 &lt; 2.2e-16 ***</span></span>
-<span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Residual standard error: 0.09582 on 651 degrees of freedom</span></span>
-<span><span class="co">#&gt; Multiple R-squared: 0.6044,  Adjusted R-squared: 0.6038 </span></span>
-<span><span class="co">#&gt; F-statistic: 994.8 on 1 and 651 DF,  p-value: &lt; 2.2e-16</span></span></code></pre></div>
+<span><span class="va">model_pgls</span> <span class="op">&lt;-</span> <span class="fu">pgls</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">Mass</span><span class="op">)</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">Wing.Length</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">cd</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model_pgls</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="phylogenetic-generalised-linear-mixed-model-pglmm">Phylogenetic generalised linear mixed model (PGLMM)<a class="anchor" aria-label="anchor" href="#phylogenetic-generalised-linear-mixed-model-pglmm"></a>
@@ -341,7 +319,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 09:51:39</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-01 15:22:45</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -582,6 +560,11 @@ tree using genus-level placement:</p>
 <span>  seed <span class="op">=</span> <span class="fl">42</span>,                      <span class="co"># for reproducibility</span></span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Tree returned by <span style="color: #0000BB;">"internal"</span> is not strictly ultrametric.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.</span></span>
+<span><span class="co">#&gt; → To force: `phytools::force.ultrametric(result$tree)` or</span></span>
+<span><span class="co">#&gt;   `ape::chronos(result$tree)`.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> To suppress this check: pass `check_ultrametric = FALSE`.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original tips: %d\nAugmented tips: %d\n"</span>,</span>
 <span>            <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">original</span><span class="op">)</span>, <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>

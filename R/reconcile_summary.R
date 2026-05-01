@@ -273,6 +273,7 @@ reconcile_summary <- function(reconciliation,
 #' @param x A `reconciliation_summary` from [reconcile_summary()].
 #' @param ... Additional arguments (currently unused).
 #' @return The object, invisibly.
+#' @keywords internal
 #' @export
 print.reconciliation_summary <- function(x, ...) {
   if (!is.null(x$formatted_text) && nzchar(x$formatted_text)) {

@@ -15,7 +15,7 @@ reconcile_data() and friends."><meta property="og:image" content="https://itchys
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,6 +29,8 @@ reconcile_data() and friends."><meta property="og:image" content="https://itchys
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -79,23 +81,33 @@ formats, read the file yourself with <code><a href="https://rdrr.io/r/utils/read
 
 
 <dt id="arg-from-col">from_col<a class="anchor" aria-label="anchor" href="#arg-from-col"></a></dt>
-<dd><p>Character(1). Column name for source names (e.g.,
+<dd><p>A length-1 character vector. Column name for source names (e.g.,
 <code>"Species1"</code> for BirdLife names).</p></dd>
 
 
 <dt id="arg-to-col">to_col<a class="anchor" aria-label="anchor" href="#arg-to-col"></a></dt>
-<dd><p>Character(1). Column name for target names (e.g.,
+<dd><p>A length-1 character vector. Column name for target names (e.g.,
 <code>"Species3"</code> for BirdTree names).</p></dd>
 
 
 <dt id="arg-match-type-col">match_type_col<a class="anchor" aria-label="anchor" href="#arg-match-type-col"></a></dt>
-<dd><p>Character(1) or NULL. Column containing the match
-type (e.g., <code>"1BL to 1BT"</code>, <code>"Many BL to 1BT"</code>). Used to annotate
-notes and filter.</p></dd>
+<dd><p>A length-1 character vector or <code>NULL</code>. Name
+of an optional column in <code>crosswalk</code> that classifies each row's
+relationship between the two taxonomies — e.g. <code>"1BL to 1BT"</code>
+(one BirdLife species mapped to one BirdTree species; a clean
+one-to-one match), <code>"Many BL to 1BT"</code> (a lump: several BirdLife
+species mapped to a single BirdTree species), <code>"1BL to many BT"</code>
+(a split). When supplied, the contents of this column are
+appended to each override's <code>user_note</code> so the audit trail
+records the relationship; if you also pass
+<code>one_to_one_only = TRUE</code>, only the rows whose match type starts
+<code>"1...to 1..."</code> are kept. Pass <code>NULL</code> (default) when your
+crosswalk has no such classification column — every row is
+then kept and notes carry no provenance label.</p></dd>
 
 
 <dt id="arg-notes-col">notes_col<a class="anchor" aria-label="anchor" href="#arg-notes-col"></a></dt>
-<dd><p>Character(1) or NULL. Column containing additional
+<dd><p>A length-1 character vector or NULL. Column containing additional
 notes.</p></dd>
 
 

@@ -17,7 +17,7 @@ about where the new tips sit."><meta property="og:image" content="https://itchys
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,6 +31,8 @@ about where the new tips sit."><meta property="og:image" content="https://itchys
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
+    <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
+    <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -65,7 +67,11 @@ about where the new tips sit.</p>
 <span>  where <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"genus"</span>, <span class="st">"near"</span><span class="op">)</span>,</span>
 <span>  branch_length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"congener_median"</span>, <span class="st">"half_terminal"</span>, <span class="st">"zero"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"internal"</span>, <span class="st">"rtrees"</span>, <span class="st">"vphylomaker"</span>, <span class="st">"uphylomaker"</span><span class="op">)</span>,</span>
+<span>  taxon <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  check_ultrametric <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,13 +86,16 @@ about where the new tips sit.</p>
 
 <dt id="arg-tree">tree<a class="anchor" aria-label="anchor" href="#arg-tree"></a></dt>
 <dd><p>An <code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code> object. Must be the same tree used to
-build <code>reconciliation</code> (or a tree with the same tip set).</p></dd>
+build <code>reconciliation</code> (or a tree with the same tip set). For
+<code>source = "rtrees"</code>, this is passed to <code>rtrees</code> as the
+user-supplied backbone (<code>tree_by_user = TRUE</code>).</p></dd>
 
 
 <dt id="arg-where">where<a class="anchor" aria-label="anchor" href="#arg-where"></a></dt>
-<dd><p>Character(1). Where to attach each new tip:</p><dl><dt><code>"genus"</code> (default)</dt>
+<dd><p>A length-1 character vector. Where to attach each new tip
+(only used when <code>source = "internal"</code>; ignored otherwise):</p><dl><dt><code>"genus"</code> (default)</dt>
 <dd><p>Attach as sister to a single congener
-chosen at random from the genus. Simpler; recommended when the
+chosen at random from the genus. Recommended when the
 genus has only one or two representatives in the tree, or when
 you want variation across runs for sensitivity analyses.</p></dd>
 
@@ -101,8 +110,9 @@ to one sister taxon.</p></dd>
 
 
 <dt id="arg-branch-length">branch_length<a class="anchor" aria-label="anchor" href="#arg-branch-length"></a></dt>
-<dd><p>Character(1). How to set the terminal branch
-length of each newly added tip:</p><dl><dt><code>"congener_median"</code> (default)</dt>
+<dd><p>A length-1 character vector. How to set the terminal branch
+length of each newly added tip (only used when <code>source = "internal"</code>;
+ignored otherwise — <code>rtrees</code> sets its own branch lengths):</p><dl><dt><code>"congener_median"</code> (default)</dt>
 <dd><p>Median terminal branch length
 of the species' congeners. Uses the average "how long since
 this group diverged" for the genus. Recommended for
@@ -126,22 +136,64 @@ assuming any divergence time.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Integer or <code>NULL</code>. Random seed for reproducibility when
-<code>where = "genus"</code> picks a congener at random. Set to a fixed
-integer in real analyses so results are reproducible. The seed is
-scoped to this call: the session RNG state is saved before and
-restored after, so subsequent random draws in your script are
-unaffected. Default <code>NULL</code>.</p></dd>
+<dd><p>A length-1 integer or <code>NULL</code>. When non-<code>NULL</code> and
+<code>source = "internal"</code>, a fixed seed for the random congener
+choice when <code>where = "genus"</code>, making the call reproducible.
+When <code>NULL</code> (default), the session's current RNG state is used
+so results vary across runs — useful for sensitivity analyses
+that explore the variation introduced by the random choice. Set
+to a fixed integer in real analyses so results are reproducible.
+The seed is scoped to this call: the session RNG state is saved
+before and restored after, so subsequent random draws in your
+script are unaffected. Default <code>NULL</code>. (For
+<code>source = "rtrees"</code>, set the seed in your script before calling
+<code>reconcile_augment()</code>; <code>rtrees</code> does not accept a seed
+argument.)</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
 <dd><p>Logical. Suppress progress messages? Default <code>FALSE</code>.</p></dd>
 
+
+<dt id="arg-source">source<a class="anchor" aria-label="anchor" href="#arg-source"></a></dt>
+<dd><p>A length-1 character vector. Which grafting backend
+to use. One of <code>"internal"</code> (default), <code>"rtrees"</code>, or
+<code>"vphylomaker"</code>. See “Choosing a source”.</p></dd>
+
+
+<dt id="arg-taxon">taxon<a class="anchor" aria-label="anchor" href="#arg-taxon"></a></dt>
+<dd><p>A length-1 character vector. Required when
+<code>source = "rtrees"</code>. One of <code>"bird"</code>, <code>"mammal"</code>, <code>"fish"</code>,
+<code>"amphibian"</code>, <code>"reptile"</code>, <code>"plant"</code>, <code>"shark_ray"</code>, <code>"bee"</code>,
+<code>"butterfly"</code>. Ignored for <code>"internal"</code> and <code>"vphylomaker"</code>.</p></dd>
+
+
+<dt id="arg-check-ultrametric">check_ultrametric<a class="anchor" aria-label="anchor" href="#arg-check-ultrametric"></a></dt>
+<dd><p>Logical. After grafting, check that the
+result is ultrametric and warn if not. Default <code>TRUE</code>. The
+<code>"rtrees"</code>, <code>"vphylomaker"</code>, and <code>"uphylomaker"</code> backends produce
+ultrametric trees by design; the <code>"internal"</code> backend does too
+when the input tree was ultrametric and <code>branch_length</code> is
+<code>"congener_median"</code> or <code>"half_terminal"</code>, but not when
+<code>branch_length = "zero"</code> (which produces zero-length tip edges
+that break ultrametricity by construction).</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments forwarded to the chosen backend:
+<code>rtrees::get_tree()</code> for <code>source = "rtrees"</code> (e.g. <code>scenario</code>,
+<code>n_tree</code>); <code>V.PhyloMaker2::phylo.maker()</code> for
+<code>source = "vphylomaker"</code> (e.g. <code>scenarios = "S3"</code>,
+<code>nodes.type</code>); <code>U.PhyloMaker::phylo.maker()</code> for
+<code>source = "uphylomaker"</code> (e.g. <code>gen.list</code>, <code>scenario</code>).
+Ignored when <code>source = "internal"</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with:</p><dl><dt>tree</dt>
-<dd><p>The augmented <code>phylo</code> object.</p></dd>
+<dd><p>The augmented <code>phylo</code> object (or <code>multiPhylo</code>
+when <code>source = "rtrees"</code> returns a posterior sample).</p></dd>
 
 <dt>original</dt>
 <dd><p>The original (unmodified) <code>phylo</code> object, for
@@ -149,16 +201,21 @@ easy comparison.</p></dd>
 
 <dt>augmented</dt>
 <dd><p>A tibble documenting each added species:
-<code>species</code>, <code>genus</code>, <code>placed_near</code> (sister tip or MRCA node),
-<code>branch_length</code>, <code>method</code>, <code>n_congeners</code>.</p></dd>
+<code>species</code>, <code>genus</code>, <code>placed_near</code> (sister tip / MRCA node /
+<code>rtrees</code> placement note), <code>branch_length</code>, <code>method</code>,
+<code>n_congeners</code>. For <code>source = "rtrees"</code>, <code>branch_length</code> and
+<code>n_congeners</code> are <code>NA</code> because the backend chooses them.</p></dd>
 
 <dt>skipped</dt>
 <dd><p>A tibble of species that could not be placed,
-with the reason (e.g. "no congener in tree").</p></dd>
+with the reason (e.g. "No congener in tree", "rtrees did
+not place this species").</p></dd>
 
 <dt>meta</dt>
-<dd><p>Provenance metadata: placement strategy, branch
-length rule, counts.</p></dd>
+<dd><p>Provenance metadata: source, placement strategy,
+branch length rule, counts; for <code>source = "rtrees"</code> includes
+a <code>backend_meta</code> sub-list with the taxon and the number of
+grafted tips.</p></dd>
 
 
 </dl></div>
@@ -166,16 +223,71 @@ length rule, counts.</p></dd>
     <h2 id="when-to-use-this">When to use this<a class="anchor" aria-label="anchor" href="#when-to-use-this"></a></h2>
 
 
-<p>Genus-level placement is an <em>exploratory</em> convenience, not a
-substitute for a properly inferred phylogeny. It assumes the missing
-species diverged in roughly the same way as its congeners, which is
-often wrong in detail. Use it to keep exploratory PCMs running while
-you decide how to handle orphan species, and always:</p><ol><li><p>Report exactly which species were augmented (see <code>$augmented</code>
+<p>Tip-grafting is an <em>exploratory</em> convenience, not a substitute
+for a properly inferred phylogeny. Both source modes (see below)
+make strong placement assumptions that are often wrong in detail.
+Use it to keep exploratory PCMs running while you decide how to
+handle orphan species, and always:</p><ol><li><p>Report exactly which species were augmented (see <code>$augmented</code>
 in the return value).</p></li>
 <li><p>Run sensitivity analyses with and without the augmented tips.</p></li>
 <li><p>Prefer a published imputed phylogeny (e.g. the PhyloMaker or
 TACT approaches) when grafting many species.</p></li>
 </ol></div>
+    <div class="section level2">
+    <h2 id="choosing-a-source">Choosing a source<a class="anchor" aria-label="anchor" href="#choosing-a-source"></a></h2>
+
+
+<dl><dt><code>"internal"</code> (default)</dt>
+<dd><p>Genus-level placement using
+only your tree (no external dependencies). Each missing
+species is attached as sister to a congener (or at the
+congeneric MRCA). Fast and reproducible, but only works when
+the genus is already represented in the tree, and assumes the
+new tip diverged in roughly the same way as its congeners.</p></dd>
+
+<dt><code>"rtrees"</code></dt>
+<dd><p>Delegates the grafting to the
+<code>rtrees</code> mega-tree machinery via
+<code>rtrees::get_tree(tree_by_user = TRUE)</code>. Uses your tree
+as the backbone and lets <code>rtrees</code> place each missing
+species using genus / family information from a taxon-specific
+reference tree. Requires <code>taxon</code> and the GitHub-only
+<code>rtrees</code> package
+(<a href="https://daijiang.github.io/rtrees/" class="external-link">https://daijiang.github.io/rtrees/</a>). Helpful when the
+genus is absent from your tree but present in <code>rtrees</code>'
+reference — which the internal mode would skip.</p></dd>
+
+<dt><code>"vphylomaker"</code></dt>
+<dd><p>Plant-only alternative to
+<code>"rtrees"</code> via either of the GitHub packages
+<span class="pkg">V.PhyloMaker2</span>
+(<a href="https://github.com/jinyizju/V.PhyloMaker2" class="external-link">https://github.com/jinyizju/V.PhyloMaker2</a>, preferred
+when installed; updated and enlarged version) or
+<span class="pkg">V.PhyloMaker</span>
+(<a href="https://github.com/jinyizju/V.PhyloMaker" class="external-link">https://github.com/jinyizju/V.PhyloMaker</a>, used as a
+fallback; original 2019 version). Calls
+<code>phylo.maker(sp.list, tree, scenarios = ...)</code> with your
+tree as the backbone. Use this when you want explicit control
+over the V.PhyloMaker placement scenario (<code>"S1"</code>,
+<code>"S2"</code>, or <code>"S3"</code> — see Jin &amp; Qian 2019/2022);
+otherwise <code>"rtrees"</code> with <code>taxon = "plant"</code> is
+simpler.</p></dd>
+
+<dt><code>"uphylomaker"</code></dt>
+<dd><p>Universal (plants + animals) variant
+of V.PhyloMaker, via the GitHub package <span class="pkg">U.PhyloMaker</span>
+(<a href="https://github.com/jinyizju/U.PhyloMaker" class="external-link">https://github.com/jinyizju/U.PhyloMaker</a>). Same
+<code>phylo.maker</code> convention but takes a <code>gen.list</code> (a
+genus-family lookup) so it can graft non-plant taxa as well
+as plants. Use this when your tree spans multiple kingdoms
+and you want the V.PhyloMaker placement strategy.</p></dd>
+
+
+</dl><p>Use <code><a href="pr_get_tree.html">pr_get_tree()</a></code> when you have only a species list and need a
+candidate tree from scratch (rotl, clootl, or rtrees). Use
+<code>reconcile_augment()</code> when you already have a tree and want to fill
+the gaps.</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Paradis, E. &amp; Schliep, K. (2019) ape 5.0: an environment for modern
@@ -186,7 +298,14 @@ phylogenetics and evolutionary analyses in R. <em>Bioinformatics</em>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="reconcile_tree.html">reconcile_tree()</a></code> for the reconciliation step;
 <code><a href="reconcile_apply.html">reconcile_apply()</a></code> for the non-augmenting alternative (prune data
-and tree to the intersection).</p>
+and tree to the intersection); <code><a href="pr_get_tree.html">pr_get_tree()</a></code> for retrieving a
+candidate tree from external resources when you don't have a tree
+yet; <code><a href="pr_date_tree.html">pr_date_tree()</a></code> for time-calibrating an existing topology;
+<code><a href="pr_cite_tree.html">pr_cite_tree()</a></code> for formatting tree provenance citations. The
+companion package
+<a href="https://itchyshin.github.io/pigauto/" class="external-link">pigauto</a> consumes the
+resulting tree (or <code>multiPhylo</code>) directly via
+<code>multi_impute_trees()</code> for posterior-tree PCMs.</p>
 <p>Other reconciliation functions:
 <code><a href="reconcile_apply.html">reconcile_apply</a>()</code>,
 <code><a href="reconcile_crosswalk.html">reconcile_crosswalk</a>()</code>,
@@ -226,6 +345,11 @@ and tree to the intersection).</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Augmenting tree with 262 unresolved species...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Added 136 species to tree (126 skipped)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Skipped species had no congener in the tree. See $skipped for details.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Tree returned by <span style="color: #0000BB;">"internal"</span> is not strictly ultrametric.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> → To force: `phytools::force.ultrametric(result$tree)` or</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span>   `ape::chronos(result$tree)`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> To suppress this check: pass `check_ultrametric = FALSE`.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Compare original vs augmented tree</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Original tips:"</span>, <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">tree_jetz</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></span>
@@ -282,6 +406,18 @@ and tree to the intersection).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Calamanthus pyrrhopygius MRCA of Calamanthus fuliginosus, Calamanthus … near/0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Gerygone citrina         MRCA of Gerygone modesta, Gerygone albofronta… near/0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Pyrrholaemus sagittatus  Pyrrholaemus brunneus                          near/0</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span>  <span class="co"># --- Example 3: delegate grafting to rtrees ---</span></span></span>
+<span class="r-in"><span>  <span class="co"># Useful when the genus is missing from your tree but present in</span></span></span>
+<span class="r-in"><span>  <span class="co"># the rtrees taxon-specific reference tree.</span></span></span>
+<span class="r-in"><span>  <span class="va">aug_rt</span> <span class="op">&lt;-</span> <span class="fu">reconcile_augment</span><span class="op">(</span><span class="va">result</span>, <span class="va">tree_jetz</span>,</span></span>
+<span class="r-in"><span>                               source <span class="op">=</span> <span class="st">"rtrees"</span>,</span></span>
+<span class="r-in"><span>                               taxon  <span class="op">=</span> <span class="st">"bird"</span>,</span></span>
+<span class="r-in"><span>                               quiet  <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">aug_rt</span><span class="op">$</span><span class="va">augmented</span><span class="op">)</span>              <span class="co"># how many were placed</span></span></span>
+<span class="r-in"><span>  <span class="va">aug_rt</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">n_grafted</span>  <span class="co"># how many at higher rank</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
