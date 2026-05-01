@@ -1,5 +1,26 @@
 # prepR4pcm 0.3.1.9000 (development version)
 
+## What's NOT in this round (deferred work)
+
+For honesty / handoff so future contributors don't lose track:
+
+* **#10** -- `reconcile_multi()` may undercount dataset-specific
+  matches when names differ only by formatting (Round 4 candidate;
+  needs root-cause debug).
+* **#12** -- `reconcile_summary()` prints even when assigned to a
+  variable (Round 4 candidate; small UX fix, needs `quiet` /
+  `print_report` argument).
+* **#14** -- Ayumi's documentation-feedback summary (Round 3).
+* **#15-#21, #26** -- Per-function documentation feedback wave from
+  pooherna and Sergio (Round 3; will be batched into a single
+  doc-quality pass).
+* **#16** -- Suggested Delhey citation correction. Requires
+  verification before changing; current citation may already be
+  correct.
+* The remaining 22 of 37 Tier-4 defence-in-depth claim-parity tests
+  outlined in the round-2 plan; they're documented but not yet
+  written.
+
 ## New vignette and example data
 
 * New vignette **"Assembling mammal trait databases for phylogenetic
