@@ -68,11 +68,14 @@ jobs:
           # backends for the augment / retrieval functions
           # (eliotmiller/clootl, daijiang/rtrees,
           # jinyizju/V.PhyloMaker(2|), jinyizju/U.PhyloMaker). Note:
-          # phylotastic/datelife is NOT in Remotes -- its transitive
-          # `bold` dep can't be resolved by pak on a clean CI image.
-          # Users who want the datelife backend install it manually
-          # following the runtime install hint.
+          # phylotastic/datelife lives in DESCRIPTION's `Enhances:`
+          # field (not Suggests / Remotes) -- its transitive `bold`
+          # dep can't be resolved by pak on a clean CI image.
+          # `dependencies` below explicitly excludes Enhances so pak
+          # doesn't try. Users who want the datelife backend install
+          # it manually following the runtime install hint.
           extra-packages: any::rcmdcheck
+          dependencies: '"Imports", "Depends", "LinkingTo", "Suggests"'
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
