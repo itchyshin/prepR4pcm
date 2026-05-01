@@ -21,8 +21,13 @@
 #' Use `pr_date_tree()` when you already have a topology (e.g. from a
 #' published phylogeny or your own analysis) and want to attach
 #' divergence times. Use [pr_get_tree()] with `source = "datelife"` if
-#' you have only species names. Both end up calling \pkg{datelife},
-#' but the starting point is different.
+#' you have only species names. Both end up calling the GitHub-only
+#' \code{datelife} package, but the starting point is different.
+#' Install \code{datelife} before calling this function ---
+#' \pkg{prepR4pcm} does NOT pull it in via `Suggests` (its transitive
+#' dep tree can't be auto-resolved by pak on a clean CI image, so
+#' we keep it as an opt-in install):
+#' \code{pak::pak("phylotastic/datelife")}.
 #'
 #' @param tree An `ape::phylo` (or `multiPhylo`) object: the topology
 #'   to calibrate.

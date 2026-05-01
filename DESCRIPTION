@@ -1,6 +1,6 @@
 Package: prepR4pcm
 Title: Prepare Data and Trees for Phylogenetic Comparative Methods
-Version: 0.4.0
+Version: 0.4.0.9000
 Authors@R: c(
     person("Shinichi", "Nakagawa",
            email = "s.nakagawa@unsw.edu.au",
@@ -47,7 +47,6 @@ Imports:
 Suggests:
     caper,
     clootl,
-    datelife,
     digest,
     dplyr,
     fishtree,
@@ -66,15 +65,15 @@ Suggests:
     U.PhyloMaker,
     V.PhyloMaker,
     V.PhyloMaker2
+Enhances:
+    datelife
 Additional_repositories:
     https://eliotmiller.r-universe.dev,
     https://daijiang.r-universe.dev,
-    https://phylotastic.r-universe.dev,
     https://jinyizju.r-universe.dev
 Remotes:
     eliotmiller/clootl,
     daijiang/rtrees,
-    phylotastic/datelife,
     jinyizju/V.PhyloMaker2,
     jinyizju/V.PhyloMaker,
     jinyizju/U.PhyloMaker

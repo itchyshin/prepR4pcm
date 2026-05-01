@@ -1,8 +1,32 @@
+# Local checks (devtools::check, devtools::test) are the source of
+# truth for this package. CI is intentionally lean:
+#
+#   * Triggered only on pull_request and on workflow_dispatch (manual
+#     trigger via the GitHub UI). Skipped on push to main, where the
+#     pre-merge PR run already covered it.
+#   * Runs Linux-only by default (cheap, fast). The cross-OS matrix
+#     (macOS + Windows) is enabled by adding the `os: full` input to a
+#     workflow_dispatch run -- use it before a release / CRAN
+#     submission, not on every PR.
+#
+# Background: GitHub Actions minutes cost real money on macOS / Windows
+# runners. Local Mac runs the same checks instantly; the team-level
+# CLAUDE.md guidance is "local checks over GitHub Actions" precisely
+# for this reason.
+
 on:
-  push:
-    branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      os:
+        description: 'OS matrix to run (default = ubuntu-only; "full" adds macOS + Windows)'
+        required: false
+        default: 'ubuntu'
+        type: choice
+        options:
+          - ubuntu
+          - full
 
 name: R-CMD-check
 
@@ -17,12 +41,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,  r: 'release'}
-          - {os: ubuntu-latest,  r: 'oldrel-1'}
+        # Default: Linux release-only. Manual workflow_dispatch with
+        # os = "full" adds macOS + Windows.
+        config: ${{ fromJSON(github.event.inputs.os == 'full'
+          && '[{"os":"ubuntu-latest","r":"release"},{"os":"macos-latest","r":"release"},{"os":"windows-latest","r":"release"}]'
+          || '[{"os":"ubuntu-latest","r":"release"}]') }}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -41,11 +64,18 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # The DESCRIPTION's `Remotes:` field points pak at
-          # `eliotmiller/clootl` and `daijiang/rtrees` (GitHub-only
-          # backends for `pr_get_tree()`), so they install correctly
-          # during dependency resolution.
+          # `Remotes:` in DESCRIPTION points pak at the GitHub-only
+          # backends for the augment / retrieval functions
+          # (eliotmiller/clootl, daijiang/rtrees,
+          # jinyizju/V.PhyloMaker(2|), jinyizju/U.PhyloMaker). Note:
+          # phylotastic/datelife lives in DESCRIPTION's `Enhances:`
+          # field (not Suggests / Remotes) -- its transitive `bold`
+          # dep can't be resolved by pak on a clean CI image.
+          # `dependencies` below explicitly excludes Enhances so pak
+          # doesn't try. Users who want the datelife backend install
+          # it manually following the runtime install hint.
           extra-packages: any::rcmdcheck
+          dependencies: '"Imports", "Depends", "LinkingTo", "Suggests"'
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2

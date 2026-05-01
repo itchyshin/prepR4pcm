@@ -57,13 +57,15 @@ with \code{\link[=reconcile_data]{reconcile_data()}} (with a \code{taxadb} autho
 results.}
 \item{\code{"datelife"}}{Universal database of pre-computed
 chronograms (Sanchez Reyes et al. 2024, \emph{Syst. Biol.}
-73:470), via the GitHub package \pkg{datelife}
+73:470), via the GitHub package \code{datelife}
 (\url{https://github.com/phylotastic/datelife}). Returns a
 single SDM-summary chronogram by default; with
 \code{n_tree > 1}, returns a multiPhylo of up to that many
-per-source candidate chronograms. Install with
-\code{pak::pak("phylotastic/datelife")} (the package was
-archived from CRAN in 2024).}
+per-source candidate chronograms. \strong{Install before use}
+with \code{pak::pak("phylotastic/datelife")} --- the package
+is GitHub-only (archived from CRAN in 2024 with a heavy
+transitive dep tree pak can't auto-resolve), so \pkg{prepR4pcm}
+does NOT pull it in via \code{Suggests}.}
 \item{\code{"auto"}}{Fall-through dispatcher: try installed
 backends in priority order (rtrees if \code{taxon} provided,
 then rotl, fishtree, clootl, datelife), return the first
@@ -145,7 +147,7 @@ relevant backend package (\code{tol_induced_subtree} in
 \pkg{rotl}, \code{extractTree} in \pkg{clootl},
 \code{get_tree} in \pkg{rtrees}, \code{fishtree_phylogeny} /
 \code{fishtree_complete_phylogeny} in \pkg{fishtree},
-\code{datelife_search} in \pkg{datelife}) for the full list.}
+\code{datelife_search} in \code{datelife}) for the full list.}
 }
 \value{
 A list with class \code{pr_tree_result} and components:
