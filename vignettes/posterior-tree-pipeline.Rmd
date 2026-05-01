@@ -1,0 +1,216 @@
+---
+title: "From species names to a phylogenetic posterior — prepR4pcm + pigauto"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From species names to a phylogenetic posterior — prepR4pcm + pigauto}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE      # most of this requires datelife / pigauto / network
+)
+```
+
+Phylogenetic comparative methods (PCMs) propagate uncertainty
+imperfectly. The standard pipeline takes one tree, fits one model,
+and reports one set of confidence intervals. But the tree itself is
+typically a point estimate from a posterior, the trait data
+typically have missing values, and each of those is its own source
+of uncertainty.
+
+This vignette walks through a pipeline that handles both:
+
+1. **prepR4pcm** reconciles species names, fetches a *posterior of
+   trees* (not just one), and prepares the data for downstream
+   modelling.
+2. **[pigauto](https://itchyshin.github.io/pigauto/)** imputes the
+   missing trait values, fits the model on each posterior tree, and
+   pools the results via Rubin's rules so the reported standard
+   errors reflect both the tree and imputation uncertainty.
+
+The two packages compose: prepR4pcm produces `multiPhylo`, pigauto
+consumes `multiPhylo`. Once the contract is set up, swapping the
+backend (rtrees vs datelife vs fishtree) doesn't change the rest of
+the pipeline.
+
+## What we'll build
+
+A model-ready dataset for fish, with:
+
+- A posterior of 50 fish chronograms from the Fish Tree of Life
+  (Rabosky et al. 2018).
+- 50 imputations of the missing trait values per tree (so 50 × 50 =
+  2,500 model fits).
+- Pooled estimates with valid standard errors that account for both
+  axes of uncertainty.
+
+```{r setup}
+library(prepR4pcm)
+# Suggests packages we'll lean on:
+# install.packages("fishtree")
+# pak::pak("phylotastic/datelife")
+# Optional, for the pooling step at the end:
+# pak::pak("itchyshin/pigauto")
+```
+
+## Step 1 — Reconcile names
+
+Start with whatever names appear in your dataset. They never quite
+match the tree's tip labels.
+
+```{r reconcile, eval = FALSE}
+# Your data and your tree — typically loaded from disk
+my_data <- data.frame(
+  species   = c("Salmo salar", "Esox lucius", "Esox_lucius",
+                "Oncorhynchus mykiss"),
+  body_size = c(98, 130, NA, 50)   # NA is OK; pigauto will impute
+)
+
+# Reconcile names against a published taxonomic authority. Catches
+# typos, formatting drift, and synonymy.
+rec <- reconcile_data(my_data,
+                      x_species = "species",
+                      authority = "col")  # Catalogue of Life
+rec   # one-line summary of matched / unmatched / counts
+```
+
+## Step 2 — Get a posterior of trees
+
+The headline change in Round 5: every backend supports `n_tree > 1`,
+and every backend that *can* return multiple trees does so. Here we
+ask `fishtree` for 50 stochastic resolutions (Chang, Rabosky, Alfaro
+2019, *Syst. Biol.*).
+
+```{r retrieve, eval = FALSE}
+trees <- pr_get_tree(rec,
+                     source = "fishtree",
+                     n_tree = 50)
+
+class(trees$tree)             # "multiPhylo"
+length(trees$tree)            # 50
+length(trees$matched)         # how many species placed
+head(trees$unmatched)         # species absent from fishtree
+
+# Per-tree provenance: one entry per tree
+length(trees$backend_meta$tree_provenance)  # 50
+trees$backend_meta$tree_provenance[[1]]
+```
+
+For the universal-but-slower option, use `source = "datelife"` —
+the chronogram-database backend that returns one calibrated tree per
+source (Hedges, Bininda-Emonds, Upham, etc.).
+
+```{r datelife, eval = FALSE}
+trees <- pr_get_tree(rec,
+                     source = "datelife",
+                     n_tree = 50)
+# trees$tree is multiPhylo; per-source citations are in
+# trees$backend_meta$tree_provenance[[i]]$citation
+```
+
+If you already have a topology and want to *date* it (rather than
+fetch a new one), use `pr_date_tree()`:
+
+```{r date, eval = FALSE}
+my_topology   <- ape::read.tree("my_topology.nex")
+dated_trees   <- pr_date_tree(my_topology, n_dated = 50)
+class(dated_trees$tree)        # multiPhylo of 50 dated copies
+```
+
+## Step 3 — Format citations (do this *before* you submit)
+
+Reviewers ask. Save yourself the round-trip.
+
+```{r cite, eval = FALSE}
+# Plain text for an email or a methods paragraph
+pr_cite_tree(trees)
+
+# Markdown for a GitHub issue or PR description
+cat(pr_cite_tree(trees, format = "markdown"))
+
+# BibTeX for a manuscript bibliography (sanity-check before submitting)
+cat(pr_cite_tree(trees, format = "bibtex"))
+```
+
+## Step 4 — Hand the posterior to pigauto
+
+This is the contract. `pigauto::multi_impute_trees(df, trees, m_per_tree)`
+takes `df` (data with NAs) and `trees` (`multiPhylo`) and returns
+`m_per_tree` complete-data imputations *per tree*. The output knows
+which imputation came from which tree, and pigauto's pooling step
+later uses that index.
+
+```{r pigauto, eval = FALSE}
+library(pigauto)
+
+# 5 imputations per tree × 50 trees = 250 complete datasets
+mi <- multi_impute_trees(rec$aligned,
+                         trees      = trees$tree,
+                         m_per_tree = 5)
+
+# Fit your model to each completed dataset. Replace the formula
+# with whatever your hypothesis is.
+fits <- with_imputations(mi, function(df) {
+  glmmTMB::glmmTMB(body_size ~ 1 + (1 | species),
+                   data = df)
+})
+
+# Pool via Rubin's rules — the standard errors reflect BOTH the
+# imputation uncertainty AND the tree-posterior uncertainty.
+pooled <- pool_mi(fits,
+                  coef_fun = function(fit) fixef(fit)$cond,
+                  vcov_fun = function(fit) vcov(fit)$cond)
+
+pooled
+```
+
+The reported intervals are wider than the equivalent
+single-tree-single-imputation pipeline — and *correctly* so. The
+narrower intervals were always overconfident.
+
+## Choosing a backend
+
+| If your taxon is... | And you want... | Use |
+|---|---|---|
+| Universal | A single best-guess tree | `pr_get_tree(source = "rotl")` |
+| Universal | A posterior of dated trees | `pr_get_tree(source = "datelife", n_tree = 50)` |
+| Birds | Time-calibrated, current Clements | `pr_get_tree(source = "clootl", n_tree = 50)` |
+| Fish | Time-calibrated, posterior | `pr_get_tree(source = "fishtree", n_tree = 50)` |
+| Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly | Taxon-specific mega-tree, possibly grafted | `pr_get_tree(source = "rtrees", taxon = "<group>", n_tree = 50)` |
+
+For the dating-only case (you already have a topology):
+
+| If your topology is... | Use |
+|---|---|
+| Universal taxa | `pr_date_tree(my_tree, n_dated = 50)` |
+
+## What's *not* in this pipeline
+
+- **Tree-comparison.** If you fetch from two backends and want to
+  see how much they disagree, `ape::comparePhylo()` and `phangorn`
+  are the relevant tools. A wrapper might appear in a future round.
+- **Caching.** Each call hits the network or the database fresh. For
+  a paper-scale pipeline, use `memoise::memoise()` around your
+  `pr_get_tree()` calls. A built-in cache is on the Round 6 plan.
+- **Trait imputation alone.** That's pigauto's `impute()` /
+  `multi_impute()`. The vignette skips straight to the
+  trees-aware variant because that's the integration point.
+
+## See also
+
+- `?pr_get_tree`, `?pr_date_tree`, `?pr_cite_tree`,
+  `?reconcile_augment` --- the four entry points for prepR4pcm's
+  tree-handling.
+- [pigauto's full PCM workflow vignette](https://itchyshin.github.io/pigauto/articles/pigauto_workflow_mixed.html)
+  --- the downstream half, in detail.
+- Sanchez Reyes et al. (2024). *DateLife: Leveraging databases and
+  analytical tools to reveal the dated Tree of Life.* Systematic
+  Biology 73(2): 470–485.
+  [doi:10.1093/sysbio/syae015](https://doi.org/10.1093/sysbio/syae015).
+- Rabosky et al. (2018). *An inverse latitudinal gradient in
+  speciation rate for marine fishes.* Nature 559: 392–395.
+  [doi:10.1038/s41586-018-0273-1](https://doi.org/10.1038/s41586-018-0273-1).

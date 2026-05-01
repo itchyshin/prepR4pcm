@@ -47,6 +47,7 @@ Imports:
 Suggests:
     caper,
     clootl,
+    datelife,
     dplyr,
     fishtree,
     knitr,
@@ -63,11 +64,13 @@ Suggests:
     testthat (>= 3.0.0)
 Additional_repositories:
     https://eliotmiller.r-universe.dev,
-    https://daijiang.r-universe.dev
+    https://daijiang.r-universe.dev,
+    https://phylotastic.r-universe.dev
 Remotes:
     eliotmiller/clootl,
     daijiang/rtrees,
-    daijiang/megatrees@main
+    daijiang/megatrees@main,
+    phylotastic/datelife
 LazyData: true
 Config/testthat/edition: 3
 VignetteBuilder: knitr
