@@ -40,6 +40,19 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.1.9000" id="prepr4pcm-0319000-development-version">prepR4pcm 0.3.1.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0319000-development-version"></a></h2>
 <div class="section level3">
+<h3 id="new-features-0-3-1-9000">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> connects a reconciled species list to an external phylogenetic resource and returns a pruned candidate tree plus a matching report (matched / unmatched / source / backend metadata). Three backends ship initially:
+<ul><li>
+<code>"rotl"</code> – Open Tree of Life synthesis tree (universal coverage, via the CRAN package ).</li>
+<li>
+<code>"rtrees"</code> – taxon-specific mega-trees (bird, mammal, fish, amphibian, reptile, plant, shark/ray, bee, butterfly), via the GitHub package  (<code>pak::pak("daijiang/rtrees")</code>).</li>
+<li>
+<code>"clootl"</code> – bird-only phylogenies in current Clements taxonomy, via the GitHub package  (<code>pak::pak("eliotmiller/clootl")</code>).</li>
+</ul>
+Accepts a reconciliation object, a character vector, or a data frame as input. Each backend is loaded only on demand – asking for a backend you don’t have installed produces a helpful migration error with the install command. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/42" class="external-link">#42</a> (Ayumi Mizuno).</li>
+</ul></div>
+<div class="section level3">
 <h3 id="whats-not-in-this-round-deferred-work-0-3-1-9000">What’s NOT in this round (deferred work)<a class="anchor" aria-label="anchor" href="#whats-not-in-this-round-deferred-work-0-3-1-9000"></a></h3>
 <p>For honesty / handoff so future contributors don’t lose track:</p>
 <ul><li>
@@ -68,7 +81,7 @@
 </li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-0-3-1-9000">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000"></a></h3>
+<h3 id="new-features-0-3-1-9000-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000-1"></a></h3>
 <ul><li><p><code>authority = "ott"</code> (Open Tree of Life) is supported again, after Round 1 dropped it on incomplete diagnosis. The original failure was at <code><a href="https://rdrr.io/pkg/taxadb/man/td_create.html" class="external-link">taxadb::td_create()</a></code> with the default schema set <code>c("dwc", "common")</code> — <code>taxadb</code> v22.12 does not ship a <code>common</code> schema for OTT. We now restrict the schema to <code>"dwc"</code> (the only schema the cascade actually consumes), unblocking OTT and potentially other providers that lack a <code>common</code> schema. Re-closes <a href="https://github.com/itchyshin/prepR4pcm/issues/5" class="external-link">#5</a> properly.</p></li>
 <li><p><code>authority = "itis_test"</code> exposes <code>taxadb</code>’s small bundled testing dataset. Useful for examples and unit tests without a network round-trip.</p></li>
 </ul></div>
@@ -79,7 +92,7 @@
 <li><p><code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> and <code><a href="../reference/reconcile_data.html">reconcile_data()</a></code> previously dropped manual overrides silently when the override <code>name_x</code> was not in the data or <code>name_y</code> was not in the target. The reconciliation object now carries an <code>unused_overrides</code> slot listing every rejected override with a <code>reason</code> (<code>name_x_not_in_data</code>, <code>name_y_not_in_target</code>, or <code>already_matched</code>), and the functions emit a <code>cli_alert_warning()</code> pointing the user at it. <code><a href="../reference/reconcile_summary.html">reconcile_summary()</a></code> includes a count and a per-row listing in the verbose section. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/8" class="external-link">#8</a>a (Ayumi Mizuno).</p></li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-0-3-1-9000-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000-1"></a></h3>
+<h3 id="new-features-0-3-1-9000-2">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-1-9000-2"></a></h3>
 <ul><li>
 <code><a href="../reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> now accepts <code>.csv</code>, <code>.tsv</code>, or <code>.txt</code> (tab-delimited) file paths in addition to data frames. The format is inferred from the file extension. Closes <a href="https://github.com/itchyshin/prepR4pcm/issues/8" class="external-link">#8</a>b (Ayumi Mizuno).</li>
 </ul></div>
