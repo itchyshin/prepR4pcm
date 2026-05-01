@@ -1,4 +1,77 @@
-# prepR4pcm (development version)
+# prepR4pcm 0.3.1.9000 (development version)
+
+## What's NOT in this round (deferred work)
+
+For honesty / handoff so future contributors don't lose track:
+
+* **#10** -- `reconcile_multi()` may undercount dataset-specific
+  matches when names differ only by formatting (Round 4 candidate;
+  needs root-cause debug).
+* **#12** -- `reconcile_summary()` prints even when assigned to a
+  variable (Round 4 candidate; small UX fix, needs `quiet` /
+  `print_report` argument).
+* **#14** -- Ayumi's documentation-feedback summary (Round 3).
+* **#15-#21, #26** -- Per-function documentation feedback wave from
+  pooherna and Sergio (Round 3; will be batched into a single
+  doc-quality pass).
+* **#16** -- Suggested Delhey citation correction. Requires
+  verification before changing; current citation may already be
+  correct.
+* The remaining 22 of 37 Tier-4 defence-in-depth claim-parity tests
+  outlined in the round-2 plan; they're documented but not yet
+  written.
+
+## New vignette and example data
+
+* New vignette **"Assembling mammal trait databases for phylogenetic
+  comparative models"** (`db-assembly-workflow_mammals`), contributed
+  by Santiago Ortega. Walks through combining three mammal trait
+  sources (Amniote, PanTHERIA, TetrapodTraits), reconciling the
+  unique species names against a phylogenetic tree, applying
+  manual corrections, and collapsing the matched records into a
+  model-ready species-level data frame aligned with a pruned tree.
+  Closes #11.
+
+* Four new bundled example datasets used by the new vignette:
+  `mammal_amniote_example` (Myhrvold et al. 2015),
+  `mammal_pantheria_example` (Jones et al. 2009),
+  `mammal_tetrapodtraits_example` (Moura et al. 2024), and
+  `mammal_tree_example` (a 5,987-tip mammal phylogeny, source to
+  be confirmed with the contributor).
+
+* `dplyr`, `readr`, and `stringr` moved from `Suggests` to `Imports`,
+  reflecting that they are used routinely in the package's vignettes
+  and R code rather than being optional.
+
+## Breaking changes
+
+* `pr_valid_authorities()` no longer lists `iucn`, `tpl`, `fb`, `slb`,
+  or `wd`. Empirical testing against `taxadb` v22.12 (the database the
+  package depends on) showed that `iucn` errors with a schema mismatch
+  and the other four are not `taxadb` providers at all. Anyone passing
+  one of these values was getting a hard error from inside `taxadb`;
+  the call sites now produce a targeted migration message pointing
+  users at the working authorities. (Identified in follow-up to #5,
+  Ayumi Mizuno.)
+
+  If you were passing one of the removed authorities, switch to one of
+  `"col"`, `"itis"`, `"gbif"`, `"ncbi"`, or `"ott"`, or pass
+  `authority = NULL` to skip synonym resolution.
+
+## New features
+
+* `authority = "ott"` (Open Tree of Life) is supported again, after
+  Round 1 dropped it on incomplete diagnosis. The original failure
+  was at `taxadb::td_create()` with the default schema set
+  `c("dwc", "common")` --- `taxadb` v22.12 does not ship a `common`
+  schema for OTT. We now restrict the schema to `"dwc"` (the only
+  schema the cascade actually consumes), unblocking OTT and
+  potentially other providers that lack a `common` schema. Re-closes
+  #5 properly.
+
+* `authority = "itis_test"` exposes `taxadb`'s small bundled testing
+  dataset. Useful for examples and unit tests without a network
+  round-trip.
 
 ## Bug fixes
 
@@ -7,15 +80,17 @@
   messages. The functions now route errors through `cli::cli_abort()`,
   which interprets the markup. Closes #4 (Eduardo Santos).
 
-* `authority = "ott"` (Open Tree of Life) has been removed from the
-  list of valid authorities returned by `pr_valid_authorities()`. The
-  default `taxadb` release does not ship a working OTT schema and the
-  call would fail deep inside taxadb with a confusing schema error;
-  users are now told up front that `ott` is not supported and given
-  the working alternatives. Closes #5 (Ayumi Mizuno).
+* The matching cascade no longer prints `Stage 3/4: Synonym
+  resolution (...)` when `authority = NULL`, or
+  `Stage 4/4: Fuzzy matching (...)` when `fuzzy = FALSE`. Stage
+  numbering is computed from the active stages only, so a call with
+  `authority = NULL, fuzzy = FALSE` reports `Stage 1/2: Exact ...`
+  and `Stage 2/2: Normalised ...`. Previously, the fixed `Stage X/4`
+  labels suggested matches were being made at synonym/fuzzy stages
+  even when they were skipped. Closes #13 (Ayumi Mizuno).
 
 * `reconcile_tree()` and `reconcile_data()` previously dropped manual
-  overrides silently when the override's `name_x` was not in the data
+  overrides silently when the override `name_x` was not in the data
   or `name_y` was not in the target. The reconciliation object now
   carries an `unused_overrides` slot listing every rejected override
   with a `reason` (`name_x_not_in_data`, `name_y_not_in_target`, or

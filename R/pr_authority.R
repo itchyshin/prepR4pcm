@@ -5,22 +5,99 @@
 
 #' Valid taxonomic authorities
 #'
-#' Returns the set of authority codes that the package accepts. The
-#' "core" authorities (`col`, `itis`, `gbif`, `ncbi`) are well-tested
-#' and routinely used. The remaining authorities (`tpl`, `fb`, `slb`,
-#' `wd`, `iucn`) are passed through to \pkg{taxadb} but their coverage
-#' and current availability vary -- some may require running
-#' `taxadb::td_create()` manually with a matching `version`.
+#' Returns the set of authority codes that the package accepts when
+#' resolving species-name synonyms via \pkg{taxadb}. The list mirrors
+#' \pkg{taxadb}'s own documented providers (see `?taxadb::td_create`)
+#' so that every value here is genuinely callable in the underlying
+#' database:
 #'
-#' `"ott"` (Open Tree of Life) was previously listed as supported but
-#' the current \pkg{taxadb} release does not ship a working OTT schema
-#' under the default provider settings; it has been removed from the
-#' valid list. Re-add it manually if you maintain a working
-#' \pkg{taxadb} OTT installation.
+#' \describe{
+#'   \item{`"col"`}{Catalogue of Life. The default and a sensible
+#'     starting point for most taxa.}
+#'   \item{`"itis"`}{Integrated Taxonomic Information System. Strong
+#'     coverage for North American vertebrates and plants.}
+#'   \item{`"gbif"`}{GBIF backbone. Wider coverage; captures more
+#'     recent synonymy.}
+#'   \item{`"ncbi"`}{NCBI Taxonomy. Best when you are working with
+#'     sequence data.}
+#'   \item{`"ott"`}{Open Tree of Life synthetic taxonomy. Useful when
+#'     your downstream phylogeny is from the Open Tree synthesis. We
+#'     restrict the schema to `"dwc"` (Darwin Core) when calling
+#'     `taxadb::td_create()` because the `"common"` schema does not
+#'     ship for OTT under \pkg{taxadb} v22.12.}
+#'   \item{`"itis_test"`}{A small bundled subset of ITIS, cached
+#'     locally with \pkg{taxadb} for testing. Intended for examples
+#'     and unit tests; not for analysis.}
+#' }
+#'
+#' Five authority codes that previous versions of the package
+#' advertised --- `iucn`, `tpl`, `fb`, `slb`, `wd` --- are not on this
+#' list. Empirical testing against \pkg{taxadb} v22.12 showed that
+#' `iucn` errors with a schema mismatch and the other four are not
+#' \pkg{taxadb} providers at all. Anyone who was passing one of those
+#' values was getting a hard error; passing them now produces a
+#' helpful migration message instead.
 #'
 #' @keywords internal
 pr_valid_authorities <- function() {
-  c("col", "itis", "gbif", "ncbi", "tpl", "fb", "slb", "wd", "iucn")
+  c("col", "itis", "gbif", "ncbi", "ott", "itis_test")
+}
+
+# Authorities that earlier versions of the package incorrectly listed
+# as supported. We keep the set so that we can produce a targeted
+# migration error if a user passes one of these (rather than the
+# generic "not a valid authority" message).
+.pr_removed_authorities <- function() {
+  c("iucn", "tpl", "fb", "slb", "wd")
+}
+
+
+#' Validate a user-supplied authority string
+#'
+#' Used by every entry-point function that accepts `authority`.
+#' Lower-cases the input, returns it unchanged if `NULL` (synonym
+#' resolution skipped), errors with a helpful message if the value
+#' was previously listed but is no longer supported, or with a
+#' standard "unknown authority" message otherwise.
+#'
+#' @param authority Character(1) or NULL. The user-supplied value.
+#' @param call Calling environment, for `cli_abort(call = ...)`.
+#' @return The lower-cased, validated authority (or NULL).
+#' @keywords internal
+pr_validate_authority <- function(authority, call = caller_env()) {
+  if (is.null(authority)) return(NULL)
+  authority <- tolower(authority)
+
+  if (authority %in% pr_valid_authorities()) {
+    return(authority)
+  }
+
+  if (authority %in% .pr_removed_authorities()) {
+    removed <- .pr_removed_authorities()
+    valid <- pr_valid_authorities()
+    cli::cli_abort(
+      c(
+        "{.val {authority}} is not a supported authority.",
+        "x" = paste0(
+          "{.val {authority}} was listed in earlier versions of the ",
+          "package but is not actually supported by {.pkg taxadb} ",
+          "v22.12 (the database we test against)."
+        ),
+        "i" = "Removed authorities: {.val {removed}}.",
+        ">" = "Switch to one of: {.val {valid}}.",
+        ">" = "Or pass {.code authority = NULL} to skip synonym resolution."
+      ),
+      call = call
+    )
+  }
+
+  cli::cli_abort(
+    c(
+      "Unknown authority: {.val {authority}}.",
+      "i" = "Valid options: {.val {pr_valid_authorities()}}."
+    ),
+    call = call
+  )
 }
 
 #' Ensure the taxadb local database is available
@@ -43,8 +120,14 @@ pr_ensure_db <- function(authority, db_version = NULL) {
     )
   }
 
-  # taxadb::td_create downloads the DB if not present
-  args <- list(provider = authority)
+  # We restrict to the Darwin Core ("dwc") schema rather than letting
+  # taxadb default to schema = c("dwc", "common"). The cascade only
+  # consumes scientific names (dwc); the `common` schema (vernacular
+  # names) is unused. More importantly, the "common" schema does not
+  # ship for OTT under taxadb v22.12, so the default would error on
+  # otherwise-valid OTT calls. Restricting to "dwc" keeps every
+  # authority on pr_valid_authorities() callable.
+  args <- list(provider = authority, schema = "dwc")
   if (!is.null(db_version)) args$version <- db_version
 
   tryCatch(
@@ -59,7 +142,7 @@ pr_ensure_db <- function(authority, db_version = NULL) {
         c(
           "Failed to create/access taxadb database.",
           "x" = conditionMessage(e),
-          "i" = 'Try running {.code taxadb::td_create("{authority}")} manually.'
+          "i" = 'Try running {.code taxadb::td_create("{authority}", schema = "dwc")} manually.'
         ),
         call = caller_env()
       )

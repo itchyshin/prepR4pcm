@@ -1,0 +1,50 @@
+# Build the pkgdown site as an emergency manual rebuild.
+#
+# Day-to-day, the site auto-deploys via GitHub Pages because the Pages
+# source is configured to read directly from `main:/docs/`. This
+# workflow is only triggered manually (workflow_dispatch) when we need
+# to verify a build server-side or rebuild without committing the
+# regenerated docs/ tree from a local machine.
+#
+# The deploy step (push to gh-pages) was removed because under the
+# main:/docs configuration the pkgdown HTML in `docs/` is what GitHub
+# Pages serves. A separate gh-pages branch would be ignored.
+
+on:
+  workflow_dispatch:
+
+name: pkgdown
+
+permissions: read-all
+
+jobs:
+  pkgdown:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
+
+      - name: Build site (verification only; not deployed)
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        shell: Rscript {0}
+
+      - name: Upload built site as artifact for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgdown-site
+          path: docs/
+          retention-days: 7

@@ -13,17 +13,23 @@
 #'   are written.
 #' @param tree An `ape::phylo` object or file path. If `NULL`, only the
 #'   data and mapping are written.
-#' @param species_col Character(1). Column name in `data` containing
-#'   species names. Auto-detected if `NULL`.
-#' @param dir Character(1). Output directory. Created if it does not exist.
-#'   Default `"."`.
-#' @param prefix Character(1). File name prefix. Default `"reconciled"`.
-#' @param tree_format Character(1). Tree output format: `"nexus"` (default)
-#'   or `"newick"`.
-#' @param drop_unresolved Logical. Drop unresolved species? Default `TRUE`.
+#' @param species_col A length-1 character vector. Column name in `data`
+#'   containing species names. Auto-detected when `NULL`.
+#' @param dir A length-1 character vector. Path to the output directory
+#'   that will receive the exported files (e.g. a project's
+#'   `data-output/` folder, or a staging directory before a Zenodo
+#'   deposit). Created if it does not exist. Default `"."`.
+#' @param prefix A length-1 character vector. File name prefix. Default
+#'   `"reconciled"`.
+#' @param tree_format A length-1 character vector. Tree output format:
+#'   `"nexus"` (default) or `"newick"`.
+#' @param drop_unresolved Logical. Drops unresolved species when `TRUE`.
+#'   Default `TRUE`.
 #'
 #' @return A named list of file paths (invisibly):
-#'   `$data` (CSV), `$tree` (Nexus or Newick), `$mapping` (CSV).
+#'   `$data` (CSV), `$tree` (Nexus or Newick), `$mapping` (CSV), and
+#'   `$unused_overrides` (CSV; `NULL` when there are no rejected
+#'   overrides on the reconciliation).
 #'
 #' @family reconciliation functions
 #' @seealso [reconcile_apply()] for in-memory alignment without writing
@@ -103,6 +109,24 @@ reconcile_export <- function(reconciliation, data = NULL, tree = NULL,
   )
   paths$mapping <- path_mapping
   cli_alert_success("Mapping written to {.path {path_mapping}}")
+
+  # Write unused-override audit trail when non-empty. Always reflected
+  # in the returned `paths` list so callers can rely on its shape, but
+  # the CSV is only created when there is something to write.
+  paths$unused_overrides <- NULL
+  unused <- reconciliation$unused_overrides
+  if (!is.null(unused) && nrow(unused) > 0) {
+    path_unused <- file.path(dir, paste0(prefix, "_unused_overrides.csv"))
+    utils::write.csv(
+      as.data.frame(unused),
+      path_unused,
+      row.names = FALSE
+    )
+    paths$unused_overrides <- path_unused
+    cli_alert_success(
+      "Unused overrides written to {.path {path_unused}}"
+    )
+  }
 
   invisible(paths)
 }

@@ -105,19 +105,7 @@ reconcile_tree <- function(x, tree,
   # Validate data frame
   if (!is.data.frame(x)) abort("`x` must be a data frame.", call = caller_env())
 
-  if (!is.null(authority)) {
-    authority <- tolower(authority)
-    if (!authority %in% pr_valid_authorities()) {
-      abort(
-        c(
-          paste0("Unknown authority: '", authority, "'."),
-          "i" = paste0("Valid options: ",
-                       paste(pr_valid_authorities(), collapse = ", "))
-        ),
-        call = caller_env()
-      )
-    }
-  }
+  authority <- pr_validate_authority(authority)
 
   # Detect species column
   if (is.null(x_species)) x_species <- pr_detect_species_column(x, "x_species")

@@ -158,6 +158,32 @@ reconcile_report <- function(reconciliation,
     add(pr_mapping_table(manual_m, max_rows = 50))
   }
 
+  unused_ov <- reconciliation$unused_overrides
+  if (!is.null(unused_ov) && nrow(unused_ov) > 0) {
+    add("<h2>Unused overrides (", nrow(unused_ov), ")</h2>")
+    add("<p>Override rows that could not be applied. Each is tagged ",
+        "with a reason code.</p>")
+    add("<table>",
+        "<thead><tr>",
+        "<th>name_x</th><th>name_y</th><th>reason</th>",
+        "</tr></thead>",
+        "<tbody>")
+    show_n <- min(nrow(unused_ov), 50)
+    for (i in seq_len(show_n)) {
+      add("<tr>",
+          "<td>", pr_html_escape(unused_ov$name_x[i]), "</td>",
+          "<td>", pr_html_escape(unused_ov$name_y[i]), "</td>",
+          "<td><code>", pr_html_escape(unused_ov$reason[i]),
+          "</code></td>",
+          "</tr>")
+    }
+    if (nrow(unused_ov) > 50) {
+      add("<tr><td colspan='3'><em>... and ",
+          nrow(unused_ov) - 50, " more</em></td></tr>")
+    }
+    add("</tbody></table>")
+  }
+
   if (nrow(unres_x) > 0) {
     add("<h2>Unresolved: in data but not in tree (", nrow(unres_x), ")</h2>")
     add("<ul>")

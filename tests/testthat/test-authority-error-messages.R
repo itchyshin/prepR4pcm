@@ -49,10 +49,28 @@ test_that("missing-taxadb error fires when taxadb is unavailable (issue #4)", {
   expect_false(grepl("{.code", msg, fixed = TRUE))
 })
 
-test_that("ott is no longer a valid authority (issue #5)", {
-  # ott was removed from pr_valid_authorities() because the default
-  # taxadb release does not ship a working OTT schema.
-  expect_false("ott" %in% pr_valid_authorities())
-  # Core authorities remain.
-  expect_true(all(c("col", "itis", "gbif", "ncbi") %in% pr_valid_authorities()))
+test_that("the supported-authority list matches taxadb's documented providers (issue #5)", {
+  # Round 1 incorrectly removed `ott`; Round 2 restored it after we
+  # found that taxadb::filter_name actually works for OTT, and that
+  # the failure was at td_create() because the default schema set
+  # included "common" (which OTT does not ship). Round 2 restricts
+  # to schema = "dwc" -- see pr_ensure_db().
+  #
+  # The valid list now mirrors ?taxadb::td_create's documented
+  # providers exactly.
+  expected <- c("col", "itis", "gbif", "ncbi", "ott", "itis_test")
+  expect_setequal(pr_valid_authorities(), expected)
+})
+
+test_that("removed authorities produce a helpful migration error (issue #5 follow-up)", {
+  # Anyone passing one of the previously-listed-but-broken authorities
+  # should get a targeted message naming them, not the generic
+  # "not a valid authority" message.
+  for (bad in c("iucn", "tpl", "fb", "slb", "wd")) {
+    err <- tryCatch(pr_validate_authority(bad), error = function(e) e)
+    expect_s3_class(err, "error")
+    msg <- conditionMessage(err)
+    expect_true(grepl("not.*supported", msg, ignore.case = TRUE),
+                info = sprintf("error message for `%s` does not mention 'not supported': %s", bad, msg))
+  }
 })

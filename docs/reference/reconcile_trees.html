@@ -15,7 +15,7 @@ Clements 2025) before deciding which tree to use in a downstream PCM."><meta pro
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,6 +28,7 @@ Clements 2025) before deciding which tree to use in a downstream PCM."><meta pro
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
+    <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -84,91 +85,101 @@ Newick/Nexus tree file.</p></dd>
 
 
 <dt id="arg-authority">authority<a class="anchor" aria-label="anchor" href="#arg-authority"></a></dt>
-<dd><p>Character(1) or <code>NULL</code>. Taxonomic authority used for
-synonym resolution (stage 3 of the cascade). One of:</p><dl><dt><code>"col"</code> (default)</dt>
+<dd><p>A length-1 character vector, or <code>NULL</code>. Taxonomic
+authority used for synonym resolution (stage 3 of the cascade).
+One of:</p><dl><dt><code>"col"</code> (default)</dt>
 <dd><p>Catalogue of Life — broad, curated,
 frequently updated. A sensible default for most taxa.</p></dd>
 
-<dt><code>"gbif"</code></dt>
-<dd><p>Global Biodiversity Information Facility backbone.
-Wider coverage; includes more recent synonymy.</p></dd>
-
 <dt><code>"itis"</code></dt>
-<dd><p>Integrated Taxonomic Information System — strong
-for North American vertebrates and plants.</p></dd>
+<dd><p>Integrated Taxonomic Information System —
+strong for North American vertebrates and plants.</p></dd>
+
+<dt><code>"gbif"</code></dt>
+<dd><p>Global Biodiversity Information Facility
+backbone. Wider coverage; includes more recent synonymy.</p></dd>
 
 <dt><code>"ncbi"</code></dt>
-<dd><p>NCBI Taxonomy — best when working with sequence
-data.</p></dd>
+<dd><p>NCBI Taxonomy — best when working with
+sequence data.</p></dd>
 
-<dt><code>"iucn"</code>, <code>"fb"</code> (FishBase), <code>"slb"</code> (SeaLifeBase), <code>"wd"</code>
-(Wikidata), <code>"tpl"</code> (The Plant List)</dt>
-<dd><p>Also passed through to <span class="pkg">taxadb</span>. Coverage and current
-availability vary; some may require running
-<code>taxadb::td_create()</code> manually with a matching <code>version</code>.</p></dd>
+<dt><code>"ott"</code></dt>
+<dd><p>Open Tree of Life synthetic taxonomy. Useful when
+your downstream phylogeny is from the Open Tree synthesis.</p></dd>
+
+<dt><code>"itis_test"</code></dt>
+<dd><p>A small bundled subset of ITIS, cached
+locally with <span class="pkg">taxadb</span> for testing. Intended for examples
+and unit tests; not for analysis.</p></dd>
 
 <dt><code>NULL</code></dt>
 <dd><p>Skip the synonym stage entirely. Useful for quick
-checks or when taxadb is unavailable. Stages 1, 2 and 4 still
-run.</p></dd>
+checks or when <span class="pkg">taxadb</span> is unavailable. Stages 1, 2 and 4
+still run.</p></dd>
 
 
-</dl><p><code>"ott"</code> (Open Tree of Life) was previously listed but is <strong>not</strong>
-currently supported because the default <span class="pkg">taxadb</span> release does
-not ship a working OTT schema. Use a different authority, or skip
-synonym resolution by passing <code>NULL</code>.</p></dd>
+</dl><p>Five authority codes that earlier versions of the package
+advertised — <code>"iucn"</code>, <code>"tpl"</code>, <code>"fb"</code>, <code>"slb"</code>, <code>"wd"</code> — are
+no longer accepted. Empirical testing against <span class="pkg">taxadb</span> v22.12
+showed that <code>iucn</code> errors with a schema mismatch and the others
+are not <span class="pkg">taxadb</span> providers at all. Passing one of those
+values now produces a helpful migration error.</p></dd>
 
 
 <dt id="arg-rank">rank<a class="anchor" aria-label="anchor" href="#arg-rank"></a></dt>
-<dd><p>Character(1). Controls how trinomials are handled during
-normalisation:</p><dl><dt><code>"species"</code> (default)</dt>
-<dd><p>Strip infraspecific epithets so that
-<code>"Parus major major"</code> becomes <code>"Parus major"</code> before matching.</p></dd>
+<dd><p>A length-1 character vector. Controls how trinomials
+are handled during normalisation:</p><dl><dt><code>"species"</code> (default)</dt>
+<dd><p>Strip infraspecific epithets so
+that <code>"Parus major major"</code> becomes <code>"Parus major"</code> before
+matching.</p></dd>
 
 <dt><code>"subspecies"</code></dt>
-<dd><p>Keep trinomials intact. Use this when your
-analysis operates at subspecies level.</p></dd>
+<dd><p>Keep trinomials intact. Use this when
+your analysis operates at subspecies level.</p></dd>
 
 
 </dl></dd>
 
 
 <dt id="arg-overrides">overrides<a class="anchor" aria-label="anchor" href="#arg-overrides"></a></dt>
-<dd><p>Optional pre-built corrections. Either a data frame
-with at least columns <code>name_x</code> and <code>name_y</code> (plus an optional
-<code>user_note</code> column), or a file path to a CSV with the same columns.
-Any name listed here bypasses the cascade and is recorded as
-<code>match_type = "manual"</code>. Useful for applying published crosswalks
-(see <code><a href="reconcile_crosswalk.html">reconcile_crosswalk()</a></code>) or for locking down decisions made in a
-previous run.</p></dd>
+<dd><p>Optional pre-built corrections. Either a data
+frame with at least columns <code>name_x</code> and <code>name_y</code> (plus an
+optional <code>user_note</code> column), or a file path to a CSV with the
+same columns. Any name listed here bypasses the cascade and is
+recorded as <code>match_type = "manual"</code>. Useful for applying
+published crosswalks (see <code><a href="reconcile_crosswalk.html">reconcile_crosswalk()</a></code>) or for locking
+down decisions made in a previous run.</p></dd>
 
 
 <dt id="arg-db-version">db_version<a class="anchor" aria-label="anchor" href="#arg-db-version"></a></dt>
-<dd><p>Character(1). <span class="pkg">taxadb</span> database snapshot to use
-(e.g. <code>"22.12"</code>). <code>NULL</code> (default) uses the latest available.</p></dd>
+<dd><p>A length-1 character vector. <span class="pkg">taxadb</span>
+database snapshot to use (e.g. <code>"22.12"</code>). <code>NULL</code> (default) uses
+the latest available.</p></dd>
 
 
 <dt id="arg-fuzzy">fuzzy<a class="anchor" aria-label="anchor" href="#arg-fuzzy"></a></dt>
-<dd><p>Logical. Enable the fuzzy-matching stage? Default <code>FALSE</code>.
-Turn this on to catch likely typos (<em>Corvus brachyrhnchos</em>
--&gt; <em>Corvus brachyrhynchos</em>). When <code>FALSE</code>, stages 1–3 still run.</p></dd>
+<dd><p>Logical. Enables the fuzzy-matching stage when
+<code>TRUE</code>. Default <code>FALSE</code>. Turn this on to catch likely typos
+(<em>Corvus brachyrhnchos</em> -&gt; <em>Corvus brachyrhynchos</em>). When
+<code>FALSE</code>, stages 1–3 still run.</p></dd>
 
 
 <dt id="arg-fuzzy-threshold">fuzzy_threshold<a class="anchor" aria-label="anchor" href="#arg-fuzzy-threshold"></a></dt>
 <dd><p>Numeric in [0, 1]. Minimum genus-weighted
 similarity score for a fuzzy match to be accepted. Default <code>0.9</code>
 (roughly "no more than ~10% of characters differ"). Lower values
-(e.g. <code>0.7</code>) are more permissive but produce more false positives;
-always review fuzzy matches with <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code> or
-<code><a href="reconcile_review.html">reconcile_review()</a></code> before trusting them.</p></dd>
+(e.g. <code>0.7</code>) are more permissive but produce more false
+positives; always review fuzzy matches with <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code>
+or <code><a href="reconcile_review.html">reconcile_review()</a></code> before trusting them.</p></dd>
 
 
 <dt id="arg-resolve">resolve<a class="anchor" aria-label="anchor" href="#arg-resolve"></a></dt>
-<dd><p>Character(1). What to do with borderline matches:</p><dl><dt><code>"flag"</code> (default)</dt>
-<dd><p>Mark low-confidence fuzzy matches (score
-below <code>flag_threshold</code>) and names with indirect taxadb synonymy as
-<code>match_type = "flagged"</code> so you can audit them with
-<code><a href="reconcile_review.html">reconcile_review()</a></code> or <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code>.</p></dd>
+<dd><p>A length-1 character vector. What to do with
+borderline matches:</p><dl><dt><code>"flag"</code> (default)</dt>
+<dd><p>Mark low-confidence fuzzy matches
+(score below <code>flag_threshold</code>) and names with indirect
+taxadb synonymy as <code>match_type = "flagged"</code> so you can audit
+them with <code><a href="reconcile_review.html">reconcile_review()</a></code> or <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code>.</p></dd>
 
 <dt><code>"first"</code></dt>
 <dd><p>Accept the highest-scoring candidate silently,
@@ -180,7 +191,8 @@ already reviewed the ambiguities.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical. Suppress progress messages? Default <code>FALSE</code>.</p></dd>
+<dd><p>Logical. Suppresses progress messages when <code>TRUE</code>.
+Default <code>FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -221,10 +233,8 @@ single dataset against many trees at once.</p>
 <span class="r-in"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu">reconcile_trees</span><span class="op">(</span><span class="va">tree_jetz</span>, <span class="va">tree_clements25</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Reconciling 657 tips (tree1) vs 854 tips (tree2)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Matching 657 x 854 names through 2 stages...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/4: Exact matching...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/4: Normalised matching (641 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 3/4: Synonym resolution (641 matched so far)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 4/4: Fuzzy matching (641 matched so far)...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 1/2: Exact matching...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Stage 2/2: Normalised matching (641 matched so far)...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Matched 641/657 tips between trees</span>
 <span class="r-in"><span><span class="va">rec</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
@@ -232,7 +242,7 @@ single dataset against many trees at once.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Source x: tree1 (657 tips)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Source y: tree2 (854 tips)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Authority: none</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-04-28 18:13:34</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-05-01 08:04:18</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████████░] 98% (641/657)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Match summary</span> ──</span>

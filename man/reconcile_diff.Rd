@@ -13,7 +13,8 @@ reconcile_diff(x, y, quiet = FALSE)
 reconciled against the same \code{x} data so that \code{name_x} values are
 comparable.}
 
-\item{quiet}{Logical. Suppress the console summary? Default \code{FALSE}.}
+\item{quiet}{Logical. Suppresses the console summary when \code{TRUE}.
+Default \code{FALSE}.}
 }
 \value{
 A list with the following components:
@@ -26,8 +27,13 @@ in \code{x}.}
 differs between the two runs.}
 \item{\code{target_changed}}{Tibble of species whose \code{name_y}
 differs.}
+\item{\code{unused_overrides_diff}}{Tibble of overrides that are in
+the \code{unused_overrides} slot of one reconciliation but not
+the other; columns \code{name_x}, \code{name_y}, \code{reason}, \code{side}
+(\code{"x"} or \code{"y"}).}
 \item{\code{summary}}{A one-row tibble with counts: \code{n_gained},
-\code{n_lost}, \code{n_type_changed}, \code{n_target_changed}, \code{n_shared}.}
+\code{n_lost}, \code{n_type_changed}, \code{n_target_changed}, \code{n_shared},
+\code{n_unused_override_diff}.}
 }
 }
 \description{

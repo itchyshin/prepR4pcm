@@ -10,40 +10,57 @@
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], [reconcile_trees()],
 #'   [reconcile_to_trees()], or [reconcile_multi()].
+#' @param include_unused_overrides Logical. Appends the rejected
+#'   override rows to the returned tibble when `TRUE`, with
+#'   `match_type = "override_unused"`, `match_score = NA`, and the
+#'   `notes` column carrying the rejection reason
+#'   (`name_x_not_in_data`, `name_y_not_in_target`, or
+#'   `already_matched`). Default `FALSE` for backward compatibility ---
+#'   the bare mapping tibble has the same shape as before.
 #'
 #' @return A tibble with one row per unique name seen in either source
 #'   and the following columns:
 #'   \describe{
-#'     \item{`name_x`}{The original name as it appeared in source `x`
-#'       (your data). `NA` for rows that exist only in source `y`
-#'       (e.g. tree tips not in your data).}
-#'     \item{`name_y`}{The original name as it appeared in source `y`
-#'       (the reference dataset or tree). `NA` for rows that exist only
-#'       in source `x`.}
+#'     \item{`name_x`}{Statement: this column holds the original name
+#'       as it appeared in source `x` (your data). `NA` for rows that
+#'       exist only in source `y` (e.g. tree tips not in your data).}
+#'     \item{`name_y`}{Statement: this column holds the original name
+#'       as it appeared in source `y` (the reference dataset or tree).
+#'       `NA` for rows that exist only in source `x`.}
 #'     \item{`name_resolved`}{The accepted/canonical name returned by
 #'       the taxonomic authority, when synonym resolution was used.
 #'       `NA` when `authority = NULL` or no synonym was found.}
 #'     \item{`match_type`}{One of `"exact"`, `"normalized"`,
 #'       `"synonym"`, `"fuzzy"`, `"manual"` (set via
 #'       [reconcile_override()]), `"flagged"` (low-confidence, needs
-#'       review), or `"unresolved"`.}
+#'       review), `"unresolved"`, or --- when
+#'       `include_unused_overrides = TRUE` --- `"override_unused"`
+#'       (override row not applied because of missing names or prior
+#'       matches).}
 #'     \item{`match_score`}{Numeric in \[0, 1\]. `1` for
 #'       exact/normalized/synonym/manual matches; a genus-weighted
-#'       Levenshtein score for fuzzy matches; `NA` for unresolved.}
+#'       Levenshtein score for fuzzy matches; `NA` for unresolved and
+#'       for unused-override rows.}
 #'     \item{`match_source`}{Where the match came from: `"exact"`,
 #'       `"normalisation"`, the taxadb authority code (e.g. `"col"`),
 #'       `"fuzzy"`, or `"user_override"`.}
-#'     \item{`in_x`}{Logical. Was this name present in source `x`?}
-#'     \item{`in_y`}{Logical. Was this name present in source `y`?}
+#'     \item{`in_x`}{Logical. This column records whether the name was
+#'       present in source `x`.}
+#'     \item{`in_y`}{Logical. This column records whether the name was
+#'       present in source `y`.}
 #'     \item{`notes`}{Free-text notes, populated e.g. when a name is
-#'       flagged for review or when an override carries a user comment.}
+#'       flagged for review or when an override carries a user comment.
+#'       For `match_type = "override_unused"` rows this column carries
+#'       the rejection reason.}
 #'   }
 #'
 #' @family reconciliation functions
 #' @seealso [reconcile_summary()] for a printed breakdown;
 #'   [reconcile_suggest()] for near-miss candidates for unresolved
 #'   names; [reconcile_apply()] to turn the mapping into an aligned
-#'   data-tree pair.
+#'   data-tree pair. The unused-override rows surfaced by
+#'   `include_unused_overrides = TRUE` mirror the `unused_overrides`
+#'   slot on the [reconciliation] object.
 #'
 #' @examples
 #' data(avonet_subset)
@@ -58,10 +75,33 @@
 #' # Which species are in the data but missing from the tree?
 #' head(mapping[mapping$in_x & !mapping$in_y, c("name_x", "match_type")])
 #'
+#' # Append rejected overrides for audit
+#' mapping_full <- reconcile_mapping(rec, include_unused_overrides = TRUE)
+#'
 #' @export
-reconcile_mapping <- function(reconciliation) {
+reconcile_mapping <- function(reconciliation, include_unused_overrides = FALSE) {
   validate_reconciliation(reconciliation)
-  reconciliation$mapping
+  if (!isTRUE(include_unused_overrides)) {
+    return(reconciliation$mapping)
+  }
+
+  unused <- reconciliation$unused_overrides
+  if (is.null(unused) || nrow(unused) == 0) {
+    return(reconciliation$mapping)
+  }
+
+  unused_rows <- tibble(
+    name_x        = unused$name_x,
+    name_y        = unused$name_y,
+    name_resolved = NA_character_,
+    match_type    = "override_unused",
+    match_score   = NA_real_,
+    match_source  = "user_override",
+    in_x          = FALSE,
+    in_y          = FALSE,
+    notes         = unused$reason
+  )
+  rbind(reconciliation$mapping, unused_rows)
 }
 
 

@@ -65,4 +65,3 @@ data-raw/sources/
 scripts/output/
 /doc/
 /Meta/
-.github/workflows/pkgdown.yaml

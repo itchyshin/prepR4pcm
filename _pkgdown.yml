@@ -26,6 +26,8 @@ navbar:
         href: articles/getting-started.html
       - text: "Bird trait workflow (PGLS + PGLMM)"
         href: articles/bird-workflow.html
+      - text: "Mammal database-assembly workflow"
+        href: articles/db-assembly-workflow_mammals.html
 
 reference:
 
@@ -106,3 +108,7 @@ reference:
   - tree_jetz
   - tree_clements25
   - crosswalk_birdlife_birdtree
+  - mammal_amniote_example
+  - mammal_pantheria_example
+  - mammal_tetrapodtraits_example
+  - mammal_tree_example

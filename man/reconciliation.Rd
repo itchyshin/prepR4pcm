@@ -42,12 +42,16 @@ debugging or writing custom helpers.
 }
 \section{Structure}{
 
-A \code{reconciliation} is an S3 list with four components:
+A \code{reconciliation} is an S3 list with five components:
 \describe{
 \item{\code{mapping}}{A tibble with one row per unique name seen in
 either source. Columns are documented in \code{\link[=reconcile_mapping]{reconcile_mapping()}}:
-\code{name_x}, \code{name_y}, \code{name_resolved}, \code{match_type},
-\code{match_score}, \code{match_source}, \code{in_x}, \code{in_y}, \code{notes}.}
+\code{name_x}, \code{name_y}, \code{name_resolved}, \code{match_type} (one of
+\code{"exact"}, \code{"normalized"}, \code{"synonym"}, \code{"fuzzy"}, \code{"manual"},
+\code{"flagged"}, \code{"unresolved"}, or --- when surfaced via
+\code{reconcile_mapping(include_unused_overrides = TRUE)} ---
+\code{"override_unused"}), \code{match_score}, \code{match_source}, \code{in_x},
+\code{in_y}, \code{notes}.}
 \item{\code{meta}}{A named list of provenance metadata --- call
 signature, timestamp, source labels, taxonomic authority,
 fuzzy settings, resolve mode, rank, \pkg{prepR4pcm} version.}
@@ -55,6 +59,14 @@ fuzzy settings, resolve mode, rank, \pkg{prepR4pcm} version.}
 print method and by \code{\link[=reconcile_summary]{reconcile_summary()}}.}
 \item{\code{overrides}}{A tibble logging manual corrections applied
 via \code{\link[=reconcile_override]{reconcile_override()}} or \code{\link[=reconcile_override_batch]{reconcile_override_batch()}}.}
+\item{\code{unused_overrides}}{A tibble of overrides that the cascade
+could NOT apply, with columns \code{name_x}, \code{name_y}, and \code{reason}
+(one of \code{name_x_not_in_data}, \code{name_y_not_in_target}, or
+\code{already_matched}). Empty when no overrides were supplied or
+when every override applied successfully. Surfaced in
+\code{reconcile_summary()}, \code{reconcile_report()} (HTML),
+\code{reconcile_export()} (as \verb{<prefix>_unused_overrides.csv}), and
+\code{reconcile_mapping(include_unused_overrides = TRUE)}.}
 }
 }
 

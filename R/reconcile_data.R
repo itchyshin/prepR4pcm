@@ -27,91 +27,9 @@
 #' Names that survive all four stages are labelled `unresolved`. Any
 #' entries supplied through `overrides` take precedence over the cascade.
 #'
-#' @param x A data frame whose species will be matched \emph{from}.
-#' @param y A data frame whose species will be matched \emph{to}
-#'   (typically the "reference" taxonomy or the dataset you want to
-#'   merge with).
-#' @param x_species Character(1). Column in `x` containing scientific
-#'   names. Auto-detected (e.g. `species`, `Species1`, `scientific_name`)
-#'   if `NULL`.
-#' @param y_species Character(1). Column in `y` containing scientific
-#'   names. Auto-detected if `NULL`.
-#' @param authority Character(1) or `NULL`. Taxonomic authority used for
-#'   synonym resolution (stage 3 of the cascade). One of:
-#'   \describe{
-#'     \item{`"col"` (default)}{Catalogue of Life --- broad, curated,
-#'       frequently updated. A sensible default for most taxa.}
-#'     \item{`"gbif"`}{Global Biodiversity Information Facility backbone.
-#'       Wider coverage; includes more recent synonymy.}
-#'     \item{`"itis"`}{Integrated Taxonomic Information System --- strong
-#'       for North American vertebrates and plants.}
-#'     \item{`"ncbi"`}{NCBI Taxonomy --- best when working with sequence
-#'       data.}
-#'     \item{`"iucn"`, `"fb"` (FishBase), `"slb"` (SeaLifeBase), `"wd"`
-#'       (Wikidata), `"tpl"` (The Plant List)}{
-#'       Also passed through to \pkg{taxadb}. Coverage and current
-#'       availability vary; some may require running
-#'       `taxadb::td_create()` manually with a matching `version`.}
-#'     \item{`NULL`}{Skip the synonym stage entirely. Useful for quick
-#'       checks or when taxadb is unavailable. Stages 1, 2 and 4 still
-#'       run.}
-#'   }
+#' \strong{After the call.} A `reconciliation` object is the input to
+#' most other functions in the package. Common next steps:
 #'
-#'   `"ott"` (Open Tree of Life) was previously listed but is **not**
-#'   currently supported because the default \pkg{taxadb} release does
-#'   not ship a working OTT schema. Use a different authority, or skip
-#'   synonym resolution by passing `NULL`.
-#' @param rank Character(1). Controls how trinomials are handled during
-#'   normalisation:
-#'   \describe{
-#'     \item{`"species"` (default)}{Strip infraspecific epithets so that
-#'       `"Parus major major"` becomes `"Parus major"` before matching.}
-#'     \item{`"subspecies"`}{Keep trinomials intact. Use this when your
-#'       analysis operates at subspecies level.}
-#'   }
-#' @param overrides Optional pre-built corrections. Either a data frame
-#'   with at least columns `name_x` and `name_y` (plus an optional
-#'   `user_note` column), or a file path to a CSV with the same columns.
-#'   Any name listed here bypasses the cascade and is recorded as
-#'   `match_type = "manual"`. Useful for applying published crosswalks
-#'   (see [reconcile_crosswalk()]) or for locking down decisions made in a
-#'   previous run.
-#' @param db_version Character(1). \pkg{taxadb} database snapshot to use
-#'   (e.g. `"22.12"`). `NULL` (default) uses the latest available.
-#' @param fuzzy Logical. Enable the fuzzy-matching stage? Default `FALSE`.
-#'   Turn this on to catch likely typos (*Corvus brachyrhnchos*
-#'   -> *Corvus brachyrhynchos*). When `FALSE`, stages 1--3 still run.
-#' @param fuzzy_threshold Numeric in \[0, 1\]. Minimum genus-weighted
-#'   similarity score for a fuzzy match to be accepted. Default `0.9`
-#'   (roughly "no more than ~10% of characters differ"). Lower values
-#'   (e.g. `0.7`) are more permissive but produce more false positives;
-#'   always review fuzzy matches with [reconcile_suggest()] or
-#'   [reconcile_review()] before trusting them.
-#' @param flag_threshold Numeric in \[0, 1\]. When `resolve = "flag"`, fuzzy
-#'   matches with a score below this value are recorded as
-#'   `match_type = "flagged"` rather than `"fuzzy"`, marking them for
-#'   manual review. Default `0.95`. Must be >= `fuzzy_threshold` to have
-#'   any effect.
-#' @param resolve Character(1). What to do with borderline matches:
-#'   \describe{
-#'     \item{`"flag"` (default)}{Mark low-confidence fuzzy matches (score
-#'       below `flag_threshold`) and names with indirect taxadb synonymy as
-#'       `match_type = "flagged"` so you can audit them with
-#'       [reconcile_review()] or [reconcile_suggest()].}
-#'     \item{`"first"`}{Accept the highest-scoring candidate silently,
-#'       without flagging. Faster but riskier; use only when you have
-#'       already reviewed the ambiguities.}
-#'   }
-#' @param quiet Logical. Suppress progress messages? Default `FALSE`.
-#' @param x_label Character(1) or `NULL`. Human-readable label for source `x`
-#'   stored in the reconciliation metadata and shown in `print()` / `format()`.
-#'   Defaults to the expression passed as `x` (via `deparse(substitute())`).
-#'   Set this explicitly when calling `reconcile_data()` inside another function
-#'   so the label reflects the real data source rather than the local argument
-#'   name.
-#' @param y_label Character(1) or `NULL`. Same as `x_label`, for source `y`.
-#'
-#' @return A [reconciliation] object. Common next steps:
 #' \itemize{
 #'   \item [reconcile_summary()] --- human-readable breakdown of matches.
 #'   \item [reconcile_plot()] --- one-glance bar/pie of match composition.
@@ -122,6 +40,103 @@
 #'     reconciliation as the species key.
 #'   \item [reconcile_report()] --- shareable HTML audit trail.
 #' }
+#'
+#' @param x A data frame whose species will be matched \emph{from}.
+#' @param y A data frame whose species will be matched \emph{to}
+#'   (typically the "reference" taxonomy or the dataset you want to
+#'   merge with).
+#' @param x_species A length-1 character vector. Name of the column in
+#'   `x` containing scientific names. Auto-detected (e.g. `species`,
+#'   `Species1`, `scientific_name`) when `NULL`.
+#' @param y_species A length-1 character vector. Name of the column in
+#'   `y` containing scientific names. Auto-detected when `NULL`.
+#' @param authority A length-1 character vector, or `NULL`. Taxonomic
+#'   authority used for synonym resolution (stage 3 of the cascade).
+#'   One of:
+#'   \describe{
+#'     \item{`"col"` (default)}{Catalogue of Life --- broad, curated,
+#'       frequently updated. A sensible default for most taxa.}
+#'     \item{`"itis"`}{Integrated Taxonomic Information System ---
+#'       strong for North American vertebrates and plants.}
+#'     \item{`"gbif"`}{Global Biodiversity Information Facility
+#'       backbone. Wider coverage; includes more recent synonymy.}
+#'     \item{`"ncbi"`}{NCBI Taxonomy --- best when working with
+#'       sequence data.}
+#'     \item{`"ott"`}{Open Tree of Life synthetic taxonomy. Useful when
+#'       your downstream phylogeny is from the Open Tree synthesis.}
+#'     \item{`"itis_test"`}{A small bundled subset of ITIS, cached
+#'       locally with \pkg{taxadb} for testing. Intended for examples
+#'       and unit tests; not for analysis.}
+#'     \item{`NULL`}{Skip the synonym stage entirely. Useful for quick
+#'       checks or when \pkg{taxadb} is unavailable. Stages 1, 2 and 4
+#'       still run.}
+#'   }
+#'
+#'   Five authority codes that earlier versions of the package
+#'   advertised --- `"iucn"`, `"tpl"`, `"fb"`, `"slb"`, `"wd"` --- are
+#'   no longer accepted. Empirical testing against \pkg{taxadb} v22.12
+#'   showed that `iucn` errors with a schema mismatch and the others
+#'   are not \pkg{taxadb} providers at all. Passing one of those
+#'   values now produces a helpful migration error.
+#' @param rank A length-1 character vector. Controls how trinomials
+#'   are handled during normalisation:
+#'   \describe{
+#'     \item{`"species"` (default)}{Strip infraspecific epithets so
+#'       that `"Parus major major"` becomes `"Parus major"` before
+#'       matching.}
+#'     \item{`"subspecies"`}{Keep trinomials intact. Use this when
+#'       your analysis operates at subspecies level.}
+#'   }
+#' @param overrides Optional pre-built corrections. Either a data
+#'   frame with at least columns `name_x` and `name_y` (plus an
+#'   optional `user_note` column), or a file path to a CSV with the
+#'   same columns. Any name listed here bypasses the cascade and is
+#'   recorded as `match_type = "manual"`. Useful for applying
+#'   published crosswalks (see [reconcile_crosswalk()]) or for locking
+#'   down decisions made in a previous run.
+#' @param db_version A length-1 character vector. \pkg{taxadb}
+#'   database snapshot to use (e.g. `"22.12"`). `NULL` (default) uses
+#'   the latest available.
+#' @param fuzzy Logical. Enables the fuzzy-matching stage when
+#'   `TRUE`. Default `FALSE`. Turn this on to catch likely typos
+#'   (*Corvus brachyrhnchos* -> *Corvus brachyrhynchos*). When
+#'   `FALSE`, stages 1--3 still run.
+#' @param fuzzy_threshold Numeric in \[0, 1\]. Minimum genus-weighted
+#'   similarity score for a fuzzy match to be accepted. Default `0.9`
+#'   (roughly "no more than ~10% of characters differ"). Lower values
+#'   (e.g. `0.7`) are more permissive but produce more false
+#'   positives; always review fuzzy matches with [reconcile_suggest()]
+#'   or [reconcile_review()] before trusting them.
+#' @param flag_threshold Numeric in \[0, 1\]. When `resolve = "flag"`,
+#'   fuzzy matches with a score below this value are recorded as
+#'   `match_type = "flagged"` rather than `"fuzzy"`, marking them for
+#'   manual review. Default `0.95`. Must be >= `fuzzy_threshold` to
+#'   have any effect.
+#' @param resolve A length-1 character vector. What to do with
+#'   borderline matches:
+#'   \describe{
+#'     \item{`"flag"` (default)}{Mark low-confidence fuzzy matches
+#'       (score below `flag_threshold`) and names with indirect
+#'       taxadb synonymy as `match_type = "flagged"` so you can audit
+#'       them with [reconcile_review()] or [reconcile_suggest()].}
+#'     \item{`"first"`}{Accept the highest-scoring candidate silently,
+#'       without flagging. Faster but riskier; use only when you have
+#'       already reviewed the ambiguities.}
+#'   }
+#' @param quiet Logical. Suppresses progress messages when `TRUE`.
+#'   Default `FALSE`.
+#' @param x_label Character(1) or `NULL`. Human-readable label for source `x`
+#'   stored in the reconciliation metadata and shown in `print()` / `format()`.
+#'   Defaults to the expression passed as `x` (via `deparse(substitute())`).
+#'   Set this explicitly when calling `reconcile_data()` inside another function
+#'   so the label reflects the real data source rather than the local argument
+#'   name.
+#' @param y_label Character(1) or `NULL`. Same as `x_label`, for source `y`.
+#'
+#' @return A [reconciliation] object. The accompanying mapping tibble,
+#'   match-type counts, provenance metadata, and applied / unused
+#'   override slots are documented in [reconciliation]. See the
+#'   "After the call" section above for the most common next steps.
 #'
 #' @family reconciliation functions
 #' @seealso [reconcile_tree()] for matching against a phylogenetic tree;
@@ -181,19 +196,7 @@ reconcile_data <- function(x, y,
   if (!is.data.frame(x)) abort("`x` must be a data frame.", call = caller_env())
   if (!is.data.frame(y)) abort("`y` must be a data frame.", call = caller_env())
 
-  if (!is.null(authority)) {
-    authority <- tolower(authority)
-    if (!authority %in% pr_valid_authorities()) {
-      abort(
-        c(
-          paste0("Unknown authority: '", authority, "'."),
-          "i" = paste0("Valid options: ",
-                       paste(pr_valid_authorities(), collapse = ", "))
-        ),
-        call = caller_env()
-      )
-    }
-  }
+  authority <- pr_validate_authority(authority)
 
   # Detect species columns
   if (is.null(x_species)) x_species <- pr_detect_species_column(x, "x_species")
