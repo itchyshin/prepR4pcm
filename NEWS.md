@@ -1,5 +1,37 @@
 # prepR4pcm 0.3.1.9000 (development version)
 
+## Round 6: tree-handling UX polish
+
+* **Local on-disk cache for `pr_get_tree()`.** Pass `cache = TRUE`
+  to memoise the request on disk; subsequent identical calls are
+  instant. New companion functions:
+  - `pr_tree_cache_dir(path = NULL)` -- get/set the cache directory.
+    Defaults to `tools::R_user_dir()`; can be set to a project-local
+    path so the cache travels with the analysis.
+  - `pr_tree_cache_status()` -- list cache entries with timestamps
+    and sizes.
+  - `pr_tree_cache_clear(confirm, source)` -- wipe the cache;
+    optionally restrict to a single backend.
+* **`pr_get_tree_status(check_network)` health probe.** One-call
+  report listing every backend with installed / version /
+  needs_network / reachable / install hint. Useful for first-time
+  users figuring out which backends are available.
+* **`pr_tree_compare(...)` for comparing trees.** Tip-set Jaccard,
+  Robinson-Foulds distance on the shared subtree, branch-length
+  agreement. Accepts `phylo`, `multiPhylo`, or `pr_tree_result`
+  inputs (positional or named).
+* **TNRS preflight for non-TNRS backends.** New `tnrs` argument on
+  `pr_get_tree()`: `"auto"` (default; runs TNRS for clootl + fishtree
+  to lift their match rates), `"always"` (run regardless), `"never"`
+  (skip). Silently skipped with a one-shot warning when `rotl` is
+  not installed.
+* **`source = "auto"` fall-through dispatcher.** Tries installed
+  backends in priority order; returns the first that resolves at
+  least `min_match` of the species (default 0.8) or the best of the
+  lot if none meets the threshold. New `min_match` argument
+  controls the threshold.
+* `digest` added to `Suggests` (used by the new cache-key hashing).
+
 ## Round 5: posterior-tree support and the prepR4pcm -> pigauto pipeline
 
 * **`pr_get_tree()` gains a unified `n_tree` parameter** so users can
