@@ -1,5 +1,29 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## CI cleanup
+
+* **CI workflow trimmed** to `pull_request` + `workflow_dispatch`
+  only (was: `push` + `pull_request`), Linux-only by default (was:
+  full macOS / Windows / Linux x 3 R-version matrix). The
+  `workflow_dispatch` trigger has an `os` input -- set it to `full`
+  before a release / CRAN submission to re-run the full matrix
+  manually. Saves GitHub Actions minutes (~85% reduction) and
+  matches the team's "local checks over CI" preference per
+  `CLAUDE.md`.
+* **`datelife` moved from `Suggests` + `Remotes` to `Enhances`**
+  in `DESCRIPTION`. Reason: datelife was archived from CRAN in
+  2024 and has a heavy transitive dep tree (`bold`, `phylobase`,
+  Bioconductor packages) that pak's resolver cannot install on
+  clean CI images. `Enhances` declares the relationship so R CMD
+  check is happy, but pak doesn't try to auto-install it. Users
+  who want the datelife backend run
+  `pak::pak("phylotastic/datelife")` themselves; the runtime
+  `requireNamespace("datelife")` guard in
+  `.pr_get_tree_datelife()` and `.pr_date_tree_datelife()`
+  produces a clear install hint when datelife is missing.
+* `\pkg{datelife}` references in roxygen replaced with
+  `\code{datelife}` to match the new dependency status.
+
 ## Bug fixes and documentation polish
 
 * `reconcile_multi()` no longer undercounts dataset-specific matches

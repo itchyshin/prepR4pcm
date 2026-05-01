@@ -65,8 +65,13 @@ code.
 Use \code{pr_date_tree()} when you already have a topology (e.g. from a
 published phylogeny or your own analysis) and want to attach
 divergence times. Use \code{\link[=pr_get_tree]{pr_get_tree()}} with \code{source = "datelife"} if
-you have only species names. Both end up calling \pkg{datelife},
-but the starting point is different.
+you have only species names. Both end up calling the GitHub-only
+\code{datelife} package, but the starting point is different.
+Install \code{datelife} before calling this function ---
+\pkg{prepR4pcm} does NOT pull it in via \code{Suggests} (its transitive
+dep tree can't be auto-resolved by pak on a clean CI image, so
+we keep it as an opt-in install):
+\code{pak::pak("phylotastic/datelife")}.
 }
 
 \examples{
