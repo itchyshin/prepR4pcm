@@ -68,3 +68,4 @@ scripts/output/
 
 # Claude Code runtime state
 .claude/
+README.html

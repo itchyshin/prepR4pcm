@@ -1,3 +1,30 @@
+# prepR4pcm 0.4.0.9000 (development version)
+
+## Bug fixes and documentation polish
+
+* `reconcile_summary()` no longer prints to the console when its
+  result is assigned to a variable. The formatted report now lives
+  on the returned object's `formatted_text` slot and renders via
+  the `print.reconciliation_summary()` method, so R's REPL
+  auto-prints the report only when the function is called at the
+  prompt without assignment. Refs #12 (Ayumi Mizuno).
+* README: rewritten the introduction to spell out *why* species-name
+  mismatches matter for PCMs, expanded the worked examples for each
+  mismatch type (formatting, synonymy, typos), expanded the PGLS /
+  PCM acronyms, moved the Quick example after Typical workflow,
+  added inline framing prose around the Quick example, fixed broken
+  / missing links for the Clements checklist and BirdLife-BirdTree
+  crosswalk, added an inline citation block (text + BibTeX) so
+  users don't need to run `citation("prepR4pcm")` to see what to
+  cite, and clarified that bundled datasets are *subsets* of the
+  full upstream sources. Refs #53 (Malgorzata Lagisz).
+* Fixed: removed `V.PhyloMaker3` from `Suggests` and `Remotes` --
+  the repo was hallucinated in Round 8 and doesn't exist on GitHub
+  (`jinyizju/V.PhyloMaker3` returns 404). The `vphylomaker` augment
+  backend now prefers `V.PhyloMaker2` (the actual current version)
+  with a fallback to the original `V.PhyloMaker`. The fix preserves
+  the public API of `reconcile_augment(source = "vphylomaker")`.
+
 # prepR4pcm 0.4.0
 
 This release closes out the multi-round tree-handling overhaul started

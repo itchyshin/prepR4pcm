@@ -64,8 +64,8 @@ Suggests:
     taxadb,
     testthat (>= 3.0.0),
     U.PhyloMaker,
-    V.PhyloMaker2,
-    V.PhyloMaker3
+    V.PhyloMaker,
+    V.PhyloMaker2
 Additional_repositories:
     https://eliotmiller.r-universe.dev,
     https://daijiang.r-universe.dev,
@@ -75,8 +75,8 @@ Remotes:
     eliotmiller/clootl,
     daijiang/rtrees,
     phylotastic/datelife,
-    jinyizju/V.PhyloMaker3,
     jinyizju/V.PhyloMaker2,
+    jinyizju/V.PhyloMaker,
     jinyizju/U.PhyloMaker
 LazyData: true
 Config/testthat/edition: 3

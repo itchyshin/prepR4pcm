@@ -64,7 +64,7 @@ test_that("source = 'vphylomaker' dispatches to the helper", {
 })
 
 
-test_that("source = 'vphylomaker' errors helpfully when neither V3 nor V2 installed", {
+test_that("source = 'vphylomaker' errors helpfully when neither V2 nor V1 installed", {
   tree <- ape::rtree(2, tip.label = c("Quercus_robur", "Pinus_sylvestris"))
   df <- data.frame(species = c("Quercus robur", "Pinus sylvestris",
                                 "Quercus alba"),
@@ -75,7 +75,7 @@ test_that("source = 'vphylomaker' errors helpfully when neither V3 nor V2 instal
   )
   testthat::local_mocked_bindings(
     requireNamespace = function(package, ..., quietly = TRUE) {
-      if (package %in% c("V.PhyloMaker3", "V.PhyloMaker2")) FALSE else TRUE
+      if (package %in% c("V.PhyloMaker2", "V.PhyloMaker")) FALSE else TRUE
     },
     .package = "base"
   )
@@ -86,8 +86,8 @@ test_that("source = 'vphylomaker' errors helpfully when neither V3 nor V2 instal
   )
   expect_s3_class(err, "error")
   msg <- conditionMessage(err)
-  expect_true(grepl("V.PhyloMaker3", msg, fixed = TRUE))
   expect_true(grepl("V.PhyloMaker2", msg, fixed = TRUE))
+  expect_true(grepl("V.PhyloMaker", msg, fixed = TRUE))
 })
 
 
