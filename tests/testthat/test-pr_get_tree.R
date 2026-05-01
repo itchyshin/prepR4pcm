@@ -465,6 +465,224 @@ test_that("source = 'datelife' calls the datelife backend", {
 })
 
 
+# 9. TNRS preflight ------------------------------------------------------
+#
+# We mock the internal `.pr_tnrs_preflight` so the tests don't depend
+# on rotl being installed. The mock signals whether it was called and
+# with what arguments.
+
+test_that("tnrs = 'auto' runs preflight for clootl + fishtree but not rotl + datelife", {
+  preflight_calls <- list()
+  testthat::local_mocked_bindings(
+    .pr_tnrs_preflight = function(species, source, tnrs) {
+      preflight_calls[[length(preflight_calls) + 1L]] <<- list(
+        source = source, tnrs = tnrs, n = length(species)
+      )
+      species
+    },
+    .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .pr_get_tree_datelife = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .package = "prepR4pcm"
+  )
+
+  # All four backends call the preflight (with different `source`)
+  pr_get_tree("Salmo salar",     source = "clootl")
+  pr_get_tree("Homo sapiens",    source = "rotl")
+  pr_get_tree("Rhea americana",  source = "datelife")
+  pr_get_tree("Esox lucius",     source = "fishtree")
+  expect_length(preflight_calls, 4L)
+  # All four were called with tnrs = "auto"
+  expect_true(all(vapply(preflight_calls,
+                          function(c) c$tnrs == "auto", logical(1))))
+})
+
+
+test_that("tnrs preflight is plumbed through with the user's choice", {
+  seen_tnrs <- character()
+  testthat::local_mocked_bindings(
+    .pr_tnrs_preflight = function(species, source, tnrs) {
+      seen_tnrs <<- c(seen_tnrs, tnrs)
+      species
+    },
+    .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .package = "prepR4pcm"
+  )
+  pr_get_tree("Salmo salar", source = "clootl", tnrs = "always")
+  pr_get_tree("Salmo salar", source = "clootl", tnrs = "never")
+  pr_get_tree("Salmo salar", source = "clootl", tnrs = "auto")
+  expect_equal(seen_tnrs, c("always", "never", "auto"))
+})
+
+
+test_that(".pr_tnrs_preflight is no-op when tnrs = 'never'", {
+  out <- .pr_tnrs_preflight(c("a", "b"), source = "clootl",
+                             tnrs = "never")
+  expect_equal(out, c("a", "b"))
+})
+
+
+test_that(".pr_tnrs_preflight skips for non-TNRS-default backends with tnrs = 'auto'", {
+  # rotl already does TNRS internally; auto should skip.
+  out <- .pr_tnrs_preflight(c("Homo sapiens"), source = "rotl",
+                             tnrs = "auto")
+  expect_equal(out, c("Homo sapiens"))
+})
+
+
+test_that(".pr_tnrs_preflight warns when rotl is missing", {
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (identical(package, "rotl")) FALSE else TRUE
+    },
+    .package = "base"
+  )
+  expect_warning(
+    out <- .pr_tnrs_preflight(c("Salmo salar"), source = "clootl",
+                                tnrs = "auto"),
+    "rotl"
+  )
+  expect_equal(out, c("Salmo salar"))
+})
+
+
+test_that("min_match validation rejects out-of-range values", {
+  expect_error(pr_get_tree("foo", source = "rotl", min_match = -0.1),
+               "0, 1")
+  expect_error(pr_get_tree("foo", source = "rotl", min_match = 1.5),
+               "0, 1")
+  expect_error(pr_get_tree("foo", source = "rotl", min_match = c(0.5, 0.8)),
+               "length-1")
+})
+
+
+# 10. source = 'auto' dispatcher ----------------------------------------
+#
+# We mock pr_get_tree_status so all backends look installed regardless
+# of the local environment. We also mock all backend helpers so the
+# dispatcher's behaviour is deterministic.
+
+.fake_status_all_installed <- function() {
+  data.frame(
+    source        = c("rotl", "rtrees", "clootl", "fishtree", "datelife"),
+    installed     = TRUE,
+    version       = "1.0.0",
+    needs_network = c(TRUE, FALSE, FALSE, TRUE, FALSE),
+    reachable     = NA,
+    install_hint  = "...",
+    source_repo   = "...",
+    stringsAsFactors = FALSE
+  )
+}
+
+
+test_that("source = 'auto' returns the first backend that meets min_match", {
+  testthat::local_mocked_bindings(
+    pr_get_tree_status = function(check_network = FALSE) {
+      .fake_status_all_installed()
+    },
+    .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
+      # Resolve 100% of species
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .package = "prepR4pcm"
+  )
+  res <- pr_get_tree(c("Homo sapiens", "Pan troglodytes"),
+                    source = "auto", min_match = 0.5)
+  expect_equal(res$source, "rotl")
+  expect_equal(length(res$matched), 2)
+})
+
+
+test_that("source = 'auto' falls through if first backend doesn't meet min_match", {
+  testthat::local_mocked_bindings(
+    pr_get_tree_status = function(check_network = FALSE) {
+      .fake_status_all_installed()
+    },
+    .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species[1]), matched = species[1],
+           unmatched = species[-1], backend_meta = list())
+    },
+    .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species), matched = species,
+           unmatched = character(), backend_meta = list())
+    },
+    .package = "prepR4pcm"
+  )
+  res <- pr_get_tree(c("a", "b", "c", "d"),
+                    source = "auto", min_match = 0.8)
+  expect_equal(res$source, "fishtree")
+})
+
+
+test_that("source = 'auto' returns best-of-the-lot when none meets threshold", {
+  testthat::local_mocked_bindings(
+    pr_get_tree_status = function(check_network = FALSE) {
+      .fake_status_all_installed()
+    },
+    .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species[1]), matched = species[1],
+           unmatched = species[-1], backend_meta = list())
+    },
+    .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species[1:2]),
+           matched = species[1:2],
+           unmatched = species[-(1:2)], backend_meta = list())
+    },
+    .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species[1]), matched = species[1],
+           unmatched = species[-1], backend_meta = list())
+    },
+    .pr_get_tree_datelife = function(species, n_tree = 1L, ...) {
+      list(tree = mini_phylo(species[1]), matched = species[1],
+           unmatched = species[-1], backend_meta = list())
+    },
+    .package = "prepR4pcm"
+  )
+  expect_warning(
+    res <- pr_get_tree(c("a", "b", "c", "d", "e"),
+                      source = "auto", min_match = 0.95),
+    "min_match"
+  )
+  # fishtree resolved 2/5 = best
+  expect_equal(res$source, "fishtree")
+  expect_equal(length(res$matched), 2L)
+})
+
+
+test_that("source = 'auto' errors when no backends are installed", {
+  testthat::local_mocked_bindings(
+    pr_get_tree_status = function(check_network = FALSE) {
+      df <- .fake_status_all_installed()
+      df$installed <- FALSE
+      df
+    },
+    .package = "prepR4pcm"
+  )
+  expect_error(
+    pr_get_tree(c("a", "b"), source = "auto"),
+    "No tree-retrieval backends"
+  )
+})
+
+
 test_that("rtrees without taxon errors helpfully", {
   testthat::local_mocked_bindings(
     requireNamespace = function(package, ..., quietly = TRUE) TRUE,

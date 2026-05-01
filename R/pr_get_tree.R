@@ -72,6 +72,12 @@
 #'       per-source candidate chronograms. Install with
 #'       \code{pak::pak("phylotastic/datelife")} (the package was
 #'       archived from CRAN in 2024).}
+#'     \item{\code{"auto"}}{Fall-through dispatcher: try installed
+#'       backends in priority order (rtrees if `taxon` provided,
+#'       then rotl, fishtree, clootl, datelife), return the first
+#'       result that resolves at least \code{min_match} of the
+#'       species. Useful for first-pass exploration when you don't
+#'       yet know which backend covers your taxa.}
 #'   }
 #' @param species_col A length-1 character vector. Required when `x`
 #'   is a data frame; ignored otherwise.
@@ -102,6 +108,28 @@
 #'   }
 #'   When the request returns a multiPhylo, the result's `tree` slot
 #'   is `multiPhylo`; otherwise `phylo`.
+#' @param cache Logical. Cache the result on disk and reuse it on
+#'   subsequent identical calls? Default `FALSE`. When `TRUE`, the
+#'   request is keyed by `(species, source, n_tree, taxon, ...)` and
+#'   stored at [pr_tree_cache_dir()]. See [pr_tree_cache_status()]
+#'   and [pr_tree_cache_clear()] for inspecting / wiping the cache.
+#' @param tnrs A length-1 character vector. Run a TNRS preflight
+#'   (Open Tree of Life name resolution via `rotl::tnrs_match_names`)
+#'   on the species list before calling the backend? One of:
+#'   \describe{
+#'     \item{`"auto"` (default)}{Run TNRS only for backends that don't
+#'       do it themselves --- currently `clootl` and `fishtree`.
+#'       Improves their match rate substantially.}
+#'     \item{`"always"`}{Run TNRS regardless of backend.}
+#'     \item{`"never"`}{Skip TNRS even when the backend would benefit.}
+#'   }
+#'   When `rotl` is not installed, TNRS is silently skipped with a
+#'   one-shot warning.
+#' @param min_match A length-1 numeric in `[0, 1]`. Only used when
+#'   `source = "auto"`. The minimum fraction of input species a
+#'   backend must resolve for the dispatcher to accept its result;
+#'   if no backend meets the threshold, the best available is
+#'   returned with a warning. Default `0.8`.
 #' @param ... Backend-specific arguments forwarded to the underlying
 #'   call. See the help page of the underlying function in the
 #'   relevant backend package (\code{tol_induced_subtree} in
@@ -138,7 +166,12 @@
 #'   [reconcile_augment()] for filling gaps in an existing tree
 #'   (a tree-aware alternative to retrieving a fresh tree);
 #'   [pr_date_tree()] for time-calibrating an existing topology;
-#'   [pr_cite_tree()] for formatting citations for a tree result.
+#'   [pr_cite_tree()] for formatting citations for a tree result;
+#'   [pr_tree_compare()] for comparing two or more retrieved trees;
+#'   [pr_get_tree_status()] for checking which backends are installed
+#'   and reachable;
+#'   [pr_tree_cache_dir()] / [pr_tree_cache_status()] /
+#'   [pr_tree_cache_clear()] for managing the on-disk cache.
 #'   The companion package
 #'   \href{https://itchyshin.github.io/pigauto/}{pigauto} consumes a
 #'   `multiPhylo` directly via `multi_impute_trees()` for posterior-
@@ -174,16 +207,27 @@
 #' @export
 pr_get_tree <- function(x,
                         source = c("rotl", "rtrees", "clootl",
-                                   "fishtree", "datelife"),
+                                   "fishtree", "datelife", "auto"),
                         species_col = NULL,
                         taxon = NULL,
                         n_tree = 1L,
+                        cache = FALSE,
+                        tnrs = c("auto", "always", "never"),
+                        min_match = 0.8,
                         ...) {
   source <- match.arg(source)
+  tnrs   <- match.arg(tnrs)
   if (!is.numeric(n_tree) || length(n_tree) != 1L || n_tree < 1L) {
     cli::cli_abort(
       c("{.arg n_tree} must be a length-1 positive integer.",
         "i" = "Got: {.val {n_tree}}.")
+    )
+  }
+  if (!is.numeric(min_match) || length(min_match) != 1L ||
+      min_match < 0 || min_match > 1) {
+    cli::cli_abort(
+      c("{.arg min_match} must be a length-1 numeric in [0, 1].",
+        "i" = "Got: {.val {min_match}}.")
     )
   }
   n_tree <- as.integer(n_tree)
@@ -196,14 +240,39 @@ pr_get_tree <- function(x,
     )
   }
 
+  # source = "auto" --- try backends in priority order, return the
+  # first one that resolves >= min_match * length(species). Drops to
+  # the fall-through dispatcher.
+  if (source == "auto") {
+    return(.pr_get_tree_auto(species, taxon = taxon, n_tree = n_tree,
+                              cache = cache, tnrs = tnrs,
+                              min_match = min_match, ...))
+  }
+
+  # TNRS preflight --- run rotl::tnrs_match_names() before backends
+  # that don't do TNRS internally (clootl, fishtree). Skip for the
+  # backends that already do it (rotl, datelife), and for rtrees
+  # (which has its own genus/family fall-back).
+  species_for_query <- .pr_tnrs_preflight(species, source, tnrs)
+
+  # Cache lookup ------------------------------------------------------
+  if (isTRUE(cache)) {
+    key <- .pr_tree_cache_key(species_for_query, source = source,
+                               n_tree = n_tree, taxon = taxon, ...)
+    cached <- .pr_tree_cache_get(key, source)
+    if (!is.null(cached)) {
+      return(cached)
+    }
+  }
+
   result <- switch(
     source,
-    rotl     = .pr_get_tree_rotl(species, n_tree = n_tree, ...),
-    rtrees   = .pr_get_tree_rtrees(species, n_tree = n_tree,
+    rotl     = .pr_get_tree_rotl(species_for_query, n_tree = n_tree, ...),
+    rtrees   = .pr_get_tree_rtrees(species_for_query, n_tree = n_tree,
                                     taxon = taxon, ...),
-    clootl   = .pr_get_tree_clootl(species, n_tree = n_tree, ...),
-    fishtree = .pr_get_tree_fishtree(species, n_tree = n_tree, ...),
-    datelife = .pr_get_tree_datelife(species, n_tree = n_tree, ...)
+    clootl   = .pr_get_tree_clootl(species_for_query, n_tree = n_tree, ...),
+    fishtree = .pr_get_tree_fishtree(species_for_query, n_tree = n_tree, ...),
+    datelife = .pr_get_tree_datelife(species_for_query, n_tree = n_tree, ...)
   )
 
   # Ensure backend_meta$tree_provenance is always present as a list with
@@ -221,7 +290,118 @@ pr_get_tree <- function(x,
     backend_meta = result$backend_meta
   )
   class(out) <- "pr_tree_result"
+
+  # Cache write ------------------------------------------------------
+  if (isTRUE(cache)) {
+    .pr_tree_cache_put(key, source, out)
+  }
+
   out
+}
+
+
+# Internal: TNRS preflight ---------------------------------------------
+#
+# When tnrs = "auto", we run rotl::tnrs_match_names() on the species
+# list before sending it to clootl or fishtree, which require exact
+# name matches. The backend then sees the canonical Open Tree names,
+# substantially improving coverage. When tnrs = "always" we run TNRS
+# regardless; when "never" we skip it.
+
+.pr_tnrs_preflight <- function(species, source, tnrs) {
+  needs_tnrs_default <- source %in% c("clootl", "fishtree")
+  do_it <- switch(tnrs,
+    auto    = needs_tnrs_default,
+    always  = TRUE,
+    never   = FALSE
+  )
+  if (!do_it) return(species)
+  if (!requireNamespace("rotl", quietly = TRUE)) {
+    # Don't error: silently skip preflight, report in a warning so the
+    # user knows coverage may be lower than expected.
+    cli::cli_warn(c(
+      "TNRS preflight requires {.pkg rotl}; skipping.",
+      "i" = 'Install with {.code install.packages("rotl")} for higher match rates with backends like {.val {source}}.'
+    ))
+    return(species)
+  }
+  tnrs_res <- tryCatch(
+    rotl::tnrs_match_names(species),
+    error = function(e) NULL
+  )
+  if (is.null(tnrs_res)) return(species)
+  # Replace each input name with its TNRS-resolved unique_name when
+  # available; fall back to the original otherwise.
+  resolved <- tnrs_res$unique_name
+  if (is.null(resolved)) return(species)
+  out <- ifelse(is.na(resolved) | !nzchar(resolved),
+                species, resolved)
+  out
+}
+
+
+# Internal: source = "auto" fall-through dispatcher --------------------
+#
+# Try backends in a priority order, return the first one that resolves
+# >= min_match * length(species). If none meets the threshold, return
+# the best of the lot with a warning.
+
+.pr_get_tree_auto <- function(species, taxon = NULL, n_tree = 1L,
+                                cache = FALSE, tnrs = "auto",
+                                min_match = 0.8, ...) {
+  # Priority order: try the broadest-coverage CRAN backends first,
+  # then taxon-specific, then GitHub-only.
+  candidates <- c("rotl", "fishtree", "clootl", "datelife")
+  # rtrees needs taxon; only include if the user provided one.
+  if (!is.null(taxon) && nzchar(taxon)) {
+    candidates <- c("rtrees", candidates)
+  }
+  # Only try installed backends.
+  status <- pr_get_tree_status(check_network = FALSE)
+  candidates <- candidates[
+    candidates %in% status$source[status$installed]
+  ]
+  if (length(candidates) == 0L) {
+    cli::cli_abort(c(
+      "No tree-retrieval backends are installed.",
+      "i" = "Run {.code pr_get_tree_status()} to see install instructions."
+    ))
+  }
+
+  best <- NULL
+  attempts <- list()
+  for (b in candidates) {
+    res <- tryCatch(
+      pr_get_tree(species, source = b, taxon = taxon, n_tree = n_tree,
+                   cache = cache, tnrs = tnrs, ...),
+      error = function(e) NULL
+    )
+    if (is.null(res)) {
+      attempts[[b]] <- list(success = FALSE, n_matched = 0L)
+      next
+    }
+    n_matched <- length(res$matched)
+    attempts[[b]] <- list(success = TRUE, n_matched = n_matched)
+    if (is.null(best) || n_matched > length(best$matched)) {
+      best <- res
+    }
+    if (n_matched >= min_match * length(species)) {
+      best$backend_meta$auto_attempts <- attempts
+      best$backend_meta$auto_chose    <- b
+      return(best)
+    }
+  }
+
+  if (is.null(best)) {
+    cli::cli_abort("No backend produced a tree for this species list.")
+  }
+  cli::cli_warn(c(
+    "No backend met the {.arg min_match} threshold of {min_match}.",
+    "i" = "Returning the best available result ({.val {best$source}}, {length(best$matched)}/{length(species)} matched)."
+  ))
+  best$backend_meta$auto_attempts <- attempts
+  best$backend_meta$auto_chose    <- best$source
+  best
 }
 
 

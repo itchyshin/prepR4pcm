@@ -6,10 +6,13 @@
 \usage{
 pr_get_tree(
   x,
-  source = c("rotl", "rtrees", "clootl", "fishtree", "datelife"),
+  source = c("rotl", "rtrees", "clootl", "fishtree", "datelife", "auto"),
   species_col = NULL,
   taxon = NULL,
   n_tree = 1L,
+  cache = FALSE,
+  tnrs = c("auto", "always", "never"),
+  min_match = 0.8,
   ...
 )
 }
@@ -60,6 +63,12 @@ single SDM-summary chronogram by default; with
 per-source candidate chronograms. Install with
 \code{pak::pak("phylotastic/datelife")} (the package was
 archived from CRAN in 2024).}
+\item{\code{"auto"}}{Fall-through dispatcher: try installed
+backends in priority order (rtrees if \code{taxon} provided,
+then rotl, fishtree, clootl, datelife), return the first
+result that resolves at least \code{min_match} of the
+species. Useful for first-pass exploration when you don't
+yet know which backend covers your taxa.}
 }}
 
 \item{species_col}{A length-1 character vector. Required when \code{x}
@@ -93,6 +102,31 @@ capped at \code{n_tree}) when \code{n_tree > 1}.}
 }
 When the request returns a multiPhylo, the result's \code{tree} slot
 is \code{multiPhylo}; otherwise \code{phylo}.}
+
+\item{cache}{Logical. Cache the result on disk and reuse it on
+subsequent identical calls? Default \code{FALSE}. When \code{TRUE}, the
+request is keyed by \verb{(species, source, n_tree, taxon, ...)} and
+stored at \code{\link[=pr_tree_cache_dir]{pr_tree_cache_dir()}}. See \code{\link[=pr_tree_cache_status]{pr_tree_cache_status()}}
+and \code{\link[=pr_tree_cache_clear]{pr_tree_cache_clear()}} for inspecting / wiping the cache.}
+
+\item{tnrs}{A length-1 character vector. Run a TNRS preflight
+(Open Tree of Life name resolution via \code{rotl::tnrs_match_names})
+on the species list before calling the backend? One of:
+\describe{
+\item{\code{"auto"} (default)}{Run TNRS only for backends that don't
+do it themselves --- currently \code{clootl} and \code{fishtree}.
+Improves their match rate substantially.}
+\item{\code{"always"}}{Run TNRS regardless of backend.}
+\item{\code{"never"}}{Skip TNRS even when the backend would benefit.}
+}
+When \code{rotl} is not installed, TNRS is silently skipped with a
+one-shot warning.}
+
+\item{min_match}{A length-1 numeric in \verb{[0, 1]}. Only used when
+\code{source = "auto"}. The minimum fraction of input species a
+backend must resolve for the dispatcher to accept its result;
+if no backend meets the threshold, the best available is
+returned with a warning. Default \code{0.8}.}
 
 \item{...}{Backend-specific arguments forwarded to the underlying
 call. See the help page of the underlying function in the
@@ -175,7 +209,12 @@ data frame ready for analysis;
 \code{\link[=reconcile_augment]{reconcile_augment()}} for filling gaps in an existing tree
 (a tree-aware alternative to retrieving a fresh tree);
 \code{\link[=pr_date_tree]{pr_date_tree()}} for time-calibrating an existing topology;
-\code{\link[=pr_cite_tree]{pr_cite_tree()}} for formatting citations for a tree result.
+\code{\link[=pr_cite_tree]{pr_cite_tree()}} for formatting citations for a tree result;
+\code{\link[=pr_tree_compare]{pr_tree_compare()}} for comparing two or more retrieved trees;
+\code{\link[=pr_get_tree_status]{pr_get_tree_status()}} for checking which backends are installed
+and reachable;
+\code{\link[=pr_tree_cache_dir]{pr_tree_cache_dir()}} / \code{\link[=pr_tree_cache_status]{pr_tree_cache_status()}} /
+\code{\link[=pr_tree_cache_clear]{pr_tree_cache_clear()}} for managing the on-disk cache.
 The companion package
 \href{https://itchyshin.github.io/pigauto/}{pigauto} consumes a
 \code{multiPhylo} directly via \code{multi_impute_trees()} for posterior-
