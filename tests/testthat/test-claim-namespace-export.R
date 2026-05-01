@@ -6,25 +6,40 @@
 # manual NAMESPACE edits that drop exports silently.
 
 test_that("every @export'd function in R/ is exported in NAMESPACE", {
-  root <- tryCatch(
-    {
-      cands <- c(
-        test_path("..", ".."),
-        file.path(getwd()),
-        file.path(getwd(), "..", "..")
-      )
-      for (c in cands) if (file.exists(file.path(c, "NAMESPACE"))) return(normalizePath(c))
-      NA_character_
-    },
-    error = function(e) NA_character_
+  root <- NA_character_
+  cands <- c(
+    test_path("..", ".."),
+    file.path(getwd()),
+    file.path(getwd(), "..", "..")
   )
+  for (c in cands) {
+    if (file.exists(file.path(c, "NAMESPACE"))) {
+      root <- normalizePath(c)
+      break
+    }
+  }
   if (is.na(root)) skip("NAMESPACE not found")
 
   ns <- readLines(file.path(root, "NAMESPACE"), warn = FALSE)
+  # Plain `export(name)` entries.
   ns_exports <- regmatches(
     ns,
     regexpr("(?<=^export\\()[^)]+(?=\\))", ns, perl = TRUE)
   )
+  # S3 method registrations: `S3method(generic, class)` registers
+  # `generic.class` as an S3 method. Functions tagged `@export` for
+  # an S3 method (e.g. `#' @export` above `print.reconciliation`)
+  # land here, not in `export()`. Treat both as equivalent.
+  ns_s3 <- regmatches(
+    ns,
+    regexpr("(?<=^S3method\\()[^)]+(?=\\))", ns, perl = TRUE)
+  )
+  ns_s3_methods <- vapply(
+    strsplit(ns_s3, "\\s*,\\s*"),
+    function(parts) paste(parts, collapse = "."),
+    character(1)
+  )
+  ns_all <- c(ns_exports, ns_s3_methods)
 
   r_files <- list.files(file.path(root, "R"),
                         pattern = "\\.R$", full.names = TRUE)
@@ -51,7 +66,7 @@ test_that("every @export'd function in R/ is exported in NAMESPACE", {
   expect_gt(length(declared_exports), 0,
             label = "no @export'd functions found in R/")
 
-  missing <- setdiff(declared_exports, ns_exports)
+  missing <- setdiff(declared_exports, ns_all)
   expect_equal(
     length(missing), 0,
     info = sprintf(

@@ -29,23 +29,19 @@
 
 
 test_that("README and every vignette agree on the install command for prepR4pcm", {
-  root <- tryCatch(
-    {
-      candidates <- c(
-        test_path("..", ".."),
-        file.path(getwd()),
-        file.path(getwd(), ".."),
-        file.path(getwd(), "..", "..")
-      )
-      for (c in candidates) {
-        if (file.exists(file.path(c, "DESCRIPTION"))) {
-          return(normalizePath(c))
-        }
-      }
-      NA_character_
-    },
-    error = function(e) NA_character_
+  root <- NA_character_
+  candidates <- c(
+    test_path("..", ".."),
+    file.path(getwd()),
+    file.path(getwd(), ".."),
+    file.path(getwd(), "..", "..")
   )
+  for (c in candidates) {
+    if (file.exists(file.path(c, "DESCRIPTION"))) {
+      root <- normalizePath(c)
+      break
+    }
+  }
   if (is.na(root)) skip("package root not found")
 
   # README and all vignettes

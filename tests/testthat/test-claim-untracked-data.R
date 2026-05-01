@@ -9,18 +9,18 @@
 # Both have happened in past R packages and are silent failures.
 
 test_that("every file in data/ has a corresponding documented object", {
-  root <- tryCatch(
-    {
-      cands <- c(
-        test_path("..", ".."),
-        file.path(getwd()),
-        file.path(getwd(), "..", "..")
-      )
-      for (c in cands) if (dir.exists(file.path(c, "data"))) return(normalizePath(c))
-      NA_character_
-    },
-    error = function(e) NA_character_
+  root <- NA_character_
+  cands <- c(
+    test_path("..", ".."),
+    file.path(getwd()),
+    file.path(getwd(), "..", "..")
   )
+  for (c in cands) {
+    if (dir.exists(file.path(c, "data"))) {
+      root <- normalizePath(c)
+      break
+    }
+  }
   if (is.na(root)) skip("data/ directory not found")
 
   rda_files <- list.files(file.path(root, "data"),
@@ -44,18 +44,18 @@ test_that("every file in data/ has a corresponding documented object", {
 
 
 test_that("every documented dataset has a corresponding .rda in data/", {
-  root <- tryCatch(
-    {
-      cands <- c(
-        test_path("..", ".."),
-        file.path(getwd()),
-        file.path(getwd(), "..", "..")
-      )
-      for (c in cands) if (dir.exists(file.path(c, "man"))) return(normalizePath(c))
-      NA_character_
-    },
-    error = function(e) NA_character_
+  root <- NA_character_
+  cands <- c(
+    test_path("..", ".."),
+    file.path(getwd()),
+    file.path(getwd(), "..", "..")
   )
+  for (c in cands) {
+    if (dir.exists(file.path(c, "man"))) {
+      root <- normalizePath(c)
+      break
+    }
+  }
   if (is.na(root)) skip("man/ directory not found")
 
   # Datasets are documented with `\docType{data}` in their Rd source.

@@ -8,18 +8,18 @@
 # pkgdown site never find it.
 
 test_that("every entry under _pkgdown.yml reference: exists in the package", {
-  root <- tryCatch(
-    {
-      cands <- c(
-        test_path("..", ".."),
-        file.path(getwd()),
-        file.path(getwd(), "..", "..")
-      )
-      for (c in cands) if (file.exists(file.path(c, "_pkgdown.yml"))) return(normalizePath(c))
-      NA_character_
-    },
-    error = function(e) NA_character_
+  root <- NA_character_
+  cands <- c(
+    test_path("..", ".."),
+    file.path(getwd()),
+    file.path(getwd(), "..", "..")
   )
+  for (c in cands) {
+    if (file.exists(file.path(c, "_pkgdown.yml"))) {
+      root <- normalizePath(c)
+      break
+    }
+  }
   if (is.na(root)) skip("_pkgdown.yml not found")
 
   yml <- readLines(file.path(root, "_pkgdown.yml"), warn = FALSE)
