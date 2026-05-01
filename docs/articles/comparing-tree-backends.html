@@ -142,6 +142,83 @@ rough check on whether two chronograms agree on rate scale.</li>
 </ul>
 </div>
 <div class="section level2">
+<h2 id="what-actually-works-status-table">What actually works (status table)<a class="anchor" aria-label="anchor" href="#what-actually-works-status-table"></a>
+</h2>
+<p>The retrieval surface is wider than what’s been verified end-to-end
+on a clean install. Here’s the honest score (last run: 2026-05-01):</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Backend</th>
+<th>Single tree</th>
+<th>Multi-tree (<code>n_tree &gt; 1</code>)</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>rotl</code></td>
+<td>likely ✅</td>
+<td>n/a (synthesis is single)</td>
+<td>Untested locally because <code>rotl</code> ↔︎ <code>rncl</code> ↔︎
+<code>Rcpp</code> incompatibility on dev box</td>
+</tr>
+<tr class="even">
+<td><code>rtrees</code></td>
+<td>✅</td>
+<td>⚠️ partial</td>
+<td>Returns whatever the chosen mega-tree provides
+(e.g. <code>mammal_tree = "vertlife"</code> → 100).
+<strong><code>n_tree</code> is informational only — it does NOT cap the
+count.</strong>
+</td>
+</tr>
+<tr class="odd">
+<td><code>clootl</code></td>
+<td>❌</td>
+<td>❌</td>
+<td>Needs the AvesData repo set up via
+<code>clootl::get_avesdata_repo()</code> first; without it,
+<code>extractTree</code>/<code>sampleTrees</code> error with
+<code>object 'clootl_data' not found</code>. Once set up,
+<code>n_tree &gt; 1</code> routes to
+<code>clootl::sampleTrees(count = …)</code> (capped at 100
+upstream).</td>
+</tr>
+<tr class="even">
+<td><code>fishtree</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>
+<code>n_tree &gt; 1</code> switches to
+<code>fishtree::fishtree_complete_phylogeny()</code> which returns the
+requested count.</td>
+</tr>
+<tr class="odd">
+<td><code>datelife</code></td>
+<td>likely ✅</td>
+<td>likely ✅</td>
+<td>Untested locally because datelife is <code>Enhances</code>
+(GitHub-only, heavy bold/Bioc deps). Install with
+<code>pak::pak("phylotastic/datelife")</code>.</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code></td>
+<td>likely ✅</td>
+<td>likely ✅</td>
+<td>Untested same reason as datelife.</td>
+</tr>
+</tbody>
+</table>
+<p>If you hit a <strong>broken</strong> row above, please open an issue
+at <a href="https://github.com/itchyshin/prepR4pcm/issues" class="external-link">itchyshin/prepR4pcm</a>
+with your <code><a href="../reference/pr_get_tree_status.html">pr_get_tree_status()</a></code> output and the error.</p>
+</div>
+<div class="section level2">
 <h2 id="what-to-do-with-the-result">What to do with the result<a class="anchor" aria-label="anchor" href="#what-to-do-with-the-result"></a>
 </h2>
 <div class="section level3">

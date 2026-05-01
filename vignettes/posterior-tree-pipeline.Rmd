@@ -174,19 +174,24 @@ narrower intervals were always overconfident.
 
 ## Choosing a backend
 
-| If your taxon is... | And you want... | Use |
-|---|---|---|
-| Universal | A single best-guess tree | `pr_get_tree(source = "rotl")` |
-| Universal | A posterior of dated trees | `pr_get_tree(source = "datelife", n_tree = 50)` |
-| Birds | Time-calibrated, current Clements | `pr_get_tree(source = "clootl", n_tree = 50)` |
-| Fish | Time-calibrated, posterior | `pr_get_tree(source = "fishtree", n_tree = 50)` |
-| Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly | Taxon-specific mega-tree, possibly grafted | `pr_get_tree(source = "rtrees", taxon = "<group>", n_tree = 50)` |
+The "Status" column is the verified state on a clean macOS R 4.4
+install as of 2026-05-01. See the
+[Comparing tree backends](comparing-tree-backends.html) vignette
+for the full status table including caveats.
+
+| If your taxon is... | And you want... | Use | Status |
+|---|---|---|---|
+| Universal | A single best-guess tree | `pr_get_tree(source = "rotl")` | likely ✅ (untested locally — rotl/Rcpp install issue on dev box) |
+| Universal | A posterior of dated trees | `pr_get_tree(source = "datelife", n_tree = 50)` | likely ✅ (datelife is `Enhances`, install separately with `pak::pak("phylotastic/datelife")`) |
+| Birds | Time-calibrated, current Clements | `pr_get_tree(source = "clootl", n_tree = 50)` | ❌ requires `clootl::get_avesdata_repo()` first; otherwise errors with `object 'clootl_data' not found` |
+| Fish | Time-calibrated, posterior | `pr_get_tree(source = "fishtree", n_tree = 50)` | ✅ verified — returns `multiPhylo[50]` |
+| Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly | Taxon-specific mega-tree, possibly grafted | `pr_get_tree(source = "rtrees", taxon = "<group>")` | ✅ works; ⚠️ `n_tree` is **informational only** — `rtrees::get_tree()` has no `n_tree` argument, the count is fixed by the chosen mega-tree (e.g. `mammal_tree = "vertlife"` → 100, `bird` default → 100, single-tree mega-trees → 1). |
 
 For the dating-only case (you already have a topology):
 
-| If your topology is... | Use |
-|---|---|
-| Universal taxa | `pr_date_tree(my_tree, n_dated = 50)` |
+| If your topology is... | Use | Status |
+|---|---|---|
+| Universal taxa | `pr_date_tree(my_tree, n_dated = 50)` | likely ✅ (untested locally — datelife not installed) |
 
 ## What's *not* in this pipeline
 

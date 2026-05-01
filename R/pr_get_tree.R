@@ -94,11 +94,24 @@
 #'   \describe{
 #'     \item{`"rotl"`}{Always returns 1 (the synthesis tree). A
 #'       one-shot warning is emitted if `n_tree > 1`.}
-#'     \item{`"rtrees"`}{Passes through to
-#'       `rtrees::get_tree(n_tree = ...)`. Requires `taxon`.}
-#'     \item{`"clootl"`}{Passes through to
-#'       `clootl::extractTree(sample.size = n_tree)` so you get
-#'       multiple Clements posterior samples.}
+#'     \item{`"rtrees"`}{**`n_tree` is informational only here.**
+#'       `rtrees::get_tree()` does not have an `n_tree` argument;
+#'       the multi-tree count is fixed by which mega-tree was
+#'       selected. Reference trees rtrees uses internally:
+#'       birds = Jetz et al. 2012
+#'       (\url{https://birdtree.org}, 100 posterior trees);
+#'       mammals = Upham et al. 2019 (VertLife, 100 by default;
+#'       set `mammal_tree = "phylacine"` for the PHYLACINE set);
+#'       amphibians + squamates = VertLife; fish = Rabosky et al. 2018
+#'       (also wrapped by `source = "fishtree"`); plants =
+#'       V.PhyloMaker; bees = Bee Tree of Life. Override which
+#'       mega-tree is used via `...` (e.g. `bee_tree = "bootstrap"`
+#'       for 100 bee trees instead of the single ML tree).
+#'       Requires `taxon`.}
+#'     \item{`"clootl"`}{`n_tree = 1` calls `clootl::extractTree()`;
+#'       `n_tree > 1` calls `clootl::sampleTrees(count = n_tree)`
+#'       (capped at 100 upstream). **Both require the AvesData
+#'       repo to be set up via `clootl::get_avesdata_repo()` first.**}
 #'     \item{`"fishtree"`}{Single phylo via `fishtree_phylogeny()`
 #'       when `n_tree = 1`; switches to
 #'       `fishtree_complete_phylogeny()` returning a multiPhylo of
@@ -563,15 +576,19 @@ pr_get_tree <- function(x,
     )
   }
 
-  # When n_tree > 1, request multiple posterior samples via
-  # clootl::extractTree(sample.size = n_tree). Default sample.size = 1.
+  # n_tree = 1: clootl::extractTree() returns a single phylo.
+  # n_tree > 1: clootl::sampleTrees(count = n_tree) returns a
+  #             multiPhylo. As of clootl 0.1.4 `count` is documented
+  #             as "work in progress, can only sample 100 for now",
+  #             so the upstream caps at 100.
   call_args <- list(...)
-  if (n_tree > 1L && is.null(call_args$sample.size)) {
-    call_args$sample.size <- n_tree
-  }
   call_args$species <- species
-
-  tree <- do.call(clootl::extractTree, call_args)
+  if (n_tree > 1L) {
+    if (is.null(call_args$count)) call_args$count <- n_tree
+    tree <- do.call(clootl::sampleTrees, call_args)
+  } else {
+    tree <- do.call(clootl::extractTree, call_args)
+  }
 
   # Determine matched / unmatched by intersecting the requested species
   # against the returned tree's tip labels. For multiPhylo, all trees
@@ -630,11 +647,14 @@ pr_get_tree <- function(x,
     )
   }
 
-  # rtrees::get_tree has its own n_tree argument. Pass it through if the
-  # user didn't already set it via ... so n_tree on pr_get_tree() works
-  # uniformly across backends.
+  # rtrees::get_tree() does NOT have an n_tree argument. Multi-tree
+  # output is determined by which mega-tree set is selected (e.g.
+  # mammal_tree = "vertlife" / "phylacine" returns 100 posterior
+  # trees by default; bee_tree = "bootstrap" returns 100; fish_tree
+  # = "all-taxon" returns 100). For those taxa, n_tree is informational
+  # only -- the count comes from the underlying mega-tree.
+  # Single-tree taxa (bird default, etc.) ignore n_tree entirely.
   call_args <- list(...)
-  if (is.null(call_args$n_tree)) call_args$n_tree <- n_tree
   call_args$sp_list      <- species
   call_args$taxon        <- taxon
   call_args$show_grafted <- TRUE
