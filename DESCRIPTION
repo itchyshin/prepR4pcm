@@ -48,6 +48,7 @@ Suggests:
     caper,
     clootl,
     dplyr,
+    fishtree,
     knitr,
     MCMCglmm,
     phytools,

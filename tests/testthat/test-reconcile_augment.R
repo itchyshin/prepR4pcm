@@ -309,3 +309,198 @@ test_that("M4: zero-branch trees still produce augmented tree", {
     ))
   )
 })
+
+
+# --- source = "rtrees" backend (mocked) ----------------------------------
+#
+# We mock the internal helper `.pr_augment_rtrees` so the suite doesn't
+# depend on the actual rtrees package being installed nor on the
+# rtrees mega-tree files being downloadable on CI. The tests verify:
+#   1. source = "rtrees" dispatches to the rtrees helper
+#   2. taxon is propagated through to the helper
+#   3. The result has the documented shape (augmented + skipped + meta)
+#   4. meta$source is "rtrees"
+#   5. meta$where / meta$branch_length_method are NA (not applicable)
+#   6. multiPhylo return value is preserved
+#   7. Missing taxon errors helpfully (via the real helper)
+#   8. Missing rtrees package errors helpfully (via the real helper)
+
+
+test_that("source = 'rtrees' dispatches to the rtrees helper", {
+  setup <- make_test_setup()
+  seen_taxon <- NA
+  seen_species <- NULL
+  testthat::local_mocked_bindings(
+    .pr_augment_rtrees = function(species_to_add, tree, taxon = NULL,
+                                   quiet = FALSE, ...) {
+      seen_taxon <<- taxon
+      seen_species <<- species_to_add
+      list(
+        tree = tree,
+        augmented = tibble::tibble(
+          species = species_to_add,
+          genus = sub(" .*$", "", species_to_add),
+          placed_near = "rtrees: placed at species level",
+          branch_length = NA_real_,
+          method = paste0("rtrees/", taxon, "/placed"),
+          n_congeners = NA_integer_
+        ),
+        skipped = tibble::tibble(species = character(),
+                                  genus = character(),
+                                  reason = character()),
+        backend_meta = list(backend = "rtrees", taxon = taxon,
+                            n_grafted = 0L, n_returned = 1L)
+      )
+    },
+    .package = "prepR4pcm"
+  )
+  res <- reconcile_augment(setup$rec, setup$tree,
+                           source = "rtrees", taxon = "bird", quiet = TRUE)
+  expect_equal(seen_taxon, "bird")
+  expect_true(length(seen_species) >= 1)
+})
+
+
+test_that("source = 'rtrees' returns the documented shape", {
+  setup <- make_test_setup()
+  testthat::local_mocked_bindings(
+    .pr_augment_rtrees = function(species_to_add, tree, taxon = NULL,
+                                   quiet = FALSE, ...) {
+      list(
+        tree = tree,
+        augmented = tibble::tibble(
+          species = species_to_add,
+          genus = sub(" .*$", "", species_to_add),
+          placed_near = "rtrees: placed at species level",
+          branch_length = NA_real_,
+          method = paste0("rtrees/", taxon, "/placed"),
+          n_congeners = NA_integer_
+        ),
+        skipped = tibble::tibble(species = character(),
+                                  genus = character(),
+                                  reason = character()),
+        backend_meta = list(backend = "rtrees", taxon = taxon,
+                            n_grafted = 0L, n_returned = 1L)
+      )
+    },
+    .package = "prepR4pcm"
+  )
+  res <- reconcile_augment(setup$rec, setup$tree,
+                           source = "rtrees", taxon = "bird", quiet = TRUE)
+  expect_named(res, c("tree", "original", "augmented", "skipped", "meta"))
+  expect_equal(res$meta$source, "rtrees")
+  expect_true(is.na(res$meta$where))
+  expect_true(is.na(res$meta$branch_length_method))
+  expect_equal(res$meta$backend_meta$taxon, "bird")
+  expect_s3_class(res$augmented, "data.frame")
+  expect_s3_class(res$skipped, "data.frame")
+  # All documented mapping cols present
+  expect_setequal(names(res$augmented),
+                  c("species", "genus", "placed_near", "branch_length",
+                    "method", "n_congeners"))
+})
+
+
+test_that("source = 'rtrees' preserves a multiPhylo return value", {
+  setup <- make_test_setup()
+  testthat::local_mocked_bindings(
+    .pr_augment_rtrees = function(species_to_add, tree, taxon = NULL,
+                                   quiet = FALSE, ...) {
+      mp <- structure(list(tree, tree, tree), class = "multiPhylo")
+      list(
+        tree = mp,
+        augmented = tibble::tibble(
+          species = species_to_add,
+          genus = sub(" .*$", "", species_to_add),
+          placed_near = "rtrees: placed at species level",
+          branch_length = NA_real_,
+          method = paste0("rtrees/", taxon, "/placed"),
+          n_congeners = NA_integer_
+        ),
+        skipped = tibble::tibble(species = character(),
+                                  genus = character(),
+                                  reason = character()),
+        backend_meta = list(backend = "rtrees", taxon = taxon,
+                            n_grafted = 0L, n_returned = 3L)
+      )
+    },
+    .package = "prepR4pcm"
+  )
+  res <- reconcile_augment(setup$rec, setup$tree,
+                           source = "rtrees", taxon = "bird", quiet = TRUE)
+  expect_s3_class(res$tree, "multiPhylo")
+  expect_equal(length(res$tree), 3L)
+  expect_equal(res$meta$backend_meta$n_returned, 3L)
+})
+
+
+test_that("source = 'rtrees' without taxon errors helpfully", {
+  setup <- make_test_setup()
+  # Use the real helper (not the mock) so we hit the taxon validation.
+  # Mock only requireNamespace so the package-availability check passes
+  # in environments where rtrees is not installed.
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) TRUE,
+    .package = "base"
+  )
+  err <- tryCatch(
+    reconcile_augment(setup$rec, setup$tree,
+                      source = "rtrees", taxon = NULL, quiet = TRUE),
+    error = function(e) e
+  )
+  expect_s3_class(err, "error")
+  expect_true(grepl("taxon", conditionMessage(err)))
+})
+
+
+test_that("source = 'rtrees' without the rtrees package errors helpfully", {
+  setup <- make_test_setup()
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (identical(package, "rtrees")) FALSE else TRUE
+    },
+    .package = "base"
+  )
+  err <- tryCatch(
+    reconcile_augment(setup$rec, setup$tree,
+                      source = "rtrees", taxon = "bird", quiet = TRUE),
+    error = function(e) e
+  )
+  expect_s3_class(err, "error")
+  msg <- conditionMessage(err)
+  expect_true(grepl("rtrees", msg, fixed = TRUE))
+  expect_true(grepl("daijiang", msg, fixed = TRUE))
+})
+
+
+test_that("source = 'rtrees' with no unresolved species short-circuits", {
+  # Build a reconciliation where every species is matched. No call should
+  # be made to the rtrees helper; tree returns unchanged.
+  tree <- ape::rtree(2, tip.label = c("Homo_sapiens", "Pan_troglodytes"))
+  df <- data.frame(species = c("Homo sapiens", "Pan troglodytes"),
+                    stringsAsFactors = FALSE)
+  rec <- suppressMessages(
+    reconcile_tree(df, tree, x_species = "species",
+                   authority = NULL, quiet = TRUE)
+  )
+  helper_called <- FALSE
+  testthat::local_mocked_bindings(
+    .pr_augment_rtrees = function(...) {
+      helper_called <<- TRUE
+      stop("should not be called")
+    },
+    .package = "prepR4pcm"
+  )
+  res <- reconcile_augment(rec, tree, source = "rtrees", taxon = "mammal",
+                           quiet = TRUE)
+  expect_false(helper_called)
+  expect_equal(res$meta$n_augmented, 0)
+  expect_equal(res$meta$source, "rtrees")
+})
+
+
+test_that("source = 'internal' (default) records meta$source", {
+  setup <- make_test_setup()
+  res <- reconcile_augment(setup$rec, setup$tree, seed = 42, quiet = TRUE)
+  expect_equal(res$meta$source, "internal")
+})
