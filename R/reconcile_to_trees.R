@@ -67,19 +67,7 @@ reconcile_to_trees <- function(x, trees,
     names(trees) <- paste0("tree_", seq_along(trees))
   }
 
-  if (!is.null(authority)) {
-    authority <- tolower(authority)
-    if (!authority %in% pr_valid_authorities()) {
-      abort(
-        c(
-          paste0("Unknown authority: '", authority, "'."),
-          "i" = paste0("Valid options: ",
-                       paste(pr_valid_authorities(), collapse = ", "))
-        ),
-        call = caller_env()
-      )
-    }
-  }
+  authority <- pr_validate_authority(authority)
 
   # Detect species column once
   if (is.null(x_species)) x_species <- pr_detect_species_column(x, "x_species")

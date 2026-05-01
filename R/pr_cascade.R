@@ -8,8 +8,10 @@
 #'
 #' @param names_x Character vector. Names from source x.
 #' @param names_y Character vector. Names from source y.
-#' @param authority Character(1) or NULL. Taxonomic authority for synonym
-#'   lookup. NULL skips stage 3.
+#' @param authority A length-1 character vector, or `NULL`. Taxonomic
+#'   authority for the synonym-resolution stage. One of `"col"`,
+#'   `"itis"`, `"gbif"`, `"ncbi"`, `"ott"`, or `"itis_test"`. `NULL`
+#'   skips stage 3.
 #' @param db_version Character(1) or NULL.
 #' @param rank Character(1). `"species"` or `"subspecies"`.
 #' @param overrides A data.frame with columns `name_x` and `name_y` for
@@ -47,12 +49,26 @@ pr_run_cascade <- function(names_x, names_y,
   unique_x <- unique(names_x[!is.na(names_x)])
   unique_y <- unique(names_y[!is.na(names_y)])
 
-  # Show progress for large datasets
+  # Show progress for large datasets. We renumber Stage labels so they
+  # reflect only the active stages -- Stage 1/N is always exact,
+  # Stage 2/N is always normalised, Stage 3/N is synonym (only if
+  # authority is supplied), Stage 4/N is fuzzy (only if fuzzy = TRUE).
+  # Without this dynamic numbering we would print "Stage 3/4: Synonym
+  # resolution (...)" even with authority = NULL, which previously
+  # suggested matches were being made at the synonym stage when in
+  # reality stages 1+2 had already matched them. (Issue #13.)
   use_progress <- !quiet && length(unique_x) > 500
+  do_synonym <- !is.null(authority)
+  do_fuzzy   <- isTRUE(fuzzy)
+  n_stages   <- 2L + do_synonym + do_fuzzy
+  stage_no   <- 0L
+  next_stage_label <- function(name) {
+    stage_no <<- stage_no + 1L
+    sprintf("Stage %d/%d: %s", stage_no, n_stages, name)
+  }
   if (use_progress) {
-    n_stages <- 2L + (!is.null(authority)) + fuzzy
     cli_alert_info(
-      "Matching {length(unique_x)} x {length(unique_y)} names through {n_stages} stages..."
+      "Matching {length(unique_x)} x {length(unique_y)} names through {n_stages} stage{?s}..."
     )
   }
 
@@ -123,7 +139,7 @@ pr_run_cascade <- function(names_x, names_y,
   }
 
   # --- Stage 1: Exact match ---
-  if (use_progress) cli_alert_info("Stage 1/4: Exact matching...")
+  if (use_progress) cli_alert_info(next_stage_label("Exact matching..."))
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
@@ -146,7 +162,12 @@ pr_run_cascade <- function(names_x, names_y,
   }
 
   # --- Stage 2: Normalised match ---
-  if (use_progress) cli_alert_info("Stage 2/4: Normalised matching ({length(matched_x)} matched so far)...")
+  if (use_progress) {
+    cli_alert_info(
+      paste0(next_stage_label("Normalised matching"),
+             " ({length(matched_x)} matched so far)...")
+    )
+  }
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
@@ -193,12 +214,20 @@ pr_run_cascade <- function(names_x, names_y,
     }
   }
 
-  # --- Stage 3: Synonym resolution ---
-  if (use_progress) cli_alert_info("Stage 3/4: Synonym resolution ({length(matched_x)} matched so far)...")
+  # --- Stage 3: Synonym resolution (skipped if authority = NULL) ---
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
-  if (!is.null(authority) && length(remaining_x) > 0 &&
+  if (do_synonym) {
+    if (use_progress) {
+      cli_alert_info(
+        paste0(next_stage_label("Synonym resolution"),
+               " ({length(matched_x)} matched so far)...")
+      )
+    }
+  }
+
+  if (do_synonym && length(remaining_x) > 0 &&
       length(remaining_y) > 0) {
 
     # Normalise remaining names before synonym lookup
@@ -249,12 +278,20 @@ pr_run_cascade <- function(names_x, names_y,
     }
   }
 
-  # --- Stage 4: Fuzzy matching ---
-  if (use_progress) cli_alert_info("Stage 4/4: Fuzzy matching ({length(matched_x)} matched so far)...")
+  # --- Stage 4: Fuzzy matching (skipped if fuzzy = FALSE) ---
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
-  if (fuzzy && length(remaining_x) > 0 && length(remaining_y) > 0) {
+  if (do_fuzzy) {
+    if (use_progress) {
+      cli_alert_info(
+        paste0(next_stage_label("Fuzzy matching"),
+               " ({length(matched_x)} matched so far)...")
+      )
+    }
+  }
+
+  if (do_fuzzy && length(remaining_x) > 0 && length(remaining_y) > 0) {
     if (!quiet) {
       cli_alert_info("Running fuzzy matching on {length(remaining_x)} x {length(remaining_y)} remaining names...")
     }

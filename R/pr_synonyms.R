@@ -6,11 +6,14 @@
 #' a taxonomic authority to find cases where both names resolve to the same
 #' accepted name, or where one name is a synonym of the other.
 #'
-#' @param unmatched_x Character vector. Unmatched names from source x.
-#' @param unmatched_y Character vector. Unmatched names from source y.
-#' @param authority Character(1). Authority code.
-#' @param db_version Character(1) or NULL.
-#' @param quiet Logical. Suppress progress messages?
+#' @param unmatched_x A character vector. Unmatched names from
+#'   source x.
+#' @param unmatched_y A character vector. Unmatched names from
+#'   source y.
+#' @param authority A length-1 character vector. Authority code, one
+#'   of `pr_valid_authorities()`.
+#' @param db_version A length-1 character vector, or `NULL`.
+#' @param quiet Logical. Suppresses progress messages when `TRUE`.
 #'
 #' @return A tibble with columns: `name_x`, `name_y`, `name_resolved`,
 #'   `match_source`, `notes`.

@@ -63,47 +63,46 @@ test_that("every entry in pr_valid_authorities() is documented in ?reconcile_dat
 })
 
 
-test_that("every authority in ?reconcile_data @param is in pr_valid_authorities()", {
+test_that("every authority listed as supported in ?reconcile_data is in pr_valid_authorities()", {
   rd_text <- .read_rd_source("reconcile_data")
   expect_false(is.na(rd_text), info = "reconcile_data.Rd not found")
 
-  # Find the \item{authority}{...} block by walking braces from the
-  # opening of \item{authority}{ until the matching close brace.
-  m <- regexpr("\\\\item\\{authority\\}\\{", rd_text, perl = TRUE)
-  expect_true(m > 0, info = "no \\item{authority}{...} found in reconcile_data.Rd")
+  # The supported authorities are listed in a \describe{}{...} block
+  # inside \item{authority}{...}. Authorities mentioned in narrative
+  # prose elsewhere in the same @param (e.g. a deprecation note about
+  # codes that used to be advertised) are NOT claims of support, so we
+  # restrict the search to \item{...} entries WITHIN \describe{} blocks
+  # only.
+  describe_pattern <- "\\\\describe\\{((?:[^{}]|\\{[^{}]*\\})*)\\}"
+  describe_blocks <- regmatches(
+    rd_text,
+    gregexpr(describe_pattern, rd_text, perl = TRUE)
+  )[[1]]
+  expect_gt(length(describe_blocks), 0,
+            label = "no \\describe{} blocks found in reconcile_data.Rd; the doc structure may have changed")
 
-  # Scan forward, tracking brace depth, to find the close brace of
-  # the authority \item{}.
-  start <- m + attr(m, "match.length")
-  depth <- 1
-  i <- start
-  rd_chars <- strsplit(rd_text, "", fixed = TRUE)[[1]]
-  while (i <= length(rd_chars) && depth > 0) {
-    if (rd_chars[i] == "{") depth <- depth + 1
-    else if (rd_chars[i] == "}") depth <- depth - 1
-    if (depth == 0) break
-    i <- i + 1
-  }
-  authority_block <- substr(rd_text, start, i - 1)
-
-  # Match quoted authority codes in the block. Restrict to the known
-  # authority namespace so we don't match arbitrary other quoted
-  # strings (e.g. "species", "Species1").
   candidate_authorities <- c(
     "col", "itis", "gbif", "ncbi", "ott", "iucn", "itis_test",
     "tpl", "fb", "slb", "wd"
   )
-  documented <- candidate_authorities[
-    vapply(candidate_authorities, function(a) {
-      grepl(paste0('["`]', a, '["`]'), authority_block, perl = TRUE)
-    }, logical(1))
-  ]
+
+  documented <- character()
+  for (block in describe_blocks) {
+    documented <- union(
+      documented,
+      candidate_authorities[
+        vapply(candidate_authorities, function(a) {
+          grepl(paste0('["`]', a, '["`]'), block, perl = TRUE)
+        }, logical(1))
+      ]
+    )
+  }
 
   for (auth in documented) {
     expect_true(
       auth %in% pr_valid_authorities(),
       info = sprintf(
-        "authority `%s` is documented in ?reconcile_data but is missing from pr_valid_authorities() -- aspirational doc, not backed by code",
+        "authority `%s` is listed as supported in a \\describe{} block of ?reconcile_data but is missing from pr_valid_authorities() -- aspirational doc, not backed by code",
         auth
       )
     )

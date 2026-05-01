@@ -64,7 +64,11 @@ test_that("every match_type value emitted by the cascade is in the documented vo
 })
 
 
-test_that("the documented vocabulary is reflected in ?reconciliation", {
+test_that("the documented vocabulary is reflected in ?reconcile_mapping", {
+  # The match_type vocabulary is documented inside reconcile_mapping.Rd
+  # (the @return block enumerates the possible values). reconciliation.Rd
+  # delegates to reconcile_mapping.Rd for column-level details, so we
+  # check the latter.
   candidates <- c(
     test_path("..", "..", "man"),
     file.path(getwd(), "man"),
@@ -75,14 +79,14 @@ test_that("the documented vocabulary is reflected in ?reconciliation", {
   for (c in candidates) {
     if (dir.exists(c) &&
         file.exists(file.path(dirname(c), "DESCRIPTION"))) {
-      p <- file.path(c, "reconciliation.Rd")
+      p <- file.path(c, "reconcile_mapping.Rd")
       if (file.exists(p)) {
         rd_text <- paste(readLines(p, warn = FALSE), collapse = "\n")
         break
       }
     }
   }
-  if (is.na(rd_text)) skip("reconciliation.Rd not present")
+  if (is.na(rd_text)) skip("reconcile_mapping.Rd not present")
 
   # Each documented value should appear (quoted) somewhere in the Rd.
   # We're not strict about location to keep this test tolerant of

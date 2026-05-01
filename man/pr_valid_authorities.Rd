@@ -7,18 +7,38 @@
 pr_valid_authorities()
 }
 \description{
-Returns the set of authority codes that the package accepts. The
-"core" authorities (\code{col}, \code{itis}, \code{gbif}, \code{ncbi}) are well-tested
-and routinely used. The remaining authorities (\code{tpl}, \code{fb}, \code{slb},
-\code{wd}, \code{iucn}) are passed through to \pkg{taxadb} but their coverage
-and current availability vary -- some may require running
-\code{taxadb::td_create()} manually with a matching \code{version}.
+Returns the set of authority codes that the package accepts when
+resolving species-name synonyms via \pkg{taxadb}. The list mirrors
+\pkg{taxadb}'s own documented providers (see \code{?taxadb::td_create})
+so that every value here is genuinely callable in the underlying
+database:
 }
 \details{
-\code{"ott"} (Open Tree of Life) was previously listed as supported but
-the current \pkg{taxadb} release does not ship a working OTT schema
-under the default provider settings; it has been removed from the
-valid list. Re-add it manually if you maintain a working
-\pkg{taxadb} OTT installation.
+\describe{
+\item{\code{"col"}}{Catalogue of Life. The default and a sensible
+starting point for most taxa.}
+\item{\code{"itis"}}{Integrated Taxonomic Information System. Strong
+coverage for North American vertebrates and plants.}
+\item{\code{"gbif"}}{GBIF backbone. Wider coverage; captures more
+recent synonymy.}
+\item{\code{"ncbi"}}{NCBI Taxonomy. Best when you are working with
+sequence data.}
+\item{\code{"ott"}}{Open Tree of Life synthetic taxonomy. Useful when
+your downstream phylogeny is from the Open Tree synthesis. We
+restrict the schema to \code{"dwc"} (Darwin Core) when calling
+\code{taxadb::td_create()} because the \code{"common"} schema does not
+ship for OTT under \pkg{taxadb} v22.12.}
+\item{\code{"itis_test"}}{A small bundled subset of ITIS, cached
+locally with \pkg{taxadb} for testing. Intended for examples
+and unit tests; not for analysis.}
+}
+
+Five authority codes that previous versions of the package
+advertised --- \code{iucn}, \code{tpl}, \code{fb}, \code{slb}, \code{wd} --- are not on this
+list. Empirical testing against \pkg{taxadb} v22.12 showed that
+\code{iucn} errors with a schema mismatch and the other four are not
+\pkg{taxadb} providers at all. Anyone who was passing one of those
+values was getting a hard error; passing them now produces a
+helpful migration message instead.
 }
 \keyword{internal}

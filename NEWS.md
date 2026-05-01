@@ -1,5 +1,35 @@
 # prepR4pcm (development version)
 
+## Breaking changes
+
+* `pr_valid_authorities()` no longer lists `iucn`, `tpl`, `fb`, `slb`,
+  or `wd`. Empirical testing against `taxadb` v22.12 (the database the
+  package depends on) showed that `iucn` errors with a schema mismatch
+  and the other four are not `taxadb` providers at all. Anyone passing
+  one of these values was getting a hard error from inside `taxadb`;
+  the call sites now produce a targeted migration message pointing
+  users at the working authorities. (Identified in follow-up to #5,
+  Ayumi Mizuno.)
+
+  If you were passing one of the removed authorities, switch to one of
+  `"col"`, `"itis"`, `"gbif"`, `"ncbi"`, or `"ott"`, or pass
+  `authority = NULL` to skip synonym resolution.
+
+## New features
+
+* `authority = "ott"` (Open Tree of Life) is supported again, after
+  Round 1 dropped it on incomplete diagnosis. The original failure
+  was at `taxadb::td_create()` with the default schema set
+  `c("dwc", "common")` --- `taxadb` v22.12 does not ship a `common`
+  schema for OTT. We now restrict the schema to `"dwc"` (the only
+  schema the cascade actually consumes), unblocking OTT and
+  potentially other providers that lack a `common` schema. Re-closes
+  #5 properly.
+
+* `authority = "itis_test"` exposes `taxadb`'s small bundled testing
+  dataset. Useful for examples and unit tests without a network
+  round-trip.
+
 ## Bug fixes
 
 * `pr_lookup_authority()` and `pr_ensure_db()` no longer print raw
@@ -7,12 +37,14 @@
   messages. The functions now route errors through `cli::cli_abort()`,
   which interprets the markup. Closes #4 (Eduardo Santos).
 
-* `authority = "ott"` (Open Tree of Life) has been removed from the
-  list of valid authorities returned by `pr_valid_authorities()`. The
-  default `taxadb` release does not ship a working OTT schema and the
-  call would fail deep inside taxadb with a confusing schema error;
-  users are now told up front that `ott` is not supported and given
-  the working alternatives. Closes #5 (Ayumi Mizuno).
+* The matching cascade no longer prints `Stage 3/4: Synonym
+  resolution (...)` when `authority = NULL`, or
+  `Stage 4/4: Fuzzy matching (...)` when `fuzzy = FALSE`. Stage
+  numbering is computed from the active stages only, so a call with
+  `authority = NULL, fuzzy = FALSE` reports `Stage 1/2: Exact ...`
+  and `Stage 2/2: Normalised ...`. Previously, the fixed `Stage X/4`
+  labels suggested matches were being made at synonym/fuzzy stages
+  even when they were skipped. Closes #13 (Ayumi Mizuno).
 
 * `reconcile_tree()` and `reconcile_data()` previously dropped manual
   overrides silently when the override's `name_x` was not in the data

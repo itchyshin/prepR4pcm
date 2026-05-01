@@ -32,81 +32,89 @@ File format is auto-detected.}
 Auto-detected (e.g. \code{species}, \code{Species1}, \code{scientific_name}) if
 \code{NULL}.}
 
-\item{authority}{Character(1) or \code{NULL}. Taxonomic authority used for
-synonym resolution (stage 3 of the cascade). One of:
+\item{authority}{A length-1 character vector, or \code{NULL}. Taxonomic
+authority used for synonym resolution (stage 3 of the cascade).
+One of:
 \describe{
 \item{\code{"col"} (default)}{Catalogue of Life --- broad, curated,
 frequently updated. A sensible default for most taxa.}
-\item{\code{"gbif"}}{Global Biodiversity Information Facility backbone.
-Wider coverage; includes more recent synonymy.}
-\item{\code{"itis"}}{Integrated Taxonomic Information System --- strong
-for North American vertebrates and plants.}
-\item{\code{"ncbi"}}{NCBI Taxonomy --- best when working with sequence
-data.}
-\item{\code{"iucn"}, \code{"fb"} (FishBase), \code{"slb"} (SeaLifeBase), \code{"wd"}
-(Wikidata), \code{"tpl"} (The Plant List)}{
-Also passed through to \pkg{taxadb}. Coverage and current
-availability vary; some may require running
-\code{taxadb::td_create()} manually with a matching \code{version}.}
+\item{\code{"itis"}}{Integrated Taxonomic Information System ---
+strong for North American vertebrates and plants.}
+\item{\code{"gbif"}}{Global Biodiversity Information Facility
+backbone. Wider coverage; includes more recent synonymy.}
+\item{\code{"ncbi"}}{NCBI Taxonomy --- best when working with
+sequence data.}
+\item{\code{"ott"}}{Open Tree of Life synthetic taxonomy. Useful when
+your downstream phylogeny is from the Open Tree synthesis.}
+\item{\code{"itis_test"}}{A small bundled subset of ITIS, cached
+locally with \pkg{taxadb} for testing. Intended for examples
+and unit tests; not for analysis.}
 \item{\code{NULL}}{Skip the synonym stage entirely. Useful for quick
-checks or when taxadb is unavailable. Stages 1, 2 and 4 still
-run.}
+checks or when \pkg{taxadb} is unavailable. Stages 1, 2 and 4
+still run.}
 }
 
-\code{"ott"} (Open Tree of Life) was previously listed but is \strong{not}
-currently supported because the default \pkg{taxadb} release does
-not ship a working OTT schema. Use a different authority, or skip
-synonym resolution by passing \code{NULL}.}
+Five authority codes that earlier versions of the package
+advertised --- \code{"iucn"}, \code{"tpl"}, \code{"fb"}, \code{"slb"}, \code{"wd"} --- are
+no longer accepted. Empirical testing against \pkg{taxadb} v22.12
+showed that \code{iucn} errors with a schema mismatch and the others
+are not \pkg{taxadb} providers at all. Passing one of those
+values now produces a helpful migration error.}
 
-\item{rank}{Character(1). Controls how trinomials are handled during
-normalisation:
+\item{rank}{A length-1 character vector. Controls how trinomials
+are handled during normalisation:
 \describe{
-\item{\code{"species"} (default)}{Strip infraspecific epithets so that
-\code{"Parus major major"} becomes \code{"Parus major"} before matching.}
-\item{\code{"subspecies"}}{Keep trinomials intact. Use this when your
-analysis operates at subspecies level.}
+\item{\code{"species"} (default)}{Strip infraspecific epithets so
+that \code{"Parus major major"} becomes \code{"Parus major"} before
+matching.}
+\item{\code{"subspecies"}}{Keep trinomials intact. Use this when
+your analysis operates at subspecies level.}
 }}
 
-\item{overrides}{Optional pre-built corrections. Either a data frame
-with at least columns \code{name_x} and \code{name_y} (plus an optional
-\code{user_note} column), or a file path to a CSV with the same columns.
-Any name listed here bypasses the cascade and is recorded as
-\code{match_type = "manual"}. Useful for applying published crosswalks
-(see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}) or for locking down decisions made in a
-previous run.}
+\item{overrides}{Optional pre-built corrections. Either a data
+frame with at least columns \code{name_x} and \code{name_y} (plus an
+optional \code{user_note} column), or a file path to a CSV with the
+same columns. Any name listed here bypasses the cascade and is
+recorded as \code{match_type = "manual"}. Useful for applying
+published crosswalks (see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}) or for locking
+down decisions made in a previous run.}
 
-\item{db_version}{Character(1). \pkg{taxadb} database snapshot to use
-(e.g. \code{"22.12"}). \code{NULL} (default) uses the latest available.}
+\item{db_version}{A length-1 character vector. \pkg{taxadb}
+database snapshot to use (e.g. \code{"22.12"}). \code{NULL} (default) uses
+the latest available.}
 
-\item{fuzzy}{Logical. Enable the fuzzy-matching stage? Default \code{FALSE}.
-Turn this on to catch likely typos (\emph{Corvus brachyrhnchos}
--> \emph{Corvus brachyrhynchos}). When \code{FALSE}, stages 1--3 still run.}
+\item{fuzzy}{Logical. Enables the fuzzy-matching stage when
+\code{TRUE}. Default \code{FALSE}. Turn this on to catch likely typos
+(\emph{Corvus brachyrhnchos} -> \emph{Corvus brachyrhynchos}). When
+\code{FALSE}, stages 1--3 still run.}
 
 \item{fuzzy_threshold}{Numeric in [0, 1]. Minimum genus-weighted
 similarity score for a fuzzy match to be accepted. Default \code{0.9}
 (roughly "no more than ~10\% of characters differ"). Lower values
-(e.g. \code{0.7}) are more permissive but produce more false positives;
-always review fuzzy matches with \code{\link[=reconcile_suggest]{reconcile_suggest()}} or
-\code{\link[=reconcile_review]{reconcile_review()}} before trusting them.}
+(e.g. \code{0.7}) are more permissive but produce more false
+positives; always review fuzzy matches with \code{\link[=reconcile_suggest]{reconcile_suggest()}}
+or \code{\link[=reconcile_review]{reconcile_review()}} before trusting them.}
 
-\item{flag_threshold}{Numeric in [0, 1]. When \code{resolve = "flag"}, fuzzy
-matches with a score below this value are recorded as
+\item{flag_threshold}{Numeric in [0, 1]. When \code{resolve = "flag"},
+fuzzy matches with a score below this value are recorded as
 \code{match_type = "flagged"} rather than \code{"fuzzy"}, marking them for
-manual review. Default \code{0.95}. Must be >= \code{fuzzy_threshold} to have
-any effect.}
+manual review. Default \code{0.95}. Must be >= \code{fuzzy_threshold} to
+have any effect.}
 
-\item{resolve}{Character(1). What to do with borderline matches:
+\item{resolve}{A length-1 character vector. What to do with
+borderline matches:
 \describe{
-\item{\code{"flag"} (default)}{Mark low-confidence fuzzy matches (score
-below \code{flag_threshold}) and names with indirect taxadb synonymy as
-\code{match_type = "flagged"} so you can audit them with
-\code{\link[=reconcile_review]{reconcile_review()}} or \code{\link[=reconcile_suggest]{reconcile_suggest()}}.}
+\item{\code{"flag"} (default)}{Mark low-confidence fuzzy matches
+(score below \code{flag_threshold}) and names with indirect
+taxadb synonymy as \code{match_type = "flagged"} so you can audit
+them with \code{\link[=reconcile_review]{reconcile_review()}} or \code{\link[=reconcile_suggest]{reconcile_suggest()}}.}
 \item{\code{"first"}}{Accept the highest-scoring candidate silently,
 without flagging. Faster but riskier; use only when you have
 already reviewed the ambiguities.}
 }}
 
-\item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
+\item{quiet}{Logical. Suppresses progress messages when \code{TRUE}.
+Default \code{FALSE}.}
 
 \item{x_label}{Character(1) or \code{NULL}. Human-readable label for source \code{x}
 stored in the reconciliation metadata and shown in \code{print()} / \code{format()}.

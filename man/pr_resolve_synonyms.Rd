@@ -13,15 +13,18 @@ pr_resolve_synonyms(
 )
 }
 \arguments{
-\item{unmatched_x}{Character vector. Unmatched names from source x.}
+\item{unmatched_x}{A character vector. Unmatched names from
+source x.}
 
-\item{unmatched_y}{Character vector. Unmatched names from source y.}
+\item{unmatched_y}{A character vector. Unmatched names from
+source y.}
 
-\item{authority}{Character(1). Authority code.}
+\item{authority}{A length-1 character vector. Authority code, one
+of \code{pr_valid_authorities()}.}
 
-\item{db_version}{Character(1) or NULL.}
+\item{db_version}{A length-1 character vector, or \code{NULL}.}
 
-\item{quiet}{Logical. Suppress progress messages?}
+\item{quiet}{Logical. Suppresses progress messages when \code{TRUE}.}
 }
 \value{
 A tibble with columns: \code{name_x}, \code{name_y}, \code{name_resolved},

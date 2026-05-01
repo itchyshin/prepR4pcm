@@ -23,8 +23,10 @@ pr_run_cascade(
 
 \item{names_y}{Character vector. Names from source y.}
 
-\item{authority}{Character(1) or NULL. Taxonomic authority for synonym
-lookup. NULL skips stage 3.}
+\item{authority}{A length-1 character vector, or \code{NULL}. Taxonomic
+authority for the synonym-resolution stage. One of \code{"col"},
+\code{"itis"}, \code{"gbif"}, \code{"ncbi"}, \code{"ott"}, or \code{"itis_test"}. \code{NULL}
+skips stage 3.}
 
 \item{db_version}{Character(1) or NULL.}
 
