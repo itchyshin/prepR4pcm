@@ -13,6 +13,7 @@ pr_get_tree(
   cache = FALSE,
   tnrs = c("auto", "always", "never"),
   min_match = 0.8,
+  check_ultrametric = TRUE,
   ...
 )
 }
@@ -127,6 +128,16 @@ one-shot warning.}
 backend must resolve for the dispatcher to accept its result;
 if no backend meets the threshold, the best available is
 returned with a warning. Default \code{0.8}.}
+
+\item{check_ultrametric}{Logical. After producing the tree, check
+that it's ultrametric (all tips equidistant from the root) and
+warn if not. Default \code{TRUE}. Only enforced for backends that
+normally return chronograms (\code{rtrees}, \code{clootl}, \code{fishtree},
+\code{datelife}); \code{rotl} returns a topology without real branch
+lengths, so the check is skipped. To force ultrametricity on a
+non-ultrametric result, use \code{phytools::force.ultrametric()} or
+\code{ape::chronos()} directly --- prepR4pcm does not modify the
+tree silently.}
 
 \item{...}{Backend-specific arguments forwarded to the underlying
 call. See the help page of the underlying function in the

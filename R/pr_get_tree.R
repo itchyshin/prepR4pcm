@@ -130,6 +130,15 @@
 #'   backend must resolve for the dispatcher to accept its result;
 #'   if no backend meets the threshold, the best available is
 #'   returned with a warning. Default `0.8`.
+#' @param check_ultrametric Logical. After producing the tree, check
+#'   that it's ultrametric (all tips equidistant from the root) and
+#'   warn if not. Default `TRUE`. Only enforced for backends that
+#'   normally return chronograms (`rtrees`, `clootl`, `fishtree`,
+#'   `datelife`); `rotl` returns a topology without real branch
+#'   lengths, so the check is skipped. To force ultrametricity on a
+#'   non-ultrametric result, use `phytools::force.ultrametric()` or
+#'   `ape::chronos()` directly --- prepR4pcm does not modify the
+#'   tree silently.
 #' @param ... Backend-specific arguments forwarded to the underlying
 #'   call. See the help page of the underlying function in the
 #'   relevant backend package (\code{tol_induced_subtree} in
@@ -214,6 +223,7 @@ pr_get_tree <- function(x,
                         cache = FALSE,
                         tnrs = c("auto", "always", "never"),
                         min_match = 0.8,
+                        check_ultrametric = TRUE,
                         ...) {
   source <- match.arg(source)
   tnrs   <- match.arg(tnrs)
@@ -296,7 +306,52 @@ pr_get_tree <- function(x,
     .pr_tree_cache_put(key, source, out)
   }
 
+  # Ultrametric sanity check ----------------------------------------
+  # Backends that normally return chronograms should produce
+  # ultrametric trees. Warn (don't force) if not.
+  if (isTRUE(check_ultrametric)) {
+    .pr_check_tree_ultrametric(out$tree, source)
+  }
+
   out
+}
+
+
+# Internal: warn when a backend that should produce ultrametric trees
+# does not. Skipped for `rotl` (synthesis topology, no real branch
+# lengths) and `fishtree` with `type = "phylogram"`.
+
+.pr_check_tree_ultrametric <- function(tree, source) {
+  # Don't bother for backends that don't pretend to produce
+  # ultrametric output.
+  if (source == "rotl") return(invisible())
+  ut <- .pr_is_tree_ultrametric(tree)
+  if (isTRUE(ut)) return(invisible())
+  if (is.na(ut))  return(invisible())   # no edge lengths, can't check
+  cli::cli_warn(c(
+    "Tree returned by {.val {source}} is not strictly ultrametric.",
+    "i" = "Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.",
+    ">" = "To force: {.code phytools::force.ultrametric(result$tree)} or {.code ape::chronos(result$tree)}.",
+    "*" = "To suppress this check: pass {.code check_ultrametric = FALSE}."
+  ))
+}
+
+
+# Internal: tolerant ultrametric check that handles multiPhylo.
+# Returns TRUE/FALSE, or NA if we can't tell (no edge lengths).
+
+.pr_is_tree_ultrametric <- function(tree) {
+  if (inherits(tree, "multiPhylo")) {
+    # All trees in a multiPhylo are tested; return TRUE only if every
+    # tree is ultrametric.
+    res <- vapply(tree, .pr_is_tree_ultrametric, logical(1))
+    return(all(res))
+  }
+  if (is.null(tree$edge.length)) return(NA)
+  tryCatch(
+    isTRUE(ape::is.ultrametric(tree, tol = 1e-6)),
+    error = function(e) NA
+  )
 }
 
 

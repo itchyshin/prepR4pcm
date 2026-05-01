@@ -41,6 +41,25 @@
 #'     (\url{https://daijiang.github.io/rtrees/}). Helpful when the
 #'     genus is absent from your tree but present in \pkg{rtrees}'
 #'     reference --- which the internal mode would skip.}
+#'   \item{\code{"vphylomaker"}}{Plant-only alternative to
+#'     \code{"rtrees"} via either of the GitHub packages
+#'     \pkg{V.PhyloMaker3}
+#'     (\url{https://github.com/jinyizju/V.PhyloMaker3}, preferred
+#'     when installed) or \pkg{V.PhyloMaker2}
+#'     (\url{https://github.com/jinyizju/V.PhyloMaker2}, used as a
+#'     fallback). Calls \code{phylo.maker(sp.list, tree, scenarios = ...)}
+#'     with your tree as the backbone. Use this when you want
+#'     explicit control over the V.PhyloMaker placement scenario
+#'     (\code{"S1"}, \code{"S2"}, or \code{"S3"} --- see Jin & Qian
+#'     2019, \emph{Ecography} 42:1353); otherwise \code{"rtrees"}
+#'     with \code{taxon = "plant"} is simpler.}
+#'   \item{\code{"uphylomaker"}}{Universal (plants + animals) variant
+#'     of V.PhyloMaker, via the GitHub package \pkg{U.PhyloMaker}
+#'     (\url{https://github.com/jinyizju/U.PhyloMaker}). Same
+#'     \code{phylo.maker} convention but takes a `gen.list` (a
+#'     genus-family lookup) so it can graft non-plant taxa as well
+#'     as plants. Use this when your tree spans multiple kingdoms
+#'     and you want the V.PhyloMaker placement strategy.}
 #' }
 #' Use [pr_get_tree()] when you have only a species list and need a
 #' candidate tree from scratch (rotl, clootl, or rtrees). Use
@@ -98,18 +117,27 @@
 #'   argument.)
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
 #' @param source A length-1 character vector. Which grafting backend
-#'   to use. One of `"internal"` (default; the genus-level placement
-#'   strategy described above) or `"rtrees"` (delegate to
-#'   \code{rtrees::get_tree(tree_by_user = TRUE)}; see
-#'   \dQuote{Choosing a source}). Default `"internal"`.
+#'   to use. One of `"internal"` (default), `"rtrees"`, or
+#'   `"vphylomaker"`. See \dQuote{Choosing a source}.
 #' @param taxon A length-1 character vector. Required when
 #'   `source = "rtrees"`. One of `"bird"`, `"mammal"`, `"fish"`,
 #'   `"amphibian"`, `"reptile"`, `"plant"`, `"shark_ray"`, `"bee"`,
-#'   `"butterfly"`. See \pkg{rtrees}' help page for `get_tree`.
+#'   `"butterfly"`. Ignored for `"internal"` and `"vphylomaker"`.
+#' @param check_ultrametric Logical. After grafting, check that the
+#'   result is ultrametric and warn if not. Default `TRUE`. The
+#'   `"rtrees"`, `"vphylomaker"`, and `"uphylomaker"` backends produce
+#'   ultrametric trees by design; the `"internal"` backend does too
+#'   when the input tree was ultrametric and `branch_length` is
+#'   `"congener_median"` or `"half_terminal"`, but not when
+#'   `branch_length = "zero"` (which produces zero-length tip edges
+#'   that break ultrametricity by construction).
+#' @param ... Additional arguments forwarded to the chosen backend:
+#'   `rtrees::get_tree()` for `source = "rtrees"` (e.g. `scenario`,
+#'   `n_tree`); `V.PhyloMaker3::phylo.maker()` for
+#'   `source = "vphylomaker"` (e.g. `scenarios = "S3"`,
+#'   `nodes.type`); `U.PhyloMaker::phylo.maker()` for
+#'   `source = "uphylomaker"` (e.g. `gen.list`, `scenario`).
 #'   Ignored when `source = "internal"`.
-#' @param ... Additional arguments forwarded to
-#'   `rtrees::get_tree()` when `source = "rtrees"` (e.g. `scenario`,
-#'   `n_tree`). Ignored when `source = "internal"`.
 #'
 #' @return A list with:
 #'   \describe{
@@ -201,8 +229,10 @@ reconcile_augment <- function(reconciliation,
                                                   "zero"),
                                seed = NULL,
                                quiet = FALSE,
-                               source = c("internal", "rtrees"),
+                               source = c("internal", "rtrees",
+                                           "vphylomaker", "uphylomaker"),
                                taxon = NULL,
+                               check_ultrametric = TRUE,
                                ...) {
 
   validate_reconciliation(reconciliation)
@@ -264,6 +294,9 @@ reconcile_augment <- function(reconciliation,
         )
       }
     }
+    if (isTRUE(check_ultrametric)) {
+      .pr_check_tree_ultrametric(res$tree, source = "rtrees")
+    }
     return(list(
       tree      = res$tree,
       original  = original_tree,
@@ -276,6 +309,52 @@ reconcile_augment <- function(reconciliation,
         branch_length_method = NA_character_,
         seed                 = seed,
         source               = "rtrees",
+        backend_meta         = res$backend_meta,
+        original_n_tips      = ape::Ntip(original_tree),
+        augmented_n_tips     = new_n_tips
+      )
+    ))
+  }
+
+  # --- V.PhyloMaker / U.PhyloMaker dispatch ------------------------------
+  # Both call the same phylo.maker convention; we dispatch on `source`.
+  if (source %in% c("vphylomaker", "uphylomaker")) {
+    pkg_label <- if (source == "vphylomaker") "V.PhyloMaker" else "U.PhyloMaker"
+    if (!quiet) {
+      cli_alert_info(
+        "Augmenting tree with {length(species_to_add)} unresolved species via {.pkg {pkg_label}}..."
+      )
+    }
+    res <- if (source == "vphylomaker") {
+      .pr_augment_vphylomaker(species_to_add, tree, quiet = quiet, ...)
+    } else {
+      .pr_augment_uphylomaker(species_to_add, tree, quiet = quiet, ...)
+    }
+    new_n_tips <- if (inherits(res$tree, "multiPhylo")) {
+      ape::Ntip(res$tree[[1]])
+    } else {
+      ape::Ntip(res$tree)
+    }
+    if (!quiet) {
+      cli_alert_success(
+        "Added {nrow(res$augmented)} species via {pkg_label} ({nrow(res$skipped)} could not be placed)"
+      )
+    }
+    if (isTRUE(check_ultrametric)) {
+      .pr_check_tree_ultrametric(res$tree, source = source)
+    }
+    return(list(
+      tree      = res$tree,
+      original  = original_tree,
+      augmented = res$augmented,
+      skipped   = res$skipped,
+      meta      = list(
+        n_augmented          = nrow(res$augmented),
+        n_skipped            = nrow(res$skipped),
+        where                = NA_character_,
+        branch_length_method = NA_character_,
+        seed                 = seed,
+        source               = source,
         backend_meta         = res$backend_meta,
         original_n_tips      = ape::Ntip(original_tree),
         augmented_n_tips     = new_n_tips
@@ -392,6 +471,14 @@ reconcile_augment <- function(reconciliation,
         "Skipped species had no congener in the tree. See $skipped for details."
       )
     }
+  }
+
+  # Ultrametric check: skip when branch_length = "zero" because that
+  # produces zero-length tip edges by design (the user asked for a
+  # polytomy / sensitivity check); warn for the other branch-length
+  # rules where ultrametricity is the expected output.
+  if (isTRUE(check_ultrametric) && branch_length != "zero") {
+    .pr_check_tree_ultrametric(tree, source = "internal")
   }
 
   list(
@@ -636,6 +723,262 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
       taxon     = taxon,
       n_grafted = length(grafted_set),
       n_returned = if (is_multi) length(augmented_tree) else 1L
+    )
+  )
+}
+
+
+#' Internal: delegate grafting to V.PhyloMaker3::phylo.maker()
+#'
+#' Plant-only alternative to the rtrees backend. Wraps
+#' `V.PhyloMaker3::phylo.maker()` so the user can pick a specific
+#' V.PhyloMaker scenario (S1 / S2 / S3, see Jin & Qian 2019).
+#'
+#' @param species_to_add Character vector of binomials to graft.
+#' @param tree The user's backbone phylo.
+#' @param scenarios Character. One of "S1", "S2", "S3" (default
+#'   "S3"). Forwarded to `V.PhyloMaker3::phylo.maker()`.
+#' @param quiet Logical.
+#' @param ... Forwarded to `V.PhyloMaker3::phylo.maker()`.
+#' @return A list with `tree`, `augmented`, `skipped`, `backend_meta`.
+#' @keywords internal
+.pr_augment_vphylomaker <- function(species_to_add, tree,
+                                      scenarios = "S3",
+                                      quiet = FALSE, ...) {
+  # Prefer V.PhyloMaker3 when available; fall back to V.PhyloMaker2.
+  # Both packages expose `phylo.maker()` with the same calling
+  # convention, so the dispatch is just choosing the namespace.
+  pkg <- if (requireNamespace("V.PhyloMaker3", quietly = TRUE)) {
+    "V.PhyloMaker3"
+  } else if (requireNamespace("V.PhyloMaker2", quietly = TRUE)) {
+    "V.PhyloMaker2"
+  } else {
+    cli::cli_abort(
+      c("{.code source = \"vphylomaker\"} requires either {.pkg V.PhyloMaker3} or {.pkg V.PhyloMaker2}.",
+        "i" = 'Install V3 (preferred) with: {.code pak::pak("jinyizju/V.PhyloMaker3")}.',
+        "i" = 'Or install V2 with: {.code pak::pak("jinyizju/V.PhyloMaker2")}.',
+        ">" = "See {.url https://github.com/jinyizju/V.PhyloMaker3} for details.")
+    )
+  }
+  if (!quiet) {
+    cli::cli_alert_info("Using {.pkg {pkg}} (preferred when both are installed: V3).")
+  }
+
+  # V.PhyloMaker (both 2 and 3) wants a sp.list data.frame with cols
+  # `species`, `genus`, `family`. We provide species + genus from the
+  # binomial; family is left NA (V.PhyloMaker fills it from its
+  # taxonomy).
+  sp_list <- data.frame(
+    species = species_to_add,
+    genus   = pr_extract_genus(species_to_add),
+    family  = NA_character_,
+    stringsAsFactors = FALSE
+  )
+
+  phylo_maker_fn <- get("phylo.maker", envir = asNamespace(pkg))
+  pm <- phylo_maker_fn(
+    sp.list   = sp_list,
+    tree      = tree,
+    scenarios = scenarios,
+    ...
+  )
+  # phylo.maker returns a list; the dated tree lives at $scenario.<name>
+  # for scenarios S1/S2 and at $species.list, $scenario.3 for S3.
+  # Pull the first phylo we find.
+  augmented_tree <- if (inherits(pm, "phylo")) {
+    pm
+  } else if (is.list(pm)) {
+    cand <- pm[vapply(pm, inherits, logical(1), what = "phylo")]
+    if (length(cand) == 0L) {
+      cli::cli_abort(c(
+        "Unexpected return type from {.code V.PhyloMaker3::phylo.maker()}.",
+        "i" = "Got names: {.val {names(pm)}}.")
+      )
+    }
+    cand[[1]]
+  } else {
+    cli::cli_abort(
+      "Unexpected return type from {.code V.PhyloMaker3::phylo.maker()}: {.cls {class(pm)[1]}}."
+    )
+  }
+
+  # Determine matched / unmatched by intersecting against the new tip set
+  ref_tips <- augmented_tree$tip.label
+  norm_req <- pr_normalize_names(species_to_add)
+  norm_tip <- pr_normalize_names(ref_tips)
+  in_tree  <- norm_req %in% norm_tip
+
+  added_species   <- species_to_add[in_tree]
+  skipped_species <- species_to_add[!in_tree]
+
+  augmented <- if (length(added_species) > 0) {
+    tibble(
+      species       = added_species,
+      genus         = pr_extract_genus(added_species),
+      placed_near   = paste0("V.PhyloMaker (", scenarios, ")"),
+      branch_length = NA_real_,
+      method        = paste0("vphylomaker/", scenarios),
+      n_congeners   = NA_integer_
+    )
+  } else {
+    tibble(species = character(), genus = character(),
+           placed_near = character(), branch_length = numeric(),
+           method = character(), n_congeners = integer())
+  }
+
+  skipped <- if (length(skipped_species) > 0) {
+    tibble(
+      species = skipped_species,
+      genus   = pr_extract_genus(skipped_species),
+      reason  = "V.PhyloMaker did not place this species"
+    )
+  } else {
+    tibble(species = character(), genus = character(),
+           reason = character())
+  }
+
+  list(
+    tree         = augmented_tree,
+    augmented    = augmented,
+    skipped      = skipped,
+    backend_meta = list(
+      backend    = "vphylomaker",
+      package    = pkg,
+      scenarios  = scenarios,
+      references = c(
+        v3_v2 = "Jin Y & Qian H (2022) V.PhyloMaker2: an updated and enlarged R package that can generate very large phylogenies for vascular plants. Plant Diversity 44:335-339. doi:10.1016/j.pld.2022.05.005",
+        v1    = "Jin Y & Qian H (2019) V.PhyloMaker: an R package that can generate very large phylogenies for vascular plants. Ecography 42:1353-1359. doi:10.1111/ecog.04434"
+      )
+    )
+  )
+}
+
+
+#' Internal: delegate grafting to U.PhyloMaker::phylo.maker()
+#'
+#' Universal (plants + animals) variant of the V.PhyloMaker grafting
+#' strategy. Wraps `U.PhyloMaker::phylo.maker()` so the user can pick
+#' a specific scenario.
+#'
+#' @param species_to_add Character vector of binomials to graft.
+#' @param tree The user's backbone phylo.
+#' @param gen.list A data.frame mapping genus -> family. Required by
+#'   U.PhyloMaker. If `NULL`, the function attempts to load the
+#'   bundled `U.PhyloMaker::nodes.info.1` lookup; if that fails,
+#'   errors with an instructive message.
+#' @param scenario Character. One of "S1", "S2", "S3". Default "S3".
+#' @param quiet Logical.
+#' @param ... Forwarded to `U.PhyloMaker::phylo.maker()`.
+#' @return A list with `tree`, `augmented`, `skipped`, `backend_meta`.
+#' @keywords internal
+.pr_augment_uphylomaker <- function(species_to_add, tree,
+                                      gen.list = NULL,
+                                      scenario = "S3",
+                                      quiet = FALSE, ...) {
+  if (!requireNamespace("U.PhyloMaker", quietly = TRUE)) {
+    cli::cli_abort(
+      c("{.code source = \"uphylomaker\"} requires the {.pkg U.PhyloMaker} package.",
+        "i" = 'Install with: {.code pak::pak("jinyizju/U.PhyloMaker")} (GitHub-only).',
+        ">" = "See {.url https://github.com/jinyizju/U.PhyloMaker} for details.")
+    )
+  }
+
+  # U.PhyloMaker wants sp.list with cols species, genus, family, and a
+  # gen.list mapping genus -> family. We provide species + genus from
+  # the binomial; users can pass a custom `gen.list` via ..., otherwise
+  # we try to use U.PhyloMaker's bundled lookup.
+  sp_list <- data.frame(
+    species = species_to_add,
+    genus   = pr_extract_genus(species_to_add),
+    family  = NA_character_,
+    species.relative = NA_character_,
+    genus.relative   = NA_character_,
+    stringsAsFactors = FALSE
+  )
+
+  if (is.null(gen.list)) {
+    gen.list <- tryCatch(
+      get("nodes.info.1", envir = asNamespace("U.PhyloMaker")),
+      error = function(e) NULL
+    )
+    if (is.null(gen.list)) {
+      cli::cli_abort(c(
+        "{.fn U.PhyloMaker::phylo.maker} requires a {.arg gen.list} argument.",
+        "i" = "Pass a data.frame mapping genus -> family via {.code ...} (e.g. {.code gen.list = my_gen_list}).",
+        ">" = "See {.url https://github.com/jinyizju/U.PhyloMaker} for the expected format."
+      ))
+    }
+  }
+
+  if (!quiet) {
+    cli::cli_alert_info("Calling {.code U.PhyloMaker::phylo.maker()} with scenario = {.val {scenario}}.")
+  }
+
+  pm <- U.PhyloMaker::phylo.maker(
+    sp.list  = sp_list,
+    tree     = tree,
+    gen.list = gen.list,
+    scenario = scenario,
+    ...
+  )
+  augmented_tree <- if (inherits(pm, "phylo")) {
+    pm
+  } else if (is.list(pm)) {
+    cand <- pm[vapply(pm, inherits, logical(1), what = "phylo")]
+    if (length(cand) == 0L) {
+      cli::cli_abort(c(
+        "Unexpected return type from {.code U.PhyloMaker::phylo.maker()}.",
+        "i" = "Got names: {.val {names(pm)}}.")
+      )
+    }
+    cand[[1]]
+  } else {
+    cli::cli_abort(
+      "Unexpected return type from {.code U.PhyloMaker::phylo.maker()}: {.cls {class(pm)[1]}}."
+    )
+  }
+
+  ref_tips <- augmented_tree$tip.label
+  norm_req <- pr_normalize_names(species_to_add)
+  norm_tip <- pr_normalize_names(ref_tips)
+  in_tree  <- norm_req %in% norm_tip
+
+  added_species   <- species_to_add[in_tree]
+  skipped_species <- species_to_add[!in_tree]
+
+  augmented <- if (length(added_species) > 0) {
+    tibble(
+      species       = added_species,
+      genus         = pr_extract_genus(added_species),
+      placed_near   = paste0("U.PhyloMaker (", scenario, ")"),
+      branch_length = NA_real_,
+      method        = paste0("uphylomaker/", scenario),
+      n_congeners   = NA_integer_
+    )
+  } else {
+    tibble(species = character(), genus = character(),
+           placed_near = character(), branch_length = numeric(),
+           method = character(), n_congeners = integer())
+  }
+  skipped <- if (length(skipped_species) > 0) {
+    tibble(
+      species = skipped_species,
+      genus   = pr_extract_genus(skipped_species),
+      reason  = "U.PhyloMaker did not place this species"
+    )
+  } else {
+    tibble(species = character(), genus = character(),
+           reason = character())
+  }
+
+  list(
+    tree         = augmented_tree,
+    augmented    = augmented,
+    skipped      = skipped,
+    backend_meta = list(
+      backend   = "uphylomaker",
+      scenario  = scenario,
+      reference = "Jin Y & Qian H (2023) U.PhyloMaker: an R package that can generate large phylogenetic trees for plants and animals. Plant Diversity 45:347-352. doi:10.1016/j.pld.2022.12.007"
     )
   )
 }

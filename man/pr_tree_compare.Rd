@@ -43,9 +43,13 @@ rotl and another from fishtree --- do they agree?"
 }
 \details{
 RF distance is computed via \code{\link[ape:dist.topo]{ape::dist.topo()}} with the default
-method. Branch-length correlation matches edges by their bipartition
-set on the pruned topology; if the two trees disagree on a
-bipartition, that edge is dropped from the correlation.
+method. Branch-length correlation matches edges by their tip-set
+bipartition: for each edge in tree A, the corresponding edge in
+tree B (if any) is the one that splits the same set of tips. The
+Pearson correlation is taken over the matched edge-length pairs;
+edges whose bipartition is absent in the other tree are dropped.
+This is a proper bipartition-matched correlation as introduced in
+Kuhner & Felsenstein (1994) for tree comparison.
 }
 \examples{
 # Two trees with identical tip sets

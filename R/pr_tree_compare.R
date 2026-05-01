@@ -41,9 +41,13 @@
 #'
 #' @details
 #' RF distance is computed via [ape::dist.topo()] with the default
-#' method. Branch-length correlation matches edges by their bipartition
-#' set on the pruned topology; if the two trees disagree on a
-#' bipartition, that edge is dropped from the correlation.
+#' method. Branch-length correlation matches edges by their tip-set
+#' bipartition: for each edge in tree A, the corresponding edge in
+#' tree B (if any) is the one that splits the same set of tips. The
+#' Pearson correlation is taken over the matched edge-length pairs;
+#' edges whose bipartition is absent in the other tree are dropped.
+#' This is a proper bipartition-matched correlation as introduced in
+#' Kuhner & Felsenstein (1994) for tree comparison.
 #'
 #' @seealso [pr_get_tree()] for retrieval; [reconcile_apply()] for
 #'   combining a chosen tree with a dataset.
@@ -116,7 +120,10 @@ pr_tree_compare <- function(..., prune_to_common = TRUE) {
   }
 
   # Pairwise branch-length correlation (on common subtree, when both
-  # trees have edge lengths)
+  # trees have edge lengths). Uses bipartition matching: for each
+  # internal edge in tree A, find the edge in tree B that splits the
+  # same set of tips and correlate the lengths. Edges with no
+  # matching bipartition in the other tree are dropped.
   blcor <- matrix(NA_real_, nrow = n, ncol = n,
                    dimnames = list(nm, nm))
   for (i in seq_len(n)) for (j in seq_len(n)) {
@@ -130,26 +137,7 @@ pr_tree_compare <- function(..., prune_to_common = TRUE) {
     if (length(common) < 4L) next
     a <- ape::keep.tip(a, common)
     b <- ape::keep.tip(b, common)
-    # Pair edges by parent-child node label after a unified labelling.
-    # Quick approximation: median edge-length ratio. A future round
-    # may replace this with bipartition-matched correlation.
-    bl_a <- a$edge.length
-    bl_b <- b$edge.length
-    if (length(bl_a) != length(bl_b)) {
-      # Topologies differ; correlate the sorted lengths as a coarse
-      # but defensible "do they agree on rate scale" check.
-      n_use <- min(length(bl_a), length(bl_b))
-      blcor[i, j] <- tryCatch(
-        suppressWarnings(stats::cor(sort(bl_a)[seq_len(n_use)],
-                                     sort(bl_b)[seq_len(n_use)])),
-        error = function(e) NA_real_
-      )
-    } else {
-      blcor[i, j] <- tryCatch(
-        suppressWarnings(stats::cor(sort(bl_a), sort(bl_b))),
-        error = function(e) NA_real_
-      )
-    }
+    blcor[i, j] <- .pr_bipartition_branch_cor(a, b)
   }
 
   out <- list(
@@ -182,6 +170,83 @@ print.pr_tree_compare <- function(x, ...) {
     print(round(x$pairwise_branch_cor, 3))
   }
   invisible(x)
+}
+
+
+# Internal: bipartition-matched branch-length correlation -----------
+#
+# For two trees on the same tip set, match every edge in tree A to
+# the edge in tree B that induces the same bipartition (same set of
+# tips on the descendant side). When no matching bipartition exists,
+# drop the edge from the correlation. Also handle terminal (tip)
+# edges by matching on the tip label.
+
+.pr_bipartition_branch_cor <- function(a, b) {
+  # Build bipartition descriptors:
+  #   - For terminal edges: the tip label.
+  #   - For internal edges: a sorted, comma-joined list of descendant tips.
+  desc_a <- .pr_edge_descriptors(a)
+  desc_b <- .pr_edge_descriptors(b)
+  if (is.null(desc_a) || is.null(desc_b)) return(NA_real_)
+  shared <- intersect(names(desc_a), names(desc_b))
+  if (length(shared) < 2L) return(NA_real_)
+  bl_a <- desc_a[shared]
+  bl_b <- desc_b[shared]
+  tryCatch(
+    suppressWarnings(stats::cor(bl_a, bl_b)),
+    error = function(e) NA_real_
+  )
+}
+
+
+# Build a named numeric vector: names are bipartition keys (sorted
+# tip lists for internal edges, tip labels for terminal edges); values
+# are the matching edge lengths.
+
+.pr_edge_descriptors <- function(tree) {
+  if (is.null(tree$edge.length)) return(NULL)
+  n_tips <- ape::Ntip(tree)
+  edges  <- tree$edge
+  bls    <- tree$edge.length
+
+  # Pre-compute the descendant-tip set for every node via post-order
+  # traversal. tip nodes (1..n_tips) descend only from themselves.
+  parents  <- edges[, 1]
+  children <- edges[, 2]
+  desc <- vector("list", max(c(parents, children)))
+  for (i in seq_len(n_tips)) desc[[i]] <- tree$tip.label[i]
+
+  # Children appear before their parent in a post-order sweep; ape's
+  # default edge ordering isn't always strict post-order, so iterate
+  # until no node's descendant set changes (small N: cheap).
+  changed <- TRUE
+  while (changed) {
+    changed <- FALSE
+    for (k in seq_len(nrow(edges))) {
+      p <- parents[k]; c <- children[k]
+      if (is.null(desc[[c]])) next
+      old <- desc[[p]]
+      old_or_empty <- if (is.null(old)) character() else old
+      merged <- union(old_or_empty, desc[[c]])
+      if (!identical(sort(merged), sort(old_or_empty))) {
+        desc[[p]] <- merged
+        changed <- TRUE
+      }
+    }
+  }
+
+  # Build keys for every edge
+  keys <- vapply(seq_len(nrow(edges)), function(k) {
+    c <- children[k]
+    if (c <= n_tips) {
+      tree$tip.label[c]
+    } else {
+      paste(sort(desc[[c]]), collapse = ",")
+    }
+  }, character(1))
+
+  out <- stats::setNames(bls, keys)
+  out
 }
 
 

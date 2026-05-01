@@ -4,7 +4,13 @@
 \alias{pr_date_tree}
 \title{Time-calibrate a topology using the DateLife chronogram database}
 \usage{
-pr_date_tree(tree, n_dated = 1L, dating_method = "bladj", ...)
+pr_date_tree(
+  tree,
+  n_dated = 1L,
+  dating_method = "bladj",
+  check_ultrametric = TRUE,
+  ...
+)
 }
 \arguments{
 \item{tree}{An \code{ape::phylo} (or \code{multiPhylo}) object: the topology
@@ -19,6 +25,11 @@ per source (capped at \code{n_dated}).}
 \code{datelife::datelife_use()}. One of \code{"bladj"} (default; fast,
 no calibration uncertainty) or \code{"mrbayes"} (Bayesian; slower,
 produces credible intervals).}
+
+\item{check_ultrametric}{Logical. After dating, check that the
+result is ultrametric and warn if not. Default \code{TRUE}.
+\code{datelife::datelife_use()} is supposed to produce ultrametric
+chronograms; this catches regressions.}
 
 \item{...}{Additional arguments forwarded to
 \code{datelife::datelife_use()}.}
