@@ -8,6 +8,10 @@
 An object of class \code{phylo} (from the ape package), with
 5,987 tips and 5,986 internal nodes.
 }
+\source{
+Provenance pending confirmation. See
+\url{https://github.com/itchyshin/prepR4pcm/issues/11}.
+}
 \usage{
 mammal_tree_example
 }
@@ -19,9 +23,33 @@ labels use underscores (\code{Genus_species}); 76 tips representing
 Mesozoic stem-mammal fossils carry an \code{X_} prefix.
 }
 \details{
-This tree is bundled as an example object only; full provenance
-can be requested from the contributor (Santiago Ortega) and is
-tracked at the issue that introduced this data
-(\url{https://github.com/itchyshin/prepR4pcm/issues/11}).
+This tree is bundled as an example object only. The exact source
+phylogeny and any pruning / grafting steps that produced it are
+tracked at the issue that introduced the data
+(\url{https://github.com/itchyshin/prepR4pcm/issues/11}); the
+contributor (Santiago Ortega) will confirm the source when the
+issue is closed. Until then, treat the tree as illustrative only:
+it is sufficient for demonstrating the reconciliation cascade in
+the vignette but should not be cited directly in published work.
+If you need a published mammal phylogeny for analysis, see one of
+the references below.
+}
+\references{
+Established mammal phylogenies suitable for analysis include:
+
+Upham, N.S., Esselstyn, J.A. & Jetz, W. (2019) Inferring the
+mammal tree: Species-level sets of phylogenies for questions in
+ecology, evolution, and conservation. \emph{PLOS Biology}
+17:e3000494. \doi{10.1371/journal.pbio.3000494}
+
+Faurby, S. & Svenning, J.-C. (2015) A species-level phylogeny of
+all extant and late Quaternary extinct mammals using a novel
+heuristic-hierarchical Bayesian approach. \emph{Molecular
+Phylogenetics and Evolution} 84:14--26.
+\doi{10.1016/j.ympev.2014.11.001}
+
+Bininda-Emonds, O.R.P. et al. (2007) The delayed rise of
+present-day mammals. \emph{Nature} 446:507--512.
+\doi{10.1038/nature05634}
 }
 \keyword{datasets}

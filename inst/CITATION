@@ -1,4 +1,11 @@
-citHeader("To cite prepR4pcm in publications, use:")
+citHeader(c(
+  "To cite prepR4pcm itself, use the entry below.",
+  "If you use a bundled example dataset (avonet_subset, nesttrait_subset,",
+  "delhey_subset, tree_jetz, tree_clements25, crosswalk_birdlife_birdtree,",
+  "mammal_amniote_example, mammal_pantheria_example,",
+  "mammal_tetrapodtraits_example), please ALSO cite the original",
+  "publication listed in the dataset's help page (`?<dataset>`)."
+))
 
 bibentry(
   bibtype  = "Manual",
@@ -12,7 +19,7 @@ bibentry(
     person("Jimuel Jr", "Celeste"),
     person("Sergio", "Poo Hernandez")
   ),
-  year     = "2025",
+  year     = format(Sys.Date(), "%Y"),
   note     = sprintf("R package version %s", meta$Version),
   url      = "https://github.com/itchyshin/prepR4pcm"
 )

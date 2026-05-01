@@ -96,11 +96,12 @@ reference:
   - pr_normalize_names
   - pr_extract_tips
 
-- title: "Bundled example data"
+- title: "Bundled bird data"
   desc: >
-    Subsetted datasets and phylogenies used in the examples and
-    vignettes. Full credit to the original data providers ---
-    see the help pages for citations.
+    Subsetted bird datasets and phylogenies used by the
+    bird-workflow vignette. Full credit to the original data
+    providers --- each help page lists the citation, and the README
+    has a consolidated list.
   contents:
   - avonet_subset
   - nesttrait_subset
@@ -108,6 +109,14 @@ reference:
   - tree_jetz
   - tree_clements25
   - crosswalk_birdlife_birdtree
+
+- title: "Bundled mammal data"
+  desc: >
+    Subsetted mammal trait sources and an example phylogeny used by
+    the db-assembly-workflow_mammals vignette. Each help page lists
+    the citation; the mammal phylogeny has provenance pending
+    confirmation (see the help page).
+  contents:
   - mammal_amniote_example
   - mammal_pantheria_example
   - mammal_tetrapodtraits_example

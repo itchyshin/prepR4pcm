@@ -105,9 +105,19 @@
 #'   \item{Match.notes}{Additional notes on the match}
 #' }
 #'
-#' @source Tobias et al. (2022) AVONET: morphological, ecological and
-#'   geographical data for all birds. *Ecology Letters* 25:581--597.
-#'   \doi{10.1111/ele.13898}
+#' @source The crosswalk is distributed as supporting information with
+#'   the AVONET database release (Tobias et al. 2022). It maps two
+#'   underlying taxonomies, both of which should be cited if you use
+#'   the crosswalk in published work --- see the references below.
+#'
+#' @references
+#' Tobias, J.A. et al. (2022) AVONET: morphological, ecological and
+#' geographical data for all birds. \emph{Ecology Letters}
+#' 25:581--597. \doi{10.1111/ele.13898}
+#'
+#' Jetz, W., Thomas, G.H., Joy, J.B., Hartmann, K. & Mooers, A.O.
+#' (2012) The global diversity of birds in space and time.
+#' \emph{Nature} 491:444--448. \doi{10.1038/nature11631}
 "crosswalk_birdlife_birdtree"
 
 
@@ -229,11 +239,38 @@
 #' labels use underscores (`Genus_species`); 76 tips representing
 #' Mesozoic stem-mammal fossils carry an `X_` prefix.
 #'
-#' This tree is bundled as an example object only; full provenance
-#' can be requested from the contributor (Santiago Ortega) and is
-#' tracked at the issue that introduced this data
-#' (<https://github.com/itchyshin/prepR4pcm/issues/11>).
+#' This tree is bundled as an example object only. The exact source
+#' phylogeny and any pruning / grafting steps that produced it are
+#' tracked at the issue that introduced the data
+#' (<https://github.com/itchyshin/prepR4pcm/issues/11>); the
+#' contributor (Santiago Ortega) will confirm the source when the
+#' issue is closed. Until then, treat the tree as illustrative only:
+#' it is sufficient for demonstrating the reconciliation cascade in
+#' the vignette but should not be cited directly in published work.
+#' If you need a published mammal phylogeny for analysis, see one of
+#' the references below.
 #'
 #' @format An object of class `phylo` (from the ape package), with
 #'   5,987 tips and 5,986 internal nodes.
+#'
+#' @source Provenance pending confirmation. See
+#'   \url{https://github.com/itchyshin/prepR4pcm/issues/11}.
+#'
+#' @references
+#' Established mammal phylogenies suitable for analysis include:
+#'
+#' Upham, N.S., Esselstyn, J.A. & Jetz, W. (2019) Inferring the
+#' mammal tree: Species-level sets of phylogenies for questions in
+#' ecology, evolution, and conservation. \emph{PLOS Biology}
+#' 17:e3000494. \doi{10.1371/journal.pbio.3000494}
+#'
+#' Faurby, S. & Svenning, J.-C. (2015) A species-level phylogeny of
+#' all extant and late Quaternary extinct mammals using a novel
+#' heuristic-hierarchical Bayesian approach. \emph{Molecular
+#' Phylogenetics and Evolution} 84:14--26.
+#' \doi{10.1016/j.ympev.2014.11.001}
+#'
+#' Bininda-Emonds, O.R.P. et al. (2007) The delayed rise of
+#' present-day mammals. \emph{Nature} 446:507--512.
+#' \doi{10.1038/nature05634}
 "mammal_tree_example"
