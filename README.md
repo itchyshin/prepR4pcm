@@ -54,7 +54,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-04-24 15:30:00
+#>   Timestamp: 2026-05-01 08:19:25
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -115,13 +115,19 @@ ape::Ntip(aligned$tree)
 ## Vignettes
 
 - [Getting
-  Started](https://itchyshin.github.io/prepR4pcm/docs/articles/getting-started.html)
+  Started](https://itchyshin.github.io/prepR4pcm/articles/getting-started.html)
   ([source](vignettes/getting-started.Rmd)) — core concepts and a
   minimal worked example
 - [Bird Trait
-  Workflow](https://itchyshin.github.io/prepR4pcm/docs/articles/bird-workflow.html)
+  Workflow](https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html)
   ([source](vignettes/bird-workflow.Rmd)) — a realistic multi-dataset,
-  multi-tree analysis pipeline
+  multi-tree analysis pipeline ending in PGLS and phylogenetic GLMM fits
+- [Mammal Database-Assembly
+  Workflow](https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html)
+  ([source](vignettes/db-assembly-workflow_mammals.Rmd)) — assembling a
+  trait database from three sources (Amniote, PanTHERIA,
+  TetrapodTraits), reconciling species names against a mammal phylogeny,
+  and producing a model-ready species-level data frame
 
 ## Citation
 
@@ -148,8 +154,8 @@ credit to the original data providers:
   [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)
 - **NestTrait v2**: Chia et al. (2023) *Scientific Data* 10:923.
   [doi:10.1038/s41597-023-02837-1](https://doi.org/10.1038/s41597-023-02837-1)
-- **Plumage lightness**: Delhey et al. (2019) *American Naturalist*
-  194:13–27. [doi:10.1086/703588](https://doi.org/10.1086/703588)
+- **Plumage lightness**: Delhey et al. (2019) *Ecology Letters*
+  22:726–736. [doi:10.1111/ele.13233](https://doi.org/10.1111/ele.13233)
 - **Jetz phylogeny**: Jetz et al. (2012) *Nature* 491:444–448.
   [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631)
 - **Clements checklist**: Clements et al. (2025) eBird/Clements

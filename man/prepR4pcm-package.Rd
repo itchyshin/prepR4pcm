@@ -54,10 +54,13 @@ aligned <- reconcile_apply(rec,
 \item{Reconciliation object}{The central data structure. Contains a
 \code{mapping} tibble (one row per source name, with match type and
 score), a \code{meta} list (reproducibility provenance), a \code{counts}
-summary, and an \code{overrides} log. Returned by all \verb{reconcile_*}
-matching functions. Inspect with \code{\link[=reconcile_summary]{reconcile_summary()}}, extract the
-table with \code{\link[=reconcile_mapping]{reconcile_mapping()}}, and act on it with
-\code{\link[=reconcile_apply]{reconcile_apply()}}, \code{\link[=reconcile_merge]{reconcile_merge()}}, or \code{\link[=reconcile_export]{reconcile_export()}}.}
+summary, an \code{overrides} log of applied manual corrections, and an
+\code{unused_overrides} audit trail of overrides that could not be
+applied (e.g. when \code{name_y} is missing from the target). Returned
+by all \verb{reconcile_*} matching functions. Inspect with
+\code{\link[=reconcile_summary]{reconcile_summary()}}, extract the table with \code{\link[=reconcile_mapping]{reconcile_mapping()}},
+and act on it with \code{\link[=reconcile_apply]{reconcile_apply()}}, \code{\link[=reconcile_merge]{reconcile_merge()}}, or
+\code{\link[=reconcile_export]{reconcile_export()}}.}
 
 \item{Four-stage matching cascade}{Names are resolved in this order,
 and the first stage that produces a match is recorded as
@@ -116,8 +119,13 @@ sensitivity analyses with and without augmented tips.}
 \item \code{vignette("getting-started", package = "prepR4pcm")} --- core
 concepts with a minimal worked example.
 \item \code{vignette("bird-workflow", package = "prepR4pcm")} --- a
-realistic multi-dataset, multi-tree pipeline ending in PGLS and
+realistic multi-dataset bird pipeline ending in PGLS and
 phylogenetic GLMM fits.
+\item \code{vignette("db-assembly-workflow_mammals", package = "prepR4pcm")}
+--- assembling a mammal trait database from three sources
+(Amniote, PanTHERIA, TetrapodTraits), reconciling the unique
+species names against a mammal phylogeny, and producing a
+model-ready species-level data frame.
 }
 }
 

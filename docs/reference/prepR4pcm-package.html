@@ -103,10 +103,13 @@ and produce aligned data-tree pairs ready for downstream analysis.</p>
 <dd><p>The central data structure. Contains a
 <code>mapping</code> tibble (one row per source name, with match type and
 score), a <code>meta</code> list (reproducibility provenance), a <code>counts</code>
-summary, and an <code>overrides</code> log. Returned by all <code>reconcile_*</code>
-matching functions. Inspect with <code><a href="reconcile_summary.html">reconcile_summary()</a></code>, extract the
-table with <code><a href="reconcile_mapping.html">reconcile_mapping()</a></code>, and act on it with
-<code><a href="reconcile_apply.html">reconcile_apply()</a></code>, <code><a href="reconcile_merge.html">reconcile_merge()</a></code>, or <code><a href="reconcile_export.html">reconcile_export()</a></code>.</p></dd>
+summary, an <code>overrides</code> log of applied manual corrections, and an
+<code>unused_overrides</code> audit trail of overrides that could not be
+applied (e.g. when <code>name_y</code> is missing from the target). Returned
+by all <code>reconcile_*</code> matching functions. Inspect with
+<code><a href="reconcile_summary.html">reconcile_summary()</a></code>, extract the table with <code><a href="reconcile_mapping.html">reconcile_mapping()</a></code>,
+and act on it with <code><a href="reconcile_apply.html">reconcile_apply()</a></code>, <code><a href="reconcile_merge.html">reconcile_merge()</a></code>, or
+<code><a href="reconcile_export.html">reconcile_export()</a></code>.</p></dd>
 
 
 <dt>Four-stage matching cascade</dt>
@@ -183,8 +186,13 @@ sensitivity analyses with and without augmented tips.</p></dd>
 <ul><li><p><code><a href="../articles/getting-started.html">vignette("getting-started", package = "prepR4pcm")</a></code> — core
 concepts with a minimal worked example.</p></li>
 <li><p><code><a href="../articles/bird-workflow.html">vignette("bird-workflow", package = "prepR4pcm")</a></code> — a
-realistic multi-dataset, multi-tree pipeline ending in PGLS and
+realistic multi-dataset bird pipeline ending in PGLS and
 phylogenetic GLMM fits.</p></li>
+<li><p><code><a href="../articles/db-assembly-workflow_mammals.html">vignette("db-assembly-workflow_mammals", package = "prepR4pcm")</a></code>
+— assembling a mammal trait database from three sources
+(Amniote, PanTHERIA, TetrapodTraits), reconciling the unique
+species names against a mammal phylogeny, and producing a
+model-ready species-level data frame.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

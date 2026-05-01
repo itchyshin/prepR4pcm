@@ -226,10 +226,12 @@ result3 <- reconcile_tree(
 )
 ```
 
-Supported authorities: `col`, `itis`, `gbif`, `ncbi`, `ott`, `fb`,
-`slb`, `wd`, `iucn`, `itis_test`. The database is downloaded once and
-cached locally, ensuring reproducibility — results do not depend on an
-external API being available.
+Supported authorities: `col`, `itis`, `gbif`, `ncbi`, `ott`, and
+`itis_test` (a small bundled subset of ITIS used for examples). These
+mirror the providers documented in `?taxadb::td_create`; the database
+is downloaded once on first use and cached locally, ensuring
+reproducibility (results do not depend on an external API being
+available).
 
 ## Example 4: Pre-built overrides
 
@@ -321,14 +323,14 @@ aligned <- reconcile_apply(result, data = my_data, tree = my_tree,
 
 - Hadfield, J.D. (2010) MCMC methods for multi-response generalized
   linear mixed models: the MCMCglmm R package. *Journal of Statistical
-  Software* 33:1--22. doi:10.18637/jss.v033.i02
+  Software* 33:1--22. [doi:10.18637/jss](https://doi.org/10.18637/jss).v033.i02
 - Orme, D., Freckleton, R., Thomas, G., Petzoldt, T., Fritz, S.,
   Isaac, N. & Pearse, W. (2025) caper: Comparative Analyses of
   Phylogenetics and Evolution in R. R package version 1.0.4.
-  doi:10.32614/CRAN.package.caper
+  [doi:10.32614/CRAN](https://doi.org/10.32614/CRAN).package.caper
 - Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
   phylogenetics and evolutionary analyses in R. *Bioinformatics*
-  35:526--528. doi:10.1093/bioinformatics/bty633
+  35:526--528. [doi:10.1093/bioinformatics/bty633](https://doi.org/10.1093/bioinformatics/bty633)
 - Revell, L.J. (2024) phytools 2.0: an updated R ecosystem for
   phylogenetic comparative methods (and other things).
-  *PeerJ* 12:e16505. doi:10.7717/peerj.16505
+  *PeerJ* 12:e16505. [doi:10.7717/peerj](https://doi.org/10.7717/peerj).16505
