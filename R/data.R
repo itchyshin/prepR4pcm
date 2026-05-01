@@ -138,3 +138,102 @@
 #' @source Clements et al. (2025) eBird/Clements Checklist of Birds of
 #'   the World, v2025.
 "tree_clements25"
+
+
+# ---------------------------------------------------------------------------
+# Mammal example data, used by the database-assembly vignette
+# (vignettes/db-assembly-workflow_mammals.Rmd).
+# ---------------------------------------------------------------------------
+
+#' Amniote-style mammal life-history sample
+#'
+#' A ~5,000-species sample of mammal life-history records, prepared to
+#' mirror the structure of the Amniote Life-History Database. Used by
+#' the `db-assembly-workflow_mammals` vignette to demonstrate
+#' assembling trait data from multiple sources before reconciling
+#' against a phylogenetic tree.
+#'
+#' @format A tibble with ~4,953 rows and 5 columns:
+#' \describe{
+#'   \item{`name`}{Length-1 character vector. Scientific name (genus
+#'     species), space-separated. Some rows carry trinomials.}
+#'   \item{`female_body_mass_g`}{Numeric. Female adult body mass (g);
+#'     `NA` when unknown.}
+#'   \item{`adult_body_mass_g`}{Numeric. Sex-pooled adult body mass
+#'     (g); `NA` when unknown.}
+#'   \item{`litter_or_clutch_size_n`}{Numeric. Mean offspring per
+#'     reproductive event; `NA` when unknown.}
+#'   \item{`litters_or_clutches_per_y`}{Numeric. Number of reproductive
+#'     events per year; `NA` when unknown.}
+#' }
+#'
+#' @source Myhrvold et al. (2015) An amniote life-history database to
+#'   perform comparative analyses with birds, mammals, and reptiles.
+#'   *Ecology* 96:3109. \doi{10.1890/15-0846R.1}
+"mammal_amniote_example"
+
+
+#' PanTHERIA-style mammal life-history sample
+#'
+#' A ~5,400-species sample of mammal life-history records, prepared to
+#' mirror the structure of the PanTHERIA database. Used by the
+#' `db-assembly-workflow_mammals` vignette.
+#'
+#' @format A tibble with ~5,416 rows and 4 columns:
+#' \describe{
+#'   \item{`MSW05_Binomial`}{Length-1 character vector. Scientific name
+#'     under MSW3 (Mammal Species of the World 3) taxonomy.}
+#'   \item{`5-1_AdultBodyMass_g`}{Numeric. Adult body mass (g); `NA`
+#'     when unknown.}
+#'   \item{`15-1_LitterSize`}{Numeric. Mean litter size; `NA` when
+#'     unknown.}
+#'   \item{`16-1_LittersPerYear`}{Numeric. Litters per year; `NA` when
+#'     unknown.}
+#' }
+#'
+#' @source Jones et al. (2009) PanTHERIA: a species-level database of
+#'   life history, ecology, and geography of extant and recently
+#'   extinct mammals. *Ecology* 90:2648.
+#'   \doi{10.1890/08-1494.1}
+"mammal_pantheria_example"
+
+
+#' TetrapodTraits-style mammal sample
+#'
+#' A ~5,900-species sample of mammal trait records, prepared to
+#' mirror the structure of the TetrapodTraits 1.0.0 database. Used by
+#' the `db-assembly-workflow_mammals` vignette.
+#'
+#' @format A tibble with ~5,911 rows and 3 columns:
+#' \describe{
+#'   \item{`Scientific.Name`}{Length-1 character vector. Scientific
+#'     name (genus species), period-separated genus.species column
+#'     name as in the source release.}
+#'   \item{`BodyMass_g`}{Numeric. Body mass (g); `NA` when unknown.}
+#'   \item{`LitterSize`}{Numeric. Mean litter size; `NA` when
+#'     unknown.}
+#' }
+#'
+#' @source Moura et al. (2024) A phylogeny-informed characterisation
+#'   of global tetrapod traits addresses data gaps and biases.
+#'   *PLOS Biology* 22:e3002658.
+#'   \doi{10.1371/journal.pbio.3002658}
+"mammal_tetrapodtraits_example"
+
+
+#' Mammal phylogenetic tree (example)
+#'
+#' A 5,987-tip mammal phylogeny, used by the
+#' `db-assembly-workflow_mammals` vignette to demonstrate reconciling
+#' species names from multiple trait sources against a tree. Tip
+#' labels use underscores (`Genus_species`); 76 tips representing
+#' Mesozoic stem-mammal fossils carry an `X_` prefix.
+#'
+#' This tree is bundled as an example object only; full provenance
+#' can be requested from the contributor (Santiago Ortega) and is
+#' tracked at the issue that introduced this data
+#' (<https://github.com/itchyshin/prepR4pcm/issues/11>).
+#'
+#' @format An object of class `phylo` (from the ape package), with
+#'   5,987 tips and 5,986 internal nodes.
+"mammal_tree_example"

@@ -1,4 +1,26 @@
-# prepR4pcm (development version)
+# prepR4pcm 0.3.1.9000 (development version)
+
+## New vignette and example data
+
+* New vignette **"Assembling mammal trait databases for phylogenetic
+  comparative models"** (`db-assembly-workflow_mammals`), contributed
+  by Santiago Ortega. Walks through combining three mammal trait
+  sources (Amniote, PanTHERIA, TetrapodTraits), reconciling the
+  unique species names against a phylogenetic tree, applying
+  manual corrections, and collapsing the matched records into a
+  model-ready species-level data frame aligned with a pruned tree.
+  Closes #11.
+
+* Four new bundled example datasets used by the new vignette:
+  `mammal_amniote_example` (Myhrvold et al. 2015),
+  `mammal_pantheria_example` (Jones et al. 2009),
+  `mammal_tetrapodtraits_example` (Moura et al. 2024), and
+  `mammal_tree_example` (a 5,987-tip mammal phylogeny, source to
+  be confirmed with the contributor).
+
+* `dplyr`, `readr`, and `stringr` moved from `Suggests` to `Imports`,
+  reflecting that they are used routinely in the package's vignettes
+  and R code rather than being optional.
 
 ## Breaking changes
 

@@ -1,6 +1,6 @@
 Package: prepR4pcm
 Title: Prepare Data and Trees for Phylogenetic Comparative Methods
-Version: 0.3.0.9000
+Version: 0.3.1.9000
 Authors@R: c(
     person("Shinichi", "Nakagawa",
            email = "s.nakagawa@unsw.edu.au",
@@ -42,16 +42,19 @@ Depends:
 Imports:
     ape,
     cli,
+    dplyr,
+    readr,
     rlang,
+    stringr,
     tibble
 Suggests:
     caper,
-    dplyr,
     knitr,
     MCMCglmm,
     phytools,
     pkgdown,
     rmarkdown,
+    spelling,
     taxadb,
     testthat (>= 3.0.0)
 LazyData: true
