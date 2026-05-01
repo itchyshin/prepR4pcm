@@ -2,6 +2,17 @@
 
 ## Bug fixes and documentation polish
 
+* `reconcile_multi()` no longer undercounts dataset-specific matches
+  when the same species appears in different formats across datasets
+  (e.g. `Homo_sapiens` in one dataset and `Homo sapiens` in another).
+  The cascade gains a `multi_x = TRUE` mode that allows multiple x
+  names to resolve to the same tree tip via normalisation, which
+  `reconcile_multi()` now uses. The mapping also gains the
+  documented `in_<dataset>` logical columns (one per input dataset)
+  that were missing from the implementation. With these changes the
+  per-dataset join `match(your_data$species, mapping$name_x)` is
+  reliable: every species in every input dataset finds its row.
+  Refs #10 (Ayumi Mizuno).
 * `reconcile_summary()` no longer prints to the console when its
   result is assigned to a variable. The formatted report now lives
   on the returned object's `formatted_text` slot and renders via

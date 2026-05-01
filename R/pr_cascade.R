@@ -23,6 +23,14 @@
 #'   `"flag"` (default) marks fuzzy matches below 0.95 and indirect
 #'   synonym matches as `match_type = "flagged"` for manual review.
 #'   `"first"` accepts all matches at face value.
+#' @param multi_x Logical. Allow multiple x names to resolve to the
+#'   same y? Default `FALSE` (each y is matched at most once).
+#'   `reconcile_multi()` sets this to `TRUE` because the same species
+#'   may legitimately appear in different formats (e.g. underscore
+#'   vs space) across datasets, and both formats should resolve to
+#'   the same tree tip. With `multi_x = TRUE`, the normalised and
+#'   synonym stages do not exclude already-matched y's from their
+#'   lookup space.
 #' @param quiet Logical.
 #'
 #' @return A tibble with the full mapping table.
@@ -36,6 +44,7 @@ pr_run_cascade <- function(names_x, names_y,
                            fuzzy_threshold = 0.9,
                            flag_threshold = 0.95,
                            resolve = "flag",
+                           multi_x = FALSE,
                            quiet = FALSE) {
 
   # Deduplicate inputs, warning about NAs
@@ -169,7 +178,12 @@ pr_run_cascade <- function(names_x, names_y,
     )
   }
   remaining_x <- setdiff(unique_x, matched_x)
-  remaining_y <- setdiff(unique_y, matched_y)
+  # When multi_x = TRUE, allow already-matched y's to be matched to
+  # additional x's via normalisation. This handles the case where the
+  # same species appears in multiple formats across datasets (e.g.
+  # `Homo_sapiens` from one dataset and `Homo sapiens` from another)
+  # and both should resolve to the same tree tip. Issue #10 (Ayumi).
+  remaining_y <- if (multi_x) unique_y else setdiff(unique_y, matched_y)
 
   if (length(remaining_x) > 0 && length(remaining_y) > 0) {
     norm_x <- pr_normalize_names(remaining_x, rank = rank)
@@ -192,11 +206,15 @@ pr_run_cascade <- function(names_x, names_y,
       nx_hits <- as.character(norm_x[hit_mask])
       y_hits  <- unname(lookup_y[nx_hits])
 
-      # If multiple x names normalise to the same y, keep only the first x
-      dup_y   <- duplicated(y_hits)
-      x_hits  <- x_hits[!dup_y]
-      nx_hits <- nx_hits[!dup_y]
-      y_hits  <- y_hits[!dup_y]
+      # If multiple x names normalise to the same y, keep only the first
+      # x in single-source mode. With multi_x = TRUE we keep every x ->
+      # y mapping so the per-dataset join works.
+      if (!multi_x) {
+        dup_y   <- duplicated(y_hits)
+        x_hits  <- x_hits[!dup_y]
+        nx_hits <- nx_hits[!dup_y]
+        y_hits  <- y_hits[!dup_y]
+      }
 
       rows[[length(rows) + 1]] <- tibble(
         name_x        = x_hits,

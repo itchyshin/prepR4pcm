@@ -95,9 +95,11 @@ reconcile_multi <- function(datasets, tree,
     sprintf("phylo (%d tips)", length(tips))
   }
 
-  # Collect all unique species names across datasets
-  all_names <- character()
-
+  # Collect all unique species names per-dataset and across datasets.
+  # Per-dataset names are kept so we can add `in_<dataset>` logical
+  # columns to the mapping. Issue #10 (Ayumi).
+  per_dataset_names <- vector("list", length(datasets))
+  names(per_dataset_names) <- names(datasets)
   for (i in seq_along(datasets)) {
     df <- datasets[[i]]
     col <- if (!is.null(species_cols)) {
@@ -105,10 +107,9 @@ reconcile_multi <- function(datasets, tree,
     } else {
       pr_detect_species_column(df, paste0("species in '", names(datasets)[i], "'"))
     }
-    all_names <- c(all_names, as.character(df[[col]]))
+    per_dataset_names[[i]] <- unique(stats::na.omit(as.character(df[[col]])))
   }
-
-  all_names <- unique(all_names[!is.na(all_names)])
+  all_names <- unique(unlist(per_dataset_names, use.names = FALSE))
 
   if (!quiet) {
     cli_alert_info(
@@ -119,7 +120,11 @@ reconcile_multi <- function(datasets, tree,
   # Load overrides
   overrides_df <- pr_load_overrides(overrides)
 
-  # Run cascade on combined names
+  # Run cascade on combined names. multi_x = TRUE so the same tree
+  # tip can resolve multiple x names that differ only in formatting
+  # (e.g. `Homo_sapiens` from one dataset and `Homo sapiens` from
+  # another both resolve to the tree tip via normalisation). Issue
+  # #10 (Ayumi).
   mapping <- pr_run_cascade(
     names_x         = all_names,
     names_y         = tips,
@@ -130,8 +135,19 @@ reconcile_multi <- function(datasets, tree,
     fuzzy           = fuzzy,
     fuzzy_threshold = fuzzy_threshold,
     resolve         = resolve,
+    multi_x         = TRUE,
     quiet           = quiet
   )
+
+  # Add one logical `in_<dataset>` column per input dataset, indicating
+  # whether each `name_x` row appeared in that dataset. Documented in
+  # the function's @return; was missing from the implementation. The
+  # column is TRUE when the literal name_x is in the dataset's
+  # species list (matched verbatim, including formatting).
+  for (i in seq_along(datasets)) {
+    col_name <- paste0("in_", names(datasets)[i])
+    mapping[[col_name]] <- mapping$name_x %in% per_dataset_names[[i]]
+  }
 
   # Build metadata
   meta <- list(

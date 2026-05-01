@@ -156,3 +156,95 @@ test_that("M9: reconcile_multi errors informatively on NULL tree", {
                     authority = NULL, quiet = TRUE)
   )
 })
+
+
+# Issue #10 (Ayumi): same species across datasets in different
+# formats should both resolve to the tree tip via normalisation.
+test_that("reconcile_multi: same species in different formats both resolve (#10)", {
+  range_df <- data.frame(species = c("Homo_sapiens", "Pan_troglodytes"),
+                          stringsAsFactors = FALSE)
+  nest_df  <- data.frame(species = c("Homo sapiens", "Pan troglodytes"),
+                          stringsAsFactors = FALSE)
+  tree <- ape::read.tree(text = "(Homo_sapiens:1, Pan_troglodytes:1);")
+
+  res <- reconcile_multi(
+    list(range = range_df, nest = nest_df),
+    tree,
+    species_cols = "species",
+    authority    = NULL,
+    quiet        = TRUE
+  )
+
+  # Both formats appear, both resolve to a tip.
+  underscores_resolved <- res$mapping$in_y[
+    res$mapping$name_x %in% c("Homo_sapiens", "Pan_troglodytes")
+  ]
+  spaces_resolved <- res$mapping$in_y[
+    res$mapping$name_x %in% c("Homo sapiens", "Pan troglodytes")
+  ]
+  expect_true(all(underscores_resolved))
+  expect_true(all(spaces_resolved))
+
+  # No unresolved x names
+  unres <- res$mapping$match_type == "unresolved" & res$mapping$in_x
+  expect_equal(sum(unres), 0L)
+
+  # Per-dataset coverage matches the per-dataset name count
+  in_range_resolved <- sum(res$mapping$in_range & res$mapping$in_y)
+  in_nest_resolved  <- sum(res$mapping$in_nest  & res$mapping$in_y)
+  expect_equal(in_range_resolved, 2L)
+  expect_equal(in_nest_resolved,  2L)
+})
+
+
+test_that("reconcile_multi: in_<dataset> columns are present and correct (#10)", {
+  df1 <- data.frame(species = c("Homo sapiens", "Pan troglodytes"),
+                     stringsAsFactors = FALSE)
+  df2 <- data.frame(species = c("Pan troglodytes", "Gorilla gorilla"),
+                     stringsAsFactors = FALSE)
+  tree <- ape::read.tree(
+    text = "(Homo_sapiens:1, (Pan_troglodytes:1, Gorilla_gorilla:1));"
+  )
+
+  res <- reconcile_multi(
+    list(d1 = df1, d2 = df2), tree,
+    species_cols = "species",
+    authority    = NULL, quiet = TRUE
+  )
+
+  expect_true("in_d1" %in% names(res$mapping))
+  expect_true("in_d2" %in% names(res$mapping))
+
+  # Pan troglodytes is in both datasets; Homo only in d1; Gorilla only in d2
+  is_pan     <- res$mapping$name_x == "Pan troglodytes"
+  is_homo    <- res$mapping$name_x == "Homo sapiens"
+  is_gorilla <- res$mapping$name_x == "Gorilla gorilla"
+  expect_true(res$mapping$in_d1[is_pan] && res$mapping$in_d2[is_pan])
+  expect_true(res$mapping$in_d1[is_homo] && !res$mapping$in_d2[is_homo])
+  expect_true(!res$mapping$in_d1[is_gorilla] && res$mapping$in_d2[is_gorilla])
+})
+
+
+test_that("reconcile_multi mapping joins safely back to each dataset (#10)", {
+  # The whole point of issue #10: each dataset's species names
+  # appear verbatim in the mapping, so a left join from the
+  # original dataset works.
+  d1 <- data.frame(species = c("Homo_sapiens", "Pan_troglodytes"),
+                    trait1 = c(1.5, 2.5))
+  d2 <- data.frame(species = c("Homo sapiens", "Pan troglodytes"),
+                    trait2 = c(10, 20))
+  tree <- ape::read.tree(text = "(Homo_sapiens:1, Pan_troglodytes:1);")
+
+  res <- reconcile_multi(list(d1 = d1, d2 = d2), tree,
+                          species_cols = "species",
+                          authority    = NULL, quiet = TRUE)
+
+  # Join each dataset on its raw species column to the mapping;
+  # every row should find a match (no NAs in the joined name_y).
+  d1$tip <- res$mapping$name_y[match(d1$species, res$mapping$name_x)]
+  d2$tip <- res$mapping$name_y[match(d2$species, res$mapping$name_x)]
+  expect_false(any(is.na(d1$tip)))
+  expect_false(any(is.na(d2$tip)))
+  # Both datasets resolve to the same tree tips
+  expect_equal(sort(d1$tip), sort(d2$tip))
+})

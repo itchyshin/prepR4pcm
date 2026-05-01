@@ -15,6 +15,7 @@ pr_run_cascade(
   fuzzy_threshold = 0.9,
   flag_threshold = 0.95,
   resolve = "flag",
+  multi_x = FALSE,
   quiet = FALSE
 )
 }
@@ -44,6 +45,15 @@ matches. Default \code{0.9} (conservative).}
 \code{"flag"} (default) marks fuzzy matches below 0.95 and indirect
 synonym matches as \code{match_type = "flagged"} for manual review.
 \code{"first"} accepts all matches at face value.}
+
+\item{multi_x}{Logical. Allow multiple x names to resolve to the
+same y? Default \code{FALSE} (each y is matched at most once).
+\code{reconcile_multi()} sets this to \code{TRUE} because the same species
+may legitimately appear in different formats (e.g. underscore
+vs space) across datasets, and both formats should resolve to
+the same tree tip. With \code{multi_x = TRUE}, the normalised and
+synonym stages do not exclude already-matched y's from their
+lookup space.}
 
 \item{quiet}{Logical.}
 }
