@@ -96,6 +96,14 @@ reference:
   - pr_normalize_names
   - pr_extract_tips
 
+- title: "Tree retrieval (external backends)"
+  desc: >
+    Retrieve a candidate phylogeny for a reconciled species list by
+    querying an external R package. Backends live in `Suggests` (or
+    GitHub) and are installed on demand.
+  contents:
+  - pr_get_tree
+
 - title: "Bundled bird data"
   desc: >
     Subsetted bird datasets and phylogenies used by the

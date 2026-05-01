@@ -49,6 +49,15 @@ All packages in `Suggests` are used conditionally:
   bird-workflow vignette also illustrates them, with each chunk guarded
   by `eval = requireNamespace(..., quietly = TRUE)` so the vignette
   knits cleanly without those packages installed.
+* `clootl`, `rtrees` — GitHub-only packages that back two optional
+  backends of `pr_get_tree()` (issue #42). Each is referenced only via
+  `requireNamespace(..., quietly = TRUE)` in `R/pr_get_tree.R`; the
+  function emits a targeted error pointing at the GitHub install
+  command when either is unavailable. The packages are mirrored on
+  R-universe (https://eliotmiller.r-universe.dev/clootl,
+  https://daijiang.r-universe.dev/rtrees) and listed in the
+  `Additional_repositories:` field of DESCRIPTION so CRAN's check
+  can locate them.
 * `knitr`, `rmarkdown` — used by the vignette builder.
 * `dplyr`, `pkgdown`, `testthat` — used only by tests, vignettes, and
   site building.

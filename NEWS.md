@@ -1,5 +1,26 @@
 # prepR4pcm 0.3.1.9000 (development version)
 
+## New features
+
+* `pr_get_tree()` connects a reconciled species list to an external
+  phylogenetic resource and returns a pruned candidate tree plus a
+  matching report (matched / unmatched / source / backend metadata).
+  Three backends ship initially:
+  - `"rotl"` -- Open Tree of Life synthesis tree (universal coverage,
+    via the CRAN package \pkg{rotl}).
+  - `"rtrees"` -- taxon-specific mega-trees (bird, mammal, fish,
+    amphibian, reptile, plant, shark/ray, bee, butterfly), via the
+    GitHub package \pkg{rtrees} (`pak::pak("daijiang/rtrees")`).
+  - `"clootl"` -- bird-only phylogenies in current Clements
+    taxonomy, via the GitHub package \pkg{clootl}
+    (`pak::pak("eliotmiller/clootl")`).
+
+  Accepts a reconciliation object, a character vector, or a data
+  frame as input. Each backend is loaded only on demand --
+  asking for a backend you don't have installed produces a helpful
+  migration error with the install command. Closes #42 (Ayumi
+  Mizuno).
+
 ## What's NOT in this round (deferred work)
 
 For honesty / handoff so future contributors don't lose track:

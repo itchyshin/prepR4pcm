@@ -46,6 +46,7 @@ Imports:
     tibble
 Suggests:
     caper,
+    clootl,
     dplyr,
     knitr,
     MCMCglmm,
@@ -53,10 +54,15 @@ Suggests:
     pkgdown,
     readr,
     rmarkdown,
+    rotl,
+    rtrees,
     spelling,
     stringr,
     taxadb,
     testthat (>= 3.0.0)
+Additional_repositories:
+    https://eliotmiller.r-universe.dev,
+    https://daijiang.r-universe.dev
 LazyData: true
 Config/testthat/edition: 3
 VignetteBuilder: knitr
