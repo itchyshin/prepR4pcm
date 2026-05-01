@@ -17,15 +17,21 @@ reconcile_apply(
 \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
 \item{data}{A data frame to align. If \code{NULL}, only the tree is
-returned.}
+processed and the returned \code{data} slot is \code{NULL}.}
 
-\item{tree}{An \code{ape::phylo} object to align. If \code{NULL}, only the
-data frame is returned.}
+\item{tree}{An \code{ape::phylo} object (or path to a Newick / Nexus
+file) to align. If \code{NULL}, only the data frame is processed and
+the returned \code{tree} slot is \code{NULL}. (Passing both \code{data = NULL}
+and \code{tree = NULL} is allowed but produces an empty result; the
+normal use is to pass at least one of them.)}
 
-\item{species_col}{Character(1). Column in \code{data} containing species
-names. Auto-detected if \code{NULL}.}
+\item{species_col}{A length-1 character vector. Column in \code{data}
+containing species names. Auto-detected from a small set of
+common heuristics (e.g. \code{species}, \code{Species1}, \code{scientific_name})
+when \code{NULL}; the heuristics list is not exhaustive --- pass the
+column name explicitly if your data uses a non-standard label.}
 
-\item{drop_unresolved}{Logical. Drop unmatched rows and tips?
+\item{drop_unresolved}{Logical. Drops unmatched rows and tips when \code{TRUE}.
 Defaults to \code{FALSE} (keep everything and just warn). Set to \code{TRUE}
 when preparing data for an analysis that cannot tolerate mismatches.}
 }

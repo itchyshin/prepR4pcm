@@ -10,7 +10,7 @@
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
-#' @param type Character(1). Which matches to review:
+#' @param type A length-1 character vector. Which matches to review:
 #'   \describe{
 #'     \item{`"flagged"`}{Only flagged matches (default).}
 #'     \item{`"fuzzy"`}{Fuzzy and flagged matches.}

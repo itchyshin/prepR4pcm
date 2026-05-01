@@ -7,10 +7,11 @@
 pr_normalize_names(names, rank = c("species", "subspecies"))
 }
 \arguments{
-\item{names}{Character vector of scientific names. \code{NA} values are
-preserved as \code{NA}.}
+\item{names}{A character vector of scientific names (any length;
+each element is a single name). \code{NA} values are preserved as
+\code{NA}.}
 
-\item{rank}{Character(1). Taxonomic rank to normalise to:
+\item{rank}{A length-1 character vector. Taxonomic rank to normalise to:
 \describe{
 \item{\code{"species"} (default)}{Strip infraspecific epithets so
 trinomials become binomials (\verb{Parus major major} ->
@@ -24,14 +25,21 @@ A character vector of normalised names, the same length as
 recording every non-trivial change, for auditing.
 }
 \description{
+(Title and prose use British English spelling \emph{normalise},
+consistent with the package's \code{Language: en-GB} declaration.
+The function identifier \code{pr_normalize_names()} keeps the
+American-English \code{z} because R-package function names
+conventionally use ASCII identifiers in the form most R users
+expect; the two spellings are equivalent and intentional.)
+}
+\details{
 Apply a sequence of deterministic text transformations so that
 scientific names which differ only in formatting compare equal.
 This is the same routine used by stage 2 of the matching cascade in
 \code{\link[=reconcile_data]{reconcile_data()}} and \code{\link[=reconcile_tree]{reconcile_tree()}}. Use it directly when you
 want to clean a column of names without running a full
 reconciliation --- for example, when building a crosswalk by hand.
-}
-\details{
+
 The transformations, applied in order, are:
 \enumerate{
 \item Replace underscores and multiple whitespace with a single

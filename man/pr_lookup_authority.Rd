@@ -9,9 +9,9 @@ pr_lookup_authority(names, authority = "col", db_version = NULL)
 \arguments{
 \item{names}{Character vector of scientific names.}
 
-\item{authority}{Character(1). Authority code (e.g., \code{"col"}).}
+\item{authority}{A length-1 character vector. Authority code (e.g., \code{"col"}).}
 
-\item{db_version}{Character(1) or NULL.}
+\item{db_version}{A length-1 character vector or NULL.}
 }
 \value{
 A tibble with columns: \code{input}, \code{accepted_name}, \code{status},

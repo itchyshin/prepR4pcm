@@ -125,13 +125,13 @@
 #'   }
 #' @param quiet Logical. Suppresses progress messages when `TRUE`.
 #'   Default `FALSE`.
-#' @param x_label Character(1) or `NULL`. Human-readable label for source `x`
+#' @param x_label A length-1 character vector or `NULL`. Human-readable label for source `x`
 #'   stored in the reconciliation metadata and shown in `print()` / `format()`.
 #'   Defaults to the expression passed as `x` (via `deparse(substitute())`).
 #'   Set this explicitly when calling `reconcile_data()` inside another function
 #'   so the label reflects the real data source rather than the local argument
 #'   name.
-#' @param y_label Character(1) or `NULL`. Same as `x_label`, for source `y`.
+#' @param y_label A length-1 character vector or `NULL`. Same as `x_label`, for source `y`.
 #'
 #' @return A [reconciliation] object. The accompanying mapping tibble,
 #'   match-type counts, provenance metadata, and applied / unused

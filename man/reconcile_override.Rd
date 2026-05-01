@@ -15,14 +15,14 @@ reconcile_override(
 \arguments{
 \item{reconciliation}{A \link{reconciliation} object.}
 
-\item{name_x}{Character(1). The name as it appears in source \code{x}
+\item{name_x}{A length-1 character vector. The name as it appears in source \code{x}
 (your data). Must match a value already present in \code{mapping$name_x}.}
 
-\item{name_y}{Character(1) or \code{NULL}. The name in source \code{y} (the
+\item{name_y}{A length-1 character vector or \code{NULL}. The name in source \code{y} (the
 tree or reference dataset) that \code{name_x} should be mapped to.
 \code{NULL} is only valid when \code{action = "reject"}.}
 
-\item{action}{Character(1). What the override does:
+\item{action}{A length-1 character vector. What the override does:
 \describe{
 \item{\code{"accept"} (default)}{Confirm a proposed match. Use after
 reviewing a flagged fuzzy or synonym hit.}
@@ -33,7 +33,7 @@ to the unresolved pool. Use when the cascade over-matched
 cascade produced for \code{name_x}.}
 }}
 
-\item{note}{Character(1). A short justification for the override,
+\item{note}{A length-1 character vector. A short justification for the override,
 stored in the provenance log and in \code{mapping$notes}. Strongly
 recommended --- future you will want to know why this decision was
 made.}
@@ -45,10 +45,14 @@ An updated \link{reconciliation} object. The existing row for
 }
 \description{
 Apply a single hand-curated decision to a \link{reconciliation} object.
-Use this to accept a match the cascade rejected (typically a flagged
-fuzzy hit), remove a spurious match, or force a new mapping that the
-cascade missed. The override is recorded in the provenance log so
-that you and your reviewers can audit every manual decision.
+Use this to accept a match the matching cascade rejected (typically
+a flagged fuzzy hit), remove a spurious match, or force a new
+mapping that the cascade missed. ("Cascade" here means the
+four-stage matching pipeline run by \code{\link[=reconcile_tree]{reconcile_tree()}} and
+\code{\link[=reconcile_data]{reconcile_data()}} --- exact, normalised, synonym, fuzzy --- as
+described in \code{?prepR4pcm}.) The override is recorded in the
+provenance log so that you and your reviewers can audit every
+manual decision.
 }
 \details{
 For applying many overrides at once (e.g. from a curated CSV), see

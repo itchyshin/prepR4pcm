@@ -11,8 +11,8 @@
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
-#' @param file Character(1). Output file path. Must end in `.html`.
-#' @param title Character(1). Report title shown at the top of the
+#' @param file A length-1 character vector. Output file path. Must end in `.html`.
+#' @param title A length-1 character vector. Report title shown at the top of the
 #'   page. Default is generic.
 #' @param open Logical. Open the finished report in the default
 #'   browser? Defaults to `TRUE` in interactive sessions, `FALSE`

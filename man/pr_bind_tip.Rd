@@ -9,7 +9,7 @@ pr_bind_tip(tree, tip_label, where, position = 0, edge.length = 0)
 \arguments{
 \item{tree}{phylo object.}
 
-\item{tip_label}{Character(1). Label for the new tip.}
+\item{tip_label}{A length-1 character vector. Label for the new tip.}
 
 \item{where}{Integer. Node or tip index to bind near.}
 

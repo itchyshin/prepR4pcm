@@ -23,20 +23,20 @@ reconcile_merge(
 
 \item{data_y}{The second data frame (source y in the reconciliation).}
 
-\item{species_col_x}{Character(1). Species column in \code{data_x}.
+\item{species_col_x}{A length-1 character vector. Species column in \code{data_x}.
 Auto-detected if \code{NULL}.}
 
-\item{species_col_y}{Character(1). Species column in \code{data_y}.
+\item{species_col_y}{A length-1 character vector. Species column in \code{data_y}.
 Auto-detected if \code{NULL}.}
 
-\item{how}{Character(1). Join type:
+\item{how}{A length-1 character vector. Join type:
 \itemize{
 \item \code{"inner"} (default): keep only species matched in both datasets.
 \item \code{"left"}: keep all species from \code{data_x}.
 \item \code{"full"}: keep all species from both datasets.
 }}
 
-\item{suffix}{Character(2). Suffixes to disambiguate columns with the
+\item{suffix}{A length-2 character vector. Suffixes to disambiguate columns with the
 same name in both datasets. Default \code{c("_x", "_y")}.}
 
 \item{drop_unresolved}{Logical. If \code{TRUE}, rows where \code{species_resolved}

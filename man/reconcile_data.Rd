@@ -120,14 +120,14 @@ already reviewed the ambiguities.}
 \item{quiet}{Logical. Suppresses progress messages when \code{TRUE}.
 Default \code{FALSE}.}
 
-\item{x_label}{Character(1) or \code{NULL}. Human-readable label for source \code{x}
+\item{x_label}{A length-1 character vector or \code{NULL}. Human-readable label for source \code{x}
 stored in the reconciliation metadata and shown in \code{print()} / \code{format()}.
 Defaults to the expression passed as \code{x} (via \code{deparse(substitute())}).
 Set this explicitly when calling \code{reconcile_data()} inside another function
 so the label reflects the real data source rather than the local argument
 name.}
 
-\item{y_label}{Character(1) or \code{NULL}. Same as \code{x_label}, for source \code{y}.}
+\item{y_label}{A length-1 character vector or \code{NULL}. Same as \code{x_label}, for source \code{y}.}
 }
 \value{
 A \link{reconciliation} object. The accompanying mapping tibble,

@@ -9,7 +9,7 @@
 #' @param arg_name Character. Name of the argument, used in error messages
 #'   (e.g., `"x_species"` or `"y_species"`).
 #'
-#' @return Character(1): the detected column name.
+#' @return A length-1 character vector: the detected column name.
 #'
 #' @details
 #' **Stage 1 — Name matching.** Checks column names (case-insensitive) against

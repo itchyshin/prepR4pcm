@@ -7,9 +7,9 @@
 pr_ensure_db(authority, db_version = NULL)
 }
 \arguments{
-\item{authority}{Character(1). Taxonomic authority code.}
+\item{authority}{A length-1 character vector. Taxonomic authority code.}
 
-\item{db_version}{Character(1) or NULL. Database version.}
+\item{db_version}{A length-1 character vector or NULL. Database version.}
 }
 \value{
 Invisibly returns the authority string.

@@ -15,9 +15,9 @@ reconcile_report(
 \item{reconciliation}{A \link{reconciliation} object returned by
 \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
-\item{file}{Character(1). Output file path. Must end in \code{.html}.}
+\item{file}{A length-1 character vector. Output file path. Must end in \code{.html}.}
 
-\item{title}{Character(1). Report title shown at the top of the
+\item{title}{A length-1 character vector. Report title shown at the top of the
 page. Default is generic.}
 
 \item{open}{Logical. Open the finished report in the default

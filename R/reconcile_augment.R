@@ -27,10 +27,10 @@
 #'   [reconcile_tree()].
 #' @param tree An `ape::phylo` object. Must be the same tree used to
 #'   build `reconciliation` (or a tree with the same tip set).
-#' @param where Character(1). Where to attach each new tip:
+#' @param where A length-1 character vector. Where to attach each new tip:
 #'   \describe{
 #'     \item{`"genus"` (default)}{Attach as sister to a single congener
-#'       chosen at random from the genus. Simpler; recommended when the
+#'       chosen at random from the genus. Recommended when the
 #'       genus has only one or two representatives in the tree, or when
 #'       you want variation across runs for sensitivity analyses.}
 #'     \item{`"near"`}{Attach at the most recent common ancestor (MRCA)
@@ -38,7 +38,7 @@
 #'       well-represented, because the new tip is not arbitrarily tied
 #'       to one sister taxon.}
 #'   }
-#' @param branch_length Character(1). How to set the terminal branch
+#' @param branch_length A length-1 character vector. How to set the terminal branch
 #'   length of each newly added tip:
 #'   \describe{
 #'     \item{`"congener_median"` (default)}{Median terminal branch length
@@ -55,9 +55,13 @@
 #'       where you want to see the effect of adding species without
 #'       assuming any divergence time.}
 #'   }
-#' @param seed Integer or `NULL`. Random seed for reproducibility when
-#'   `where = "genus"` picks a congener at random. Set to a fixed
-#'   integer in real analyses so results are reproducible. The seed is
+#' @param seed A length-1 integer or `NULL`. When non-`NULL`, a fixed
+#'   seed for the random congener choice when `where = "genus"`,
+#'   making the call reproducible. When `NULL` (default), the
+#'   session's current RNG state is used so results vary across runs
+#'   --- useful for sensitivity analyses that explore the variation
+#'   introduced by the random choice. Set to a fixed integer in real
+#'   analyses so results are reproducible. The seed is
 #'   scoped to this call: the session RNG state is saved before and
 #'   restored after, so subsequent random draws in your script are
 #'   unaffected. Default `NULL`.
@@ -341,7 +345,7 @@ pr_calc_augment_bl <- function(tree, congener_tips, method) {
 #' pure-ape implementation using `ape::bind.tree()`.
 #'
 #' @param tree phylo object.
-#' @param sp_label Character(1). Tip label to add (underscore format).
+#' @param sp_label A length-1 character vector. Tip label to add (underscore format).
 #' @param congener_tips Character vector of congener tip labels.
 #' @param where Placement strategy.
 #' @param bl Branch length for the new tip.
@@ -409,7 +413,7 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
 #' uses a pure-ape implementation via `ape::bind.tree()`.
 #'
 #' @param tree phylo object.
-#' @param tip_label Character(1). Label for the new tip.
+#' @param tip_label A length-1 character vector. Label for the new tip.
 #' @param where Integer. Node or tip index to bind near.
 #' @param position Numeric. How far back from the node to attach.
 #' @param edge.length Numeric. Branch length of the new tip.

@@ -60,7 +60,7 @@ pr_valid_authorities <- function() {
 #' was previously listed but is no longer supported, or with a
 #' standard "unknown authority" message otherwise.
 #'
-#' @param authority Character(1) or NULL. The user-supplied value.
+#' @param authority A length-1 character vector or NULL. The user-supplied value.
 #' @param call Calling environment, for `cli_abort(call = ...)`.
 #' @return The lower-cased, validated authority (or NULL).
 #' @keywords internal
@@ -104,8 +104,8 @@ pr_validate_authority <- function(authority, call = caller_env()) {
 #'
 #' Downloads the database for the specified authority if not already cached.
 #'
-#' @param authority Character(1). Taxonomic authority code.
-#' @param db_version Character(1) or NULL. Database version.
+#' @param authority A length-1 character vector. Taxonomic authority code.
+#' @param db_version A length-1 character vector or NULL. Database version.
 #'
 #' @return Invisibly returns the authority string.
 #' @keywords internal
@@ -159,8 +159,8 @@ pr_ensure_db <- function(authority, db_version = NULL) {
 #' name, taxonomic status, and taxon ID.
 #'
 #' @param names Character vector of scientific names.
-#' @param authority Character(1). Authority code (e.g., `"col"`).
-#' @param db_version Character(1) or NULL.
+#' @param authority A length-1 character vector. Authority code (e.g., `"col"`).
+#' @param db_version A length-1 character vector or NULL.
 #'
 #' @return A tibble with columns: `input`, `accepted_name`, `status`,
 #'   `taxon_id`, `authority`.

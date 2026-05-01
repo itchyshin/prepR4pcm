@@ -7,7 +7,7 @@
 pr_validate_authority(authority, call = caller_env())
 }
 \arguments{
-\item{authority}{Character(1) or NULL. The user-supplied value.}
+\item{authority}{A length-1 character vector or NULL. The user-supplied value.}
 
 \item{call}{Calling environment, for \code{cli_abort(call = ...)}.}
 }
