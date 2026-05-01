@@ -118,6 +118,19 @@ reference:
   - pr_get_tree
   - pr_date_tree
   - pr_cite_tree
+  - pr_tree_compare
+
+- title: "Tree-handling utilities"
+  desc: >
+    Helpers for the `pr_get_tree()` workflow: a backend health
+    probe, an on-disk cache for repeat retrievals, and the
+    `source = "auto"` / `tnrs = "auto"` controls (see
+    `?pr_get_tree`).
+  contents:
+  - pr_get_tree_status
+  - pr_tree_cache_dir
+  - pr_tree_cache_status
+  - pr_tree_cache_clear
 
 - title: "Bundled bird data"
   desc: >

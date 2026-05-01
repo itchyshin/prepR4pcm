@@ -18,8 +18,8 @@
 # Suggests / Imports package that's on CRAN, append it here.
 .cran_allowlist <- c(
   "ape", "cli", "rlang", "tibble",
-  "caper", "dplyr", "fishtree", "knitr", "MCMCglmm", "phytools", "pkgdown",
-  "readr", "rmarkdown", "rotl", "spelling", "stringr", "taxadb",
+  "caper", "digest", "dplyr", "fishtree", "knitr", "MCMCglmm", "phytools",
+  "pkgdown", "readr", "rmarkdown", "rotl", "spelling", "stringr", "taxadb",
   "testthat",
   # standard packages bundled with R
   "stats", "tools", "utils", "graphics", "grDevices", "methods"
