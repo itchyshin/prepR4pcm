@@ -14,6 +14,8 @@ pr_get_tree(
   tnrs = c("auto", "always", "never"),
   min_match = 0.8,
   check_ultrametric = TRUE,
+  resolve_polytomies = FALSE,
+  branch_lengths = NULL,
   ...
 )
 }
@@ -153,6 +155,34 @@ lengths, so the check is skipped. To force ultrametricity on a
 non-ultrametric result, use \code{phytools::force.ultrametric()} or
 \code{ape::chronos()} directly --- prepR4pcm does not modify the
 tree silently.}
+
+\item{resolve_polytomies}{Logical. After retrieval, resolve
+any polytomies via \code{\link[ape:multi2di]{ape::multi2di()}} with \code{random = TRUE}?
+Default \code{FALSE} (back-compat; topology preserved). Useful for
+phylogenetic meta-analysis, where a strictly bifurcating tree
+is required for \code{\link[=pr_phylo_cor]{pr_phylo_cor()}} / \code{\link[ape:vcv.phylo]{ape::vcv()}} to produce a
+full-rank correlation matrix.}
+
+\item{branch_lengths}{A length-1 character vector or \code{NULL}. After
+retrieval (and after polytomy resolution if requested), assign
+branch lengths via the named method? Default \code{NULL} (no
+transformation; backend's branch lengths are kept as-is). Other
+values:
+\describe{
+\item{\code{"grafen"}}{Grafen's (1989) method via
+\code{\link[ape:compute.brlen]{ape::compute.brlen()}} with \code{method = "Grafen"}. The
+canonical choice for phylogenetic meta-analysis when the
+topology comes from \code{rotl} (whose edge lengths are
+unit-length placeholders). See Cinar et al. (2022)
+\emph{Methods Ecol. Evol.} 13:383, who use this exact
+pattern.}
+\item{\code{"compute.brlen"}}{Same as \code{"grafen"} --- Grafen is
+\code{ape::compute.brlen()}'s default method. Provided as an
+alias for users who think in terms of the underlying
+function name.}
+\item{\code{"unit"}}{Set every edge length to 1. The crudest
+option; useful only for sensitivity-analysis comparisons.}
+}}
 
 \item{...}{Backend-specific arguments forwarded to the underlying
 call. See the help page of the underlying function in the

@@ -6,6 +6,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/getting-started.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/index.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/authors.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/index.html</loc></url>
@@ -41,6 +42,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_load_tree.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_lookup_authority.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_normalize_names.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_phylo_cor.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_resolve_synonyms.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_run_cascade.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_standardise_case.html</loc></url>

@@ -35,6 +35,8 @@ navbar:
         href: articles/posterior-tree-pipeline.html
       - text: "Comparing tree backends"
         href: articles/comparing-tree-backends.html
+      - text: "Phylogenetic meta-analysis with rotl"
+        href: articles/meta-analysis-with-rotl.html
 
 reference:
 
@@ -121,6 +123,7 @@ reference:
   - pr_date_tree
   - pr_cite_tree
   - pr_tree_compare
+  - pr_phylo_cor
 
 - title: "Tree-handling utilities"
   desc: >

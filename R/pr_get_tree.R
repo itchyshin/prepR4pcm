@@ -154,6 +154,32 @@
 #'   non-ultrametric result, use `phytools::force.ultrametric()` or
 #'   `ape::chronos()` directly --- prepR4pcm does not modify the
 #'   tree silently.
+#' @param resolve_polytomies Logical. After retrieval, resolve
+#'   any polytomies via [ape::multi2di()] with `random = TRUE`?
+#'   Default `FALSE` (back-compat; topology preserved). Useful for
+#'   phylogenetic meta-analysis, where a strictly bifurcating tree
+#'   is required for [pr_phylo_cor()] / [ape::vcv()] to produce a
+#'   full-rank correlation matrix.
+#' @param branch_lengths A length-1 character vector or `NULL`. After
+#'   retrieval (and after polytomy resolution if requested), assign
+#'   branch lengths via the named method? Default `NULL` (no
+#'   transformation; backend's branch lengths are kept as-is). Other
+#'   values:
+#'   \describe{
+#'     \item{`"grafen"`}{Grafen's (1989) method via
+#'       [ape::compute.brlen()] with `method = "Grafen"`. The
+#'       canonical choice for phylogenetic meta-analysis when the
+#'       topology comes from `rotl` (whose edge lengths are
+#'       unit-length placeholders). See Cinar et al. (2022)
+#'       *Methods Ecol. Evol.* 13:383, who use this exact
+#'       pattern.}
+#'     \item{`"compute.brlen"`}{Same as `"grafen"` --- Grafen is
+#'       `ape::compute.brlen()`'s default method. Provided as an
+#'       alias for users who think in terms of the underlying
+#'       function name.}
+#'     \item{`"unit"`}{Set every edge length to 1. The crudest
+#'       option; useful only for sensitivity-analysis comparisons.}
+#'   }
 #' @param ... Backend-specific arguments forwarded to the underlying
 #'   call. See the help page of the underlying function in the
 #'   relevant backend package (\code{tol_induced_subtree} in
@@ -239,9 +265,17 @@ pr_get_tree <- function(x,
                         tnrs = c("auto", "always", "never"),
                         min_match = 0.8,
                         check_ultrametric = TRUE,
+                        resolve_polytomies = FALSE,
+                        branch_lengths = NULL,
                         ...) {
   source <- match.arg(source)
   tnrs   <- match.arg(tnrs)
+  if (!is.null(branch_lengths)) {
+    branch_lengths <- match.arg(
+      branch_lengths,
+      choices = c("grafen", "compute.brlen", "unit")
+    )
+  }
   if (!is.numeric(n_tree) || length(n_tree) != 1L || n_tree < 1L) {
     cli::cli_abort(
       c("{.arg n_tree} must be a length-1 positive integer.",
@@ -307,6 +341,20 @@ pr_get_tree <- function(x,
     result$tree, result$backend_meta, source
   )
 
+  # Post-process for the meta-analysis path -----------------------
+  # `resolve_polytomies = TRUE`: ape::multi2di() with random
+  # resolution. Done before branch_lengths so the BL transform sees
+  # a strictly bifurcating tree.
+  # `branch_lengths`: post-hoc branch length assignment via
+  #   ape::compute.brlen(method = "Grafen") or method = NULL
+  #   (Grafen is also compute.brlen's default, but we expose it
+  #   explicitly so the meta-analysis pattern is self-documenting).
+  result$tree <- .pr_post_process_tree(
+    result$tree,
+    resolve_polytomies = resolve_polytomies,
+    branch_lengths     = branch_lengths
+  )
+
   out <- list(
     tree         = result$tree,
     matched      = result$matched,
@@ -323,12 +371,56 @@ pr_get_tree <- function(x,
 
   # Ultrametric sanity check ----------------------------------------
   # Backends that normally return chronograms should produce
-  # ultrametric trees. Warn (don't force) if not.
+  # ultrametric trees. Warn (don't force) if not. Skipped when the
+  # user has applied a branch_lengths transform that defines its
+  # own scale (Grafen output IS ultrametric, so the check still
+  # fires usefully there).
   if (isTRUE(check_ultrametric)) {
     .pr_check_tree_ultrametric(out$tree, source)
   }
 
   out
+}
+
+
+# Internal: post-process a tree for the meta-analysis pattern --------
+#
+# Handles bifurcation (ape::multi2di with random = TRUE) and
+# branch-length assignment (ape::compute.brlen with the requested
+# method). Idempotent on multiPhylo (applies element-wise).
+
+.pr_post_process_tree <- function(tree,
+                                    resolve_polytomies = FALSE,
+                                    branch_lengths = NULL) {
+  if (!isTRUE(resolve_polytomies) && is.null(branch_lengths)) {
+    return(tree)
+  }
+  apply_one <- function(t) {
+    if (isTRUE(resolve_polytomies)) {
+      t <- ape::multi2di(t, random = TRUE)
+    }
+    if (!is.null(branch_lengths)) {
+      method <- switch(branch_lengths,
+        grafen          = "Grafen",
+        compute.brlen   = "Grafen",   # ape's default
+        unit            = NULL,
+        branch_lengths
+      )
+      if (identical(branch_lengths, "unit")) {
+        t$edge.length <- rep_len(1, nrow(t$edge))
+      } else {
+        t <- ape::compute.brlen(t, method = method)
+      }
+    }
+    t
+  }
+  if (inherits(tree, "multiPhylo")) {
+    out <- lapply(tree, apply_one)
+    class(out) <- "multiPhylo"
+    out
+  } else {
+    apply_one(tree)
+  }
 }
 
 

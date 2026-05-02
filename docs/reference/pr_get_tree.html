@@ -35,6 +35,7 @@ get back a phylo ready for reconcile_apply()."><meta property="og:image" content
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
     <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
+    <li><a class="dropdown-item" href="../articles/meta-analysis-with-rotl.html">Phylogenetic meta-analysis with rotl</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -74,6 +75,8 @@ get back a <code>phylo</code> ready for <code><a href="reconcile_apply.html">rec
 <span>  tnrs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"always"</span>, <span class="st">"never"</span><span class="op">)</span>,</span>
 <span>  min_match <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>  check_ultrametric <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  resolve_polytomies <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  branch_lengths <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -262,6 +265,43 @@ lengths, so the check is skipped. To force ultrametricity on a
 non-ultrametric result, use <code>phytools::force.ultrametric()</code> or
 <code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> directly — prepR4pcm does not modify the
 tree silently.</p></dd>
+
+
+<dt id="arg-resolve-polytomies">resolve_polytomies<a class="anchor" aria-label="anchor" href="#arg-resolve-polytomies"></a></dt>
+<dd><p>Logical. After retrieval, resolve
+any polytomies via <code><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">ape::multi2di()</a></code> with <code>random = TRUE</code>?
+Default <code>FALSE</code> (back-compat; topology preserved). Useful for
+phylogenetic meta-analysis, where a strictly bifurcating tree
+is required for <code><a href="pr_phylo_cor.html">pr_phylo_cor()</a></code> / <code><a href="https://rdrr.io/pkg/ape/man/vcv.phylo.html" class="external-link">ape::vcv()</a></code> to produce a
+full-rank correlation matrix.</p></dd>
+
+
+<dt id="arg-branch-lengths">branch_lengths<a class="anchor" aria-label="anchor" href="#arg-branch-lengths"></a></dt>
+<dd><p>A length-1 character vector or <code>NULL</code>. After
+retrieval (and after polytomy resolution if requested), assign
+branch lengths via the named method? Default <code>NULL</code> (no
+transformation; backend's branch lengths are kept as-is). Other
+values:</p><dl><dt><code>"grafen"</code></dt>
+<dd><p>Grafen's (1989) method via
+<code><a href="https://rdrr.io/pkg/ape/man/compute.brlen.html" class="external-link">ape::compute.brlen()</a></code> with <code>method = "Grafen"</code>. The
+canonical choice for phylogenetic meta-analysis when the
+topology comes from <code>rotl</code> (whose edge lengths are
+unit-length placeholders). See Cinar et al. (2022)
+<em>Methods Ecol. Evol.</em> 13:383, who use this exact
+pattern.</p></dd>
+
+<dt><code>"compute.brlen"</code></dt>
+<dd><p>Same as <code>"grafen"</code> — Grafen is
+<code><a href="https://rdrr.io/pkg/ape/man/compute.brlen.html" class="external-link">ape::compute.brlen()</a></code>'s default method. Provided as an
+alias for users who think in terms of the underlying
+function name.</p></dd>
+
+<dt><code>"unit"</code></dt>
+<dd><p>Set every edge length to 1. The crudest
+option; useful only for sensitivity-analysis comparisons.</p></dd>
+
+
+</dl></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

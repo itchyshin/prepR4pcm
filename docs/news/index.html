@@ -23,6 +23,7 @@
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
     <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
+    <li><a class="dropdown-item" href="../articles/meta-analysis-with-rotl.html">Phylogenetic meta-analysis with rotl</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -41,6 +42,16 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
+<div class="section level3">
+<h3 id="phylogenetic-meta-analysis-path-0-4-0-9000">Phylogenetic meta-analysis path<a class="anchor" aria-label="anchor" href="#phylogenetic-meta-analysis-path-0-4-0-9000"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> gains <code>resolve_polytomies</code> and <code>branch_lengths</code> arguments.</strong> When the topology comes from <code>rotl</code> (the dominant choice for cross-taxon meta-analysis), the user typically needs a strictly bifurcating tree with non-trivial branch lengths – e.g. via <code>ape::multi2di(random = TRUE)</code> and <code>ape::compute.brlen(method = "Grafen")</code>. Before this round users had to call those manually. Now: <code>pr_get_tree(species, source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")</code> returns a tree ready for <code><a href="https://wviechtb.github.io/metafor/reference/rma.mv.html" class="external-link">metafor::rma.mv()</a></code>. Defaults preserve back-compat (<code>resolve_polytomies = FALSE</code>, <code>branch_lengths = NULL</code>). Refs Cinar et al. 2022 (<em>Methods Ecol. Evol.</em> 13:383) and Pottier et al. 2022 (<em>Ecology Letters</em> 25:2245), who use this exact pattern.</li>
+<li>
+<strong>New: <code>pr_phylo_cor(tree)</code>.</strong> Thin wrapper around <code>ape::vcv(tree, corr = TRUE)</code> that turns the tree into the phylogenetic correlation matrix accepted by <code><a href="https://wviechtb.github.io/metafor/reference/rma.mv.html" class="external-link">metafor::rma.mv()</a></code>, <code><a href="https://rdrr.io/pkg/MCMCglmm/man/MCMCglmm.html" class="external-link">MCMCglmm::MCMCglmm()</a></code>, <code><a href="https://rdrr.io/pkg/glmmTMB/man/glmmTMB.html" class="external-link">glmmTMB::glmmTMB()</a></code>, and <code><a href="https://paulbuerkner.com/brms/reference/brm.html" class="external-link">brms::brm()</a></code> as a random-effect structure. Accepts <code>phylo</code>, <code>multiPhylo</code>, or <code>pr_tree_result</code> input.</li>
+<li>
+<strong>New vignette: “Phylogenetic meta-analysis with rotl + prepR4pcm”</strong> – end-to-end walk from species names through rotl topology, bifurcating + Grafen branches, correlation matrix, to <code><a href="https://wviechtb.github.io/metafor/reference/rma.mv.html" class="external-link">metafor::rma.mv()</a></code>, using a 13-species cross-taxon subset of the Pottier et al. 2022 thermal-tolerance dataset (lampreys, bivalves, insects, fish, amphibians, reptiles, cephalopods, echinoderms). Includes a “Grafen vs datelife” tradeoff discussion explaining why Grafen is the practical default for cross-taxon meta-analysis.</li>
+<li>Live tests in <code>test-meta-analysis-path.R</code> exercise the new args and the correlation-matrix wrapper end-to-end on real ape calls (no mocking of ape itself).</li>
+</ul></div>
 <div class="section level3">
 <h3 id="ci-cleanup-0-4-0-9000">CI cleanup<a class="anchor" aria-label="anchor" href="#ci-cleanup-0-4-0-9000"></a></h3>
 <ul><li>
