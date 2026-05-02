@@ -77,21 +77,44 @@
 <p>Before running any phylogenetic comparative analysis — PGLS,
 phylogenetic mixed models, ancestral state reconstruction — species
 names in your data must match the tip labels in your tree. In practice,
-they rarely do. <strong>prepR4pcm</strong> automates this
-reconciliation, documents every decision, and produces aligned objects
-ready for analysis.</p>
+they rarely do. <strong>prepR4pcm</strong> automates the matching of
+species names between data and tree (which we call
+<em>reconciliation</em>), records every name-matching decision so you
+can audit it later, and produces an aligned data frame + pruned tree
+(the <em>aligned objects</em>) where the species lists match exactly —
+the precondition for any phylogenetic comparative method.</p>
 <div class="section level2">
 <h2 id="the-problem">The problem<a class="anchor" aria-label="anchor" href="#the-problem"></a>
 </h2>
-<p>Mismatches between data and tree arise from: -
-<strong>Formatting</strong>: <code>Homo_sapiens</code> vs
-<code>Homo sapiens</code>, trailing whitespace, attached authority
-strings - <strong>Synonymy</strong>: Taxonomic revisions move species
-between genera - <strong>Missing names</strong>: Species in the data but
-not the tree (or vice versa)</p>
+<p>Mismatches between data and tree arise from three kinds of
+difference:</p>
+<ul>
+<li>
+<strong>Formatting differences</strong> — same species, written
+differently. For example, the same animal may appear as
+<code>Homo_sapiens</code> in the tree and as <code>Homo sapiens</code>
+in the data; trailing whitespace and attached authority strings
+(<code>Homo sapiens Linnaeus, 1758</code>) cause similar
+mismatches.</li>
+<li>
+<strong>Synonymy</strong> — situations where multiple scientific
+names refer to the same taxonomic group (often a species or genus); for
+example, when a recent taxonomic revision moved a species to a different
+genus, the older and newer names both circulate in the literature. See
+<a href="https://en.wikipedia.org/wiki/Synonym_(taxonomy)" class="external-link">Synonym
+(taxonomy) on Wikipedia</a> for a fuller introduction.</li>
+<li>
+<strong>Missing names</strong> — species in the data but not the
+tree, or in the tree but not the data, with no naming-rule that would
+link them.</li>
+</ul>
 <p>Fixing these by hand is tedious, error-prone, and poorly documented.
-prepR4pcm solves this with a structured matching cascade: exact match →
-normalised match → synonym resolution. Every decision is recorded.</p>
+<strong>prepR4pcm</strong> solves this with a structured matching
+cascade of algorithms: exact match → normalised match → synonym
+resolution. Every decision is recorded by the software in the
+reconciliation result, where you can inspect it via
+<code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> or
+<code><a href="../reference/reconcile_summary.html">reconcile_summary()</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -111,7 +134,7 @@ normalised match → synonym resolution. Every decision is recorded.</p>
 <p>Suppose you have trait data and a phylogenetic tree with slightly
 different naming conventions.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Simulated trait data</span></span>
+<code class="sourceCode R"><span><span class="co"># Simulated trait data for 6 primate species</span></span>
 <span><span class="va">trait_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"Homo sapiens"</span>,</span>
@@ -130,11 +153,29 @@ different naming conventions.</p>
 <span>  <span class="st">"((((Homo_sapiens:5,Pan_troglodytes:5):3,"</span>,</span>
 <span>  <span class="st">"Gorilla_gorilla:8):4,Pongo_pygmaeus:12):6,"</span>,</span>
 <span>  <span class="st">"(Macaca_mulatta:10,Papio_anubis:10):8);"</span></span>
-<span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Notice the mismatches: - <code>Pan_troglodytes</code> in the data has
-an underscore; the tree uses underscores too, but the data column uses a
-mix - <code>Cebus capucinus</code> is in the data but not the tree -
-<code>Papio anubis</code> is in the tree but not the data</p>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>   <span class="co"># the tip labels (species names) on the tree</span></span>
+<span><span class="co">#&gt; [1] "Homo_sapiens"    "Pan_troglodytes" "Gorilla_gorilla" "Pongo_pygmaeus" </span></span>
+<span><span class="co">#&gt; [5] "Macaca_mulatta"  "Papio_anubis"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tree</span><span class="op">)</span>       <span class="co"># quick visual; underscores in tip labels render as spaces</span></span></code></pre></div>
+<p><img src="getting-started_files/figure-html/example-data-1.png" width="700"></p>
+<p>(<code><a href="https://rdrr.io/pkg/ape/man/plot.phylo.html" class="external-link">ape::plot.phylo()</a></code> displays underscores as spaces by
+default — the underlying <code>tree$tip.label</code> strings still
+contain underscores, which is why <code>tree$tip.label</code> shows
+them.)</p>
+<p>Notice the mismatches:</p>
+<ul>
+<li>
+<code>Pan_troglodytes</code> in the data has an underscore; the tree
+uses underscores throughout, but the data column mixes spaces and
+underscores.</li>
+<li>
+<code>Cebus capucinus</code> is in the data but not in the
+tree.</li>
+<li>
+<code>Papio anubis</code> is in the tree but not in the data.</li>
+</ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
 <span>  x <span class="op">=</span> <span class="va">trait_data</span>,</span>
@@ -155,7 +196,7 @@ mix - <code>Cebus capucinus</code> is in the data but not the tree -
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:16:21</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:35:30</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -169,9 +210,11 @@ mix - <code>Cebus capucinus</code> is in the data but not the tree -
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Unresolved (y only):<span style="color: #0000BB;">1</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Flagged for review: <span style="color: #0000BB;">0</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span></span></code></pre></div>
-<p>The <code>reconciliation</code> object tells you immediately how many
-names matched and how. Use <code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> to see the
-full table:</p>
+<p>The “Reconciliation: data vs tree” header at the top of the output
+tells you the call that produced the result; the “Match summary” block
+underneath gives the count in each match category (exact, normalised,
+synonym, fuzzy, manual, unresolved). Use
+<code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> to see the full per-name table:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 9</span></span></span>
@@ -185,6 +228,37 @@ full table:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Cebus ca… <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>            unresolved          <span style="color: #BB0000;">NA</span> <span style="color: #BB0000;">NA</span>           TRUE  FALSE</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> <span style="color: #BB0000;">NA</span>        Papio… <span style="color: #BB0000;">NA</span>            unresolved          <span style="color: #BB0000;">NA</span> <span style="color: #BB0000;">NA</span>           FALSE TRUE </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: notes &lt;chr&gt;</span></span></span></code></pre></div>
+<p>What the columns mean:</p>
+<ul>
+<li>
+<code>name_x</code> — the species name as it appeared in your
+<strong>data</strong> (the argument <code>x</code> to
+<code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>).</li>
+<li>
+<code>name_y</code> — the matching tip label on your
+<strong>tree</strong> (the argument <code>tree</code> to
+<code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>), or <code>NA</code> if no match was
+found.</li>
+<li>
+<code>name_resolved</code> — the canonical name used when synonym
+resolution applied (the recognised form per the chosen taxonomic
+authority). <code>NA</code> for matches that didn’t go through the
+synonym stage.</li>
+<li>
+<code>match_type</code> — which stage of the cascade matched the
+name (see <em>Understanding match types</em> below).</li>
+<li>
+<code>match_score</code> — confidence on <code>[0, 1]</code>
+(<code>1</code> for exact / normalised / synonym / manual;
+<code>&lt; 1</code> for fuzzy / flagged).</li>
+<li>
+<code>in_x</code>, <code>in_y</code> — logical: was this name in the
+data, in the tree, or both?</li>
+<li>
+<code>notes</code> — human-readable note (e.g. “normalised:
+lowercased”, “via synonym lookup against COL”, “fuzzy match score
+0.92”).</li>
+</ul>
 <p>For a detailed report:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/reconcile_summary.html">reconcile_summary</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
@@ -203,13 +277,20 @@ the analysis. You can document this decision:</p>
 <span>  note <span class="op">=</span> <span class="st">"Not in target phylogeny; exclude from analysis"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Override applied: 'Cebus capucinus' -&gt; 'NA' (reject)</span></span></code></pre></div>
-<p><code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> updates the existing reconciliation
-object in place — no need to re-run <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>. The
-three actions are: - <code>"accept"</code> — confirm a specific
-<code>name_x → name_y</code> mapping. - <code>"reject"</code> — mark a
-name as deliberately excluded. - <code>"replace"</code> — redirect
-<code>name_x</code> to a different <code>name_y</code> than the cascade
-produced.</p>
+<p><code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> updates the existing
+<code>result</code> (the <code>reconciliation</code> you built earlier)
+in place — no need to re-run <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>. The three
+actions you can pass to <code>action = ...</code> are:</p>
+<ul>
+<li>
+<code>"accept"</code> — confirm a specific
+<code>name_x → name_y</code> mapping.</li>
+<li>
+<code>"reject"</code> — mark a name as deliberately excluded.</li>
+<li>
+<code>"replace"</code> — redirect <code>name_x</code> to a different
+<code>name_y</code> than the cascade produced.</li>
+</ul>
 </div>
 <div class="section level3">
 <h3 id="produce-aligned-objects">Produce aligned objects<a class="anchor" aria-label="anchor" href="#produce-aligned-objects"></a>
@@ -237,7 +318,9 @@ produced.</p>
 <span></span>
 <span><span class="co"># Aligned tree — pruned to matched species</span></span>
 <span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 5</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 5</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>   <span class="co"># the pruned tree</span></span></code></pre></div>
+<p><img src="getting-started_files/figure-html/apply-1.png" width="700"></p>
 <p>The <code>$data</code> and <code>$tree</code> components now have
 matching species, ready for comparative analysis.</p>
 </div>
@@ -245,19 +328,29 @@ matching species, ready for comparative analysis.</p>
 <div class="section level2">
 <h2 id="example-2-reconcile-two-datasets">Example 2: Reconcile two datasets<a class="anchor" aria-label="anchor" href="#example-2-reconcile-two-datasets"></a>
 </h2>
-<p>When merging trait data from different sources, species names often
-disagree:</p>
+<p><code>prepR4pcm</code> can also reconcile species names <em>between
+two datasets</em>, not just between a dataset and a tree. The same
+matching cascade applies. This is useful when merging trait data from
+different sources, where species names often disagree across datasets.
+Here is a toy example:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># df1: body mass for three primates (df1 uses an underscore for chimp)</span></span>
+<span><span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Homo sapiens"</span>, <span class="st">"Pan_troglodytes"</span>, <span class="st">"Gorilla gorilla"</span><span class="op">)</span>,</span>
 <span>  mass <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">70</span>, <span class="fl">50</span>, <span class="fl">160</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># df2: lifespan for three primates (df2 uses a space for chimp; orang</span></span>
+<span><span class="co"># is here but not gorilla)</span></span>
 <span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Homo sapiens"</span>, <span class="st">"Pan troglodytes"</span>, <span class="st">"Pongo pygmaeus"</span><span class="op">)</span>,</span>
 <span>  lifespan <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">79</span>, <span class="fl">40</span>, <span class="fl">45</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Reconcile the species columns of df1 and df2 against each other.</span></span>
+<span><span class="co"># `authority = NULL` skips the synonym-lookup stage (no taxonomic</span></span>
+<span><span class="co"># database needed for this small example). `quiet = TRUE` suppresses</span></span>
+<span><span class="co"># progress messages.</span></span>
 <span><span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_data.html">reconcile_data</a></span><span class="op">(</span></span>
 <span>  x <span class="op">=</span> <span class="va">df1</span>,</span>
 <span>  y <span class="op">=</span> <span class="va">df2</span>,</span>
@@ -267,13 +360,14 @@ disagree:</p>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Auto-detected species column: <span style="color: #00BB00;">species</span></span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Auto-detected species column: <span style="color: #00BB00;">species</span></span></span>
 <span></span>
+<span><span class="co"># The output shows how many names matched, and via which stage.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Reconciliation: data vs data</span> <span style="color: #00BBBB;">────────────────────────────────────────────────</span></span></span>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:16:21</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:35:31</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -289,12 +383,15 @@ disagree:</p>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span></span></code></pre></div>
 <p><code>Pan_troglodytes</code> (underscore) in <code>df1</code> is
 matched to <code>Pan troglodytes</code> (space) in <code>df2</code> via
-normalisation.</p>
+normalisation. <code>Gorilla gorilla</code> is in <code>df1</code> only
+and <code>Pongo pygmaeus</code> is in <code>df2</code> only — both end
+up as <code>unresolved</code> rows
+(<code>in_x = TRUE, in_y = FALSE</code> and vice versa).</p>
 </div>
 <div class="section level2">
 <h2 id="understanding-match-types">Understanding match types<a class="anchor" aria-label="anchor" href="#understanding-match-types"></a>
 </h2>
-<p>Every row in <code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> has a
+<p>Every row in the <code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> output has a
 <code>match_type</code> column. Here is what each value means and what
 action (if any) it requires:</p>
 <table class="table">
@@ -339,8 +436,9 @@ Life) to the same accepted name</td>
 <td><code>flagged</code></td>
 <td>Lower-confidence match that needs human review: fuzzy score below
 <code>flag_threshold</code>, or an indirect synonym chain</td>
-<td><strong>Review with <code><a href="../reference/reconcile_review.html">reconcile_review()</a></code> or
-<code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code></strong></td>
+<td>Review with <code><a href="../reference/reconcile_review.html">reconcile_review()</a></code> or
+<code><a href="../reference/reconcile_suggest.html">reconcile_suggest()</a></code>
+</td>
 </tr>
 <tr class="even">
 <td><code>manual</code></td>
@@ -363,18 +461,56 @@ see only the rows that need attention.</p>
 <div class="section level2">
 <h2 id="example-3-using-a-taxonomic-authority">Example 3: Using a taxonomic authority<a class="anchor" aria-label="anchor" href="#example-3-using-a-taxonomic-authority"></a>
 </h2>
-<p><strong>When should you set <code>authority</code>?</strong> Use
-<code>authority = NULL</code> (skip synonym lookup) when: - You want a
-quick offline check — no database download required. - Your data and
-tree share the same taxonomy (most formatting differences are caught by
-the normalisation stage anyway).</p>
+<p>A <em>taxonomic authority</em> is a curated database of species names
+that records, for each name, which is the currently-recognised one and
+which are synonyms (alternative names referring to the same taxon).
+prepR4pcm can use such an authority to recognise that two syntactically
+different names refer to the same species — the “synonym” stage of the
+matching cascade.</p>
+<p>The supported authorities (all served via <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a>):</p>
+<ul>
+<li>
+<strong><code>col</code></strong> — Catalogue of Life (<a href="https://www.catalogueoflife.org/" class="external-link">catalogueoflife.org</a>). Broad
+coverage; the most general default for cross-taxon work.</li>
+<li>
+<strong><code>itis</code></strong> — Integrated Taxonomic
+Information System (<a href="https://www.itis.gov/" class="external-link">itis.gov</a>).
+North-American emphasis, strong on vertebrates and vascular plants.</li>
+<li>
+<strong><code>gbif</code></strong> — Global Biodiversity Information
+Facility taxonomic backbone (<a href="https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c" class="external-link">gbif.org/dataset</a>).
+Pragmatic synthesis with very wide coverage.</li>
+<li>
+<strong><code>ncbi</code></strong> — NCBI Taxonomy (<a href="https://www.ncbi.nlm.nih.gov/taxonomy" class="external-link">ncbi.nlm.nih.gov/taxonomy</a>).
+Tracks names that appear in GenBank — most useful for molecular-data
+workflows.</li>
+<li>
+<strong><code>ott</code></strong> — Open Tree Taxonomy (<a href="https://tree.opentreeoflife.org/about/taxonomy-version" class="external-link">opentreeoflife.org/about/taxonomy-version</a>).
+The taxonomy used by Open Tree of Life, useful when paired with the
+<code>rotl</code> retrieval backend.</li>
+<li>
+<strong><code>itis_test</code></strong> — small bundled subset of
+ITIS used for the package’s own examples and tests; not a
+general-purpose authority.</li>
+</ul>
+<p>These mirror the providers documented in
+<code>?taxadb::td_create</code>. The database is downloaded once on
+first use and cached locally, ensuring reproducibility (results don’t
+depend on an external API being available the day you run the
+analysis).</p>
+<p><strong>When should you set <code>authority</code>?</strong></p>
+<p>Use <code>authority = NULL</code> (skip synonym lookup) when:</p>
+<ul>
+<li>You want a quick offline check — no database download required.</li>
+<li>Species names in your data and tree are unlikely to differ much
+(most formatting differences are caught by the normalisation stage
+anyway).</li>
+</ul>
 <p>Set <code>authority = "col"</code> (or another provider) when names
 differ because of genuine taxonomic revisions — species moved to a
-different genus, splits, or lumps. The first run will download a local
+different genus, splits, or lumps. The first run downloads a local
 database (~100 MB); subsequent runs are fast because the database is
 cached.</p>
-<p>When names differ due to synonymy, pass an authority to enable
-synonym resolution via taxadb:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requires taxadb and a local database download (automatic on first use)</span></span>
 <span><span class="va">result3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
@@ -383,19 +519,20 @@ synonym resolution via taxadb:</p>
 <span>  x_species <span class="op">=</span> <span class="st">"species"</span>,</span>
 <span>  authority <span class="op">=</span> <span class="st">"col"</span>        <span class="co"># Catalogue of Life</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Supported authorities: <code>col</code>, <code>itis</code>,
-<code>gbif</code>, <code>ncbi</code>, <code>ott</code>, and
-<code>itis_test</code> (a small bundled subset of ITIS used for
-examples). These mirror the providers documented in
-<code>?taxadb::td_create</code>; the database is downloaded once on
-first use and cached locally, ensuring reproducibility (results do not
-depend on an external API being available).</p>
 </div>
 <div class="section level2">
 <h2 id="example-4-pre-built-overrides">Example 4: Pre-built overrides<a class="anchor" aria-label="anchor" href="#example-4-pre-built-overrides"></a>
 </h2>
-<p>Labs often maintain a curated list of known corrections. You can pass
-these as a data frame or CSV path:</p>
+<p>Researchers often maintain a curated list of known corrections. You
+can pass these as a data frame, or as a path to a file in CSV
+format:</p>
+<blockquote>
+<p>The chunks below use <code>my_data</code> and <code>my_tree</code> as
+<strong>hypothetical</strong> objects (substitute your own data frame
+and <code>phylo</code> object). They are marked
+<code>eval = FALSE</code> so the vignette renders without requiring
+those objects to exist.</p>
+</blockquote>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># A data frame of known corrections</span></span>
 <span><span class="va">corrections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -425,7 +562,9 @@ take priority.</p>
 <p><code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code> reconciles several datasets at once,
 pooling all unique species names before running the cascade:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Suppose you have several data frames to reconcile against one tree:</span></span>
+<code class="sourceCode R"><span><span class="co"># Suppose you have several data frames to reconcile against one tree.</span></span>
+<span><span class="co"># `my_ecology_data`, `my_morpho_data`, and `my_tree` are **hypothetical**</span></span>
+<span><span class="co"># user-supplied objects; substitute your own.</span></span>
 <span><span class="va">datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  traits  <span class="op">=</span> <span class="va">trait_data</span>,        <span class="co"># defined above</span></span>
 <span>  ecology <span class="op">=</span> <span class="va">my_ecology_data</span>,   <span class="co"># your own data frame</span></span>
@@ -447,20 +586,29 @@ Ambiguous cases are flagged, not auto-resolved.</li>
 type, score, source, and a human-readable note.</li>
 <li>
 <strong>Reproducible</strong>: Database versions are pinned. All
-parameters are stored in the reconciliation object.</li>
+parameters used to build the result are stored on the result object
+itself, so a collaborator can re-run the same reconciliation later.</li>
 <li>
-<strong>Practical</strong>: Works with the objects comparative
-biologists already use — <code>data.frame</code> and
-<code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code>.</li>
+<strong>Practical</strong>: Works with the data types comparative
+biologists already use — a <code>data.frame</code> of trait values (one
+row per species) and a phylogenetic tree as an <code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code>
+object.</li>
 </ol>
 </div>
 <div class="section level2">
 <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
 </h2>
+<blockquote>
+<p>The chunk below uses <strong>hypothetical</strong> files
+(<code>species_traits.csv</code>, <code>species_tree.nwk</code>) —
+substitute your own paths. The chunk is marked <code>eval = FALSE</code>
+so it doesn’t try to read files that don’t exist when the vignette is
+rendered.</p>
+</blockquote>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 1. Load your data and tree</span></span>
+<span><span class="co"># 1. Load your data and tree (hypothetical paths -- substitute your own)</span></span>
 <span><span class="va">my_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"species_traits.csv"</span><span class="op">)</span></span>
 <span><span class="va">my_tree</span> <span class="op">&lt;-</span> <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">read.tree</a></span><span class="op">(</span><span class="st">"species_tree.nwk"</span><span class="op">)</span></span>
 <span></span>

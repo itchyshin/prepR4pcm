@@ -1,5 +1,49 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Documentation polish (Mal Lagisz feedback)
+
+* **README** revised per #61: clearer Features-section definitions
+  ("taxonomy crosswalks", "override tables", "unresolved species",
+  "sensitivity analyses with and without augmented tips" all now
+  defined inline, with sentence-level context); Typical-workflow
+  diagram now visually distinguishes data objects (italics) from
+  function names (plain text), with a short explanatory paragraph;
+  Quick-example description states the data sizes (919 species
+  rows, 657 tips) instead of saying "small sample" without
+  context; one long sentence in the Quick example was split into
+  two; "ships" → "contains"; added a one-line note for users who
+  see `citation("prepR4pcm")` warn that the package is not
+  installed (re-install with `pak::pak("itchyshin/prepR4pcm")`).
+* **getting-started.Rmd** revised per #64: full pass over the
+  vignette covering 28 specific items from Mal's feedback.
+  Highlights: clearer "what is reconciliation / aligned objects"
+  introduction; expanded mismatch-types section with worked
+  examples for formatting / synonymy / typos / missing names;
+  per-column explanation of the `reconcile_mapping()` output
+  (what `name_x`, `name_y`, `name_resolved`, `match_type`,
+  `match_score`, `in_x`, `in_y`, `notes` mean); the `tree`-creation
+  chunk now also shows `tree$tip.label` and `plot(tree)`; the
+  pruned-tree chunk shows `plot(aligned$tree)`; "reconciliation
+  object" terminology consistently replaced with concrete
+  references to the `result` variable name; Example 2 (data ↔
+  data) gains framing prose explaining that the same matching
+  cascade applies between two datasets; a definition of "taxonomic
+  authority" with a list of supported authorities and their
+  websites (col, itis, gbif, ncbi, ott, itis_test); "Labs" →
+  "Researchers"; "CSV path" → "a file in a CSV format"; the
+  hypothetical-`my_data` / `my_tree` chunks are now explicitly
+  labelled as hypothetical so users don't try to run them; the
+  Typical-workflow chunk's `read.csv("species_traits.csv")` and
+  `ape::read.tree("species_tree.nwk")` lines are also explicitly
+  labelled as hypothetical paths.
+* **comparing-tree-backends.Rmd**: new "Where are the VertLife
+  trees?" section explaining that `source = "rtrees", taxon =
+  "mammal"` already returns a 100-tree posterior subset of
+  Upham/Jetz-Pyron/Tonini/Stein/Jetz via the `megatrees` package,
+  so users asking for VertLife data don't need to look elsewhere
+  unless they want the full 10K-tree posterior (which still
+  requires manual download from vertlife.org).
+
 ## Phylogenetic meta-analysis path
 
 * **`pr_get_tree()` gains `resolve_polytomies` and

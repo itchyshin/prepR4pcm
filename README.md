@@ -49,38 +49,61 @@ pak::pak("itchyshin/prepR4pcm")
   whitespace, underscores), synonym resolution via
   [taxadb](https://docs.ropensci.org/taxadb/) (Norman et al. 2020), and
   fuzzy matching with genus pre-filtering for typos.
-- **Full provenance**: every name-matching decision is recorded.
+- **Full provenance**: every name-matching decision is recorded in the
+  reconciliation result, so you can audit any name change later.
   `reconcile_summary()`, `reconcile_plot()`, `reconcile_report()`, and
-  `reconcile_suggest()` help you audit matches and find near-misses.
+  `reconcile_suggest()` help you inspect matches and find near-misses.
 - **Multi-tree support**: `reconcile_to_trees()` matches a dataset
   against several trees at once; `reconcile_diff()` compares results.
-- **Crosswalks and overrides**: `reconcile_crosswalk()` converts
-  published taxonomy crosswalks (e.g., BirdLife–BirdTree) into override
-  tables.
-- **Tree augmentation**: `reconcile_augment()` grafts unresolved species
-  onto a tree using genus-level placement (always run sensitivity
-  analyses with and without augmented tips).
+- **Crosswalks and overrides**: a *taxonomic crosswalk* is a published
+  table mapping species names from one taxonomy to another (e.g. mapping
+  BirdLife species names to the BirdTree / Jetz phylogeny names). An
+  *override table* is a user-supplied two-column data frame (`name_x`,
+  `name_y`) that forces specific name pairs to resolve a particular way,
+  bypassing the cascade. `reconcile_crosswalk()` converts a published
+  crosswalk into an override table.
+- **Tree augmentation**: an *unresolved species* is one that appears in
+  your data but has no matching tip on the tree (and the cascade
+  couldn’t find it via formatting, synonymy, or fuzzy matching).
+  `reconcile_augment()` grafts unresolved species onto the tree as
+  sister to a congener (a species in the same genus). Because this
+  placement is an assumption rather than a result, you should always run
+  *sensitivity analyses* — fit your downstream model both with and
+  without the grafted tips and report whether the conclusions change.
 
 ## Typical workflow
 
-    Load data + tree
-           |
-      reconcile_tree()
-           |
-      Review: reconcile_summary(), reconcile_plot(), reconcile_report()
-           |
-      Fix: reconcile_override(), reconcile_suggest()
-           |
-      reconcile_apply()
-           |
-      Aligned data + pruned tree --> PGLS / PGLMM
+The diagram below shows the steps. Italics mark **R objects / data
+files** (the things on disk or in your workspace); plain text marks the
+**`prepR4pcm` functions** that act on them.
+
+    *Trait data*  +  *Phylogenetic tree*
+                |
+            reconcile_tree()
+                |
+                V
+        *reconciliation*  ----> Review: reconcile_summary() / reconcile_plot() / reconcile_report()
+                |              ----> Fix:    reconcile_override() / reconcile_suggest()
+                |
+            reconcile_apply()
+                |
+                V
+        *Aligned data*  +  *Pruned tree*  ---->  PGLS / PGLMM / any PCM
+
+The first reconciliation pass produces a *reconciliation* object (an
+audit of every name match). You then review and fix; once you’re happy,
+`reconcile_apply()` produces the aligned dataset and pruned tree that
+have matching species lists — the precondition for any phylogenetic
+comparative method.
 
 ## Quick example
 
-This minimal example reconciles a small bird trait dataset
-(`avonet_subset`, a sample of AVONET) against a small bird phylogeny
-(`tree_jetz`, a sample of the Jetz et al. 2012 phylogeny) and produces a
-model-ready aligned data frame plus a pruned tree.
+This example reconciles `avonet_subset` (919 species rows from AVONET, a
+global bird-trait database; Tobias et al. 2022) against `tree_jetz` (657
+tips from the Jetz et al. 2012 bird phylogeny). It produces an aligned
+data frame and a pruned tree ready for downstream modelling — both sides
+have the same species, in matched order, ready for a PGLS or
+phylogenetic mixed model.
 
 ``` r
 library(prepR4pcm)
@@ -107,7 +130,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-05-01 14:18:01
+#>   Timestamp: 2026-05-01 18:23:32
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -193,6 +216,11 @@ Or run in R to get the same entry programmatically:
 citation("prepR4pcm")
 ```
 
+If `citation("prepR4pcm")` warns *“no package ‘prepR4pcm’ was found”*,
+the installed copy is stale or in a library R isn’t searching.
+Re-install with `pak::pak("itchyshin/prepR4pcm")` and re-load (restart R
+if needed).
+
 ## Key dependencies
 
 - [ape](https://cran.r-project.org/package=ape) — phylogenetic tree
@@ -203,7 +231,7 @@ citation("prepR4pcm")
 
 ## Bundled data sources
 
-The package ships small sample datasets — each is a *subset* (a few
+The package contains small sample datasets — each is a *subset* (a few
 hundred rows or tips) of a larger published dataset, used only for the
 package’s examples, vignettes, and tests. They are not full versions: if
 you want to *do science* with these data, download the full original

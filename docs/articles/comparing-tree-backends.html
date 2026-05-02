@@ -220,6 +220,29 @@ at <a href="https://github.com/itchyshin/prepR4pcm/issues" class="external-link"
 with your <code><a href="../reference/pr_get_tree_status.html">pr_get_tree_status()</a></code> output and the error.</p>
 </div>
 <div class="section level2">
+<h2 id="where-are-the-vertlife-trees">Where are the VertLife trees?<a class="anchor" aria-label="anchor" href="#where-are-the-vertlife-trees"></a>
+</h2>
+<p>A common question: <em>“I want the VertLife / Upham et al. 2019
+mammal posterior — which backend has it?”</em></p>
+<p>Short answer: <strong><code>source = "rtrees"</code></strong> has
+them. <code>rtrees</code> depends on the <a href="https://github.com/daijiang/megatrees" class="external-link"><code>megatrees</code></a>
+package, which ships 100 randomly-sampled posterior trees from each of
+the major VertLife datasets (mammals: Upham et al. 2019; amphibians:
+Jetz &amp; Pyron 2018; squamates: Tonini et al. 2016; sharks: Stein et
+al. 2018; birds: Jetz et al. 2012). When you call
+<code>pr_get_tree(species, source = "rtrees", taxon = "mammal")</code>,
+the returned <code>multiPhylo</code> is exactly that 100-tree subset of
+the VertLife posterior, grafted to your species set.</p>
+<p>If you need the <strong>full 10,000-tree posterior</strong> (rather
+than the 100-tree subset), you currently have to download the source
+archive manually from <a href="https://vertlife.org/data/" class="external-link">vertlife.org</a> (each archive is
+0.5–2 GB). A future round may add a <code>source = "vertlife"</code>
+backend that automates this caching step; for now, the 100-tree subset
+via <code>rtrees</code> is what you get out of the box, which is
+sufficient for the great majority of phylogenetic comparative
+analyses.</p>
+</div>
+<div class="section level2">
 <h2 id="what-to-do-with-the-result">What to do with the result<a class="anchor" aria-label="anchor" href="#what-to-do-with-the-result"></a>
 </h2>
 <div class="section level3">
