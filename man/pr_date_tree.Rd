@@ -14,12 +14,15 @@ pr_date_tree(
 }
 \arguments{
 \item{tree}{An \code{ape::phylo} (or \code{multiPhylo}) object: the topology
-to calibrate.}
+(or topologies) to calibrate.}
 
 \item{n_dated}{A length-1 positive integer. How many calibrated
-trees to return. \code{1L} (default) returns a single dated topology;
+trees to return per input topology. \code{1L} (default) returns a
+single dated tree (DateLife's combined SDM-summary chronogram);
 \verb{> 1L} triggers \code{each = TRUE} so DateLife returns one chronogram
-per source (capped at \code{n_dated}).}
+per source paper in its database (capped at \code{n_dated}). All
+resulting chronograms share the input topology --- only the
+branch lengths vary across the returned set.}
 
 \item{dating_method}{A length-1 character vector. Forwarded to
 \code{datelife::datelife_use()}. One of \code{"bladj"} (default; fast,
@@ -72,6 +75,35 @@ Install \code{datelife} before calling this function ---
 dep tree can't be auto-resolved by pak on a clean CI image, so
 we keep it as an opt-in install):
 \code{pak::pak("phylotastic/datelife")}.
+}
+
+\section{What "n_dated > 1" actually returns}{
+
+This is a common point of confusion. With \code{n_dated = 50},
+\code{pr_date_tree()} does NOT change the input topology --- it returns
+up to 50 chronograms that \emph{all share} the input topology but
+differ in their branch lengths, because each variant is dated
+using a different source paper in DateLife's chronogram database
+(think: variant 1 uses Hedges et al. 2015, variant 2 uses
+Bininda-Emonds et al. 2007, etc.). So you get one topology and
+N versions of branch lengths, not N different topologies.
+
+If you want \strong{both} axes of variation (topology uncertainty +
+dating uncertainty), feed a \code{multiPhylo} of N topologies in.
+DateLife's \code{each = TRUE} mode is then applied per input tree, so
+the output reflects the cross-product of input topology and
+DateLife source. Example pipeline:
+\preformatted{
+  trees  <- pr_get_tree(species, source = "rtrees",
+                         taxon = "mammal")  # ~100 topologies
+  dated  <- pr_date_tree(trees$tree, n_dated = 5)
+}
+
+By contrast, \code{pr_get_tree(species, source = "datelife", n_tree = 50)}
+returns up to 50 chronograms where each variant comes from a
+different DateLife source --- i.e. a different topology AND
+different branch lengths per variant, because DateLife's source
+chronograms aren't constrained to share a topology.
 }
 
 \examples{

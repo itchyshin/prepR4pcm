@@ -196,7 +196,7 @@ tree.</li>
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:35:30</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-02 16:14:54</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -367,7 +367,7 @@ Here is a toy example:</p>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:35:31</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-02 16:14:55</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -467,7 +467,13 @@ which are synonyms (alternative names referring to the same taxon).
 prepR4pcm can use such an authority to recognise that two syntactically
 different names refer to the same species — the “synonym” stage of the
 matching cascade.</p>
-<p>The supported authorities (all served via <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a>):</p>
+<p>The authorities below are <strong>databases served by the <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> package</strong>
+(Norman et al. 2020). They are not R packages themselves —
+<code>authority = "col"</code> just tells <code>prepR4pcm</code> to look
+up synonyms in the taxadb-cached copy of the Catalogue of Life database,
+and so on for the others. The first call for a given authority downloads
+its database to your local taxadb cache (~100 MB); subsequent calls are
+fast and work offline.</p>
 <ul>
 <li>
 <strong><code>col</code></strong> — Catalogue of Life (<a href="https://www.catalogueoflife.org/" class="external-link">catalogueoflife.org</a>). Broad
@@ -485,19 +491,20 @@ Pragmatic synthesis with very wide coverage.</li>
 Tracks names that appear in GenBank — most useful for molecular-data
 workflows.</li>
 <li>
-<strong><code>ott</code></strong> — Open Tree Taxonomy (<a href="https://tree.opentreeoflife.org/about/taxonomy-version" class="external-link">opentreeoflife.org/about/taxonomy-version</a>).
-The taxonomy used by Open Tree of Life, useful when paired with the
-<code>rotl</code> retrieval backend.</li>
+<strong><code>ott</code></strong> — Open Tree Taxonomy (<a href="https://tree.opentreeoflife.org/about/taxonomy-version" class="external-link">tree.opentreeoflife.org/about/taxonomy-version</a>).
+Note: <code>ott</code> here is a taxadb authority name, not an R
+package. The R package that <em>retrieves trees</em> from Open Tree of
+Life is called <a href="https://docs.ropensci.org/rotl/" class="external-link"><code>rotl</code></a>, which is
+separate. Use <code>authority = "ott"</code> if you also use
+<code>pr_get_tree(source = "rotl")</code> and want the
+synonym-resolution step to use the same taxonomy as the tree.</li>
 <li>
 <strong><code>itis_test</code></strong> — small bundled subset of
 ITIS used for the package’s own examples and tests; not a
 general-purpose authority.</li>
 </ul>
 <p>These mirror the providers documented in
-<code>?taxadb::td_create</code>. The database is downloaded once on
-first use and cached locally, ensuring reproducibility (results don’t
-depend on an external API being available the day you run the
-analysis).</p>
+<code>?taxadb::td_create</code>.</p>
 <p><strong>When should you set <code>authority</code>?</strong></p>
 <p>Use <code>authority = NULL</code> (skip synonym lookup) when:</p>
 <ul>

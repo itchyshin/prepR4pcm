@@ -274,7 +274,14 @@ prepR4pcm can use such an authority to recognise that two
 syntactically different names refer to the same species — the
 "synonym" stage of the matching cascade.
 
-The supported authorities (all served via [taxadb](https://docs.ropensci.org/taxadb/)):
+The authorities below are **databases served by the
+[taxadb](https://docs.ropensci.org/taxadb/) package** (Norman et al.
+2020). They are not R packages themselves — `authority = "col"`
+just tells `prepR4pcm` to look up synonyms in the taxadb-cached
+copy of the Catalogue of Life database, and so on for the others.
+The first call for a given authority downloads its database to
+your local taxadb cache (~100 MB); subsequent calls are fast and
+work offline.
 
 - **`col`** — Catalogue of Life
   ([catalogueoflife.org](https://www.catalogueoflife.org/)). Broad
@@ -290,16 +297,17 @@ The supported authorities (all served via [taxadb](https://docs.ropensci.org/tax
   Tracks names that appear in GenBank — most useful for
   molecular-data workflows.
 - **`ott`** — Open Tree Taxonomy
-  ([opentreeoflife.org/about/taxonomy-version](https://tree.opentreeoflife.org/about/taxonomy-version)).
-  The taxonomy used by Open Tree of Life, useful when paired with
-  the `rotl` retrieval backend.
+  ([tree.opentreeoflife.org/about/taxonomy-version](https://tree.opentreeoflife.org/about/taxonomy-version)).
+  Note: `ott` here is a taxadb authority name, not an R package.
+  The R package that *retrieves trees* from Open Tree of Life is
+  called [`rotl`](https://docs.ropensci.org/rotl/), which is
+  separate. Use `authority = "ott"` if you also use
+  `pr_get_tree(source = "rotl")` and want the synonym-resolution
+  step to use the same taxonomy as the tree.
 - **`itis_test`** — small bundled subset of ITIS used for the
   package's own examples and tests; not a general-purpose authority.
 
-These mirror the providers documented in `?taxadb::td_create`. The
-database is downloaded once on first use and cached locally,
-ensuring reproducibility (results don't depend on an external API
-being available the day you run the analysis).
+These mirror the providers documented in `?taxadb::td_create`.
 
 **When should you set `authority`?**
 

@@ -83,14 +83,17 @@ code.</p>
 
 <dl><dt id="arg-tree">tree<a class="anchor" aria-label="anchor" href="#arg-tree"></a></dt>
 <dd><p>An <code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code> (or <code>multiPhylo</code>) object: the topology
-to calibrate.</p></dd>
+(or topologies) to calibrate.</p></dd>
 
 
 <dt id="arg-n-dated">n_dated<a class="anchor" aria-label="anchor" href="#arg-n-dated"></a></dt>
 <dd><p>A length-1 positive integer. How many calibrated
-trees to return. <code>1L</code> (default) returns a single dated topology;
+trees to return per input topology. <code>1L</code> (default) returns a
+single dated tree (DateLife's combined SDM-summary chronogram);
 <code>&gt; 1L</code> triggers <code>each = TRUE</code> so DateLife returns one chronogram
-per source (capped at <code>n_dated</code>).</p></dd>
+per source paper in its database (capped at <code>n_dated</code>). All
+resulting chronograms share the input topology — only the
+branch lengths vary across the returned set.</p></dd>
 
 
 <dt id="arg-dating-method">dating_method<a class="anchor" aria-label="anchor" href="#arg-dating-method"></a></dt>
@@ -151,6 +154,33 @@ Install <code>datelife</code> before calling this function —
 dep tree can't be auto-resolved by pak on a clean CI image, so
 we keep it as an opt-in install):
 <code>pak::pak("phylotastic/datelife")</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="what-n-dated-gt-actually-returns">What "n_dated &gt; 1" actually returns<a class="anchor" aria-label="anchor" href="#what-n-dated-gt-actually-returns"></a></h2>
+
+
+<p>This is a common point of confusion. With <code>n_dated = 50</code>,
+<code>pr_date_tree()</code> does NOT change the input topology — it returns
+up to 50 chronograms that <em>all share</em> the input topology but
+differ in their branch lengths, because each variant is dated
+using a different source paper in DateLife's chronogram database
+(think: variant 1 uses Hedges et al. 2015, variant 2 uses
+Bininda-Emonds et al. 2007, etc.). So you get one topology and
+N versions of branch lengths, not N different topologies.</p>
+<p>If you want <strong>both</strong> axes of variation (topology uncertainty +
+dating uncertainty), feed a <code>multiPhylo</code> of N topologies in.
+DateLife's <code>each = TRUE</code> mode is then applied per input tree, so
+the output reflects the cross-product of input topology and
+DateLife source. Example pipeline:</p><div class="sourceCode"><pre><code><span></span>
+<span>  <span class="va">trees</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rtrees"</span>,</span>
+<span>                         taxon <span class="op">=</span> <span class="st">"mammal"</span><span class="op">)</span>  <span class="co"># ~100 topologies</span></span>
+<span>  <span class="va">dated</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_date_tree.html">pr_date_tree</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span>, n_dated <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+
+<p>By contrast, <code>pr_get_tree(species, source = "datelife", n_tree = 50)</code>
+returns up to 50 chronograms where each variant comes from a
+different DateLife source — i.e. a different topology AND
+different branch lengths per variant, because DateLife's source
+chronograms aren't constrained to share a topology.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
