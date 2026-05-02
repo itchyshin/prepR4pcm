@@ -1,5 +1,39 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Phylogenetic meta-analysis path
+
+* **`pr_get_tree()` gains `resolve_polytomies` and
+  `branch_lengths` arguments.** When the topology comes from `rotl`
+  (the dominant choice for cross-taxon meta-analysis), the user
+  typically needs a strictly bifurcating tree with non-trivial
+  branch lengths -- e.g. via `ape::multi2di(random = TRUE)` and
+  `ape::compute.brlen(method = "Grafen")`. Before this round users
+  had to call those manually. Now:
+  `pr_get_tree(species, source = "rotl", resolve_polytomies = TRUE,
+  branch_lengths = "grafen")` returns a tree ready for
+  `metafor::rma.mv()`. Defaults preserve back-compat
+  (`resolve_polytomies = FALSE`, `branch_lengths = NULL`). Refs
+  Cinar et al. 2022 (*Methods Ecol. Evol.* 13:383) and Pottier et
+  al. 2022 (*Ecology Letters* 25:2245), who use this exact pattern.
+* **New: `pr_phylo_cor(tree)`.** Thin wrapper around
+  `ape::vcv(tree, corr = TRUE)` that turns the tree into the
+  phylogenetic correlation matrix accepted by `metafor::rma.mv()`,
+  `MCMCglmm::MCMCglmm()`, `glmmTMB::glmmTMB()`, and `brms::brm()` as
+  a random-effect structure. Accepts `phylo`, `multiPhylo`, or
+  `pr_tree_result` input.
+* **New vignette: "Phylogenetic meta-analysis with rotl +
+  prepR4pcm"** -- end-to-end walk from species names through rotl
+  topology, bifurcating + Grafen branches, correlation matrix, to
+  `metafor::rma.mv()`, using a 13-species cross-taxon subset of
+  the Pottier et al. 2022 thermal-tolerance dataset (lampreys,
+  bivalves, insects, fish, amphibians, reptiles, cephalopods,
+  echinoderms). Includes a "Grafen vs datelife" tradeoff
+  discussion explaining why Grafen is the practical default for
+  cross-taxon meta-analysis.
+* Live tests in `test-meta-analysis-path.R` exercise the new args
+  and the correlation-matrix wrapper end-to-end on real ape calls
+  (no mocking of ape itself).
+
 ## CI cleanup
 
 * **CI workflow trimmed** to `pull_request` + `workflow_dispatch`

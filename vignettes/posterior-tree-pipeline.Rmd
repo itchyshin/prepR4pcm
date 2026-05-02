@@ -210,7 +210,7 @@ For the dating-only case (you already have a topology):
 - `?pr_get_tree`, `?pr_date_tree`, `?pr_cite_tree`,
   `?reconcile_augment` --- the four entry points for prepR4pcm's
   tree-handling.
-- [pigauto's full PCM workflow vignette](https://itchyshin.github.io/pigauto/articles/pigauto_workflow_mixed.html)
+- [pigauto's full PCM workflow vignette](https://itchyshin.github.io/pigauto/articles/mixed-types.html)
   --- the downstream half, in detail.
 - Sanchez Reyes et al. (2024). *DateLife: Leveraging databases and
   analytical tools to reveal the dated Tree of Life.* Systematic

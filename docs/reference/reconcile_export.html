@@ -33,6 +33,7 @@ trail."><meta property="og:image" content="https://itchyshin.github.io/prepR4pcm
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
     <li><a class="dropdown-item" href="../articles/comparing-tree-backends.html">Comparing tree backends</a></li>
+    <li><a class="dropdown-item" href="../articles/meta-analysis-with-rotl.html">Phylogenetic meta-analysis with rotl</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -171,15 +172,15 @@ trail.</p>
 <span class="r-in"><span>                          dir <span class="op">=</span> <span class="va">out_dir</span>, prefix <span class="op">=</span> <span class="st">"avonet_jetz"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Dropped 262 rows with unresolved species from data</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Tree has 657 tips after alignment</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpmM5r8l/export_9935151f8f16/avonet_jetz_data.csv</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Tree written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpmM5r8l/export_9935151f8f16/avonet_jetz_tree.nex</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Mapping written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpmM5r8l/export_9935151f8f16/avonet_jetz_mapping.csv</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Data written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpOAjqBU/export_de002364d007/avonet_jetz_data.csv</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Tree written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpOAjqBU/export_de002364d007/avonet_jetz_tree.nex</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Mapping written to <span style="color: #0000BB;">/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpOAjqBU/export_de002364d007/avonet_jetz_mapping.csv</span></span>
 <span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">data</span>     <span class="co"># path to CSV</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpmM5r8l/export_9935151f8f16/avonet_jetz_data.csv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpOAjqBU/export_de002364d007/avonet_jetz_data.csv"</span>
 <span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">tree</span>     <span class="co"># path to Nexus tree</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpmM5r8l/export_9935151f8f16/avonet_jetz_tree.nex"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpOAjqBU/export_de002364d007/avonet_jetz_tree.nex"</span>
 <span class="r-in"><span><span class="va">files</span><span class="op">$</span><span class="va">mapping</span>  <span class="co"># path to mapping CSV</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpmM5r8l/export_9935151f8f16/avonet_jetz_mapping.csv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/var/folders/7x/ytfpq14s0v18frbm9v_w9f4c0000gq/T//RtmpOAjqBU/export_de002364d007/avonet_jetz_mapping.csv"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">out_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># clean up</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
