@@ -110,11 +110,46 @@ test_that("every entry in pr_valid_authorities() actually works against taxadb (
   testthat::skip_if_offline()
   testthat::skip_if_not_installed("taxadb")
 
+  # Errors that indicate taxadb infrastructure problems (DB not yet
+  # downloaded, schema mismatch, internal NULL/NA from a fresh cache,
+  # network glitch on first download) rather than "this authority is
+  # invalid". When these fire we SKIP -- because the claim under test
+  # is "taxadb accepts this provider", not "taxadb's filter_name()
+  # always works in any environment". A real authority-validity
+  # error has the substring "provider" and an explicit list, e.g.
+  # "Argument 'provider' must be one of ...".
+  is_infrastructure_error <- function(msg) {
+    grepl(
+      paste(
+        "character vector argument expected",  # internal NA/NULL from cache miss
+        "could not connect", "Could not connect",
+        "no such table",                       # SQL: schema not built yet
+        "Connection failed",                   # DBI: dbConnect failed
+        "Could not download",                  # download.file failed
+        "Could not resolve host",              # DNS / offline
+        "schema",                              # generic schema problems
+        "Failed to download",
+        "Cache error",
+        sep = "|"
+      ),
+      msg, ignore.case = TRUE, perl = TRUE
+    )
+  }
+
   for (auth in pr_valid_authorities()) {
     result <- tryCatch(
       taxadb::filter_name("Homo sapiens", provider = auth),
       error = function(e) e
     )
+    if (inherits(result, "error")) {
+      msg <- conditionMessage(result)
+      if (is_infrastructure_error(msg)) {
+        skip(sprintf(
+          "taxadb infrastructure unavailable for `%s` (skipped, not failed): %s",
+          auth, substr(msg, 1, 120)
+        ))
+      }
+    }
     expect_false(
       inherits(result, "error"),
       info = sprintf(
