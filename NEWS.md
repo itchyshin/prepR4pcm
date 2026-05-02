@@ -1,5 +1,46 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 11: consistency audit + clearer pr_date_tree semantics
+
+* **`?pr_date_tree` clarified**: a new "What `n_dated > 1` actually
+  returns" section. Common point of confusion: passing one topology
+  with `n_dated = 50` returns 50 chronograms that *share* that
+  topology but differ in branch lengths (one per DateLife source
+  paper in the database) — not 50 different topologies. The
+  posterior-tree-pipeline vignette gets the same clarification.
+* **getting-started.Rmd, "Example 3: Using a taxonomic authority"**:
+  framing rewritten to make explicit that `col`, `itis`, `gbif`,
+  `ncbi`, `ott`, `itis_test` are *taxadb authority names*, not R
+  packages. Note added that `ott` (Open Tree Taxonomy) is not the
+  same as `rotl` (the R package that retrieves trees from Open
+  Tree of Life) — they're related but separate things.
+* **README round-2 follow-up** (Mal Lagisz, #61 follow-up comment):
+  - Opening paragraph rewritten per Mal's wording.
+  - "Below you'll find" rewritten per Mal's wording.
+  - Typical-workflow diagram switched from a code-block to a
+    blockquote with `*italic*` markup so the italics actually
+    render (italics inside a code block are literal asterisks).
+  - Quick-example post-script: replaced `nrow()` + `ape::Ntip()`
+    with `intersect()` / `setdiff()` so the alignment check is on
+    *species names*, not just counts (per Mal's note that "the
+    species names should match exactly").
+  - "ending in PGLS and phylogenetic GLMM fits" → "ending in
+    fitting the PGLS and phylogenetic GLMM".
+  - **prepR4pcm** bolded in the Citation section.
+* **Audit findings (no action needed)**: every `pkg::fn` reference
+  in vignettes / R / man pages was verified — `pigauto::`,
+  `U.PhyloMaker::`, `metafor::`, `caper::`, `phylolm::` are all
+  either inside `eval = FALSE` chunks or guarded at runtime by
+  `requireNamespace()`. URLs in vignettes are 200/303 except for a
+  GBIF Cloudflare 403 bot-block (browser users see 200).
+* **VertLife backend**: research surfaced that the data download
+  URLs are public CC0 (verified live), 1-2 GB per archive. For
+  the 99% case, `source = "rtrees", taxon = "mammal"` already
+  returns the 100-tree posterior subset via `megatrees`, so a
+  full-download `source = "vertlife"` backend was deferred. A
+  "Where are the VertLife trees?" section in
+  comparing-tree-backends.Rmd points users to the right backend.
+
 ## Documentation polish (Mal Lagisz feedback)
 
 * **README** revised per #61: clearer Features-section definitions

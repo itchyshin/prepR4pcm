@@ -9,13 +9,14 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-Species names in your data rarely match the tip labels in your
-phylogenetic tree exactly. Such mismatches prevent you from combining
-species traits (data tables) with their evolutionary relationships (the
-phylogenetic tree) — which is what phylogenetic comparative methods
-(PCMs, e.g. studies of trait evolution, niche conservatism, or
-correlated trait change) need. Three kinds of mismatch silently drop
-species from these analyses:
+In phylogenetic comparative analyses, trait datasets must match exactly
+the tip labels in the phylogenetic tree. Mismatches prevent the
+integration of species trait data (e.g., tables) with their evolutionary
+relationships (the tree), which is essential for phylogenetic
+comparative methods (PCMs), such as studies of trait evolution, niche
+conservatism, or correlated trait change. These mismatches can lead to
+species being silently excluded from analyses. There are three main
+types of species name mismatches:
 
 - **Formatting differences**, e.g. `Homo_sapiens` vs `Homo sapiens`,
   trailing whitespace, capitalisation
@@ -30,9 +31,9 @@ decision so the choices are auditable, and produces aligned data–tree
 pairs ready for phylogenetic generalised least squares (PGLS),
 phylogenetic mixed models (PGLMMs), or any other PCM.
 
-Below you’ll find: how to install, a quick example, the typical
-workflow, vignettes covering realistic pipelines, citation information,
-and a list of the bundled example datasets.
+Below you’ll find instructions for package installation, a quick
+example, the typical workflow, vignettes covering realistic pipelines,
+citation information, and a list of bundled example datasets.
 
 ## Installation
 
@@ -73,22 +74,16 @@ pak::pak("itchyshin/prepR4pcm")
 
 ## Typical workflow
 
-The diagram below shows the steps. Italics mark **R objects / data
-files** (the things on disk or in your workspace); plain text marks the
-**`prepR4pcm` functions** that act on them.
+The diagram below shows the steps. **R objects and data files** are in
+italics; **`prepR4pcm` functions** that act on them are in plain
+monospace.
 
-    *Trait data*  +  *Phylogenetic tree*
-                |
-            reconcile_tree()
-                |
-                V
-        *reconciliation*  ----> Review: reconcile_summary() / reconcile_plot() / reconcile_report()
-                |              ----> Fix:    reconcile_override() / reconcile_suggest()
-                |
-            reconcile_apply()
-                |
-                V
-        *Aligned data*  +  *Pruned tree*  ---->  PGLS / PGLMM / any PCM
+> *Trait data* + *Phylogenetic tree*     ↓    `reconcile_tree()`
+> *reconciliation*     ↓    Review: `reconcile_summary()`,
+> `reconcile_plot()`, `reconcile_report()`     ↓    Fix (if needed):
+> `reconcile_override()`, `reconcile_suggest()`     ↓   
+> `reconcile_apply()` *Aligned data* + *Pruned tree*     ↓ PGLS / PGLMM
+> / any PCM
 
 The first reconciliation pass produces a *reconciliation* object (an
 audit of every name match). You then review and fix; once you’re happy,
@@ -130,7 +125,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-05-01 18:23:32
+#>   Timestamp: 2026-05-02 16:02:17
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -150,10 +145,16 @@ aligned <- reconcile_apply(rec, data = avonet_subset, tree = tree_jetz,
                            species_col = "Species1", drop_unresolved = TRUE)
 #> ! Dropped 262 rows with unresolved species from data
 #> ℹ Tree has 657 tips after alignment
-nrow(aligned$data)
+
+# Confirm the two sides hold the SAME species (not just the same count)
+data_sp <- aligned$data$Species1
+tree_sp <- aligned$tree$tip.label
+length(intersect(data_sp, tree_sp))   # how many species are in both
 #> [1] 657
-ape::Ntip(aligned$tree)
-#> [1] 657
+length(setdiff(data_sp, tree_sp))     # in data but not tree (should be 0)
+#> [1] 0
+length(setdiff(tree_sp, data_sp))     # in tree but not data (should be 0)
+#> [1] 0
 ```
 
 What just happened: `reconcile_tree()` matched every species name in
@@ -163,8 +164,9 @@ fuzzy matches as needed. The printed `rec` object shows the count in
 each match category. `reconcile_apply()` then takes that reconciliation
 and produces (a) a data frame with rows restricted to species that
 resolved to a tree tip, and (b) the tree pruned to those tips. The
-`nrow()` and `ape::Ntip()` calls confirm the two sides agree on species
-count — the precondition for any downstream PGLS or PGLMM call.
+`intersect()` / `setdiff()` calls above confirm that the data’s species
+names and the tree’s tip labels are *identical sets* (not just equal
+counts) — the actual precondition for any downstream PGLS or PGLMM call.
 
 ## Vignettes
 
@@ -175,7 +177,8 @@ count — the precondition for any downstream PGLS or PGLMM call.
 - [Bird Trait
   Workflow](https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html)
   ([source](vignettes/bird-workflow.Rmd)) — a realistic multi-dataset,
-  multi-tree analysis pipeline ending in PGLS and phylogenetic GLMM fits
+  multi-tree analysis pipeline ending in fitting the PGLS and
+  phylogenetic GLMM
 - [Mammal Database-Assembly
   Workflow](https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html)
   ([source](vignettes/db-assembly-workflow_mammals.Rmd)) — assembling a
@@ -185,8 +188,8 @@ count — the precondition for any downstream PGLS or PGLMM call.
 
 ## Citation
 
-If you use prepR4pcm in your research, please cite the package and the
-original publication for any bundled example dataset you used (see
+If you use **prepR4pcm** in your research, please cite the package and
+the original publication for any bundled example dataset you used (see
 *Bundled data sources* below).
 
 For the package itself:

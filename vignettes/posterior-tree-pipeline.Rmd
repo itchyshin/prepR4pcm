@@ -116,10 +116,21 @@ If you already have a topology and want to *date* it (rather than
 fetch a new one), use `pr_date_tree()`:
 
 ```{r date, eval = FALSE}
-my_topology   <- ape::read.tree("my_topology.nex")
-dated_trees   <- pr_date_tree(my_topology, n_dated = 50)
-class(dated_trees$tree)        # multiPhylo of 50 dated copies
+my_topology <- ape::read.tree("my_topology.nex")
+dated_trees <- pr_date_tree(my_topology, n_dated = 50)
+class(dated_trees$tree)        # "multiPhylo"
+length(dated_trees$tree)       # up to 50
 ```
+
+**What "n_dated = 50" actually returns**: 50 chronograms that all
+share `my_topology` but have *different branch lengths*, where each
+variant comes from a different source paper in DateLife's database
+(e.g. variant 1 dated against Hedges et al. 2015, variant 2
+against Bininda-Emonds et al. 2007, etc.). To get N different
+*topologies*, fetch them separately first (e.g.
+`pr_get_tree(species, source = "rtrees", taxon = "mammal")` returns
+~100 topologies), then pass that `multiPhylo` to `pr_date_tree()`
+to get the topology × source cross-product.
 
 ## Step 3 — Format citations (do this *before* you submit)
 

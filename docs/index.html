@@ -72,7 +72,7 @@
 </div>
 <!-- badges: start -->
 
-<p>Species names in your data rarely match the tip labels in your phylogenetic tree exactly. Such mismatches prevent you from combining species traits (data tables) with their evolutionary relationships (the phylogenetic tree) — which is what phylogenetic comparative methods (PCMs, e.g. studies of trait evolution, niche conservatism, or correlated trait change) need. Three kinds of mismatch silently drop species from these analyses:</p>
+<p>In phylogenetic comparative analyses, trait datasets must match exactly the tip labels in the phylogenetic tree. Mismatches prevent the integration of species trait data (e.g., tables) with their evolutionary relationships (the tree), which is essential for phylogenetic comparative methods (PCMs), such as studies of trait evolution, niche conservatism, or correlated trait change. These mismatches can lead to species being silently excluded from analyses. There are three main types of species name mismatches:</p>
 <ul>
 <li>
 <strong>Formatting differences</strong>, e.g. <code>Homo_sapiens</code> vs <code>Homo sapiens</code>, trailing whitespace, capitalisation</li>
@@ -83,7 +83,7 @@
 </li>
 </ul>
 <p><strong>prepR4pcm</strong> detects and resolves all three through a multi-stage matching cascade (exact → normalised → synonym → fuzzy), documents every decision so the choices are auditable, and produces aligned data–tree pairs ready for phylogenetic generalised least squares (PGLS), phylogenetic mixed models (PGLMMs), or any other PCM.</p>
-<p>Below you’ll find: how to install, a quick example, the typical workflow, vignettes covering realistic pipelines, citation information, and a list of the bundled example datasets.</p>
+<p>Below you’ll find instructions for package installation, a quick example, the typical workflow, vignettes covering realistic pipelines, citation information, and a list of bundled example datasets.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -111,26 +111,17 @@
 <div class="section level2">
 <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
 </h2>
-<p>The diagram below shows the steps. Italics mark <strong>R objects / data files</strong> (the things on disk or in your workspace); plain text marks the <strong><code>prepR4pcm</code> functions</strong> that act on them.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="sc">*</span>Trait data<span class="sc">*</span>  <span class="sc">+</span>  <span class="er">*</span>Phylogenetic tree<span class="sc">*</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>            <span class="er">|</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>        <span class="fu">reconcile_tree</span>()</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>            <span class="sc">|</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>            V</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    <span class="sc">*</span>reconciliation<span class="sc">*</span>  <span class="sc">---</span><span class="ot">-&gt;</span> Review<span class="sc">:</span> <span class="fu">reconcile_summary</span>() <span class="sc">/</span> <span class="fu">reconcile_plot</span>() <span class="sc">/</span> <span class="fu">reconcile_report</span>()</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>            <span class="sc">|</span>              <span class="sc">---</span><span class="ot">-&gt;</span> Fix<span class="sc">:</span>    <span class="fu">reconcile_override</span>() <span class="sc">/</span> <span class="fu">reconcile_suggest</span>()</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>            <span class="sc">|</span></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>        <span class="fu">reconcile_apply</span>()</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>            <span class="sc">|</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>            V</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>    <span class="sc">*</span>Aligned data<span class="sc">*</span>  <span class="sc">+</span>  <span class="er">*</span>Pruned tree<span class="sc">*</span>  <span class="sc">---</span><span class="ot">-&gt;</span>  PGLS <span class="sc">/</span> PGLMM <span class="sc">/</span> any PCM</span></code></pre></div>
+<p>The diagram below shows the steps. <strong>R objects and data files</strong> are in italics; <strong><code>prepR4pcm</code> functions</strong> that act on them are in plain monospace.</p>
+<blockquote>
+<p><em>Trait data</em> + <em>Phylogenetic tree</em>     ↓    <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> <em>reconciliation</em>     ↓    Review: <code><a href="reference/reconcile_summary.html">reconcile_summary()</a></code>, <code><a href="reference/reconcile_plot.html">reconcile_plot()</a></code>, <code><a href="reference/reconcile_report.html">reconcile_report()</a></code>     ↓    Fix (if needed): <code><a href="reference/reconcile_override.html">reconcile_override()</a></code>, <code><a href="reference/reconcile_suggest.html">reconcile_suggest()</a></code>     ↓    <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> <em>Aligned data</em> + <em>Pruned tree</em>     ↓ PGLS / PGLMM / any PCM</p>
+</blockquote>
 <p>The first reconciliation pass produces a <em>reconciliation</em> object (an audit of every name match). You then review and fix; once you’re happy, <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> produces the aligned dataset and pruned tree that have matching species lists — the precondition for any phylogenetic comparative method.</p>
 </div>
 <div class="section level2">
 <h2 id="quick-example">Quick example<a class="anchor" aria-label="anchor" href="#quick-example"></a>
 </h2>
 <p>This example reconciles <code>avonet_subset</code> (919 species rows from AVONET, a global bird-trait database; Tobias et al. 2022) against <code>tree_jetz</code> (657 tips from the Jetz et al. 2012 bird phylogeny). It produces an aligned data frame and a pruned tree ready for downstream modelling — both sides have the same species, in matched order, ready for a PGLS or phylogenetic mixed model.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/emmanuelparadis/ape" class="external-link">ape</a></span><span class="op">)</span></span>
 <span></span>
@@ -155,7 +146,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-01 18:23:32</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-02 16:02:17</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -175,11 +166,17 @@
 <span>                           species_col <span class="op">=</span> <span class="st">"Species1"</span>, drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ! Dropped 262 rows with unresolved species from data</span></span>
 <span><span class="co">#&gt; ℹ Tree has 657 tips after alignment</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Confirm the two sides hold the SAME species (not just the same count)</span></span>
+<span><span class="va">data_sp</span> <span class="op">&lt;-</span> <span class="va">aligned</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">Species1</span></span>
+<span><span class="va">tree_sp</span> <span class="op">&lt;-</span> <span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect</a></span><span class="op">(</span><span class="va">data_sp</span>, <span class="va">tree_sp</span><span class="op">)</span><span class="op">)</span>   <span class="co"># how many species are in both</span></span>
 <span><span class="co">#&gt; [1] 657</span></span>
-<span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 657</span></span></code></pre></div>
-<p>What just happened: <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> matched every species name in <code>avonet_subset$Species1</code> against the tip labels of <code>tree_jetz</code>, trying exact matches first and falling back through normalised, synonym, and fuzzy matches as needed. The printed <code>rec</code> object shows the count in each match category. <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> then takes that reconciliation and produces (a) a data frame with rows restricted to species that resolved to a tree tip, and (b) the tree pruned to those tips. The <code><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow()</a></code> and <code><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">ape::Ntip()</a></code> calls confirm the two sides agree on species count — the precondition for any downstream PGLS or PGLMM call.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="va">data_sp</span>, <span class="va">tree_sp</span><span class="op">)</span><span class="op">)</span>     <span class="co"># in data but not tree (should be 0)</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="va">tree_sp</span>, <span class="va">data_sp</span><span class="op">)</span><span class="op">)</span>     <span class="co"># in tree but not data (should be 0)</span></span>
+<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<p>What just happened: <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> matched every species name in <code>avonet_subset$Species1</code> against the tip labels of <code>tree_jetz</code>, trying exact matches first and falling back through normalised, synonym, and fuzzy matches as needed. The printed <code>rec</code> object shows the count in each match category. <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> then takes that reconciliation and produces (a) a data frame with rows restricted to species that resolved to a tree tip, and (b) the tree pruned to those tips. The <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect()</a></code> / <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff()</a></code> calls above confirm that the data’s species names and the tree’s tip labels are <em>identical sets</em> (not just equal counts) — the actual precondition for any downstream PGLS or PGLMM call.</p>
 </div>
 <div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
@@ -188,7 +185,7 @@
 <li>
 <a href="https://itchyshin.github.io/prepR4pcm/articles/getting-started.html">Getting Started</a> (<a href="vignettes/getting-started.Rmd">source</a>) — core concepts and a minimal worked example</li>
 <li>
-<a href="https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html">Bird Trait Workflow</a> (<a href="vignettes/bird-workflow.Rmd">source</a>) — a realistic multi-dataset, multi-tree analysis pipeline ending in PGLS and phylogenetic GLMM fits</li>
+<a href="https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html">Bird Trait Workflow</a> (<a href="vignettes/bird-workflow.Rmd">source</a>) — a realistic multi-dataset, multi-tree analysis pipeline ending in fitting the PGLS and phylogenetic GLMM</li>
 <li>
 <a href="https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html">Mammal Database-Assembly Workflow</a> (<a href="vignettes/db-assembly-workflow_mammals.Rmd">source</a>) — assembling a trait database from three sources (Amniote, PanTHERIA, TetrapodTraits), reconciling species names against a mammal phylogeny, and producing a model-ready species-level data frame</li>
 </ul>
@@ -196,23 +193,23 @@
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<p>If you use prepR4pcm in your research, please cite the package and the original publication for any bundled example dataset you used (see <em>Bundled data sources</em> below).</p>
+<p>If you use <strong>prepR4pcm</strong> in your research, please cite the package and the original publication for any bundled example dataset you used (see <em>Bundled data sources</em> below).</p>
 <p>For the package itself:</p>
 <blockquote>
 <p>Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Celeste J, Poo Hernandez S (2026). <em>prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.</em> R package version 0.4.0. <a href="https://github.com/itchyshin/prepR4pcm" class="external-link uri">https://github.com/itchyshin/prepR4pcm</a></p>
 </blockquote>
 <p>BibTeX:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Jimuel Jr Celeste and</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>            Sergio {Poo Hernandez}},</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Jimuel Jr Celeste and</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>            Sergio {Poo Hernandez}},</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>}</span></code></pre></div>
 <p>Or run in R to get the same entry programmatically:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>citation("prepR4pcm")</code> warns <em>“no package ‘prepR4pcm’ was found”</em>, the installed copy is stale or in a library R isn’t searching. Re-install with <code>pak::pak("itchyshin/prepR4pcm")</code> and re-load (restart R if needed).</p>
 </div>
