@@ -22,7 +22,7 @@ Returns the path to the cache directory used by \code{\link[=pr_get_tree]{pr_get
 override the default.
 }
 \details{
-The default cache directory is \code{\link[tools:userdir]{tools::R_user_dir()}} with type
+The default cache directory is \code{\link[tools:R_user_dir]{tools::R_user_dir()}} with type
 \code{"cache"} and the package name \code{"prepR4pcm"}, which on Linux is
 typically \verb{~/.cache/R/prepR4pcm/}, on macOS
 \verb{~/Library/Caches/org.R-project.R/R/prepR4pcm/}, and on Windows

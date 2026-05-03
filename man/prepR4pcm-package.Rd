@@ -159,10 +159,12 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID})
   \item Santiago Ortega
   \item Ayumi Mizuno
   \item Eduardo S.A. Santos
   \item Malgorzata Lagisz (\href{https://orcid.org/0000-0002-3993-6127}{ORCID})
+  \item Bhavya Jain
   \item Jimuel Jr Celeste
   \item Sergio Poo Hernandez \email{pooherna@ualberta.ca}
 }

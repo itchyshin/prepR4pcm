@@ -27,7 +27,7 @@ effect structure in phylogenetic meta-analysis (\code{metafor::rma.mv})
 or phylogenetic mixed models (\code{MCMCglmm}, \code{brms}, etc.).
 }
 \details{
-Wraps \code{\link[ape:vcv.phylo]{ape::vcv()}} with \code{corr = TRUE}. Designed to slot in after
+Wraps \code{\link[ape:vcv]{ape::vcv()}} with \code{corr = TRUE}. Designed to slot in after
 \code{\link[=pr_get_tree]{pr_get_tree()}} when the goal is meta-analysis, where typically:
 \enumerate{
 \item Topology comes from Open Tree of Life (\code{source = "rotl"})
@@ -86,5 +86,5 @@ modelling the phylogeny. \emph{Methods in Ecology and Evolution},
 \seealso{
 \code{\link[=pr_get_tree]{pr_get_tree()}} (use with \code{branch_lengths = "grafen"}
 and \code{resolve_polytomies = TRUE} for the meta-analysis path);
-\code{\link[ape:vcv.phylo]{ape::vcv()}} for the underlying computation.
+\code{\link[ape:vcv]{ape::vcv()}} for the underlying computation.
 }

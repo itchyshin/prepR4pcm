@@ -30,7 +30,7 @@ head(pr_extract_tips(tree_jetz))
 \code{\link[=pr_normalize_names]{pr_normalize_names()}} for cleaning tip labels before
 joining against a data frame.
 
-Other name utilities: 
-\code{\link{pr_normalize_names}()}
+Other name utilities:
+\code{\link[=pr_normalize_names]{pr_normalize_names()}}
 }
 \concept{name utilities}

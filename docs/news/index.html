@@ -43,6 +43,19 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
 <div class="section level3">
+<h3 id="round-landing-page-reflects-tree-fetchingdating-new-author-0-4-0-9000">Round 13: landing page reflects tree-fetching/dating; new author<a class="anchor" aria-label="anchor" href="#round-landing-page-reflects-tree-fetchingdating-new-author-0-4-0-9000"></a></h3>
+<ul><li>
+<strong>README / landing page</strong> broadened so the visible body content matches what the package actually does. Previously the page led with name-reconciliation as if that were the whole story. Now the opening explicitly names both halves of the prerequisite that <code>prepR4pcm</code> solves: (1) reconcile names; (2) retrieve and date trees. Specific changes:
+<ul><li>New first-paragraph framing.</li>
+<li>New “Tree retrieval and dating” features bullet covering <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> (5 backends), <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> (DateLife chronograms), and <code><a href="../reference/pr_cite_tree.html">pr_cite_tree()</a></code> (auto-formatted citations).</li>
+<li>Short note above the workflow diagram pointing readers to <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> / <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> if they don’t yet have a tree.</li>
+<li>New “Quick example — fetching a tree” snippet (50-tree fishtree posterior + <code><a href="../reference/pr_cite_tree.html">pr_cite_tree()</a></code>).</li>
+<li>The 3 vignettes that were missing from the in-page list (“Posterior-Tree Pipeline”, “Comparing Tree Backends”, “Phylogenetic Meta-Analysis with rotl”) are now linked.</li>
+</ul></li>
+<li>
+<strong>New author</strong>: Bhavya Jain added to <code>Authors@R</code> (DESCRIPTION) and the citation block (README + <code>inst/CITATION</code>). Position: 6th of 8, between Malgorzata Lagisz and Jimuel Jr Celeste.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="round-clootl-single-tree-path-now-works-out-of-the-box-0-4-0-9000">Round 12: clootl single-tree path now works out of the box<a class="anchor" aria-label="anchor" href="#round-clootl-single-tree-path-now-works-out-of-the-box-0-4-0-9000"></a></h3>
 <ul><li>
 <strong>Bug fix — <code>pr_get_tree(source = "clootl", n_tree = 1)</code></strong>: previously errored with <code>object 'clootl_data' not found</code> unless the user had loaded <code><a href="https://github.com/eliotmiller/clootl" class="external-link">library(clootl)</a></code> first. The wrapper now temporarily attaches the <code>clootl</code> namespace for the duration of the call (and detaches on exit, leaving the user’s search path unchanged). The single-tree path uses the v1.6 / 2025 taxonomy bundled with <code>clootl</code> and works on a fresh install with no AvesData repo. <code>n_tree &gt; 1</code> still calls <code><a href="https://rdrr.io/pkg/clootl/man/sampleTrees.html" class="external-link">clootl::sampleTrees()</a></code> and so still requires a one-time <code>clootl::get_avesdata_repo(".")</code>; that’s documented.</li>
@@ -372,7 +385,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Shinichi Nakagawa, Santiago Ortega, Ayumi Mizuno, Eduardo S.A. Santos, Malgorzata Lagisz, Jimuel Jr Celeste, Sergio Poo Hernandez.</p>
+  <p>Developed by Shinichi Nakagawa, Santiago Ortega, Ayumi Mizuno, Eduardo S.A. Santos, Malgorzata Lagisz, Bhavya Jain, Jimuel Jr Celeste, Sergio Poo Hernandez.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -69,7 +69,7 @@ pr_normalize_names("Parus major major", rank = "subspecies")
 four-stage matching cascade; \code{\link[=pr_extract_tips]{pr_extract_tips()}} for pulling tip
 labels out of a tree prior to normalising them.
 
-Other name utilities: 
-\code{\link{pr_extract_tips}()}
+Other name utilities:
+\code{\link[=pr_extract_tips]{pr_extract_tips()}}
 }
 \concept{name utilities}

@@ -1,5 +1,28 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 13: landing page reflects tree-fetching/dating; new author
+
+* **README / landing page** broadened so the visible body content
+  matches what the package actually does. Previously the page led
+  with name-reconciliation as if that were the whole story. Now the
+  opening explicitly names both halves of the prerequisite that
+  `prepR4pcm` solves: (1) reconcile names; (2) retrieve and date
+  trees. Specific changes:
+  - New first-paragraph framing.
+  - New "Tree retrieval and dating" features bullet covering
+    `pr_get_tree()` (5 backends), `pr_date_tree()` (DateLife
+    chronograms), and `pr_cite_tree()` (auto-formatted citations).
+  - Short note above the workflow diagram pointing readers to
+    `pr_get_tree()` / `pr_date_tree()` if they don't yet have a tree.
+  - New "Quick example — fetching a tree" snippet (50-tree fishtree
+    posterior + `pr_cite_tree()`).
+  - The 3 vignettes that were missing from the in-page list
+    ("Posterior-Tree Pipeline", "Comparing Tree Backends",
+    "Phylogenetic Meta-Analysis with rotl") are now linked.
+* **New author**: Bhavya Jain added to `Authors@R` (DESCRIPTION) and
+  the citation block (README + `inst/CITATION`). Position: 6th of
+  8, between Malgorzata Lagisz and Jimuel Jr Celeste.
+
 ## Round 12: clootl single-tree path now works out of the box
 
 * **Bug fix — `pr_get_tree(source = "clootl", n_tree = 1)`**: previously

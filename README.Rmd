@@ -19,11 +19,23 @@ knitr::opts_chunk$set(
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
+Phylogenetic comparative methods (PCMs) need a phylogenetic tree
+and a trait dataset whose species names line up exactly with the
+tree's tip labels. **prepR4pcm** addresses both halves of that
+prerequisite:
+
+1. **Reconcile names** when the data and the tree disagree on
+   spelling, formatting, or synonymy — so species aren't silently
+   dropped from the analysis.
+2. **Retrieve and date trees** from public databases when you
+   don't already have one, including posteriors of trees so the
+   tree-choice uncertainty can be propagated downstream.
+
 In phylogenetic comparative analyses, trait datasets must match
 exactly the tip labels in the phylogenetic tree. Mismatches prevent
 the integration of species trait data (e.g., tables) with their
 evolutionary relationships (the tree), which is essential for
-phylogenetic comparative methods (PCMs), such as studies of trait
+phylogenetic comparative methods, such as studies of trait
 evolution, niche conservatism, or correlated trait change. These
 mismatches can lead to species being silently excluded from
 analyses. There are three main types of species name mismatches:
@@ -85,8 +97,24 @@ pak::pak("itchyshin/prepR4pcm")
   run *sensitivity analyses* — fit your downstream model both with
   and without the grafted tips and report whether the conclusions
   change.
+- **Tree retrieval and dating**: `pr_get_tree()` fetches phylogenetic
+  trees from five backends — `rotl` (Open Tree of Life), `rtrees`
+  (taxon-specific mega-trees including the VertLife mammal, bird,
+  squamate, and shark posteriors), `clootl` (current Clements bird
+  taxonomy), `fishtree` (Rabosky et al. 2018), and `datelife`
+  (synthesis chronograms). Single trees and posteriors of trees are
+  both supported. `pr_date_tree()` adds time calibration via
+  DateLife. `pr_cite_tree()` produces per-source citations in plain
+  text, Markdown, or BibTeX so the methods paragraph writes itself.
 
 ## Typical workflow
+
+*Starting point*: trait data + a phylogenetic tree. *If you don't
+yet have a tree*, fetch one with `pr_get_tree()` (and optionally
+date it with `pr_date_tree()`) and continue from "Trait data +
+Phylogenetic tree" below; see the
+[posterior-tree pipeline](https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html)
+vignette for the full pattern.
 
 The diagram below shows the steps. **R objects and data files** are
 in italics; **`prepR4pcm` functions** that act on them are in plain
@@ -155,6 +183,31 @@ above confirm that the data's species names and the tree's tip
 labels are *identical sets* (not just equal counts) — the actual
 precondition for any downstream PGLS or PGLMM call.
 
+## Quick example — fetching a tree
+
+If you don't already have a tree, fetch one. The snippet below
+pulls a 50-tree posterior of fish chronograms from the Fish Tree
+of Life (Rabosky et al. 2018) and asks `pr_cite_tree()` to format
+the citations for your methods section:
+
+```r
+trees <- pr_get_tree(
+  c("Salmo salar", "Esox lucius", "Oncorhynchus mykiss"),
+  source = "fishtree",
+  n_tree = 50
+)
+class(trees$tree)              # "multiPhylo"
+length(trees$tree)             # 50
+
+# Citations for the methods section
+cat(pr_cite_tree(trees, format = "markdown"))
+```
+
+Each backend has its own coverage and quirks; the
+[comparing tree backends](https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html)
+vignette summarises which one to pick for a given taxon and what
+"`n_tree > 1`" returns in each case.
+
 ## Vignettes
 
 - [Getting Started](https://itchyshin.github.io/prepR4pcm/articles/getting-started.html)
@@ -170,6 +223,22 @@ precondition for any downstream PGLS or PGLMM call.
   PanTHERIA, TetrapodTraits), reconciling species names against a
   mammal phylogeny, and producing a model-ready species-level
   data frame
+- [Posterior-Tree Pipeline (prepR4pcm + pigauto)](https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html)
+  ([source](vignettes/posterior-tree-pipeline.Rmd))
+  --- fetching a posterior of trees, imputing missing trait
+  values, and pooling estimates with valid standard errors via
+  Rubin's rules so both the tree-choice and imputation
+  uncertainties are propagated
+- [Comparing Tree Backends](https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html)
+  ([source](vignettes/comparing-tree-backends.Rmd))
+  --- when do `rotl`, `rtrees`, `clootl`, `fishtree`, and
+  `datelife` agree on which tree to give you, and what to do
+  when they don't
+- [Phylogenetic Meta-Analysis with rotl](https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html)
+  ([source](vignettes/meta-analysis-with-rotl.Rmd))
+  --- the Cinar et al. 2022 recipe: fetch a topology, resolve
+  polytomies, assign Grafen branch lengths, build the
+  phylogenetic correlation matrix, feed `metafor::rma.mv()`
 
 ## Citation
 
@@ -179,7 +248,7 @@ the original publication for any bundled example dataset you used
 
 For the package itself:
 
-> Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Celeste J, Poo Hernandez S (2026).
+> Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Jain B, Celeste J, Poo Hernandez S (2026).
 > *prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.*
 > R package version 0.4.0. <https://github.com/itchyshin/prepR4pcm>
 
@@ -189,8 +258,8 @@ BibTeX:
 @Manual{,
   title  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},
   author = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and
-            Eduardo S.A. Santos and Malgorzata Lagisz and Jimuel Jr Celeste and
-            Sergio {Poo Hernandez}},
+            Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and
+            Jimuel Jr Celeste and Sergio {Poo Hernandez}},
   year   = {2026},
   note   = {R package version 0.4.0},
   url    = {https://github.com/itchyshin/prepR4pcm},
