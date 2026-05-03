@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,8 +103,9 @@ rest of the pipeline.</p>
 <ul>
 <li>A posterior of 50 fish chronograms from the Fish Tree of Life
 (Rabosky et al. 2018).</li>
-<li>50 imputations of the missing trait values per tree (so 50 × 50 =
-2,500 model fits).</li>
+<li>5 imputations of the missing trait values per tree (so 5 × 50 = 250
+model fits — adjust <code>m_per_tree</code> upward for a real
+analysis).</li>
 <li>Pooled estimates with valid standard errors that account for both
 axes of uncertainty.</li>
 </ul>
@@ -139,9 +140,8 @@ match the tree’s tip labels.</p>
 <div class="section level2">
 <h2 id="step-2-get-a-posterior-of-trees">Step 2 — Get a posterior of trees<a class="anchor" aria-label="anchor" href="#step-2-get-a-posterior-of-trees"></a>
 </h2>
-<p>The headline change in Round 5: every backend supports
-<code>n_tree &gt; 1</code>, and every backend that <em>can</em> return
-multiple trees does so. Here we ask <code>fishtree</code> for 50
+<p>Every backend that <em>can</em> return multiple trees does so via
+<code>n_tree &gt; 1</code>. Here we ask <code>fishtree</code> for 50
 stochastic resolutions (Chang, Rabosky, Alfaro 2019, <em>Syst.
 Biol.</em>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -174,16 +174,19 @@ than fetch a new one), use <code><a href="../reference/pr_date_tree.html">pr_dat
 <span><span class="va">dated_trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_date_tree.html">pr_date_tree</a></span><span class="op">(</span><span class="va">my_topology</span>, n_dated <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">dated_trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>        <span class="co"># "multiPhylo"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">dated_trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>       <span class="co"># up to 50</span></span></code></pre></div>
-<p><strong>What “n_dated = 50” actually returns</strong>: 50 chronograms
-that all share <code>my_topology</code> but have <em>different branch
-lengths</em>, where each variant comes from a different source paper in
-DateLife’s database (e.g. variant 1 dated against Hedges et al. 2015,
-variant 2 against Bininda-Emonds et al. 2007, etc.). To get N different
-<em>topologies</em>, fetch them separately first (e.g.
+<p><strong>What <code>n_dated = 50</code> actually returns</strong>: 50
+chronograms that all share <code>my_topology</code> but have
+<em>different branch lengths</em>. Each variant comes from a different
+source paper in DateLife’s database (e.g. variant 1 dated against Hedges
+et al. 2015, variant 2 against Bininda-Emonds et al. 2007, etc.). The
+topology is fixed; the dating varies.</p>
+<p>To get 50 different <em>topologies</em>, fetch them separately first
+(e.g.
 <code>pr_get_tree(species, source = "rtrees", taxon = "mammal")</code>
-returns ~100 topologies), then pass that <code>multiPhylo</code> to
-<code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> to get the topology × source
-cross-product.</p>
+returns 100 mammal topologies sampled from VertLife / Upham et
+al. 2019), then pass that <code>multiPhylo</code> to
+<code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> to date each one. That gives you the
+topology × source cross-product.</p>
 </div>
 <div class="section level2">
 <h2 id="step-3-format-citations-do-this-before-you-submit">Step 3 — Format citations (do this <em>before</em> you submit)<a class="anchor" aria-label="anchor" href="#step-3-format-citations-do-this-before-you-submit"></a>
@@ -238,9 +241,8 @@ narrower intervals were always overconfident.</p>
 <div class="section level2">
 <h2 id="choosing-a-backend">Choosing a backend<a class="anchor" aria-label="anchor" href="#choosing-a-backend"></a>
 </h2>
-<p>The “Status” column is the verified state on a clean macOS R 4.4
-install as of 2026-05-01. See the <a href="comparing-tree-backends.html">Comparing tree backends</a> vignette
-for the full status table including caveats.</p>
+<p>Verified on a clean macOS R 4.4 install on 2026-05-01. See the <a href="comparing-tree-backends.html">Comparing tree backends</a> vignette
+for the full status table.</p>
 <table class="table">
 <colgroup>
 <col width="25%">
@@ -259,40 +261,50 @@ for the full status table including caveats.</p>
 <td>Universal</td>
 <td>A single best-guess tree</td>
 <td><code>pr_get_tree(source = "rotl")</code></td>
-<td>likely ✅ (untested locally — rotl/Rcpp install issue on dev
-box)</td>
+<td>✅ verified — returns the Open Tree of Life synthesis tree</td>
 </tr>
 <tr class="even">
 <td>Universal</td>
 <td>A posterior of dated trees</td>
 <td><code>pr_get_tree(source = "datelife", n_tree = 50)</code></td>
-<td>likely ✅ (datelife is <code>Enhances</code>, install separately
-with <code>pak::pak("phylotastic/datelife")</code>)</td>
+<td>likely ✅ — <code>datelife</code> is in <code>Enhances</code>;
+install separately with
+<code>pak::pak("phylotastic/datelife")</code>
+</td>
 </tr>
 <tr class="odd">
 <td>Birds</td>
-<td>Time-calibrated, current Clements</td>
-<td><code>pr_get_tree(source = "clootl", n_tree = 50)</code></td>
-<td>❌ requires <code>clootl::get_avesdata_repo()</code> first;
-otherwise errors with <code>object 'clootl_data' not found</code>
-</td>
+<td>A single tree, current Clements</td>
+<td><code>pr_get_tree(source = "clootl", n_tree = 1)</code></td>
+<td>✅ verified — works out of the box (uses the v1.6/2025 taxonomy
+bundled with <code>clootl</code>)</td>
 </tr>
 <tr class="even">
+<td>Birds</td>
+<td>A posterior of trees, current Clements</td>
+<td><code>pr_get_tree(source = "clootl", n_tree = 50)</code></td>
+<td>⚠️ requires <code>clootl::get_avesdata_repo(".")</code> once before
+this works; without it <code>sampleTrees()</code> errors with
+<code>AvesData repo not found</code>. Capped at 100 upstream.</td>
+</tr>
+<tr class="odd">
 <td>Fish</td>
 <td>Time-calibrated, posterior</td>
 <td><code>pr_get_tree(source = "fishtree", n_tree = 50)</code></td>
 <td>✅ verified — returns <code>multiPhylo[50]</code>
 </td>
 </tr>
-<tr class="odd">
-<td>Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly</td>
+<tr class="even">
+<td>Bird, mammal, fish, amphibian, reptile, plant, shark, bee,
+butterfly</td>
 <td>Taxon-specific mega-tree, possibly grafted</td>
 <td><code>pr_get_tree(source = "rtrees", taxon = "&lt;group&gt;")</code></td>
 <td>✅ works; ⚠️ <code>n_tree</code> is <strong>informational
-only</strong> — <code>rtrees::get_tree()</code> has no
-<code>n_tree</code> argument, the count is fixed by the chosen mega-tree
-(e.g. <code>mammal_tree = "vertlife"</code> → 100, <code>bird</code>
-default → 100, single-tree mega-trees → 1).</td>
+only</strong> — <code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> has no
+<code>n_tree</code> argument, so the count is fixed by the chosen
+mega-tree (<code>taxon = "bird"</code> → 100,
+<code>taxon = "mammal"</code> → 100, <code>taxon = "fish"</code> → 1,
+etc.).</td>
 </tr>
 </tbody>
 </table>
@@ -311,7 +323,9 @@ default → 100, single-tree mega-trees → 1).</td>
 <tbody><tr class="odd">
 <td>Universal taxa</td>
 <td><code>pr_date_tree(my_tree, n_dated = 50)</code></td>
-<td>likely ✅ (untested locally — datelife not installed)</td>
+<td>likely ✅ — untested in this run; same dependency story as
+<code>datelife</code>
+</td>
 </tr></tbody>
 </table>
 </div>
@@ -320,21 +334,23 @@ default → 100, single-tree mega-trees → 1).</td>
 </h2>
 <ul>
 <li>
-<strong>Tree-comparison.</strong> If you fetch from two backends and
-want to see how much they disagree, <code><a href="https://rdrr.io/pkg/ape/man/comparePhylo.html" class="external-link">ape::comparePhylo()</a></code> and
-<code>phangorn</code> are the relevant tools. A wrapper might appear in
-a future round.</li>
-<li>
-<strong>Caching.</strong> Each call hits the network or the database
-fresh. For a paper-scale pipeline, use <code><a href="https://memoise.r-lib.org/reference/memoise.html" class="external-link">memoise::memoise()</a></code>
-around your <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> calls. A built-in cache is on the
-Round 6 plan.</li>
+<strong>Tree comparison across backends.</strong> prepR4pcm provides
+<code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code> for quick pairwise Jaccard /
+Robinson-Foulds / branch-length comparisons (see the <a href="comparing-tree-backends.html">comparing tree backends
+vignette</a>). For richer visual comparison use
+<code>phytools::cophyloplot()</code> or
+<code><a href="https://klausvigo.github.io/phangorn/reference/densiTree.html" class="external-link">phangorn::densiTree()</a></code>.</li>
 <li>
 <strong>Trait imputation alone.</strong> That’s pigauto’s
-<code>impute()</code> / <code>multi_impute()</code>. The vignette skips
+<code>impute()</code> / <code>multi_impute()</code>. This vignette skips
 straight to the trees-aware variant because that’s the integration
 point.</li>
 </ul>
+<p>For repeated runs of the same retrieval (e.g. while iterating on a
+manuscript), pass <code>cache = TRUE</code> to
+<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>. The cache lives under
+<code><a href="https://rdrr.io/r/tools/userdir.html" class="external-link">tools::R_user_dir()</a></code> by default; redirect with
+<code><a href="../reference/pr_tree_cache_dir.html">pr_tree_cache_dir()</a></code> if you want it inside the project.</p>
 </div>
 <div class="section level2">
 <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
