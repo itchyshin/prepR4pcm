@@ -72,7 +72,14 @@
 </div>
 <!-- badges: start -->
 
-<p>In phylogenetic comparative analyses, trait datasets must match exactly the tip labels in the phylogenetic tree. Mismatches prevent the integration of species trait data (e.g., tables) with their evolutionary relationships (the tree), which is essential for phylogenetic comparative methods (PCMs), such as studies of trait evolution, niche conservatism, or correlated trait change. These mismatches can lead to species being silently excluded from analyses. There are three main types of species name mismatches:</p>
+<p>Phylogenetic comparative methods (PCMs) need a phylogenetic tree and a trait dataset whose species names line up exactly with the tree’s tip labels. <strong>prepR4pcm</strong> addresses both halves of that prerequisite:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Reconcile names</strong> when the data and the tree disagree on spelling, formatting, or synonymy — so species aren’t silently dropped from the analysis.</li>
+<li>
+<strong>Retrieve and date trees</strong> from public databases when you don’t already have one, including posteriors of trees so the tree-choice uncertainty can be propagated downstream.</li>
+</ol>
+<p>In phylogenetic comparative analyses, trait datasets must match exactly the tip labels in the phylogenetic tree. Mismatches prevent the integration of species trait data (e.g., tables) with their evolutionary relationships (the tree), which is essential for phylogenetic comparative methods, such as studies of trait evolution, niche conservatism, or correlated trait change. These mismatches can lead to species being silently excluded from analyses. There are three main types of species name mismatches:</p>
 <ul>
 <li>
 <strong>Formatting differences</strong>, e.g. <code>Homo_sapiens</code> vs <code>Homo sapiens</code>, trailing whitespace, capitalisation</li>
@@ -106,11 +113,14 @@
 <strong>Crosswalks and overrides</strong>: a <em>taxonomic crosswalk</em> is a published table mapping species names from one taxonomy to another (e.g. mapping BirdLife species names to the BirdTree / Jetz phylogeny names). An <em>override table</em> is a user-supplied two-column data frame (<code>name_x</code>, <code>name_y</code>) that forces specific name pairs to resolve a particular way, bypassing the cascade. <code><a href="reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> converts a published crosswalk into an override table.</li>
 <li>
 <strong>Tree augmentation</strong>: an <em>unresolved species</em> is one that appears in your data but has no matching tip on the tree (and the cascade couldn’t find it via formatting, synonymy, or fuzzy matching). <code><a href="reference/reconcile_augment.html">reconcile_augment()</a></code> grafts unresolved species onto the tree as sister to a congener (a species in the same genus). Because this placement is an assumption rather than a result, you should always run <em>sensitivity analyses</em> — fit your downstream model both with and without the grafted tips and report whether the conclusions change.</li>
+<li>
+<strong>Tree retrieval and dating</strong>: <code><a href="reference/pr_get_tree.html">pr_get_tree()</a></code> fetches phylogenetic trees from five backends — <code>rotl</code> (Open Tree of Life), <code>rtrees</code> (taxon-specific mega-trees including the VertLife mammal, bird, squamate, and shark posteriors), <code>clootl</code> (current Clements bird taxonomy), <code>fishtree</code> (Rabosky et al. 2018), and <code>datelife</code> (synthesis chronograms). Single trees and posteriors of trees are both supported. <code><a href="reference/pr_date_tree.html">pr_date_tree()</a></code> adds time calibration via DateLife. <code><a href="reference/pr_cite_tree.html">pr_cite_tree()</a></code> produces per-source citations in plain text, Markdown, or BibTeX so the methods paragraph writes itself.</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
 </h2>
+<p><em>Starting point</em>: trait data + a phylogenetic tree. <em>If you don’t yet have a tree</em>, fetch one with <code><a href="reference/pr_get_tree.html">pr_get_tree()</a></code> (and optionally date it with <code><a href="reference/pr_date_tree.html">pr_date_tree()</a></code>) and continue from “Trait data + Phylogenetic tree” below; see the <a href="https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html">posterior-tree pipeline</a> vignette for the full pattern.</p>
 <p>The diagram below shows the steps. <strong>R objects and data files</strong> are in italics; <strong><code>prepR4pcm</code> functions</strong> that act on them are in plain monospace.</p>
 <blockquote>
 <p><em>Trait data</em> + <em>Phylogenetic tree</em>     ↓    <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> <em>reconciliation</em>     ↓    Review: <code><a href="reference/reconcile_summary.html">reconcile_summary()</a></code>, <code><a href="reference/reconcile_plot.html">reconcile_plot()</a></code>, <code><a href="reference/reconcile_report.html">reconcile_report()</a></code>     ↓    Fix (if needed): <code><a href="reference/reconcile_override.html">reconcile_override()</a></code>, <code><a href="reference/reconcile_suggest.html">reconcile_suggest()</a></code>     ↓    <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> <em>Aligned data</em> + <em>Pruned tree</em>     ↓ PGLS / PGLMM / any PCM</p>
@@ -146,7 +156,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-02 16:02:17</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-03 05:49:12</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -179,6 +189,23 @@
 <p>What just happened: <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> matched every species name in <code>avonet_subset$Species1</code> against the tip labels of <code>tree_jetz</code>, trying exact matches first and falling back through normalised, synonym, and fuzzy matches as needed. The printed <code>rec</code> object shows the count in each match category. <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> then takes that reconciliation and produces (a) a data frame with rows restricted to species that resolved to a tree tip, and (b) the tree pruned to those tips. The <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect()</a></code> / <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff()</a></code> calls above confirm that the data’s species names and the tree’s tip labels are <em>identical sets</em> (not just equal counts) — the actual precondition for any downstream PGLS or PGLMM call.</p>
 </div>
 <div class="section level2">
+<h2 id="quick-example--fetching-a-tree">Quick example — fetching a tree<a class="anchor" aria-label="anchor" href="#quick-example--fetching-a-tree"></a>
+</h2>
+<p>If you don’t already have a tree, fetch one. The snippet below pulls a 50-tree posterior of fish chronograms from the Fish Tree of Life (Rabosky et al. 2018) and asks <code><a href="reference/pr_cite_tree.html">pr_cite_tree()</a></code> to format the citations for your methods section:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox lucius"</span>, <span class="st">"Oncorhynchus mykiss"</span><span class="op">)</span>,</span>
+<span>  source <span class="op">=</span> <span class="st">"fishtree"</span>,</span>
+<span>  n_tree <span class="op">=</span> <span class="fl">50</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>              <span class="co"># "multiPhylo"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>             <span class="co"># 50</span></span>
+<span></span>
+<span><span class="co"># Citations for the methods section</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="reference/pr_cite_tree.html">pr_cite_tree</a></span><span class="op">(</span><span class="va">trees</span>, format <span class="op">=</span> <span class="st">"markdown"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Each backend has its own coverage and quirks; the <a href="https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html">comparing tree backends</a> vignette summarises which one to pick for a given taxon and what “<code>n_tree &gt; 1</code>” returns in each case.</p>
+</div>
+<div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
 </h2>
 <ul>
@@ -188,6 +215,13 @@
 <a href="https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html">Bird Trait Workflow</a> (<a href="vignettes/bird-workflow.Rmd">source</a>) — a realistic multi-dataset, multi-tree analysis pipeline ending in fitting the PGLS and phylogenetic GLMM</li>
 <li>
 <a href="https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html">Mammal Database-Assembly Workflow</a> (<a href="vignettes/db-assembly-workflow_mammals.Rmd">source</a>) — assembling a trait database from three sources (Amniote, PanTHERIA, TetrapodTraits), reconciling species names against a mammal phylogeny, and producing a model-ready species-level data frame</li>
+<li>
+<a href="https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html">Posterior-Tree Pipeline (prepR4pcm + pigauto)</a> (<a href="vignettes/posterior-tree-pipeline.Rmd">source</a>) — fetching a posterior of trees, imputing missing trait values, and pooling estimates with valid standard errors via Rubin’s rules so both the tree-choice and imputation uncertainties are propagated</li>
+<li>
+<a href="https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html">Comparing Tree Backends</a> (<a href="vignettes/comparing-tree-backends.Rmd">source</a>) — when do <code>rotl</code>, <code>rtrees</code>, <code>clootl</code>, <code>fishtree</code>, and <code>datelife</code> agree on which tree to give you, and what to do when they don’t</li>
+<li>
+<a href="https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html">Phylogenetic Meta-Analysis with rotl</a> (<a href="vignettes/meta-analysis-with-rotl.Rmd">source</a>) — the Cinar et al. 2022 recipe: fetch a topology, resolve polytomies, assign Grafen branch lengths, build the phylogenetic correlation matrix, feed <code><a href="https://wviechtb.github.io/metafor/reference/rma.mv.html" class="external-link">metafor::rma.mv()</a></code>
+</li>
 </ul>
 </div>
 <div class="section level2">
@@ -196,20 +230,20 @@
 <p>If you use <strong>prepR4pcm</strong> in your research, please cite the package and the original publication for any bundled example dataset you used (see <em>Bundled data sources</em> below).</p>
 <p>For the package itself:</p>
 <blockquote>
-<p>Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Celeste J, Poo Hernandez S (2026). <em>prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.</em> R package version 0.4.0. <a href="https://github.com/itchyshin/prepR4pcm" class="external-link uri">https://github.com/itchyshin/prepR4pcm</a></p>
+<p>Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Jain B, Celeste J, Poo Hernandez S (2026). <em>prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.</em> R package version 0.4.0. <a href="https://github.com/itchyshin/prepR4pcm" class="external-link uri">https://github.com/itchyshin/prepR4pcm</a></p>
 </blockquote>
 <p>BibTeX:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Jimuel Jr Celeste and</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>            Sergio {Poo Hernandez}},</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>            Jimuel Jr Celeste and Sergio {Poo Hernandez}},</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>}</span></code></pre></div>
 <p>Or run in R to get the same entry programmatically:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>citation("prepR4pcm")</code> warns <em>“no package ‘prepR4pcm’ was found”</em>, the installed copy is stale or in a library R isn’t searching. Re-install with <code>pak::pak("itchyshin/prepR4pcm")</code> and re-load (restart R if needed).</p>
 </div>
@@ -305,6 +339,7 @@
 <li>Ayumi Mizuno <br><small class="roles"> Author </small>   </li>
 <li>Eduardo S.A. Santos <br><small class="roles"> Author </small>   </li>
 <li>Malgorzata Lagisz <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-3993-6127" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Bhavya Jain <br><small class="roles"> Author </small>   </li>
 <li>Jimuel Jr Celeste <br><small class="roles"> Author </small>   </li>
 <li>Sergio Poo Hernandez <br><small class="roles"> Author </small>   </li>
 </ul>
@@ -317,7 +352,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Shinichi Nakagawa, Santiago Ortega, Ayumi Mizuno, Eduardo S.A. Santos, Malgorzata Lagisz, Jimuel Jr Celeste, Sergio Poo Hernandez.</p>
+  <p>Developed by Shinichi Nakagawa, Santiago Ortega, Ayumi Mizuno, Eduardo S.A. Santos, Malgorzata Lagisz, Bhavya Jain, Jimuel Jr Celeste, Sergio Poo Hernandez.</p>
 </div>
 
 <div class="pkgdown-footer-right">
