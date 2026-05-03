@@ -105,10 +105,13 @@ V.PhyloMaker; bees = Bee Tree of Life. Override which
 mega-tree is used via \code{...} (e.g. \code{bee_tree = "bootstrap"}
 for 100 bee trees instead of the single ML tree).
 Requires \code{taxon}.}
-\item{\code{"clootl"}}{\code{n_tree = 1} calls \code{clootl::extractTree()};
-\code{n_tree > 1} calls \code{clootl::sampleTrees(count = n_tree)}
-(capped at 100 upstream). \strong{Both require the AvesData
-repo to be set up via \code{clootl::get_avesdata_repo()} first.}}
+\item{\code{"clootl"}}{\code{n_tree = 1} calls \code{clootl::extractTree()}
+and works out of the box with the v1.6 / 2025 taxonomy
+bundled in the \code{clootl} package. \code{n_tree > 1} calls
+\code{clootl::sampleTrees(count = n_tree)} (capped at 100
+upstream) and \strong{requires the AvesData repo to be set up
+once via \code{clootl::get_avesdata_repo(".")} first};
+otherwise it errors with \verb{AvesData repo not found}.}
 \item{\code{"fishtree"}}{Single phylo via \code{fishtree_phylogeny()}
 when \code{n_tree = 1}; switches to
 \code{fishtree_complete_phylogeny()} returning a multiPhylo of

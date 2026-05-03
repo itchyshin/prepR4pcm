@@ -108,10 +108,13 @@
 #'       mega-tree is used via `...` (e.g. `bee_tree = "bootstrap"`
 #'       for 100 bee trees instead of the single ML tree).
 #'       Requires `taxon`.}
-#'     \item{`"clootl"`}{`n_tree = 1` calls `clootl::extractTree()`;
-#'       `n_tree > 1` calls `clootl::sampleTrees(count = n_tree)`
-#'       (capped at 100 upstream). **Both require the AvesData
-#'       repo to be set up via `clootl::get_avesdata_repo()` first.**}
+#'     \item{`"clootl"`}{`n_tree = 1` calls `clootl::extractTree()`
+#'       and works out of the box with the v1.6 / 2025 taxonomy
+#'       bundled in the `clootl` package. `n_tree > 1` calls
+#'       `clootl::sampleTrees(count = n_tree)` (capped at 100
+#'       upstream) and **requires the AvesData repo to be set up
+#'       once via `clootl::get_avesdata_repo(".")` first**;
+#'       otherwise it errors with `AvesData repo not found`.}
 #'     \item{`"fishtree"`}{Single phylo via `fishtree_phylogeny()`
 #'       when `n_tree = 1`; switches to
 #'       `fishtree_complete_phylogeny()` returning a multiPhylo of
@@ -668,11 +671,32 @@ pr_get_tree <- function(x,
     )
   }
 
+  # Workaround for clootl 0.1.4: extractTree() / sampleTrees() call
+  # `utils::data("clootl_data")` internally without `package =`. When
+  # clootl is not on the search path, that lookup fails (the function
+  # errors with "object 'clootl_data' not found", or — once we work
+  # around it — emits a harmless "data set 'clootl_data' not found"
+  # warning). Temporarily attach clootl for the duration of this
+  # call so the lookup resolves cleanly, and detach on exit so the
+  # user's search path is unchanged. Tracked upstream at
+  # https://github.com/eliotmiller/clootl.
+  if (!"package:clootl" %in% search()) {
+    suppressPackageStartupMessages(
+      attachNamespace("clootl")
+    )
+    on.exit(
+      try(detach("package:clootl", character.only = TRUE), silent = TRUE),
+      add = TRUE
+    )
+  }
+
   # n_tree = 1: clootl::extractTree() returns a single phylo.
   # n_tree > 1: clootl::sampleTrees(count = n_tree) returns a
-  #             multiPhylo. As of clootl 0.1.4 `count` is documented
-  #             as "work in progress, can only sample 100 for now",
-  #             so the upstream caps at 100.
+  #             multiPhylo, but requires the AvesData repo (set up via
+  #             `clootl::get_avesdata_repo()`). Without it the call
+  #             errors with "AvesData repo not found". As of clootl
+  #             0.1.4 `count` is documented as "work in progress, can
+  #             only sample 100 for now", so upstream caps at 100.
   call_args <- list(...)
   call_args$species <- species
   if (n_tree > 1L) {
