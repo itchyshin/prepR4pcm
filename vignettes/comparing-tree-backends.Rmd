@@ -79,19 +79,20 @@ The print method shows three pairwise matrices. Reading them:
 
 ## What actually works (status table)
 
-The retrieval surface is wider than what's been verified end-to-end
-on a clean install. Here's the honest score (last run: 2026-05-01):
+Backends differ in coverage and in what `n_tree > 1` does. Verified
+on a clean macOS R 4.4 install on 2026-05-01:
 
 | Backend | Single tree | Multi-tree (`n_tree > 1`) | Notes |
 |---|---|---|---|
-| `rotl` | likely ✅ | n/a (synthesis is single) | Untested locally because `rotl` ↔ `rncl` ↔ `Rcpp` incompatibility on dev box |
-| `rtrees` | ✅ | ⚠️ partial | Returns whatever the chosen mega-tree provides (e.g. `mammal_tree = "vertlife"` → 100). **`n_tree` is informational only — it does NOT cap the count.** |
-| `clootl` | ❌ | ❌ | Needs the AvesData repo set up via `clootl::get_avesdata_repo()` first; without it, `extractTree`/`sampleTrees` error with `object 'clootl_data' not found`. Once set up, `n_tree > 1` routes to `clootl::sampleTrees(count = …)` (capped at 100 upstream). |
-| `fishtree` | ✅ | ✅ | `n_tree > 1` switches to `fishtree::fishtree_complete_phylogeny()` which returns the requested count. |
-| `datelife` | likely ✅ | likely ✅ | Untested locally because datelife is `Enhances` (GitHub-only, heavy bold/Bioc deps). Install with `pak::pak("phylotastic/datelife")`. |
-| `pr_date_tree()` | likely ✅ | likely ✅ | Untested same reason as datelife. |
+| `rotl` | ✅ | n/a — synthesis is a single tree | Returns lowercase tip labels (e.g. `salmo salar`) because Open Tree taxonomy names are case-folded; reconcile against the tree if your input mixes cases. |
+| `rtrees` | ✅ | ✅ for taxa whose mega-tree is a posterior (e.g. `taxon = "bird"`, `"mammal"` → 100 trees); returns 1 tree for taxa with a single mega-tree (e.g. `taxon = "fish"`). | `n_tree` is **informational only** — `rtrees::get_tree()` has no `n_tree` argument, so the count is fixed by the chosen mega-tree. |
+| `clootl` | ✅ | ❌ unless the AvesData repo is installed (run `clootl::get_avesdata_repo(".")` once). `n_tree = 1` calls `clootl::extractTree()` and works out of the box; `n_tree > 1` calls `clootl::sampleTrees(count = …)` and needs AvesData. | The single-tree path uses the v1.6 / 2025 taxonomy bundled with `clootl`. Posterior sampling caps at 100 upstream. |
+| `fishtree` | ✅ | ✅ — `n_tree > 1` switches to `fishtree::fishtree_complete_phylogeny()` and returns the requested count. | Time-calibrated. |
+| `datelife` | likely ✅ | likely ✅ | Untested in this run because `datelife` is in `Enhances` (heavy Bioconductor / BOLD deps). Install with `pak::pak("phylotastic/datelife")`. |
+| `pr_date_tree()` | likely ✅ | likely ✅ | Same dependency story as `datelife`. |
 
-If you hit a **broken** row above, please open an issue at
+If you hit a **broken** row above on a fresh install, please open an
+issue at
 [itchyshin/prepR4pcm](https://github.com/itchyshin/prepR4pcm/issues)
 with your `pr_get_tree_status()` output and the error.
 

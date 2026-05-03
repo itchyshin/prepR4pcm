@@ -21,7 +21,7 @@ taxa: you compute an effect size per study, then fit a model that
 controls for shared evolutionary history. The standard recipe
 (Cinar et al. 2022, *Methods Ecol. Evol.* 13:383) looks like:
 
-1. **Pull a topology from Open Tree of Life** via `rotl`. OToL gives
+1. **Pull a topology from Open Tree of Life** via `rotl`. OTL gives
    you tip labels and branching structure; the edge lengths it
    returns are unit-length placeholders — **not biologically
    meaningful** time/divergence values.
@@ -62,7 +62,7 @@ each major class in the Pottier dataset:
 ```{r setup, eval = TRUE}
 library(prepR4pcm)
 # Suggested for the analysis itself:
-# install.packages("rotl")     # OToL access
+# install.packages("rotl")     # OTL access
 # install.packages("metafor")  # the meta-analysis engine
 ```
 
@@ -101,8 +101,8 @@ res <- pr_get_tree(
   branch_lengths     = "grafen"     # compute.brlen(method = "Grafen")
 )
 res$tree           # ultrametric, bifurcating, Grafen branches
-res$matched        # species OToL successfully resolved
-res$unmatched      # species OToL couldn't place
+res$matched        # species OTL successfully resolved
+res$unmatched      # species OTL couldn't place
 ```
 
 The Pottier et al. methods description matches this almost exactly;
@@ -185,11 +185,11 @@ including population, family, and shared-trial random effects (see
 their `Statistical_analyses.Rmd`). The phylogenetic component is
 the same `R = list(species = phy_cor)` either way.
 
-## Manual additions when OToL doesn't have a species
+## Manual additions when OTL doesn't have a species
 
-A common situation: OToL doesn't have one of your species. Pottier
+A common situation: OTL doesn't have one of your species. Pottier
 et al. ran into this with *Potamilus alatus* (a freshwater mussel)
-— OToL's induced subtree errored on it, so they pulled it out of
+— OTL's induced subtree errored on it, so they pulled it out of
 the tnrs match, generated the tree without it, then grafted it
 back manually with `ape::bind.tip()`:
 
@@ -204,14 +204,14 @@ binary.tree <- bind.tip(binary.tree, tip.label = "Potamilus_alatus",
 
 In `prepR4pcm`, the equivalent of "graft species back in" is
 `reconcile_augment()`. After `pr_get_tree()` gives you the
-OToL-resolved tree, call `reconcile_augment()` with the residually
+OTL-resolved tree, call `reconcile_augment()` with the residually
 unresolved species; it does the genus-level (or MRCA-level)
 placement automatically and records the placement in `$augmented`
 for the methods section:
 
 ```{r villosa, eval = FALSE}
 # Step 0 in your workflow: reconcile data names against the tree.
-# Any species OToL didn't place lands in `unresolved`; you can
+# Any species OTL didn't place lands in `unresolved`; you can
 # graft them onto the tree as sister to a congener (genus-level
 # placement; cite the taxonomic source for the placement, just as
 # Cinar et al. cite ITIS).
@@ -244,7 +244,7 @@ phy_cor <- pr_phylo_cor(dated)
 For most phylogenetic meta-analyses, **we recommend Grafen**, not
 datelife, for three reasons:
 
-1. **Coverage.** Datelife synthesises from per-clade published
+1. **Coverage.** DateLife synthesises from per-clade published
    chronograms. For a cross-taxon dataset like Pottier's (lampreys,
    bivalves, insects, fish, mammals etc., spanning 14 animal
    classes), datelife usually can't return a chronogram covering
@@ -298,7 +298,7 @@ branch_lengths = "grafen")` is the practical default.
 
 - `?pr_get_tree` — the retrieval entry point.
 - `?pr_phylo_cor` — the correlation-matrix wrapper.
-- `?reconcile_augment` — for grafting species OToL didn't place.
+- `?reconcile_augment` — for grafting species OTL didn't place.
 - Pottier, Burke, Drobniak, Lagisz, Nakagawa (2022). *Developmental
   plasticity in thermal tolerance: ontogenetic variation, persistence,
   and future directions.* Ecology Letters 25(10): 2245--2268.
