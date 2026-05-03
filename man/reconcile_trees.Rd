@@ -126,25 +126,25 @@ sum(reconcile_mapping(rec)$in_x & reconcile_mapping(rec)$in_y)
 reconciliations; \code{\link[=reconcile_to_trees]{reconcile_to_trees()}} when you want to match a
 single dataset against many trees at once.
 
-Other reconciliation functions: 
-\code{\link{reconcile_apply}()},
-\code{\link{reconcile_augment}()},
-\code{\link{reconcile_crosswalk}()},
-\code{\link{reconcile_data}()},
-\code{\link{reconcile_diff}()},
-\code{\link{reconcile_export}()},
-\code{\link{reconcile_mapping}()},
-\code{\link{reconcile_merge}()},
-\code{\link{reconcile_multi}()},
-\code{\link{reconcile_override}()},
-\code{\link{reconcile_override_batch}()},
-\code{\link{reconcile_plot}()},
-\code{\link{reconcile_report}()},
-\code{\link{reconcile_review}()},
-\code{\link{reconcile_splits_lumps}()},
-\code{\link{reconcile_suggest}()},
-\code{\link{reconcile_summary}()},
-\code{\link{reconcile_to_trees}()},
-\code{\link{reconcile_tree}()}
+Other reconciliation functions:
+\code{\link[=reconcile_apply]{reconcile_apply()}},
+\code{\link[=reconcile_augment]{reconcile_augment()}},
+\code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}},
+\code{\link[=reconcile_data]{reconcile_data()}},
+\code{\link[=reconcile_diff]{reconcile_diff()}},
+\code{\link[=reconcile_export]{reconcile_export()}},
+\code{\link[=reconcile_mapping]{reconcile_mapping()}},
+\code{\link[=reconcile_merge]{reconcile_merge()}},
+\code{\link[=reconcile_multi]{reconcile_multi()}},
+\code{\link[=reconcile_override]{reconcile_override()}},
+\code{\link[=reconcile_override_batch]{reconcile_override_batch()}},
+\code{\link[=reconcile_plot]{reconcile_plot()}},
+\code{\link[=reconcile_report]{reconcile_report()}},
+\code{\link[=reconcile_review]{reconcile_review()}},
+\code{\link[=reconcile_splits_lumps]{reconcile_splits_lumps()}},
+\code{\link[=reconcile_suggest]{reconcile_suggest()}},
+\code{\link[=reconcile_summary]{reconcile_summary()}},
+\code{\link[=reconcile_to_trees]{reconcile_to_trees()}},
+\code{\link[=reconcile_tree]{reconcile_tree()}}
 }
 \concept{reconciliation functions}

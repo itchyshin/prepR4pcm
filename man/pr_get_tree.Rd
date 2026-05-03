@@ -163,7 +163,7 @@ tree silently.}
 any polytomies via \code{\link[ape:multi2di]{ape::multi2di()}} with \code{random = TRUE}?
 Default \code{FALSE} (back-compat; topology preserved). Useful for
 phylogenetic meta-analysis, where a strictly bifurcating tree
-is required for \code{\link[=pr_phylo_cor]{pr_phylo_cor()}} / \code{\link[ape:vcv.phylo]{ape::vcv()}} to produce a
+is required for \code{\link[=pr_phylo_cor]{pr_phylo_cor()}} / \code{\link[ape:vcv]{ape::vcv()}} to produce a
 full-rank correlation matrix.}
 
 \item{branch_lengths}{A length-1 character vector or \code{NULL}. After
