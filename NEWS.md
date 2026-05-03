@@ -1,5 +1,35 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 12: clootl single-tree path now works out of the box
+
+* **Bug fix — `pr_get_tree(source = "clootl", n_tree = 1)`**: previously
+  errored with `object 'clootl_data' not found` unless the user had
+  loaded `library(clootl)` first. The wrapper now temporarily attaches
+  the `clootl` namespace for the duration of the call (and detaches
+  on exit, leaving the user's search path unchanged). The single-tree
+  path uses the v1.6 / 2025 taxonomy bundled with `clootl` and works
+  on a fresh install with no AvesData repo. `n_tree > 1` still calls
+  `clootl::sampleTrees()` and so still requires a one-time
+  `clootl::get_avesdata_repo(".")`; that's documented.
+* **Documentation honesty pass**: the
+  [comparing-tree-backends](https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html)
+  and [posterior-tree-pipeline](https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html)
+  vignettes had `clootl` flagged ❌ "broken: needs AvesData" for both
+  single- and multi-tree retrieval. That was over-pessimistic for the
+  single-tree case, which is the common one. Tables corrected.
+* **Abbreviation fix** in
+  [meta-analysis-with-rotl](https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html):
+  `OToL` → `OTL` (the abbreviation used by the official `rotl` vignettes
+  and the rOpenSci documentation).
+* **Vignette polish**: posterior-tree-pipeline.Rmd had a stale
+  reference to "round 6" / "future round" jargon and an outdated
+  "no built-in cache yet" note (a built-in cache has shipped since
+  0.4.0). Both removed.
+* **New regression tests** in `tests/testthat/test-live-backend-smoke.R`:
+  one for the single-tree clootl path (asserts a phylo, asserts no
+  search-path leak), one for the multi-tree path (asserts the helpful
+  "AvesData repo not found" error when the repo isn't set up).
+
 ## Round 11: consistency audit + clearer pr_date_tree semantics
 
 * **`?pr_date_tree` clarified**: a new "What `n_dated > 1` actually

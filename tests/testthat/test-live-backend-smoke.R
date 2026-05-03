@@ -75,28 +75,44 @@ test_that("LIVE: rotl returns single phylo (synthesis)", {
 })
 
 
-test_that("LIVE: clootl with no AvesData repo errors with a useful message", {
+test_that("LIVE: clootl n_tree = 1 succeeds without an AvesData repo", {
+  # Regression test for the May 2026 finding that the user could in
+  # fact get a single tree from `clootl` -- the wrapper had not
+  # accounted for `clootl::extractTree()`'s lookup of `clootl_data`,
+  # which only resolves when `clootl` is on the search path. Now the
+  # wrapper attaches `clootl` for the duration of the call, so the
+  # bundled v1.6 / 2025 taxonomy works out of the box.
   skip_on_cran()
   skip_if_not_installed("clootl")
-  # If the user has set up the AvesData repo, this test is moot --
-  # it'd succeed silently. Detect that case and skip.
-  has_avesdata <- tryCatch(
-    nzchar(Sys.getenv("AVESDATA_PATH")),
-    error = function(e) FALSE
-  )
+  res <- pr_get_tree(c("Corvus corax", "Pica pica"),
+                     source = "clootl", n_tree = 1, tnrs = "never")
+  expect_s3_class(res, "pr_tree_result")
+  expect_s3_class(res$tree, "phylo")
+  expect_gte(ape::Ntip(res$tree), 1L)
+  # search() should be unchanged after the call -- the wrapper detaches
+  # clootl on exit if it had to attach it.
+  expect_false("package:clootl" %in% search())
+})
+
+
+test_that("LIVE: clootl n_tree > 1 needs AvesData, errors helpfully when missing", {
+  skip_on_cran()
+  skip_if_not_installed("clootl")
+  has_avesdata <- nzchar(Sys.getenv("AVESDATA_PATH"))
   if (has_avesdata) {
     res <- pr_get_tree(c("Corvus corax", "Pica pica"),
-                       source = "clootl", n_tree = 1, tnrs = "never")
+                       source = "clootl", n_tree = 5, tnrs = "never")
     expect_s3_class(res, "pr_tree_result")
+    expect_s3_class(res$tree, "multiPhylo")
     return()
   }
-  # No AvesData repo: clootl errors with `clootl_data not found`
   err <- tryCatch(
     pr_get_tree(c("Corvus corax", "Pica pica"),
-                source = "clootl", n_tree = 1, tnrs = "never"),
+                source = "clootl", n_tree = 5, tnrs = "never"),
     error = function(e) e
   )
   expect_s3_class(err, "error")
+  expect_match(conditionMessage(err), "AvesData", fixed = TRUE)
 })
 
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,19 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
+<div class="section level3">
+<h3 id="round-clootl-single-tree-path-now-works-out-of-the-box-0-4-0-9000">Round 12: clootl single-tree path now works out of the box<a class="anchor" aria-label="anchor" href="#round-clootl-single-tree-path-now-works-out-of-the-box-0-4-0-9000"></a></h3>
+<ul><li>
+<strong>Bug fix — <code>pr_get_tree(source = "clootl", n_tree = 1)</code></strong>: previously errored with <code>object 'clootl_data' not found</code> unless the user had loaded <code><a href="https://github.com/eliotmiller/clootl" class="external-link">library(clootl)</a></code> first. The wrapper now temporarily attaches the <code>clootl</code> namespace for the duration of the call (and detaches on exit, leaving the user’s search path unchanged). The single-tree path uses the v1.6 / 2025 taxonomy bundled with <code>clootl</code> and works on a fresh install with no AvesData repo. <code>n_tree &gt; 1</code> still calls <code><a href="https://rdrr.io/pkg/clootl/man/sampleTrees.html" class="external-link">clootl::sampleTrees()</a></code> and so still requires a one-time <code>clootl::get_avesdata_repo(".")</code>; that’s documented.</li>
+<li>
+<strong>Documentation honesty pass</strong>: the <a href="https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html">comparing-tree-backends</a> and <a href="https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html">posterior-tree-pipeline</a> vignettes had <code>clootl</code> flagged ❌ “broken: needs AvesData” for both single- and multi-tree retrieval. That was over-pessimistic for the single-tree case, which is the common one. Tables corrected.</li>
+<li>
+<strong>Abbreviation fix</strong> in <a href="https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html">meta-analysis-with-rotl</a>: <code>OToL</code> → <code>OTL</code> (the abbreviation used by the official <code>rotl</code> vignettes and the rOpenSci documentation).</li>
+<li>
+<strong>Vignette polish</strong>: posterior-tree-pipeline.Rmd had a stale reference to “round 6” / “future round” jargon and an outdated “no built-in cache yet” note (a built-in cache has shipped since 0.4.0). Both removed.</li>
+<li>
+<strong>New regression tests</strong> in <code>tests/testthat/test-live-backend-smoke.R</code>: one for the single-tree clootl path (asserts a phylo, asserts no search-path leak), one for the multi-tree path (asserts the helpful “AvesData repo not found” error when the repo isn’t set up).</li>
+</ul></div>
 <div class="section level3">
 <h3 id="round-consistency-audit--clearer-pr_date_tree-semantics-0-4-0-9000">Round 11: consistency audit + clearer pr_date_tree semantics<a class="anchor" aria-label="anchor" href="#round-consistency-audit--clearer-pr_date_tree-semantics-0-4-0-9000"></a></h3>
 <ul><li>
@@ -128,7 +141,7 @@
 <li>
 <strong>Bipartition-matched branch-length correlation in <code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code>.</strong> The previous Pearson-on-sorted-edges approximation is replaced with a proper bipartition match: for each edge in tree A, the corresponding edge in tree B is the one splitting the same set of tips. Edges whose bipartition isn’t shared are dropped from the correlation.</li>
 <li>
-<strong><code>check_ultrametric = TRUE</code> argument on <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>, <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code>, and <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>.</strong> After producing the tree, runs <code><a href="https://rdrr.io/pkg/ape/man/is.ultrametric.html" class="external-link">ape::is.ultrametric()</a></code> and warns if the backend was expected to produce an ultrametric tree but didn’t. Skipped for <code>rotl</code> (synthesis topology, no real branch lengths) and for the internal augment with <code>branch_length = "zero"</code> (which breaks ultrametricity by design). Does not modify the tree – to force ultrametricity, call <code>phytools::force.ultrametric()</code> or <code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> on the result yourself.</li>
+<strong><code>check_ultrametric = TRUE</code> argument on <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>, <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code>, and <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>.</strong> After producing the tree, runs <code><a href="https://rdrr.io/pkg/ape/man/is.ultrametric.html" class="external-link">ape::is.ultrametric()</a></code> and warns if the backend was expected to produce an ultrametric tree but didn’t. Skipped for <code>rotl</code> (synthesis topology, no real branch lengths) and for the internal augment with <code>branch_length = "zero"</code> (which breaks ultrametricity by design). Does not modify the tree – to force ultrametricity, call <code><a href="https://rdrr.io/pkg/phytools/man/force.ultrametric.html" class="external-link">phytools::force.ultrametric()</a></code> or <code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> on the result yourself.</li>
 <li>
 <strong>TimeTree.org REST client deferred</strong> as a non-goal. TimeTree’s TOS restricts bulk querying for non-commercial use; a REST wrapper isn’t a clean fit for prepR4pcm’s “install-and-go” backend model. Users who need TimeTree data can fetch it manually and feed the resulting topology into <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> (or skip dating entirely).</li>
 </ul></div>
@@ -236,7 +249,7 @@
 </ul></div>
 <div class="section level3">
 <h3 id="new-features-0-4-0-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-0-1"></a></h3>
-<ul><li><p><code>authority = "ott"</code> (Open Tree of Life) is supported again, after Round 1 dropped it on incomplete diagnosis. The original failure was at <code>taxadb::td_create()</code> with the default schema set <code>c("dwc", "common")</code> — <code>taxadb</code> v22.12 does not ship a <code>common</code> schema for OTT. We now restrict the schema to <code>"dwc"</code> (the only schema the cascade actually consumes), unblocking OTT and potentially other providers that lack a <code>common</code> schema. Re-closes <a href="https://github.com/itchyshin/prepR4pcm/issues/5" class="external-link">#5</a> properly.</p></li>
+<ul><li><p><code>authority = "ott"</code> (Open Tree of Life) is supported again, after Round 1 dropped it on incomplete diagnosis. The original failure was at <code><a href="https://rdrr.io/pkg/taxadb/man/td_create.html" class="external-link">taxadb::td_create()</a></code> with the default schema set <code>c("dwc", "common")</code> — <code>taxadb</code> v22.12 does not ship a <code>common</code> schema for OTT. We now restrict the schema to <code>"dwc"</code> (the only schema the cascade actually consumes), unblocking OTT and potentially other providers that lack a <code>common</code> schema. Re-closes <a href="https://github.com/itchyshin/prepR4pcm/issues/5" class="external-link">#5</a> properly.</p></li>
 <li><p><code>authority = "itis_test"</code> exposes <code>taxadb</code>’s small bundled testing dataset. Useful for examples and unit tests without a network round-trip.</p></li>
 </ul></div>
 <div class="section level3">

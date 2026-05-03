@@ -43,8 +43,8 @@ A model-ready dataset for fish, with:
 
 - A posterior of 50 fish chronograms from the Fish Tree of Life
   (Rabosky et al. 2018).
-- 50 imputations of the missing trait values per tree (so 50 × 50 =
-  2,500 model fits).
+- 5 imputations of the missing trait values per tree (so 5 × 50 =
+  250 model fits — adjust `m_per_tree` upward for a real analysis).
 - Pooled estimates with valid standard errors that account for both
   axes of uncertainty.
 
@@ -80,10 +80,9 @@ rec   # one-line summary of matched / unmatched / counts
 
 ## Step 2 — Get a posterior of trees
 
-The headline change in Round 5: every backend supports `n_tree > 1`,
-and every backend that *can* return multiple trees does so. Here we
-ask `fishtree` for 50 stochastic resolutions (Chang, Rabosky, Alfaro
-2019, *Syst. Biol.*).
+Every backend that *can* return multiple trees does so via
+`n_tree > 1`. Here we ask `fishtree` for 50 stochastic resolutions
+(Chang, Rabosky, Alfaro 2019, *Syst. Biol.*).
 
 ```{r retrieve, eval = FALSE}
 trees <- pr_get_tree(rec,
@@ -122,15 +121,18 @@ class(dated_trees$tree)        # "multiPhylo"
 length(dated_trees$tree)       # up to 50
 ```
 
-**What "n_dated = 50" actually returns**: 50 chronograms that all
-share `my_topology` but have *different branch lengths*, where each
+**What `n_dated = 50` actually returns**: 50 chronograms that all
+share `my_topology` but have *different branch lengths*. Each
 variant comes from a different source paper in DateLife's database
-(e.g. variant 1 dated against Hedges et al. 2015, variant 2
-against Bininda-Emonds et al. 2007, etc.). To get N different
-*topologies*, fetch them separately first (e.g.
+(e.g. variant 1 dated against Hedges et al. 2015, variant 2 against
+Bininda-Emonds et al. 2007, etc.). The topology is fixed; the dating
+varies.
+
+To get 50 different *topologies*, fetch them separately first (e.g.
 `pr_get_tree(species, source = "rtrees", taxon = "mammal")` returns
-~100 topologies), then pass that `multiPhylo` to `pr_date_tree()`
-to get the topology × source cross-product.
+100 mammal topologies sampled from VertLife / Upham et al. 2019),
+then pass that `multiPhylo` to `pr_date_tree()` to date each one.
+That gives you the topology × source cross-product.
 
 ## Step 3 — Format citations (do this *before* you submit)
 
@@ -185,36 +187,41 @@ narrower intervals were always overconfident.
 
 ## Choosing a backend
 
-The "Status" column is the verified state on a clean macOS R 4.4
-install as of 2026-05-01. See the
+Verified on a clean macOS R 4.4 install on 2026-05-01. See the
 [Comparing tree backends](comparing-tree-backends.html) vignette
-for the full status table including caveats.
+for the full status table.
 
 | If your taxon is... | And you want... | Use | Status |
 |---|---|---|---|
-| Universal | A single best-guess tree | `pr_get_tree(source = "rotl")` | likely ✅ (untested locally — rotl/Rcpp install issue on dev box) |
-| Universal | A posterior of dated trees | `pr_get_tree(source = "datelife", n_tree = 50)` | likely ✅ (datelife is `Enhances`, install separately with `pak::pak("phylotastic/datelife")`) |
-| Birds | Time-calibrated, current Clements | `pr_get_tree(source = "clootl", n_tree = 50)` | ❌ requires `clootl::get_avesdata_repo()` first; otherwise errors with `object 'clootl_data' not found` |
+| Universal | A single best-guess tree | `pr_get_tree(source = "rotl")` | ✅ verified — returns the Open Tree of Life synthesis tree |
+| Universal | A posterior of dated trees | `pr_get_tree(source = "datelife", n_tree = 50)` | likely ✅ — `datelife` is in `Enhances`; install separately with `pak::pak("phylotastic/datelife")` |
+| Birds | A single tree, current Clements | `pr_get_tree(source = "clootl", n_tree = 1)` | ✅ verified — works out of the box (uses the v1.6/2025 taxonomy bundled with `clootl`) |
+| Birds | A posterior of trees, current Clements | `pr_get_tree(source = "clootl", n_tree = 50)` | ⚠️ requires `clootl::get_avesdata_repo(".")` once before this works; without it `sampleTrees()` errors with `AvesData repo not found`. Capped at 100 upstream. |
 | Fish | Time-calibrated, posterior | `pr_get_tree(source = "fishtree", n_tree = 50)` | ✅ verified — returns `multiPhylo[50]` |
-| Bird/mammal/fish/amphibian/reptile/plant/shark/bee/butterfly | Taxon-specific mega-tree, possibly grafted | `pr_get_tree(source = "rtrees", taxon = "<group>")` | ✅ works; ⚠️ `n_tree` is **informational only** — `rtrees::get_tree()` has no `n_tree` argument, the count is fixed by the chosen mega-tree (e.g. `mammal_tree = "vertlife"` → 100, `bird` default → 100, single-tree mega-trees → 1). |
+| Bird, mammal, fish, amphibian, reptile, plant, shark, bee, butterfly | Taxon-specific mega-tree, possibly grafted | `pr_get_tree(source = "rtrees", taxon = "<group>")` | ✅ works; ⚠️ `n_tree` is **informational only** — `rtrees::get_tree()` has no `n_tree` argument, so the count is fixed by the chosen mega-tree (`taxon = "bird"` → 100, `taxon = "mammal"` → 100, `taxon = "fish"` → 1, etc.). |
 
 For the dating-only case (you already have a topology):
 
 | If your topology is... | Use | Status |
 |---|---|---|
-| Universal taxa | `pr_date_tree(my_tree, n_dated = 50)` | likely ✅ (untested locally — datelife not installed) |
+| Universal taxa | `pr_date_tree(my_tree, n_dated = 50)` | likely ✅ — untested in this run; same dependency story as `datelife` |
 
 ## What's *not* in this pipeline
 
-- **Tree-comparison.** If you fetch from two backends and want to
-  see how much they disagree, `ape::comparePhylo()` and `phangorn`
-  are the relevant tools. A wrapper might appear in a future round.
-- **Caching.** Each call hits the network or the database fresh. For
-  a paper-scale pipeline, use `memoise::memoise()` around your
-  `pr_get_tree()` calls. A built-in cache is on the Round 6 plan.
+- **Tree comparison across backends.** prepR4pcm provides
+  `pr_tree_compare()` for quick pairwise Jaccard / Robinson-Foulds /
+  branch-length comparisons (see the
+  [comparing tree backends vignette](comparing-tree-backends.html)).
+  For richer visual comparison use `phytools::cophyloplot()` or
+  `phangorn::densiTree()`.
 - **Trait imputation alone.** That's pigauto's `impute()` /
-  `multi_impute()`. The vignette skips straight to the
+  `multi_impute()`. This vignette skips straight to the
   trees-aware variant because that's the integration point.
+
+For repeated runs of the same retrieval (e.g. while iterating on a
+manuscript), pass `cache = TRUE` to `pr_get_tree()`. The cache lives
+under `tools::R_user_dir()` by default; redirect with
+`pr_tree_cache_dir()` if you want it inside the project.
 
 ## See also
 
