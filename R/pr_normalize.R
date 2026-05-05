@@ -2,13 +2,6 @@
 
 #' Normalise scientific names to a canonical form
 #'
-#' (Title and prose use British English spelling \emph{normalise},
-#' consistent with the package's `Language: en-GB` declaration.
-#' The function identifier `pr_normalize_names()` keeps the
-#' American-English `z` because R-package function names
-#' conventionally use ASCII identifiers in the form most R users
-#' expect; the two spellings are equivalent and intentional.)
-#'
 #' Apply a sequence of deterministic text transformations so that
 #' scientific names which differ only in formatting compare equal.
 #' This is the same routine used by stage 2 of the matching cascade in
@@ -45,6 +38,14 @@
 #' @return A character vector of normalised names, the same length as
 #'   `names`, with an attribute `"normalisation_log"` --- a tibble
 #'   recording every non-trivial change, for auditing.
+#'
+#' @note On the spelling: the title and prose use British English
+#'   \emph{normalise}, consistent with the package's
+#'   `Language: en-GB` declaration. The function identifier
+#'   `pr_normalize_names()` keeps the American-English `z` because
+#'   R-package function names conventionally use ASCII identifiers
+#'   in the form most R users expect. The two spellings are
+#'   equivalent and intentional.
 #'
 #' @family name utilities
 #' @seealso [reconcile_data()] and [reconcile_tree()] for the full

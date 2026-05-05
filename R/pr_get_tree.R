@@ -135,9 +135,14 @@
 #'   (Open Tree of Life name resolution via `rotl::tnrs_match_names`)
 #'   on the species list before calling the backend? One of:
 #'   \describe{
-#'     \item{`"auto"` (default)}{Run TNRS only for backends that don't
-#'       do it themselves --- currently `clootl` and `fishtree`.
-#'       Improves their match rate substantially.}
+#'     \item{`"auto"` (default)}{Run TNRS only for `fishtree`, where
+#'       OTL-resolved names tend to improve the match rate. **Not
+#'       run for `clootl` by default**: clootl uses the eBird /
+#'       Clements taxonomy, so OTL-resolved names are often
+#'       different from clootl's preferred names; the network call
+#'       is also the dominant cost for large requests (~15 min for
+#'       10k species before this change). Pass `tnrs = "always"` if
+#'       you want it for clootl anyway.}
 #'     \item{`"always"`}{Run TNRS regardless of backend.}
 #'     \item{`"never"`}{Skip TNRS even when the backend would benefit.}
 #'   }
@@ -474,7 +479,15 @@ pr_get_tree <- function(x,
 # regardless; when "never" we skip it.
 
 .pr_tnrs_preflight <- function(species, source, tnrs) {
-  needs_tnrs_default <- source %in% c("clootl", "fishtree")
+  # `clootl` was previously in this default list, but it uses the
+  # eBird / Clements taxonomy whereas `rotl::tnrs_match_names()`
+  # resolves to Open Tree taxonomy names that clootl does not
+  # recognise -- the TNRS-resolved name is often a different binomial
+  # (different authority's preferred name). Worse, the network call
+  # is the dominant cost for large species lists (~15 min on a
+  # 10,597-species request, see #70). Run TNRS for clootl only when
+  # the user explicitly opts in with `tnrs = "always"`.
+  needs_tnrs_default <- source %in% c("fishtree")
   do_it <- switch(tnrs,
     auto    = needs_tnrs_default,
     always  = TRUE,
@@ -700,9 +713,17 @@ pr_get_tree <- function(x,
   call_args <- list(...)
   call_args$species <- species
   if (n_tree > 1L) {
+    # `clootl::sampleTrees()` does not accept a `force` argument
+    # (only `extractTree()` does), so don't inject one here.
     if (is.null(call_args$count)) call_args$count <- n_tree
     tree <- do.call(clootl::sampleTrees, call_args)
   } else {
+    # Default `force = TRUE` so a species that isn't in the eBird /
+    # Clements taxonomy is dropped from the returned tree rather
+    # than erroring out the whole call. The wrapper records the
+    # missing species in `$unmatched` so the caller can act on
+    # them. Users can opt out by passing `force = FALSE` explicitly.
+    if (is.null(call_args$force)) call_args$force <- TRUE
     tree <- do.call(clootl::extractTree, call_args)
   }
 

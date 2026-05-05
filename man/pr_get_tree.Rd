@@ -134,9 +134,14 @@ and \code{\link[=pr_tree_cache_clear]{pr_tree_cache_clear()}} for inspecting / w
 (Open Tree of Life name resolution via \code{rotl::tnrs_match_names})
 on the species list before calling the backend? One of:
 \describe{
-\item{\code{"auto"} (default)}{Run TNRS only for backends that don't
-do it themselves --- currently \code{clootl} and \code{fishtree}.
-Improves their match rate substantially.}
+\item{\code{"auto"} (default)}{Run TNRS only for \code{fishtree}, where
+OTL-resolved names tend to improve the match rate. \strong{Not
+run for \code{clootl} by default}: clootl uses the eBird /
+Clements taxonomy, so OTL-resolved names are often
+different from clootl's preferred names; the network call
+is also the dominant cost for large requests (~15 min for
+10k species before this change). Pass \code{tnrs = "always"} if
+you want it for clootl anyway.}
 \item{\code{"always"}}{Run TNRS regardless of backend.}
 \item{\code{"never"}}{Skip TNRS even when the backend would benefit.}
 }

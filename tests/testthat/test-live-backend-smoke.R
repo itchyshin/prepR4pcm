@@ -95,6 +95,55 @@ test_that("LIVE: clootl n_tree = 1 succeeds without an AvesData repo", {
 })
 
 
+test_that("LIVE: clootl with default tnrs runs fast on a 200-species request (#70)", {
+  # Regression test for #70 (Ayumi, May 2026): with the old default
+  # `tnrs = "auto"`, `pr_get_tree(source = "clootl")` ran an
+  # `rotl::tnrs_match_names()` preflight against the Open Tree of
+  # Life API for the full species list. With 10,597 birds the call
+  # never finished after 15 minutes; even a 200-species request was
+  # tens of seconds of network. clootl uses the eBird / Clements
+  # taxonomy, which is independent of OTL, so the preflight was both
+  # slow AND not improving matching. Fix: drop clootl from the
+  # `tnrs = "auto"` default. This test exercises the fast path
+  # explicitly and asserts it stays under 30 seconds for 200 species
+  # -- a generous ceiling well below the broken behaviour but
+  # forgiving enough for slow CI machines.
+  skip_on_cran()
+  skip_if_not_installed("clootl")
+  utils::data("clootl_data", package = "clootl", envir = environment())
+  all_birds <- clootl_data$taxonomies$year2025$SCI_NAME
+  set.seed(1)
+  spp <- sample(all_birds, 200)
+
+  t0 <- Sys.time()
+  # Default args -- no explicit tnrs override -- proves the new
+  # default doesn't trigger the OTL preflight for clootl.
+  res <- pr_get_tree(spp, source = "clootl", n_tree = 1)
+  elapsed <- as.numeric(Sys.time() - t0, units = "secs")
+
+  expect_s3_class(res, "pr_tree_result")
+  expect_s3_class(res$tree, "phylo")
+  expect_lt(elapsed, 30)
+})
+
+
+test_that("LIVE: clootl tolerates unmatched species via force = TRUE (#70)", {
+  # Regression test: previously a single unmatched name made
+  # `clootl::extractTree()` error out with the entire batch lost.
+  # The wrapper now passes `force = TRUE` by default so unmatched
+  # species are reported in `$unmatched` and the rest of the tree
+  # is still returned.
+  skip_on_cran()
+  skip_if_not_installed("clootl")
+  res <- pr_get_tree(c("Corvus corax", "Pica pica",
+                       "Definitely not a real species"),
+                     source = "clootl", n_tree = 1, tnrs = "never")
+  expect_s3_class(res$tree, "phylo")
+  expect_equal(length(res$matched), 2L)
+  expect_equal(length(res$unmatched), 1L)
+})
+
+
 test_that("LIVE: clootl n_tree > 1 needs AvesData, errors helpfully when missing", {
   skip_on_cran()
   skip_if_not_installed("clootl")
