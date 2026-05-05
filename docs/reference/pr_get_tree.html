@@ -235,9 +235,14 @@ and <code><a href="pr_tree_cache_clear.html">pr_tree_cache_clear()</a></code> fo
 <dd><p>A length-1 character vector. Run a TNRS preflight
 (Open Tree of Life name resolution via <code><a href="https://docs.ropensci.org/rotl/reference/tnrs_match_names.html" class="external-link">rotl::tnrs_match_names</a></code>)
 on the species list before calling the backend? One of:</p><dl><dt><code>"auto"</code> (default)</dt>
-<dd><p>Run TNRS only for backends that don't
-do it themselves — currently <code>clootl</code> and <code>fishtree</code>.
-Improves their match rate substantially.</p></dd>
+<dd><p>Run TNRS only for <code>fishtree</code>, where
+OTL-resolved names tend to improve the match rate. <strong>Not
+run for <code>clootl</code> by default</strong>: clootl uses the eBird /
+Clements taxonomy, so OTL-resolved names are often
+different from clootl's preferred names; the network call
+is also the dominant cost for large requests (~15 min for
+10k species before this change). Pass <code>tnrs = "always"</code> if
+you want it for clootl anyway.</p></dd>
 
 <dt><code>"always"</code></dt>
 <dd><p>Run TNRS regardless of backend.</p></dd>
