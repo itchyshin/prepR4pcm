@@ -558,15 +558,19 @@ test_that(".pr_tnrs_preflight warns once when rotl is missing", {
     },
     .package = "base"
   )
+  # `fishtree` still triggers TNRS in `tnrs = "auto"` mode (clootl
+  # was dropped from the default in #70 since clootl uses Clements,
+  # not OTL). Use fishtree here so the auto path actually exercises
+  # the missing-rotl branch.
   expect_warning(
-    out <- .pr_tnrs_preflight(c("Salmo salar"), source = "clootl",
+    out <- .pr_tnrs_preflight(c("Salmo salar"), source = "fishtree",
                                 tnrs = "auto"),
     "rotl"
   )
   expect_equal(out, c("Salmo salar"))
   # Second call: no warning (one-shot)
   expect_no_warning(
-    .pr_tnrs_preflight(c("Salmo salar"), source = "clootl",
+    .pr_tnrs_preflight(c("Salmo salar"), source = "fishtree",
                        tnrs = "auto")
   )
 })

@@ -43,6 +43,18 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
 <div class="section level3">
+<h3 id="round-clootl-performance-fix--small-doc-fixes-0-4-0-9000">Round 14: clootl performance fix (<a href="https://github.com/itchyshin/prepR4pcm/issues/70" class="external-link">#70</a>) + small doc fixes<a class="anchor" aria-label="anchor" href="#round-clootl-performance-fix--small-doc-fixes-0-4-0-9000"></a></h3>
+<ul><li>
+<strong>Performance fix — <code>pr_get_tree(source = "clootl")</code> is now ~250× faster</strong> on large bird species lists (<a href="https://github.com/itchyshin/prepR4pcm/issues/70" class="external-link">#70</a>, reported by Ayumi Mizuno). For 10,597 birds: 3.6 s after, vs. &gt;15 min (never finished) before. Two contributing causes:
+<ul><li>
+<strong>TNRS preflight no longer runs for clootl by default.</strong> <code>clootl</code> uses the eBird / Clements taxonomy; the previous default routed through <code><a href="https://docs.ropensci.org/rotl/reference/tnrs_match_names.html" class="external-link">rotl::tnrs_match_names()</a></code>, which resolves to Open Tree of Life names — different from Clements names, so it usually didn’t improve matching, and the OTL API call was the dominant cost. Users who want it can still opt in with <code>tnrs = "always"</code>.</li>
+<li>
+<strong><code>force = TRUE</code> is now passed to <code><a href="https://rdrr.io/pkg/clootl/man/extractTree.html" class="external-link">clootl::extractTree()</a></code></strong> so a single unmatched species doesn’t error out the whole call. Unmatched names are still surfaced via the result’s <code>$unmatched</code> slot. Two new live regression tests in <code>tests/testthat/test-live-backend-smoke.R</code> lock in the fix: one asserts a 200-species request finishes in &lt; 30 s with default args; the other asserts the wrapper tolerates an unmatched name and surfaces it in <code>$unmatched</code>.</li>
+</ul></li>
+<li>
+<strong>Doc fix — <code><a href="../reference/pr_normalize_names.html">?pr_normalize_names</a></code></strong> (<a href="https://github.com/itchyshin/prepR4pcm/issues/18" class="external-link">#18</a>, reported by Sergio Poo Hernandez): the <code>\description{}</code> block previously contained only the British- vs American-spelling explanation, displacing the actual function description into <code>\details{}</code>. Reordered: the function description is now in <code>\description{}</code>; the spelling note moved to a <code>\note{}</code> block.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="round-landing-page-reflects-tree-fetchingdating-new-author-0-4-0-9000">Round 13: landing page reflects tree-fetching/dating; new author<a class="anchor" aria-label="anchor" href="#round-landing-page-reflects-tree-fetchingdating-new-author-0-4-0-9000"></a></h3>
 <ul><li>
 <strong>README / landing page</strong> broadened so the visible body content matches what the package actually does. Previously the page led with name-reconciliation as if that were the whole story. Now the opening explicitly names both halves of the prerequisite that <code>prepR4pcm</code> solves: (1) reconcile names; (2) retrieve and date trees. Specific changes:

@@ -1,5 +1,34 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 14: clootl performance fix (#70) + small doc fixes
+
+* **Performance fix — `pr_get_tree(source = "clootl")` is now
+  ~250× faster** on large bird species lists (#70, reported by
+  Ayumi Mizuno). For 10,597 birds: 3.6 s after, vs. >15 min
+  (never finished) before. Two contributing causes:
+    - **TNRS preflight no longer runs for clootl by default.**
+      `clootl` uses the eBird / Clements taxonomy; the previous
+      default routed through `rotl::tnrs_match_names()`, which
+      resolves to Open Tree of Life names — different from
+      Clements names, so it usually didn't improve matching, and
+      the OTL API call was the dominant cost. Users who want it
+      can still opt in with `tnrs = "always"`.
+    - **`force = TRUE` is now passed to `clootl::extractTree()`**
+      so a single unmatched species doesn't error out the whole
+      call. Unmatched names are still surfaced via the result's
+      `$unmatched` slot.
+  Two new live regression tests in
+  `tests/testthat/test-live-backend-smoke.R` lock in the fix:
+  one asserts a 200-species request finishes in < 30 s with
+  default args; the other asserts the wrapper tolerates an
+  unmatched name and surfaces it in `$unmatched`.
+* **Doc fix — `?pr_normalize_names`** (#18, reported by Sergio
+  Poo Hernandez): the `\description{}` block previously contained
+  only the British- vs American-spelling explanation, displacing
+  the actual function description into `\details{}`. Reordered:
+  the function description is now in `\description{}`; the
+  spelling note moved to a `\note{}` block.
+
 ## Round 13: landing page reflects tree-fetching/dating; new author
 
 * **README / landing page** broadened so the visible body content

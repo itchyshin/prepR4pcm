@@ -25,21 +25,14 @@ A character vector of normalised names, the same length as
 recording every non-trivial change, for auditing.
 }
 \description{
-(Title and prose use British English spelling \emph{normalise},
-consistent with the package's \code{Language: en-GB} declaration.
-The function identifier \code{pr_normalize_names()} keeps the
-American-English \code{z} because R-package function names
-conventionally use ASCII identifiers in the form most R users
-expect; the two spellings are equivalent and intentional.)
-}
-\details{
 Apply a sequence of deterministic text transformations so that
 scientific names which differ only in formatting compare equal.
 This is the same routine used by stage 2 of the matching cascade in
 \code{\link[=reconcile_data]{reconcile_data()}} and \code{\link[=reconcile_tree]{reconcile_tree()}}. Use it directly when you
 want to clean a column of names without running a full
 reconciliation --- for example, when building a crosswalk by hand.
-
+}
+\details{
 The transformations, applied in order, are:
 \enumerate{
 \item Replace underscores and multiple whitespace with a single
@@ -53,6 +46,15 @@ and parenthetical forms (\verb{Corvus corax (Linnaeus, 1758)} ->
 \item Strip infraspecific epithets if \code{rank = "species"}.
 \item Trim whitespace and collapse leftover empty tokens.
 }
+}
+\note{
+On the spelling: the title and prose use British English
+\emph{normalise}, consistent with the package's
+\code{Language: en-GB} declaration. The function identifier
+\code{pr_normalize_names()} keeps the American-English \code{z} because
+R-package function names conventionally use ASCII identifiers
+in the form most R users expect. The two spellings are
+equivalent and intentional.
 }
 \examples{
 pr_normalize_names(c("Homo_sapiens",
