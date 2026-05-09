@@ -198,24 +198,66 @@
 #'
 #' @return A list with class `pr_tree_result` and components:
 #' \describe{
-#'   \item{`tree`}{A `phylo` object from the chosen backend, pruned to
-#'     the matched species.}
-#'   \item{`matched`}{A character vector of species names that were
-#'     successfully placed on the returned tree.}
-#'   \item{`unmatched`}{A character vector of species names that the
-#'     backend could not resolve. Inspect these and consider running
-#'     them back through [reconcile_suggest()] / a manual override.}
+#'   \item{`tree`}{A `phylo` (single) or `multiPhylo` (posterior) object
+#'     from the chosen backend, pruned to the matched species.}
+#'   \item{`matched`}{Character vector of names from the user's
+#'     **original input** (preserving the input format, including any
+#'     underscores) that resolved to a tip in `tree`. The dispatcher
+#'     enforces `matched ⊆ unique(input)` --- TNRS substitution,
+#'     normalisation, and backend-internal name juggling cannot leak
+#'     intermediate names into this slot.}
+#'   \item{`unmatched`}{Character vector of names from the **original
+#'     input** that did not resolve. Disjoint from `matched`;
+#'     `length(matched) + length(unmatched) == length(unique(input))`
+#'     always holds. Inspect these and consider running them back
+#'     through [reconcile_suggest()] / a manual override.}
 #'   \item{`source`}{The backend that produced the tree.}
-#'   \item{`backend_meta`}{A backend-specific named list of
-#'     diagnostic information (e.g. `clootl::getCitations()` output
-#'     for the `clootl` backend; OTT tip-id table for the `rotl`
-#'     backend; the `fishtree_phylogeny()` warning text and tree
-#'     `type` for the `fishtree` backend; the chronogram source
-#'     citations for the `datelife` backend). Always contains
-#'     `tree_provenance`, a list with one entry per returned tree
-#'     (so `tree[[i]]` pairs with `backend_meta$tree_provenance[[i]]`
-#'     when `tree` is a `multiPhylo`).}
+#'   \item{`backend_meta`}{A named list of diagnostic information.
+#'     Standard fields populated by the dispatcher:
+#'     \describe{
+#'       \item{`n_queried`}{Unique input species count.}
+#'       \item{`n_requested`}{The `n_tree` argument the user passed.}
+#'       \item{`n_returned`}{Number of trees in `tree` (1 for `phylo`).}
+#'       \item{`n_matched`}{Equal to `length(matched)`.}
+#'       \item{`tnrs_replacements`}{When TNRS ran (`tnrs = "always"`,
+#'         or `tnrs = "auto"` for `fishtree`) and `rotl` is installed:
+#'         a named character vector mapping original input to the
+#'         TNRS-resolved name, for names that TNRS changed. `NULL`
+#'         when no TNRS or no replacements occurred. A one-shot `cli`
+#'         warning lists the first three substitutions on the call,
+#'         so silent name correction is impossible.}
+#'       \item{`tip_set_consistent`}{Logical. For `multiPhylo` returns:
+#'         `TRUE` if every tree shares the same tip set.}
+#'       \item{`dropped_per_tree`}{For `multiPhylo` returns where
+#'         `tip_set_consistent = FALSE`: a list of character vectors,
+#'         per tree, listing species missing from each tree relative
+#'         to the union of all trees. `NULL` otherwise.}
+#'       \item{`tree_provenance`}{A list with one entry per returned
+#'         tree (so `tree[[i]]` pairs with
+#'         `backend_meta$tree_provenance[[i]]` when `tree` is a
+#'         `multiPhylo`).}
+#'     }
+#'     Backend-specific fields (e.g. `taxon`, `n_grafted`, `backend`,
+#'     `type`, `tnrs_table`, `summary_format`, `source_citations`,
+#'     `reference`) are merged in at the top level by the wrapper that
+#'     called the backend.}
 #' }
+#'
+#' @details
+#' **Name handling.** Input names are run through
+#' [pr_normalize_names()] before the backend is queried --- underscores
+#' become spaces, leading/trailing whitespace is trimmed, OTT-id
+#' suffixes (e.g. `ott770315`) and authority strings (e.g.
+#' `(Linnaeus, 1758)`) are stripped, and hybrid signs are
+#' standardised. The `matched` and `unmatched` slots in the result use
+#' the *original* input format (as you typed it), not the normalised
+#' form.
+#'
+#' When TNRS substitutes a name (only when `tnrs = "always"`, or for
+#' the `fishtree` backend under `tnrs = "auto"`), the replacement is
+#' recorded in `result$backend_meta$tnrs_replacements` as a named
+#' character vector `(original = resolved)`. A one-shot `cli` warning
+#' lists the first few substitutions on the call itself.
 #'
 #' @seealso [reconcile_tree()] / [reconcile_data()] for producing the
 #'   reconciled species list that feeds this function;
@@ -316,15 +358,17 @@ pr_get_tree <- function(x,
                               min_match = min_match, ...))
   }
 
-  # TNRS preflight --- run rotl::tnrs_match_names() before backends
-  # that don't do TNRS internally (clootl, fishtree). Skip for the
-  # backends that already do it (rotl, datelife), and for rtrees
-  # (which has its own genus/family fall-back).
-  species_for_query <- .pr_tnrs_preflight(species, source, tnrs)
+  # Build the original -> normalised -> resolved -> query mapping. This
+  # is the spine of Round 15: it is the ONLY name resolution that
+  # happens before the backend, and it tracks every transformation so
+  # matched/unmatched can later be reported against the user's
+  # original input. (See Ayumi #72/#73/#75.)
+  resolved <- .pr_resolve_query(species, source, tnrs)
+  species_query <- resolved$query
 
   # Cache lookup ------------------------------------------------------
   if (isTRUE(cache)) {
-    key <- .pr_tree_cache_key(species_for_query, source = source,
+    key <- .pr_tree_cache_key(species_query, source = source,
                                n_tree = n_tree, taxon = taxon, ...)
     cached <- .pr_tree_cache_get(key, source)
     if (!is.null(cached)) {
@@ -332,21 +376,90 @@ pr_get_tree <- function(x,
     }
   }
 
+  # Backend wrappers now return list(tree, in_query, citations). The
+  # dispatcher does all matched/unmatched accounting against the
+  # ORIGINAL input below.
   result <- switch(
     source,
-    rotl     = .pr_get_tree_rotl(species_for_query, n_tree = n_tree, ...),
-    rtrees   = .pr_get_tree_rtrees(species_for_query, n_tree = n_tree,
+    rotl     = .pr_get_tree_rotl(species_query, n_tree = n_tree, ...),
+    rtrees   = .pr_get_tree_rtrees(species_query, n_tree = n_tree,
                                     taxon = taxon, ...),
-    clootl   = .pr_get_tree_clootl(species_for_query, n_tree = n_tree, ...),
-    fishtree = .pr_get_tree_fishtree(species_for_query, n_tree = n_tree, ...),
-    datelife = .pr_get_tree_datelife(species_for_query, n_tree = n_tree, ...)
+    clootl   = .pr_get_tree_clootl(species_query, n_tree = n_tree, ...),
+    fishtree = .pr_get_tree_fishtree(species_query, n_tree = n_tree, ...),
+    datelife = .pr_get_tree_datelife(species_query, n_tree = n_tree, ...)
   )
+
+  # Map backend's per-query in/out flags back to original input.
+  # `in_query[i]` says whether species_query[i] resolved at the backend;
+  # we map that to "is original[i] matched?" -- same index, since
+  # .pr_resolve_query preserved order.
+  in_query <- result$in_query
+  if (!is.logical(in_query) || length(in_query) != length(resolved$original)) {
+    cli::cli_abort(c(
+      "Internal: backend wrapper returned malformed {.code in_query}.",
+      "i" = "Expected {.cls logical} of length {length(resolved$original)}; got {.cls {class(in_query)[1]}} of length {length(in_query)}."
+    ))
+  }
+  matched   <- resolved$original[in_query]
+  unmatched <- resolved$original[!in_query]
+
+  # Multi-tree reporting (#76) ---------------------------------------
+  is_multi <- inherits(result$tree, "multiPhylo")
+  n_returned <- if (is_multi) length(result$tree) else 1L
+
+  tip_set_consistent <- TRUE
+  dropped_per_tree   <- NULL
+  if (is_multi && length(result$tree) > 1L) {
+    tip_sets <- lapply(result$tree, function(t) sort(t$tip.label))
+    tip_set_consistent <- all(vapply(tip_sets[-1L],
+                                      function(s) identical(s, tip_sets[[1L]]),
+                                      logical(1L)))
+    if (!tip_set_consistent) {
+      union_tips <- Reduce(union, tip_sets)
+      dropped_per_tree <- lapply(tip_sets,
+                                  function(s) setdiff(union_tips, s))
+    }
+  }
+
+  # Accounting invariants -- these CANNOT fail under correct backend
+  # behaviour. If they do, it's a bug in this dispatcher or a backend
+  # wrapper, not user error. (#73)
+  stopifnot(
+    "matched must be a subset of unique input" =
+      all(matched %in% resolved$original),
+    "unmatched must be a subset of unique input" =
+      all(unmatched %in% resolved$original),
+    "matched + unmatched must cover unique input" =
+      length(matched) + length(unmatched) == length(resolved$original),
+    "matched and unmatched must be disjoint" =
+      length(intersect(matched, unmatched)) == 0L
+  )
+
+  # Build backend_meta. Start with whatever the wrapper returned (its
+  # backend-specific fields like `taxon`, `n_grafted`, `backend`,
+  # `type`, `reference`, `tnrs_table`, etc.) and OVERLAY the
+  # dispatcher's standard fields on top. Wrapper-set fields stay
+  # accessible at the top level of backend_meta for back-compat.
+  wrapper_meta <- if (is.list(result$backend_meta)) {
+    result$backend_meta
+  } else {
+    list()
+  }
+  backend_meta <- utils::modifyList(wrapper_meta, list(
+    n_queried              = length(resolved$original),
+    n_requested            = as.integer(n_tree),
+    n_returned             = n_returned,
+    n_matched              = length(matched),
+    tnrs_replacements      = resolved$tnrs_replacements,
+    tip_set_consistent     = tip_set_consistent,
+    dropped_per_tree       = dropped_per_tree
+  ))
 
   # Ensure backend_meta$tree_provenance is always present as a list with
   # one entry per returned tree, so downstream consumers (e.g. pigauto)
   # can pair tree[[i]] with backend_meta$tree_provenance[[i]].
-  result$backend_meta <- .pr_ensure_tree_provenance(
-    result$tree, result$backend_meta, source
+  backend_meta <- .pr_ensure_tree_provenance(
+    result$tree, backend_meta, source
   )
 
   # Post-process for the meta-analysis path -----------------------
@@ -354,9 +467,7 @@ pr_get_tree <- function(x,
   # resolution. Done before branch_lengths so the BL transform sees
   # a strictly bifurcating tree.
   # `branch_lengths`: post-hoc branch length assignment via
-  #   ape::compute.brlen(method = "Grafen") or method = NULL
-  #   (Grafen is also compute.brlen's default, but we expose it
-  #   explicitly so the meta-analysis pattern is self-documenting).
+  #   ape::compute.brlen(method = "Grafen") or method = NULL.
   result$tree <- .pr_post_process_tree(
     result$tree,
     resolve_polytomies = resolve_polytomies,
@@ -365,10 +476,10 @@ pr_get_tree <- function(x,
 
   out <- list(
     tree         = result$tree,
-    matched      = result$matched,
-    unmatched    = result$unmatched,
+    matched      = matched,
+    unmatched    = unmatched,
     source       = source,
-    backend_meta = result$backend_meta
+    backend_meta = backend_meta
   )
   class(out) <- "pr_tree_result"
 
@@ -470,36 +581,86 @@ pr_get_tree <- function(x,
 }
 
 
-# Internal: TNRS preflight ---------------------------------------------
+# Internal: build the original -> normalised -> resolved -> query
+# mapping that drives all matched/unmatched accounting in
+# pr_get_tree(). Returns a list:
+#   $original          : character -- unique input, in original form
+#   $normalised        : character -- pr_normalize_names(original)
+#   $resolved          : character -- TNRS resolved where applicable
+#                                     (else == normalised)
+#   $query             : character -- what gets passed to the backend
+#                                     (currently identical to resolved)
+#   $tnrs_replacements : named char (orig -> resolved) for *changed*
+#                        names, or NULL when no TNRS or no changes
 #
-# When tnrs = "auto", we run rotl::tnrs_match_names() on the species
-# list before sending it to clootl or fishtree, which require exact
-# name matches. The backend then sees the canonical Open Tree names,
-# substantially improving coverage. When tnrs = "always" we run TNRS
-# regardless; when "never" we skip it.
+# Order is preserved through every transformation so the dispatcher can
+# map per-query in/out flags back to original input by index.
+#
+# When tnrs = "auto", TNRS runs only for backends that empirically
+# benefit from it (currently `fishtree`). `clootl` uses the eBird /
+# Clements taxonomy and is harmed (Ayumi #72); rotl/datelife do their
+# own internal name resolution; rtrees has its own genus/family
+# fall-back. When tnrs = "always" we run TNRS for any backend; when
+# "never" we skip entirely.
+#
+# Every TNRS substitution is recorded explicitly in
+# `tnrs_replacements` and a one-shot cli warning is emitted, so silent
+# name correction is impossible. (Ayumi #72/#73.)
 
+# Internal: compat shim retained for tests / mocks that locked onto the
+# pre-Round-15 internal API. Returns the resolved query vector only;
+# new code (and pr_get_tree itself) calls .pr_resolve_query() to get
+# the full mapping table.
 .pr_tnrs_preflight <- function(species, source, tnrs) {
-  # `clootl` was previously in this default list, but it uses the
-  # eBird / Clements taxonomy whereas `rotl::tnrs_match_names()`
-  # resolves to Open Tree taxonomy names that clootl does not
-  # recognise -- the TNRS-resolved name is often a different binomial
-  # (different authority's preferred name). Worse, the network call
-  # is the dominant cost for large species lists (~15 min on a
-  # 10,597-species request, see #70). Run TNRS for clootl only when
-  # the user explicitly opts in with `tnrs = "always"`.
+  .pr_resolve_query(species, source, tnrs)$query
+}
+
+
+.pr_resolve_query <- function(species, source, tnrs) {
+  original   <- unique(stats::na.omit(as.character(species)))
+  normalised <- pr_normalize_names(original)
+
   needs_tnrs_default <- source %in% c("fishtree")
-  do_it <- switch(tnrs,
+  do_tnrs <- switch(tnrs,
     auto    = needs_tnrs_default,
     always  = TRUE,
     never   = FALSE
   )
-  if (!do_it) return(species)
-  if (!requireNamespace("rotl", quietly = TRUE)) {
-    # Silently skip preflight. Emit a one-shot warning the first time
-    # in a session so the user knows coverage may be lower than
-    # expected, but don't repeat it on every subsequent call (the
-    # auto dispatcher calls preflight per candidate backend, which
-    # would multiply the noise).
+
+  resolved <- normalised
+  tnrs_replacements <- NULL
+
+  if (do_tnrs && requireNamespace("rotl", quietly = TRUE)) {
+    tnrs_res <- tryCatch(
+      rotl::tnrs_match_names(normalised),
+      error = function(e) NULL
+    )
+    if (!is.null(tnrs_res) && !is.null(tnrs_res$unique_name)) {
+      replaced_idx <- !is.na(tnrs_res$unique_name) &
+                       nzchar(tnrs_res$unique_name) &
+                       tnrs_res$unique_name != normalised
+      resolved[replaced_idx] <- tnrs_res$unique_name[replaced_idx]
+      if (any(replaced_idx)) {
+        tnrs_replacements <- stats::setNames(
+          resolved[replaced_idx],
+          original[replaced_idx]
+        )
+        n_repl <- length(tnrs_replacements)
+        examples_n <- min(3L, n_repl)
+        examples <- paste(
+          sprintf("'%s' -> '%s'",
+                  names(tnrs_replacements)[seq_len(examples_n)],
+                  unname(tnrs_replacements)[seq_len(examples_n)]),
+          collapse = "; "
+        )
+        cli::cli_warn(c(
+          "TNRS replaced {n_repl} input name{?s} with OTL-resolved form{?s}.",
+          "i" = "See {.code result$backend_meta$tnrs_replacements} for the full mapping.",
+          ">" = "e.g. {examples}"
+        ))
+      }
+    }
+  } else if (do_tnrs && !requireNamespace("rotl", quietly = TRUE)) {
     if (!isTRUE(getOption("prepR4pcm.tnrs_warning_shown"))) {
       cli::cli_warn(c(
         "TNRS preflight requires {.pkg rotl}; skipping.",
@@ -508,20 +669,15 @@ pr_get_tree <- function(x,
       ))
       options(prepR4pcm.tnrs_warning_shown = TRUE)
     }
-    return(species)
   }
-  tnrs_res <- tryCatch(
-    rotl::tnrs_match_names(species),
-    error = function(e) NULL
+
+  list(
+    original          = original,
+    normalised        = normalised,
+    resolved          = resolved,
+    query             = resolved,
+    tnrs_replacements = tnrs_replacements
   )
-  if (is.null(tnrs_res)) return(species)
-  # Replace each input name with its TNRS-resolved unique_name when
-  # available; fall back to the original otherwise.
-  resolved <- tnrs_res$unique_name
-  if (is.null(resolved)) return(species)
-  out <- ifelse(is.na(resolved) | !nzchar(resolved),
-                species, resolved)
-  out
 }
 
 
@@ -644,12 +800,12 @@ pr_get_tree <- function(x,
     ))
   }
 
-  # Step 1: TNRS name match -> OTT ids.
+  # Step 1: TNRS name match -> OTT ids. (rotl backend has its own TNRS
+  # internally and always uses it -- the dispatcher's TNRS preflight is
+  # gated off for rotl.)
   tnrs <- rotl::tnrs_match_names(species)
   matched_idx <- !is.na(tnrs$ott_id)
   ott_ids <- tnrs$ott_id[matched_idx]
-  matched_names <- tnrs$search_string[matched_idx]
-  unmatched <- tnrs$search_string[!matched_idx]
 
   if (length(ott_ids) == 0) {
     cli::cli_abort(
@@ -660,15 +816,13 @@ pr_get_tree <- function(x,
   # Step 2: induced subtree.
   tree <- rotl::tol_induced_subtree(ott_ids = ott_ids, ...)
 
+  # in_query: which entries of the input species vector got an OTT id?
+  in_query <- matched_idx
+
   list(
-    tree         = tree,
-    matched      = matched_names,
-    unmatched    = unmatched,
-    backend_meta = list(
-      tnrs_table = tnrs,
-      n_queried  = length(species),
-      n_matched  = length(ott_ids)
-    )
+    tree     = tree,
+    in_query = in_query,
+    backend_meta = list(tnrs_table = tnrs)
   )
 }
 
@@ -703,6 +857,11 @@ pr_get_tree <- function(x,
     )
   }
 
+  # The dispatcher (.pr_resolve_query) has already pr_normalize_names()-ed
+  # `species`. We pass it through verbatim. This wrapper now returns
+  # only list(tree, in_query, citations); the dispatcher computes
+  # matched / unmatched against the user's original input.
+  #
   # n_tree = 1: clootl::extractTree() returns a single phylo.
   # n_tree > 1: clootl::sampleTrees(count = n_tree) returns a
   #             multiPhylo, but requires the AvesData repo (set up via
@@ -720,24 +879,28 @@ pr_get_tree <- function(x,
   } else {
     # Default `force = TRUE` so a species that isn't in the eBird /
     # Clements taxonomy is dropped from the returned tree rather
-    # than erroring out the whole call. The wrapper records the
-    # missing species in `$unmatched` so the caller can act on
-    # them. Users can opt out by passing `force = FALSE` explicitly.
+    # than erroring out the whole call. The dispatcher records the
+    # missing species in $unmatched (via the in_query vector this
+    # wrapper returns). Users can opt out by passing `force = FALSE`.
     if (is.null(call_args$force)) call_args$force <- TRUE
     tree <- do.call(clootl::extractTree, call_args)
   }
 
-  # Determine matched / unmatched by intersecting the requested species
-  # against the returned tree's tip labels. For multiPhylo, all trees
-  # share the same tip set, so the first one suffices.
-  ref_tips <- if (inherits(tree, "multiPhylo")) {
-    tree[[1]]$tip.label
-  } else {
-    tree$tip.label
+  if (is.null(tree) || !(inherits(tree, "phylo") || inherits(tree, "multiPhylo"))) {
+    cli::cli_abort(c(
+      "{.pkg clootl} returned no tree for this species list.",
+      "i" = "No queried species matched the requested eBird / Clements taxonomy.",
+      ">" = "Check the names in {.arg x} or call {.fn reconcile_suggest} against a Clements-compatible reference."
+    ))
   }
-  norm_req <- pr_normalize_names(species)
-  norm_tip <- pr_normalize_names(ref_tips)
-  in_tree  <- norm_req %in% norm_tip
+
+  # Compute in_query: which queries does the returned tree contain?
+  # Normalise both sides for the intersection (species is already
+  # normalised by the dispatcher; tip labels may need light cleanup).
+  ref_tips <- if (inherits(tree, "multiPhylo")) tree[[1]]$tip.label else tree$tip.label
+  norm_query <- pr_normalize_names(species)
+  norm_tip   <- pr_normalize_names(ref_tips)
+  in_query   <- norm_query %in% norm_tip
 
   # Gather citation block via clootl::getCitations() if present.
   citations <- tryCatch(
@@ -751,17 +914,7 @@ pr_get_tree <- function(x,
     error = function(e) NULL
   )
 
-  list(
-    tree         = tree,
-    matched      = species[in_tree],
-    unmatched    = species[!in_tree],
-    backend_meta = list(
-      n_queried   = length(species),
-      n_matched   = sum(in_tree),
-      n_returned  = if (inherits(tree, "multiPhylo")) length(tree) else 1L,
-      citations   = citations
-    )
-  )
+  list(tree = tree, in_query = in_query, citations = citations)
 }
 
 
@@ -809,14 +962,13 @@ pr_get_tree <- function(x,
     tree$tip.label
   }
 
-  # Determine matched / unmatched. rtrees may graft species at higher
-  # taxonomic nodes (genus/family); we report both placement types.
-  # Strip the trailing `*` rtrees adds to grafted tips before
-  # normalising.
+  # Determine in_query. rtrees may graft species at higher taxonomic
+  # nodes (genus/family); strip the trailing `*` rtrees adds to grafted
+  # tips before normalising.
   ref_tips_clean <- sub("\\*$", "", ref_tips)
-  norm_req <- pr_normalize_names(species)
-  norm_tip <- pr_normalize_names(ref_tips_clean)
-  in_tree  <- norm_req %in% norm_tip
+  norm_query <- pr_normalize_names(species)
+  norm_tip   <- pr_normalize_names(ref_tips_clean)
+  in_query   <- norm_query %in% norm_tip
 
   # If show_grafted = TRUE rtrees flags grafted tips with a `*`. Surface
   # the grafted set so users can see which species were placed on
@@ -824,14 +976,11 @@ pr_get_tree <- function(x,
   grafted <- grep("\\*$", ref_tips, value = TRUE)
 
   list(
-    tree         = tree,
-    matched      = species[in_tree],
-    unmatched    = species[!in_tree],
+    tree     = tree,
+    in_query = in_query,
     backend_meta = list(
-      taxon       = taxon,
-      n_queried   = length(species),
-      n_matched   = sum(in_tree),
-      n_grafted   = length(grafted),
+      taxon        = taxon,
+      n_grafted    = length(grafted),
       grafted_tips = grafted
     )
   )
@@ -881,27 +1030,22 @@ pr_get_tree <- function(x,
   } else {
     tree$tip.label
   }
-  tip_sp    <- gsub("_", " ", ref_tips)
-  norm_req  <- pr_normalize_names(species)
-  norm_tip  <- pr_normalize_names(tip_sp)
-  in_tree   <- norm_req %in% norm_tip
+  norm_query <- pr_normalize_names(species)
+  norm_tip   <- pr_normalize_names(ref_tips)  # pr_normalize_names handles _ -> space
+  in_query   <- norm_query %in% norm_tip
 
   # Pull `type` from the call if user supplied it; default is chronogram.
   call_args <- list(...)
   type_used <- if (!is.null(call_args$type)) call_args$type else "chronogram"
 
   list(
-    tree         = tree,
-    matched      = species[in_tree],
-    unmatched    = species[!in_tree],
+    tree     = tree,
+    in_query = in_query,
     backend_meta = list(
-      backend    = "fishtree",
-      type       = type_used,
-      n_queried  = length(species),
-      n_matched  = sum(in_tree),
-      n_returned = if (inherits(tree, "multiPhylo")) length(tree) else 1L,
-      warnings   = warns,
-      reference  = "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
+      backend   = "fishtree",
+      type      = type_used,
+      warnings  = warns,
+      reference = "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
     )
   )
 }
@@ -926,14 +1070,20 @@ pr_get_tree <- function(x,
     summary_format <- if (n_tree > 1L) "phylo_all" else "phylo_sdm"
   }
 
-  # Build a make_datelife_query result so we know the matched / unmatched
-  # set independent of which summary format is used. use_tnrs = FALSE
-  # keeps this offline; users who want TNRS pass use_tnrs = TRUE.
+  # Build a make_datelife_query result so we know which input names
+  # datelife can resolve. use_tnrs = FALSE keeps this offline; users
+  # who want TNRS pass use_tnrs = TRUE (or set tnrs = "always" at the
+  # dispatcher level, which has already run before we get here).
   query <- datelife::make_datelife_query(input = species,
                                           use_tnrs = use_tnrs)
   matched_names <- query$cleaned_names
   if (is.null(matched_names)) matched_names <- character()
-  unmatched <- setdiff(species, matched_names)
+
+  # in_query: which species (as the dispatcher passed them) does
+  # datelife recognise? Use normalised comparison.
+  norm_query <- pr_normalize_names(species)
+  norm_keep  <- pr_normalize_names(matched_names)
+  in_query   <- norm_query %in% norm_keep
 
   res <- datelife::datelife_search(
     input          = query,
@@ -972,16 +1122,12 @@ pr_get_tree <- function(x,
   }
 
   list(
-    tree         = tree,
-    matched      = matched_names,
-    unmatched    = unmatched,
+    tree     = tree,
+    in_query = in_query,
     backend_meta = list(
       backend          = "datelife",
       version          = as.character(utils::packageVersion("datelife")),
       summary_format   = summary_format,
-      n_queried        = length(species),
-      n_matched        = length(matched_names),
-      n_returned       = if (inherits(tree, "multiPhylo")) length(tree) else 1L,
       source_citations = source_citations,
       reference        = "Sanchez Reyes et al. (2024) Syst. Biol. 73:470 (doi:10.1093/sysbio/syae015)"
     )

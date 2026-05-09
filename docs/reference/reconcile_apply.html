@@ -120,9 +120,10 @@ was not supplied).</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Rows in <code>data</code> whose species have no match in the tree (and tips in
 <code>tree</code> whose species have no match in the data) are handled according
-to <code>drop_unresolved</code>. Matched rows and tips are not renamed — the
-reconciliation already knows which data name corresponds to which
-tree tip, and downstream PCM software looks up tips by label.</p>
+to <code>drop_unresolved</code>. Matched data rows are kept as-is. Matched tree
+tips are renamed to the source-<code>x</code> (data-side) name when the tree-side
+label differs, so downstream PCM software can look up tips by the
+species names in your data frame.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

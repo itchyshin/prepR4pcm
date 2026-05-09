@@ -208,14 +208,14 @@ test_that("check_ultrametric warns on non-ultrametric backend output", {
       # Return a non-ultrametric tree
       tr <- mini_phylo(species)
       tr$edge.length <- c(1, 2)  # asymmetric
-      list(tree = tr, matched = species, unmatched = character(),
+      list(tree = tr, in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
   )
   expect_warning(
     pr_get_tree(c("a", "b"), source = "fishtree",
-                check_ultrametric = TRUE),
+                check_ultrametric = TRUE, tnrs = "never"),
     "ultrametric"
   )
 })
@@ -226,14 +226,14 @@ test_that("check_ultrametric = FALSE suppresses the warning", {
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
       tr <- mini_phylo(species)
       tr$edge.length <- c(1, 2)
-      list(tree = tr, matched = species, unmatched = character(),
+      list(tree = tr, in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
   )
   expect_no_warning(
     pr_get_tree(c("a", "b"), source = "fishtree",
-                check_ultrametric = FALSE)
+                check_ultrametric = FALSE, tnrs = "never")
   )
 })
 
@@ -243,7 +243,7 @@ test_that("check_ultrametric does NOT warn on rotl (no real branch lengths)", {
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       tr <- mini_phylo(species)
       tr$edge.length <- NULL
-      list(tree = tr, matched = species, unmatched = character(),
+      list(tree = tr, in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"

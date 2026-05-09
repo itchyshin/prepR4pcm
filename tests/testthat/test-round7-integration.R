@@ -25,8 +25,7 @@ test_that("reconcile_data -> pr_get_tree -> pr_cite_tree pipeline works", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       list(tree = mini_phylo(species),
-           matched = species,
-           unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -51,14 +50,13 @@ test_that("multi-tree pipeline preserves per-tree provenance end to end", {
         class = "multiPhylo"
       )
       list(tree = mp,
-           matched = species,
-           unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list(reference = "Rabosky 2018"))
     },
     .package = "prepR4pcm"
   )
   res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
-                     source = "fishtree", n_tree = 3)
+                     source = "fishtree", n_tree = 3, tnrs = "never")
   expect_s3_class(res$tree, "multiPhylo")
   expect_length(res$backend_meta$tree_provenance, 3L)
 
@@ -72,11 +70,11 @@ test_that("multi-tree pipeline preserves per-tree provenance end to end", {
 test_that("pr_tree_compare on two pr_tree_result inputs works end-to-end", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -106,8 +104,7 @@ test_that("cache survives a save/load cycle", {
 
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
-           unmatched = character(),
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            backend_meta = list(stamp = Sys.time()))
     },
     .package = "prepR4pcm"
@@ -134,14 +131,11 @@ test_that("auto dispatcher records its attempts in backend_meta", {
     },
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       list(tree = mini_phylo(species[1]),
-           matched = species[1],
-           unmatched = species[-1],
-           backend_meta = list())
+           in_query = seq_along(species) == 1L, backend_meta = list())
     },
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
       list(tree = mini_phylo(species),
-           matched = species,
-           unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"

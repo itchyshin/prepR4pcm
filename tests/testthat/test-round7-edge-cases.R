@@ -83,8 +83,10 @@ test_that("pr_tree_cache_dir rejects non-character / multi-element input", {
 # Status probe edge cases --------------------------------------------
 
 test_that("pr_get_tree_status with check_network = TRUE returns logical or NA", {
-  # No mocking; the actual network probe is suppressed for backends
-  # that aren't installed (returns NA).
+  testthat::local_mocked_bindings(
+    .pr_check_backend_reachable = function(source) FALSE,
+    .package = "prepR4pcm"
+  )
   status <- pr_get_tree_status(check_network = TRUE)
   # reachable should be logical or NA
   expect_true(all(is.logical(status$reachable) | is.na(status$reachable)))
@@ -144,7 +146,7 @@ test_that("n_tree is converted to integer (numeric input accepted)", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       seen <<- n_tree
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -165,7 +167,7 @@ test_that("min_match boundary values 0 and 1 are accepted", {
       )
     },
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -181,7 +183,7 @@ test_that("backend_meta$tree_provenance n_tips is correct for single phylo", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       list(tree = mini_phylo(species),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -213,19 +215,19 @@ test_that("cache distinguishes n_tree = 1 from n_tree > 1", {
       } else {
         mini_phylo(species)
       }
-      list(tree = tree, matched = species, unmatched = character(),
+      list(tree = tree, in_query = rep(TRUE, length(species)),
            backend_meta = list(n_returned = n_tree))
     },
     .package = "prepR4pcm"
   )
 
   pr_get_tree("foo", source = "fishtree", n_tree = 1L,
-               cache = TRUE)
+               cache = TRUE, tnrs = "never")
   expect_equal(call_count, 1L)
   pr_get_tree("foo", source = "fishtree", n_tree = 5L,
-               cache = TRUE)
+               cache = TRUE, tnrs = "never")
   expect_equal(call_count, 2L)
   pr_get_tree("foo", source = "fishtree", n_tree = 1L,
-               cache = TRUE)
+               cache = TRUE, tnrs = "never")
   expect_equal(call_count, 2L)   # n_tree = 1 hit cache from first call
 })

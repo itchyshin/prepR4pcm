@@ -1,7 +1,57 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 15: pr_get_tree name-matching cascade + accounting invariants
+
+Addresses Ayumi Mizuno's #72, #73, #75, #76. **Issues remain open** —
+Ayumi to verify and close from her end.
+
+* **Bug fix — `pr_get_tree()` matched/unmatched accounting (#73).**
+  When TNRS ran (`tnrs = "always"` or the auto-default for `fishtree`),
+  the `matched` and `unmatched` slots referred to TNRS-resolved names
+  rather than the user's original input. Names that TNRS mapped to
+  OTL homonyms in plant taxonomy could appear in `unmatched` even
+  though the user never input them. Three invariants are now
+  enforced inside the dispatcher tail (`stopifnot()`):
+    - `matched` is always a subset of `unique(input)`,
+    - `unmatched` is always a subset of `unique(input)`,
+    - `length(matched) + length(unmatched) == length(unique(input))`.
+  The `matched` slot now preserves the user's *original input format*
+  (underscores stay underscores, etc.) — the wrapper no longer reports
+  against intermediate forms.
+* **TNRS substitutions are now auditable (#72).**
+  `result$backend_meta$tnrs_replacements` is a named character vector
+  `(original = resolved)` listing every name TNRS changed. A one-shot
+  `cli::cli_warn()` shows the first three substitutions on the call
+  itself, so silent name correction is no longer possible.
+* **Name-format normalisation is uniform across backends (#75).**
+  `pr_get_tree()` now runs `pr_normalize_names()` on every input
+  before backend lookup, for every backend. Underscore-form
+  (`Genus_species`), OTT-id-suffixed (`Genus species ott770315`),
+  authority-laden (`Genus species (Linnaeus, 1758)`), and
+  multi-whitespace inputs all resolve uniformly. The `matched` slot
+  preserves the user's original input format.
+* **Multi-tree returns gain reporting fields (#76).**
+  `backend_meta` now includes `n_requested` (the `n_tree` arg you
+  passed), `tip_set_consistent` (logical: do all trees share the same
+  tip set?), and `dropped_per_tree` (list of character vectors when
+  trees disagree, `NULL` when they agree).
+
+Internal refactor: a new `.pr_resolve_query()` builds the
+`original → normalised → resolved → query` mapping table and replaces
+the simpler `.pr_tnrs_preflight()` (kept as a thin compat shim).
+Backend wrappers are simplified and now return `list(tree, in_query,
+backend_meta)`; matched/unmatched accounting is done once in the
+dispatcher.
+
+Tests: 7 new regression tests in
+`tests/testthat/test-pr_get_tree-name-matching.R` pin each
+invariant. Existing tests for the internal TNRS preflight were
+updated to mock `.pr_resolve_query` instead.
+
 ## Round 14: clootl performance fix (#70) + small doc fixes
 
+* **Bug fix — `pr_get_tree(source = "clootl")`** now accepts underscore-separated species names by converting them to the space-separated form expected by `clootl`, while preserving the user's original names in `$matched` / `$unmatched` (#75). All-unmatched clootl requests now error cleanly instead of falling through to `ape::Ntip(NULL)`.
+* **Bug fix — `reconcile_apply()`** now validates an explicit `species_col` before filtering data, so a typo errors clearly instead of silently returning zero data rows.
 * **Performance fix — `pr_get_tree(source = "clootl")` is now
   ~250× faster** on large bird species lists (#70, reported by
   Ayumi Mizuno). For 10,597 birds: 3.6 s after, vs. >15 min

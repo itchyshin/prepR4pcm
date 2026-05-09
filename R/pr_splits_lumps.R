@@ -111,8 +111,8 @@ pr_detect_splits_lumps <- function(mapping) {
 #'   non-`NULL` `authority` argument. The function inspects the
 #'   `name_resolved` column, which is only populated when synonym
 #'   resolution was performed.
-#' @param quiet Logical. Suppress the console summary? Default
-#'   `FALSE`.
+#' @param quiet Logical. Suppresses the console summary when `TRUE`.
+#'   Default `FALSE`.
 #'
 #' @return Invisibly, a list with two tibbles:
 #'   \describe{

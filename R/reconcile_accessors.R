@@ -267,9 +267,10 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
 #'
 #' Rows in `data` whose species have no match in the tree (and tips in
 #' `tree` whose species have no match in the data) are handled according
-#' to `drop_unresolved`. Matched rows and tips are not renamed --- the
-#' reconciliation already knows which data name corresponds to which
-#' tree tip, and downstream PCM software looks up tips by label.
+#' to `drop_unresolved`. Matched data rows are kept as-is. Matched tree
+#' tips are renamed to the source-`x` (data-side) name when the tree-side
+#' label differs, so downstream PCM software can look up tips by the
+#' species names in your data frame.
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
@@ -344,6 +345,12 @@ reconcile_apply <- function(reconciliation, data = NULL, tree = NULL,
 
     if (is.null(species_col)) {
       species_col <- pr_detect_species_column(data, "species_col")
+    }
+    if (!species_col %in% names(data)) {
+      cli::cli_abort(c(
+        "Column {.val {species_col}} not found in {.arg data}.",
+        "i" = "Available columns: {.val {names(data)}}."
+      ))
     }
 
     data_names <- as.character(data[[species_col]])

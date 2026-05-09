@@ -74,7 +74,6 @@ test_that(".pr_tree_cache_put / get round-trip works", {
 
   fake <- list(tree = mini_phylo(c("a", "b")),
                source = "rotl", matched = c("a", "b"),
-               unmatched = character(),
                backend_meta = list())
   class(fake) <- "pr_tree_result"
 
@@ -139,8 +138,7 @@ test_that("pr_get_tree(cache = TRUE) writes and reads the cache", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       call_count <<- call_count + 1L
-      list(tree = mini_phylo(species), matched = species,
-           unmatched = character(),
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            backend_meta = list(call_count = call_count))
     },
     .package = "prepR4pcm"

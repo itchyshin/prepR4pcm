@@ -67,6 +67,19 @@ test_that("reconcile_apply rejects non-data.frame data", {
   )
 })
 
+test_that("reconcile_apply rejects unknown species_col", {
+  df <- data.frame(species = "Homo sapiens", mass = 70)
+  tree <- ape::read.tree(text = "(Homo_sapiens:1);")
+  result <- reconcile_tree(df, tree, x_species = "species",
+                            authority = NULL, quiet = TRUE)
+
+  expect_error(
+    reconcile_apply(result, data = df, species_col = "bad",
+                    drop_unresolved = TRUE),
+    "Column .bad. not found"
+  )
+})
+
 test_that("reconcile_apply works with tree only", {
   df <- data.frame(species = c("Homo sapiens"), mass = 70)
   tree <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")

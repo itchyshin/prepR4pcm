@@ -144,6 +144,29 @@ test_that("LIVE: clootl tolerates unmatched species via force = TRUE (#70)", {
 })
 
 
+test_that("LIVE: clootl accepts underscore-form species names (#75)", {
+  skip_on_cran()
+  skip_if_not_installed("clootl")
+  res <- pr_get_tree(c("Corvus_corax", "Pica_pica"),
+                     source = "clootl", n_tree = 1, tnrs = "never")
+  expect_equal(res$matched, c("Corvus_corax", "Pica_pica"))
+  expect_length(res$unmatched, 0L)
+})
+
+
+test_that("LIVE: clootl all-unmatched species errors cleanly (#75)", {
+  skip_on_cran()
+  skip_if_not_installed("clootl")
+  expect_error(
+    suppressWarnings(
+      pr_get_tree("Definitely not a real species",
+                  source = "clootl", n_tree = 1, tnrs = "never")
+    ),
+    "returned no tree"
+  )
+})
+
+
 test_that("LIVE: clootl n_tree > 1 needs AvesData, errors helpfully when missing", {
   skip_on_cran()
   skip_if_not_installed("clootl")

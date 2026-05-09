@@ -15,7 +15,7 @@ test_that("resolve_polytomies = TRUE bifurcates the tree", {
 
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = star, matched = species,
+      list(tree = star, in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -35,7 +35,7 @@ test_that("branch_lengths = 'grafen' assigns Grafen lengths", {
 
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = star, matched = species,
+      list(tree = star, in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -56,7 +56,7 @@ test_that("branch_lengths = 'unit' sets every edge to 1", {
   tr <- ape::read.tree(text = "((a, b), (c, d));")
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = tr, matched = species,
+      list(tree = tr, in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -79,7 +79,7 @@ test_that("end-to-end: polytomy + Grafen + correlation matrix", {
 
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = star, matched = species,
+      list(tree = star, in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -125,7 +125,6 @@ test_that("pr_phylo_cor() accepts pr_tree_result and multiPhylo", {
   # pr_tree_result wrapping a phylo
   res <- structure(list(tree = tr1, source = "rotl",
                           matched = tr1$tip.label,
-                          unmatched = character(),
                           backend_meta = list()),
                      class = "pr_tree_result")
   expect_no_error(pr_phylo_cor(res))
