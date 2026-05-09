@@ -4,10 +4,12 @@
 #'
 #' For every species that the four-stage cascade failed to resolve,
 #' `reconcile_suggest()` returns the top-`n` candidate matches in the
-#' reference source (`y`). This is the most efficient way to audit
-#' orphan species: a typo or a species epithet that drifted by one
-#' letter will usually appear near the top of the list, and you can
-#' then feed the fix to [reconcile_override()] or
+#' reference source (`y`). The cascade is the exact -> normalised ->
+#' synonym -> fuzzy matching process run by [reconcile_tree()] and
+#' [reconcile_data()] (see `?prepR4pcm`). This is the most efficient
+#' way to audit orphan species: a typo or a species epithet that
+#' drifted by one letter will usually appear near the top of the list,
+#' and you can then feed the fix to [reconcile_override()] or
 #' [reconcile_override_batch()].
 #'
 #' @details
@@ -34,8 +36,8 @@
 #'   score for a candidate to be listed. Default `0.7` (quite
 #'   permissive, because the idea is to surface candidates for review).
 #'   Raise to `0.85` for a tighter shortlist.
-#' @param quiet Logical. Suppress informational messages? Default
-#'   `FALSE`.
+#' @param quiet Logical. Suppresses informational messages when `TRUE`.
+#'   Default `FALSE`.
 #'
 #' @return A tibble with one row per (unresolved, suggestion) pair:
 #'   \describe{

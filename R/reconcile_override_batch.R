@@ -3,15 +3,18 @@
 #' Apply many manual corrections to a reconciliation at once
 #'
 #' A convenience wrapper around [reconcile_override()] for curated
-#' batches of manual decisions. Typical workflow: generate a CSV of
-#' corrections (by hand, or with the help of [reconcile_suggest()]),
-#' check it into version control, and apply it on every run so the
-#' corrections are reproducible and reviewable.
+#' batches of manual decisions.
+#'
+#' @details
+#' Typical workflow: generate a CSV of corrections (by hand, or with
+#' the help of [reconcile_suggest()]), check it into version control,
+#' and apply it on every run so the corrections are reproducible and
+#' reviewable.
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
-#' @param overrides A data frame, or a character(1) file path to a CSV
-#'   with the same columns:
+#' @param overrides A data frame, or a length-1 character vector giving
+#'   the path to a CSV file with the same columns:
 #'   \describe{
 #'     \item{`name_x` (required)}{The original name in source `x`
 #'       (your data).}
@@ -21,8 +24,8 @@
 #'       `"accept"` and `"replace"`.}
 #'     \item{`note`}{Optional free-text justification.}
 #'   }
-#' @param quiet Logical. Suppress per-override success messages?
-#'   Default `FALSE`.
+#' @param quiet Logical. Suppresses per-override success messages when
+#'   `TRUE`. Default `FALSE`.
 #'
 #' @return An updated [reconciliation] object with all overrides
 #'   applied.

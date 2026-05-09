@@ -18,8 +18,8 @@ score for a candidate to be listed. Default \code{0.7} (quite
 permissive, because the idea is to surface candidates for review).
 Raise to \code{0.85} for a tighter shortlist.}
 
-\item{quiet}{Logical. Suppress informational messages? Default
-\code{FALSE}.}
+\item{quiet}{Logical. Suppresses informational messages when \code{TRUE}.
+Default \code{FALSE}.}
 }
 \value{
 A tibble with one row per (unresolved, suggestion) pair:
@@ -34,10 +34,12 @@ first suggestion for each name is the best candidate.
 \description{
 For every species that the four-stage cascade failed to resolve,
 \code{reconcile_suggest()} returns the top-\code{n} candidate matches in the
-reference source (\code{y}). This is the most efficient way to audit
-orphan species: a typo or a species epithet that drifted by one
-letter will usually appear near the top of the list, and you can
-then feed the fix to \code{\link[=reconcile_override]{reconcile_override()}} or
+reference source (\code{y}). The cascade is the exact -> normalised ->
+synonym -> fuzzy matching process run by \code{\link[=reconcile_tree]{reconcile_tree()}} and
+\code{\link[=reconcile_data]{reconcile_data()}} (see \code{?prepR4pcm}). This is the most efficient
+way to audit orphan species: a typo or a species epithet that
+drifted by one letter will usually appear near the top of the list,
+and you can then feed the fix to \code{\link[=reconcile_override]{reconcile_override()}} or
 \code{\link[=reconcile_override_batch]{reconcile_override_batch()}}.
 }
 \details{

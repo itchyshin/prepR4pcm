@@ -12,8 +12,8 @@ non-\code{NULL} \code{authority} argument. The function inspects the
 \code{name_resolved} column, which is only populated when synonym
 resolution was performed.}
 
-\item{quiet}{Logical. Suppress the console summary? Default
-\code{FALSE}.}
+\item{quiet}{Logical. Suppresses the console summary when \code{TRUE}.
+Default \code{FALSE}.}
 }
 \value{
 Invisibly, a list with two tibbles:

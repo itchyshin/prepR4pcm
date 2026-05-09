@@ -54,9 +54,10 @@ in data and tree.
 \details{
 Rows in \code{data} whose species have no match in the tree (and tips in
 \code{tree} whose species have no match in the data) are handled according
-to \code{drop_unresolved}. Matched rows and tips are not renamed --- the
-reconciliation already knows which data name corresponds to which
-tree tip, and downstream PCM software looks up tips by label.
+to \code{drop_unresolved}. Matched data rows are kept as-is. Matched tree
+tips are renamed to the source-\code{x} (data-side) name when the tree-side
+label differs, so downstream PCM software can look up tips by the
+species names in your data frame.
 }
 \examples{
 data(avonet_subset)

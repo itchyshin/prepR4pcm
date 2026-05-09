@@ -10,8 +10,8 @@ reconcile_override_batch(reconciliation, overrides, quiet = FALSE)
 \item{reconciliation}{A \link{reconciliation} object returned by
 \code{\link[=reconcile_tree]{reconcile_tree()}}, \code{\link[=reconcile_data]{reconcile_data()}}, or a related matcher.}
 
-\item{overrides}{A data frame, or a character(1) file path to a CSV
-with the same columns:
+\item{overrides}{A data frame, or a length-1 character vector giving
+the path to a CSV file with the same columns:
 \describe{
 \item{\code{name_x} (required)}{The original name in source \code{x}
 (your data).}
@@ -22,8 +22,8 @@ with the same columns:
 \item{\code{note}}{Optional free-text justification.}
 }}
 
-\item{quiet}{Logical. Suppress per-override success messages?
-Default \code{FALSE}.}
+\item{quiet}{Logical. Suppresses per-override success messages when
+\code{TRUE}. Default \code{FALSE}.}
 }
 \value{
 An updated \link{reconciliation} object with all overrides
@@ -31,10 +31,13 @@ applied.
 }
 \description{
 A convenience wrapper around \code{\link[=reconcile_override]{reconcile_override()}} for curated
-batches of manual decisions. Typical workflow: generate a CSV of
-corrections (by hand, or with the help of \code{\link[=reconcile_suggest]{reconcile_suggest()}}),
-check it into version control, and apply it on every run so the
-corrections are reproducible and reviewable.
+batches of manual decisions.
+}
+\details{
+Typical workflow: generate a CSV of corrections (by hand, or with
+the help of \code{\link[=reconcile_suggest]{reconcile_suggest()}}), check it into version control,
+and apply it on every run so the corrections are reproducible and
+reviewable.
 }
 \examples{
 data(avonet_subset)

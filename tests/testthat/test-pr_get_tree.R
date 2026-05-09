@@ -32,7 +32,7 @@ test_that("character-vector input is deduplicated and NA-cleaned", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list(n_queried = length(species)))
     },
     .package = "prepR4pcm"
@@ -50,7 +50,7 @@ test_that("data-frame input pulls the species column (autodetected)", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -66,7 +66,7 @@ test_that("data-frame input respects species_col", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -89,7 +89,7 @@ test_that("reconciliation input pulls name_y and ignores species_col", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -132,7 +132,7 @@ test_that("source = 'rotl' calls the rotl backend", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
       called <<- TRUE
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -146,7 +146,7 @@ test_that("source = 'clootl' calls the clootl backend", {
   testthat::local_mocked_bindings(
     .pr_get_tree_clootl = function(species, ...) {
       called <<- TRUE
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -160,7 +160,7 @@ test_that("source = 'rtrees' calls the rtrees backend with taxon", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rtrees = function(species, taxon = NULL, ...) {
       seen_taxon <<- taxon
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list(taxon = taxon))
     },
     .package = "prepR4pcm"
@@ -176,12 +176,13 @@ test_that("source = 'fishtree' calls the fishtree backend", {
     .pr_get_tree_fishtree = function(species, ...) {
       called <<- TRUE
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list(backend = "fishtree", type = "chronogram"))
     },
     .package = "prepR4pcm"
   )
-  res <- pr_get_tree(c("Salmo salar", "Esox lucius"), source = "fishtree")
+  res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
+                    source = "fishtree", tnrs = "never")
   expect_true(called)
   expect_equal(res$source, "fishtree")
   expect_equal(res$backend_meta$backend, "fishtree")
@@ -283,8 +284,7 @@ test_that("n_tree > 1 on rotl emits a warning and returns single", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       # Real rotl helper would warn; verify n_tree is plumbed through.
-      list(tree = mini_phylo(species), matched = species,
-           unmatched = character(),
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            backend_meta = list(n_received_n_tree = n_tree))
     },
     .package = "prepR4pcm"
@@ -299,7 +299,7 @@ test_that("n_tree is plumbed through to rtrees", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rtrees = function(species, taxon = NULL, n_tree = 1L, ...) {
       seen <<- n_tree
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -315,7 +315,7 @@ test_that("n_tree is plumbed through to clootl", {
   testthat::local_mocked_bindings(
     .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
       seen <<- n_tree
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -330,12 +330,13 @@ test_that("n_tree is plumbed through to fishtree", {
   testthat::local_mocked_bindings(
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
       seen <<- n_tree
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
   )
-  pr_get_tree("Salmo salar", source = "fishtree", n_tree = 7)
+  pr_get_tree("Salmo salar", source = "fishtree", n_tree = 7,
+              tnrs = "never")
   expect_equal(seen, 7L)
 })
 
@@ -345,7 +346,7 @@ test_that("n_tree is plumbed through to datelife", {
   testthat::local_mocked_bindings(
     .pr_get_tree_datelife = function(species, n_tree = 1L, ...) {
       seen <<- n_tree
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -360,7 +361,7 @@ test_that("default n_tree = 1 (back-compat)", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       seen <<- n_tree
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -375,8 +376,7 @@ test_that("default n_tree = 1 (back-compat)", {
 test_that("backend_meta$tree_provenance is always present (single phylo)", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
-           unmatched = character(),
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            backend_meta = list(n_queried = length(species)))
     },
     .package = "prepR4pcm"
@@ -399,8 +399,7 @@ test_that("backend_meta$tree_provenance has one entry per multiPhylo tree", {
         ),
         class = "multiPhylo"
       )
-      list(tree = mp, matched = species,
-           unmatched = character(),
+      list(tree = mp, in_query = rep(TRUE, length(species)),
            backend_meta = list(
              backend = "fishtree",
              reference = "Rabosky 2018",
@@ -409,7 +408,8 @@ test_that("backend_meta$tree_provenance has one entry per multiPhylo tree", {
     },
     .package = "prepR4pcm"
   )
-  res <- pr_get_tree("Salmo salar", source = "fishtree", n_tree = 4)
+  res <- pr_get_tree("Salmo salar", source = "fishtree", n_tree = 4,
+                    tnrs = "never")
   expect_s3_class(res$tree, "multiPhylo")
   expect_length(res$backend_meta$tree_provenance, 4L)
   for (i in seq_len(4)) {
@@ -426,8 +426,7 @@ test_that("datelife per-source citations populate tree_provenance", {
         class = "multiPhylo",
         names = c("Hedges et al. 2015", "Bininda-Emonds et al. 2007")
       )
-      list(tree = mp, matched = species,
-           unmatched = character(),
+      list(tree = mp, in_query = rep(TRUE, length(species)),
            backend_meta = list(
              backend = "datelife",
              summary_format = "phylo_all",
@@ -452,7 +451,7 @@ test_that("source = 'datelife' calls the datelife backend", {
     .pr_get_tree_datelife = function(species, n_tree = 1L, ...) {
       called <<- TRUE
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list(backend = "datelife",
                                 summary_format = "phylo_sdm"))
     },
@@ -467,33 +466,36 @@ test_that("source = 'datelife' calls the datelife backend", {
 
 # 9. TNRS preflight ------------------------------------------------------
 #
-# We mock the internal `.pr_tnrs_preflight` so the tests don't depend
+# We mock the internal `.pr_resolve_query` so the tests don't depend
 # on rotl being installed. The mock signals whether it was called and
-# with what arguments.
+# with what arguments. (Round 15: `.pr_tnrs_preflight` is now a thin
+# shim over `.pr_resolve_query`, which builds the full
+# original/normalised/resolved/query mapping table; we mock the latter.)
 
-test_that("tnrs = 'auto' runs preflight for clootl + fishtree but not rotl + datelife", {
+test_that("tnrs = 'auto' runs preflight for every backend (Round 15: now per-backend gating)", {
   preflight_calls <- list()
   testthat::local_mocked_bindings(
-    .pr_tnrs_preflight = function(species, source, tnrs) {
+    .pr_resolve_query = function(species, source, tnrs) {
       preflight_calls[[length(preflight_calls) + 1L]] <<- list(
         source = source, tnrs = tnrs, n = length(species)
       )
-      species
+      list(original = species, normalised = species, resolved = species,
+           query = species, tnrs_replacements = NULL)
     },
     .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .pr_get_tree_datelife = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -514,12 +516,13 @@ test_that("tnrs = 'auto' runs preflight for clootl + fishtree but not rotl + dat
 test_that("tnrs preflight is plumbed through with the user's choice", {
   seen_tnrs <- character()
   testthat::local_mocked_bindings(
-    .pr_tnrs_preflight = function(species, source, tnrs) {
+    .pr_resolve_query = function(species, source, tnrs) {
       seen_tnrs <<- c(seen_tnrs, tnrs)
-      species
+      list(original = species, normalised = species, resolved = species,
+           query = species, tnrs_replacements = NULL)
     },
     .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
@@ -531,22 +534,30 @@ test_that("tnrs preflight is plumbed through with the user's choice", {
 })
 
 
-test_that(".pr_tnrs_preflight is no-op when tnrs = 'never'", {
-  out <- .pr_tnrs_preflight(c("a", "b"), source = "clootl",
-                             tnrs = "never")
-  expect_equal(out, c("a", "b"))
+test_that(".pr_resolve_query: tnrs = 'never' returns query == normalised (no TNRS substitution)", {
+  out <- .pr_resolve_query(c("Homo sapiens", "Pan troglodytes"),
+                            source = "clootl", tnrs = "never")
+  # query is the normalised form (pr_normalize_names is always run);
+  # without TNRS, no replacements happen.
+  expect_equal(out$original, c("Homo sapiens", "Pan troglodytes"))
+  expect_equal(out$query, out$normalised,
+                info = "with tnrs='never', query and normalised must agree")
+  expect_null(out$tnrs_replacements)
 })
 
 
-test_that(".pr_tnrs_preflight skips for non-TNRS-default backends with tnrs = 'auto'", {
-  # rotl already does TNRS internally; auto should skip.
-  out <- .pr_tnrs_preflight(c("Homo sapiens"), source = "rotl",
-                             tnrs = "auto")
-  expect_equal(out, c("Homo sapiens"))
+test_that(".pr_resolve_query: tnrs = 'auto' skips TNRS for non-default backends like rotl", {
+  # rotl already does TNRS internally; auto should skip TNRS preflight
+  # at the dispatcher level.
+  out <- .pr_resolve_query(c("Homo sapiens"), source = "rotl",
+                            tnrs = "auto")
+  expect_equal(out$query, out$normalised,
+                info = "rotl is not in the auto-TNRS default; query stays at normalised")
+  expect_null(out$tnrs_replacements)
 })
 
 
-test_that(".pr_tnrs_preflight warns once when rotl is missing", {
+test_that(".pr_resolve_query: warns once when tnrs = 'always' but rotl is missing", {
   # Reset the one-shot flag so we can deterministically observe the warn
   prev <- getOption("prepR4pcm.tnrs_warning_shown", default = NULL)
   on.exit(options(prepR4pcm.tnrs_warning_shown = prev), add = TRUE)
@@ -558,19 +569,16 @@ test_that(".pr_tnrs_preflight warns once when rotl is missing", {
     },
     .package = "base"
   )
-  # `fishtree` still triggers TNRS in `tnrs = "auto"` mode (clootl
-  # was dropped from the default in #70 since clootl uses Clements,
-  # not OTL). Use fishtree here so the auto path actually exercises
-  # the missing-rotl branch.
   expect_warning(
-    out <- .pr_tnrs_preflight(c("Salmo salar"), source = "fishtree",
-                                tnrs = "auto"),
+    out <- .pr_resolve_query(c("Salmo salar"), source = "fishtree",
+                              tnrs = "auto"),
     "rotl"
   )
-  expect_equal(out, c("Salmo salar"))
+  expect_equal(out$query, out$normalised,
+                info = "without rotl, TNRS is skipped and query falls back to normalised")
   # Second call: no warning (one-shot)
   expect_no_warning(
-    .pr_tnrs_preflight(c("Salmo salar"), source = "fishtree",
+    .pr_resolve_query(c("Salmo salar"), source = "fishtree",
                        tnrs = "auto")
   )
 })
@@ -613,13 +621,13 @@ test_that("source = 'auto' returns the first backend that meets min_match", {
     },
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
       # Resolve 100% of species
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
   )
   res <- pr_get_tree(c("Homo sapiens", "Pan troglodytes"),
-                    source = "auto", min_match = 0.5)
+                    source = "auto", min_match = 0.5, tnrs = "never")
   expect_equal(res$source, "rotl")
   expect_equal(length(res$matched), 2)
 })
@@ -631,17 +639,16 @@ test_that("source = 'auto' falls through if first backend doesn't meet min_match
       .fake_status_all_installed()
     },
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species[1]), matched = species[1],
-           unmatched = species[-1], backend_meta = list())
+      list(tree = mini_phylo(species[1]), in_query = seq_along(species) == 1L, backend_meta = list())
     },
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species), matched = species,
+      list(tree = mini_phylo(species), in_query = rep(TRUE, length(species)),
            unmatched = character(), backend_meta = list())
     },
     .package = "prepR4pcm"
   )
   res <- pr_get_tree(c("a", "b", "c", "d"),
-                    source = "auto", min_match = 0.8)
+                    source = "auto", min_match = 0.8, tnrs = "never")
   expect_equal(res$source, "fishtree")
 })
 
@@ -652,27 +659,24 @@ test_that("source = 'auto' returns best-of-the-lot when none meets threshold", {
       .fake_status_all_installed()
     },
     .pr_get_tree_rotl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species[1]), matched = species[1],
-           unmatched = species[-1], backend_meta = list())
+      list(tree = mini_phylo(species[1]), in_query = seq_along(species) == 1L, backend_meta = list())
     },
     .pr_get_tree_fishtree = function(species, n_tree = 1L, ...) {
       list(tree = mini_phylo(species[1:2]),
-           matched = species[1:2],
-           unmatched = species[-(1:2)], backend_meta = list())
+           in_query = seq_along(species) <= 2L, backend_meta = list())
     },
     .pr_get_tree_clootl = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species[1]), matched = species[1],
-           unmatched = species[-1], backend_meta = list())
+      list(tree = mini_phylo(species[1]), in_query = seq_along(species) == 1L, backend_meta = list())
     },
     .pr_get_tree_datelife = function(species, n_tree = 1L, ...) {
-      list(tree = mini_phylo(species[1]), matched = species[1],
-           unmatched = species[-1], backend_meta = list())
+      list(tree = mini_phylo(species[1]), in_query = seq_along(species) == 1L, backend_meta = list())
     },
     .package = "prepR4pcm"
   )
   expect_warning(
     res <- pr_get_tree(c("a", "b", "c", "d", "e"),
-                      source = "auto", min_match = 0.95),
+                      source = "auto", min_match = 0.95,
+                      tnrs = "never"),
     "min_match"
   )
   # fishtree resolved 2/5 = best
@@ -715,7 +719,7 @@ test_that("result has the documented class and components", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
       list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species, unmatched = character(),
+           in_query = rep(TRUE, length(species)),
            backend_meta = list(n_queried = length(species)))
     },
     .package = "prepR4pcm"
@@ -732,8 +736,8 @@ test_that("result has the documented class and components", {
 test_that("print.pr_tree_result runs without error", {
   testthat::local_mocked_bindings(
     .pr_get_tree_rotl = function(species, ...) {
-      list(tree = mini_phylo(gsub(" ", "_", species)),
-           matched = species[1], unmatched = species[-1],
+      list(tree = mini_phylo(gsub(" ", "_", species[1])),
+           in_query = seq_along(species) == 1L,
            backend_meta = list())
     },
     .package = "prepR4pcm"

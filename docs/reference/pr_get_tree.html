@@ -325,31 +325,71 @@ relevant backend package (<code>tol_induced_subtree</code> in
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with class <code>pr_tree_result</code> and components:</p><dl><dt><code>tree</code></dt>
-<dd><p>A <code>phylo</code> object from the chosen backend, pruned to
-the matched species.</p></dd>
+<dd><p>A <code>phylo</code> (single) or <code>multiPhylo</code> (posterior) object
+from the chosen backend, pruned to the matched species.</p></dd>
 
 <dt><code>matched</code></dt>
-<dd><p>A character vector of species names that were
-successfully placed on the returned tree.</p></dd>
+<dd><p>Character vector of names from the user's
+<strong>original input</strong> (preserving the input format, including any
+underscores) that resolved to a tip in <code>tree</code>. The dispatcher
+enforces <code>matched ⊆ unique(input)</code> — TNRS substitution,
+normalisation, and backend-internal name juggling cannot leak
+intermediate names into this slot.</p></dd>
 
 <dt><code>unmatched</code></dt>
-<dd><p>A character vector of species names that the
-backend could not resolve. Inspect these and consider running
-them back through <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code> / a manual override.</p></dd>
+<dd><p>Character vector of names from the <strong>original
+input</strong> that did not resolve. Disjoint from <code>matched</code>;
+<code>length(matched) + length(unmatched) == length(unique(input))</code>
+always holds. Inspect these and consider running them back
+through <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code> / a manual override.</p></dd>
 
 <dt><code>source</code></dt>
 <dd><p>The backend that produced the tree.</p></dd>
 
 <dt><code>backend_meta</code></dt>
-<dd><p>A backend-specific named list of
-diagnostic information (e.g. <code><a href="https://rdrr.io/pkg/clootl/man/getCitations.html" class="external-link">clootl::getCitations()</a></code> output
-for the <code>clootl</code> backend; OTT tip-id table for the <code>rotl</code>
-backend; the <code>fishtree_phylogeny()</code> warning text and tree
-<code>type</code> for the <code>fishtree</code> backend; the chronogram source
-citations for the <code>datelife</code> backend). Always contains
-<code>tree_provenance</code>, a list with one entry per returned tree
-(so <code>tree[[i]]</code> pairs with <code>backend_meta$tree_provenance[[i]]</code>
-when <code>tree</code> is a <code>multiPhylo</code>).</p></dd>
+<dd><p>A named list of diagnostic information.
+Standard fields populated by the dispatcher:</p><dl><dt><code>n_queried</code></dt>
+<dd><p>Unique input species count.</p></dd>
+
+<dt><code>n_requested</code></dt>
+<dd><p>The <code>n_tree</code> argument the user passed.</p></dd>
+
+<dt><code>n_returned</code></dt>
+<dd><p>Number of trees in <code>tree</code> (1 for <code>phylo</code>).</p></dd>
+
+<dt><code>n_matched</code></dt>
+<dd><p>Equal to <code>length(matched)</code>.</p></dd>
+
+<dt><code>tnrs_replacements</code></dt>
+<dd><p>When TNRS ran (<code>tnrs = "always"</code>,
+or <code>tnrs = "auto"</code> for <code>fishtree</code>) and <code>rotl</code> is installed:
+a named character vector mapping original input to the
+TNRS-resolved name, for names that TNRS changed. <code>NULL</code>
+when no TNRS or no replacements occurred. A one-shot <code>cli</code>
+warning lists the first three substitutions on the call,
+so silent name correction is impossible.</p></dd>
+
+<dt><code>tip_set_consistent</code></dt>
+<dd><p>Logical. For <code>multiPhylo</code> returns:
+<code>TRUE</code> if every tree shares the same tip set.</p></dd>
+
+<dt><code>dropped_per_tree</code></dt>
+<dd><p>For <code>multiPhylo</code> returns where
+<code>tip_set_consistent = FALSE</code>: a list of character vectors,
+per tree, listing species missing from each tree relative
+to the union of all trees. <code>NULL</code> otherwise.</p></dd>
+
+<dt><code>tree_provenance</code></dt>
+<dd><p>A list with one entry per returned
+tree (so <code>tree[[i]]</code> pairs with
+<code>backend_meta$tree_provenance[[i]]</code> when <code>tree</code> is a
+<code>multiPhylo</code>).</p></dd>
+
+
+</dl><p>Backend-specific fields (e.g. <code>taxon</code>, <code>n_grafted</code>, <code>backend</code>,
+<code>type</code>, <code>tnrs_table</code>, <code>summary_format</code>, <code>source_citations</code>,
+<code>reference</code>) are merged in at the top level by the wrapper that
+called the backend.</p></dd>
 
 
 </dl></div>
@@ -359,6 +399,19 @@ when <code>tree</code> is a <code>multiPhylo</code>).</p></dd>
 <code>Suggests</code> rather than <code>Imports</code>, so installing <strong>prepR4pcm</strong> does
 not pull them in automatically. The error message tells you what
 to install if you ask for a backend you don't have.</p>
+<p><strong>Name handling.</strong> Input names are run through
+<code><a href="pr_normalize_names.html">pr_normalize_names()</a></code> before the backend is queried — underscores
+become spaces, leading/trailing whitespace is trimmed, OTT-id
+suffixes (e.g. <code>ott770315</code>) and authority strings (e.g.
+<code>(Linnaeus, 1758)</code>) are stripped, and hybrid signs are
+standardised. The <code>matched</code> and <code>unmatched</code> slots in the result use
+the <em>original</em> input format (as you typed it), not the normalised
+form.</p>
+<p>When TNRS substitutes a name (only when <code>tnrs = "always"</code>, or for
+the <code>fishtree</code> backend under <code>tnrs = "auto"</code>), the replacement is
+recorded in <code>result$backend_meta$tnrs_replacements</code> as a named
+character vector <code>(original = resolved)</code>. A one-shot <code>cli</code> warning
+lists the first few substitutions on the call itself.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

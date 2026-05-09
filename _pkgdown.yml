@@ -113,11 +113,13 @@ reference:
     Open Tree of Life synthesis), rtrees (GitHub, taxon-specific
     mega-trees), clootl (GitHub, bird Clements taxonomy), fishtree
     (CRAN, Rabosky et al. 2018 fish chronogram), and datelife
-    (GitHub, Sanchez Reyes et al. 2024 chronogram database). Each
-    backend supports `n_tree > 1` for posterior samples to feed
-    [pigauto](https://itchyshin.github.io/pigauto/) and similar
-    multi-tree consumers. Backends live in `Suggests` (or GitHub)
-    and are installed on demand.
+    (GitHub, Sanchez Reyes et al. 2024 chronogram database).
+    Multi-tree support is backend-specific: fishtree and datelife
+    honour `n_tree`, clootl requires an AvesData repo for
+    `n_tree > 1`, rtrees returns whichever single tree or posterior
+    its selected mega-tree provides, and rotl always returns the
+    single Open Tree synthesis. Backends live in `Suggests` (or
+    GitHub) and are installed on demand.
   contents:
   - pr_get_tree
   - pr_date_tree

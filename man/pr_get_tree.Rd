@@ -203,23 +203,49 @@ relevant backend package (\code{tol_induced_subtree} in
 \value{
 A list with class \code{pr_tree_result} and components:
 \describe{
-\item{\code{tree}}{A \code{phylo} object from the chosen backend, pruned to
-the matched species.}
-\item{\code{matched}}{A character vector of species names that were
-successfully placed on the returned tree.}
-\item{\code{unmatched}}{A character vector of species names that the
-backend could not resolve. Inspect these and consider running
-them back through \code{\link[=reconcile_suggest]{reconcile_suggest()}} / a manual override.}
+\item{\code{tree}}{A \code{phylo} (single) or \code{multiPhylo} (posterior) object
+from the chosen backend, pruned to the matched species.}
+\item{\code{matched}}{Character vector of names from the user's
+\strong{original input} (preserving the input format, including any
+underscores) that resolved to a tip in \code{tree}. The dispatcher
+enforces \verb{matched ⊆ unique(input)} --- TNRS substitution,
+normalisation, and backend-internal name juggling cannot leak
+intermediate names into this slot.}
+\item{\code{unmatched}}{Character vector of names from the \strong{original
+input} that did not resolve. Disjoint from \code{matched};
+\code{length(matched) + length(unmatched) == length(unique(input))}
+always holds. Inspect these and consider running them back
+through \code{\link[=reconcile_suggest]{reconcile_suggest()}} / a manual override.}
 \item{\code{source}}{The backend that produced the tree.}
-\item{\code{backend_meta}}{A backend-specific named list of
-diagnostic information (e.g. \code{clootl::getCitations()} output
-for the \code{clootl} backend; OTT tip-id table for the \code{rotl}
-backend; the \code{fishtree_phylogeny()} warning text and tree
-\code{type} for the \code{fishtree} backend; the chronogram source
-citations for the \code{datelife} backend). Always contains
-\code{tree_provenance}, a list with one entry per returned tree
-(so \code{tree[[i]]} pairs with \code{backend_meta$tree_provenance[[i]]}
-when \code{tree} is a \code{multiPhylo}).}
+\item{\code{backend_meta}}{A named list of diagnostic information.
+Standard fields populated by the dispatcher:
+\describe{
+\item{\code{n_queried}}{Unique input species count.}
+\item{\code{n_requested}}{The \code{n_tree} argument the user passed.}
+\item{\code{n_returned}}{Number of trees in \code{tree} (1 for \code{phylo}).}
+\item{\code{n_matched}}{Equal to \code{length(matched)}.}
+\item{\code{tnrs_replacements}}{When TNRS ran (\code{tnrs = "always"},
+or \code{tnrs = "auto"} for \code{fishtree}) and \code{rotl} is installed:
+a named character vector mapping original input to the
+TNRS-resolved name, for names that TNRS changed. \code{NULL}
+when no TNRS or no replacements occurred. A one-shot \code{cli}
+warning lists the first three substitutions on the call,
+so silent name correction is impossible.}
+\item{\code{tip_set_consistent}}{Logical. For \code{multiPhylo} returns:
+\code{TRUE} if every tree shares the same tip set.}
+\item{\code{dropped_per_tree}}{For \code{multiPhylo} returns where
+\code{tip_set_consistent = FALSE}: a list of character vectors,
+per tree, listing species missing from each tree relative
+to the union of all trees. \code{NULL} otherwise.}
+\item{\code{tree_provenance}}{A list with one entry per returned
+tree (so \code{tree[[i]]} pairs with
+\code{backend_meta$tree_provenance[[i]]} when \code{tree} is a
+\code{multiPhylo}).}
+}
+Backend-specific fields (e.g. \code{taxon}, \code{n_grafted}, \code{backend},
+\code{type}, \code{tnrs_table}, \code{summary_format}, \code{source_citations},
+\code{reference}) are merged in at the top level by the wrapper that
+called the backend.}
 }
 }
 \description{
@@ -236,6 +262,21 @@ Each backend is provided by an external R package that we list in
 \code{Suggests} rather than \code{Imports}, so installing \strong{prepR4pcm} does
 not pull them in automatically. The error message tells you what
 to install if you ask for a backend you don't have.
+
+\strong{Name handling.} Input names are run through
+\code{\link[=pr_normalize_names]{pr_normalize_names()}} before the backend is queried --- underscores
+become spaces, leading/trailing whitespace is trimmed, OTT-id
+suffixes (e.g. \code{ott770315}) and authority strings (e.g.
+\verb{(Linnaeus, 1758)}) are stripped, and hybrid signs are
+standardised. The \code{matched} and \code{unmatched} slots in the result use
+the \emph{original} input format (as you typed it), not the normalised
+form.
+
+When TNRS substitutes a name (only when \code{tnrs = "always"}, or for
+the \code{fishtree} backend under \code{tnrs = "auto"}), the replacement is
+recorded in \code{result$backend_meta$tnrs_replacements} as a named
+character vector \code{(original = resolved)}. A one-shot \code{cli} warning
+lists the first few substitutions on the call itself.
 }
 \examples{
 \dontrun{
