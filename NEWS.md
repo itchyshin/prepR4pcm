@@ -1,5 +1,35 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 16: rtrees placement-status table (#74)
+
+Addresses Ayumi Mizuno's #74. **Issue remains open** — Ayumi to verify
+and close from her end.
+
+* **New `result$backend_meta$placement` (rtrees only).** When
+  `source = "rtrees"`, the result now carries a per-input placement
+  table — one row per unique input species, with columns:
+  `input_name`, `tree_name`, `placement_status`. The status is one of
+  `"exact"` (species was already in the mega-tree), `"genus_added"`
+  (grafted at the genus level by `rtrees::get_tree`; tip carries a
+  `*` suffix), `"family_added"` (grafted at the family level; `**`
+  suffix), `"skipped"` (rtrees decided not to graft, e.g. no co-family
+  species in the mega-tree), or `"unmatched"` (didn't reach rtrees at
+  all). To exclude grafted tips from a downstream analysis: filter
+  the placement table on `placement_status == "exact"` and prune the
+  tree to those tip labels.
+* **`?pr_get_tree` documents the rtrees grafting behaviour** under
+  the `rtrees` entry of `source`, naming the `*` / `**` convention
+  and pointing at `?rtrees::get_tree` for upstream control. The wrapper
+  cannot disable grafting at its level — rtrees 1.0.4 has no such
+  switch; `scenario = "at_basal_node"` vs `"random_below_basal"` only
+  affects *where* a graft lands once a graft has been chosen.
+* Existing `n_grafted` and `grafted_tips` fields in `backend_meta`
+  are preserved (back-compat).
+* New regression tests in
+  `tests/testthat/test-pr_get_tree-rtrees-placement.R` (7 tests
+  pinning the contract: columns, enum values, one row per unique
+  input, status correctness for exact / genus-added / skipped cases).
+
 ## Round 15: pr_get_tree name-matching cascade + accounting invariants
 
 Addresses Ayumi Mizuno's #72, #73, #75, #76. **Issues remain open** —

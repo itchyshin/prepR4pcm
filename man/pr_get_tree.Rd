@@ -43,7 +43,23 @@ fish, amphibian, reptile, plant, shark/ray, bee, butterfly)
 via the GitHub package \code{rtrees}
 (\url{https://daijiang.github.io/rtrees/}). Requires
 \code{taxon = "<group>"}. Calls \code{get_tree()}. Install
-with \code{pak::pak("daijiang/rtrees")} (GitHub-only).}
+with \code{pak::pak("daijiang/rtrees")} (GitHub-only).
+\strong{Grafting behaviour:} when an input species is not in
+the chosen mega-tree, \code{rtrees::get_tree()} grafts it at
+the genus level (tip suffix \verb{*}) or family level
+(\verb{**}); if no co-family species is in the mega-tree, the
+species is dropped. The placement of every input species is
+reported per-row in \code{result$backend_meta$placement} (a
+tibble with columns \code{input_name}, \code{tree_name},
+\code{placement_status} where \code{placement_status} is one
+of \code{"exact"}, \code{"genus_added"}, \code{"family_added"},
+\code{"skipped"}, or \code{"unmatched"}). The grafting itself
+cannot be disabled at the wrapper level (rtrees 1.0.4 has no
+switch); to exclude grafted tips from a downstream analysis,
+filter the placement table on \code{placement_status == "exact"}
+and prune the tree to those tip labels. See
+\code{?rtrees::get_tree} for upstream control (\code{scenario}
+\emph{where} a graft is placed, but not \emph{whether}).}
 \item{\code{"clootl"}}{Bird-only phylogenies in current
 Clements taxonomy, via the GitHub package \code{clootl}
 (\url{https://github.com/eliotmiller/clootl}). Calls
@@ -242,10 +258,15 @@ tree (so \code{tree[[i]]} pairs with
 \code{backend_meta$tree_provenance[[i]]} when \code{tree} is a
 \code{multiPhylo}).}
 }
-Backend-specific fields (e.g. \code{taxon}, \code{n_grafted}, \code{backend},
-\code{type}, \code{tnrs_table}, \code{summary_format}, \code{source_citations},
-\code{reference}) are merged in at the top level by the wrapper that
-called the backend.}
+Backend-specific fields (e.g. \code{taxon}, \code{n_grafted},
+\code{grafted_tips}, \code{placement} for \code{rtrees}; \code{backend}, \code{type},
+\code{tnrs_table} for \code{fishtree} / \code{rotl}; \code{summary_format},
+\code{source_citations}, \code{reference} for \code{datelife}) are merged in
+at the top level by the wrapper that called the backend. The
+\code{rtrees}-specific \code{placement} slot is a tibble with one row per
+unique input species and columns \code{input_name}, \code{tree_name},
+\code{placement_status} (\code{"exact"}, \code{"genus_added"},
+\code{"family_added"}, \code{"skipped"}, or \code{"unmatched"}).}
 }
 }
 \description{

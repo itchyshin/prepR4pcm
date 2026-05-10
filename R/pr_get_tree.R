@@ -49,7 +49,23 @@
 #'       via the GitHub package \code{rtrees}
 #'       (\url{https://daijiang.github.io/rtrees/}). Requires
 #'       \code{taxon = "<group>"}. Calls \code{get_tree()}. Install
-#'       with \code{pak::pak("daijiang/rtrees")} (GitHub-only).}
+#'       with \code{pak::pak("daijiang/rtrees")} (GitHub-only).
+#'       \strong{Grafting behaviour:} when an input species is not in
+#'       the chosen mega-tree, \code{rtrees::get_tree()} grafts it at
+#'       the genus level (tip suffix \verb{*}) or family level
+#'       (\verb{**}); if no co-family species is in the mega-tree, the
+#'       species is dropped. The placement of every input species is
+#'       reported per-row in \code{result$backend_meta$placement} (a
+#'       tibble with columns \code{input_name}, \code{tree_name},
+#'       \code{placement_status} where \code{placement_status} is one
+#'       of \code{"exact"}, \code{"genus_added"}, \code{"family_added"},
+#'       \code{"skipped"}, or \code{"unmatched"}). The grafting itself
+#'       cannot be disabled at the wrapper level (rtrees 1.0.4 has no
+#'       switch); to exclude grafted tips from a downstream analysis,
+#'       filter the placement table on \code{placement_status == "exact"}
+#'       and prune the tree to those tip labels. See
+#'       \code{?rtrees::get_tree} for upstream control (\code{scenario}
+#'       \emph{where} a graft is placed, but not \emph{whether}).}
 #'     \item{\code{"clootl"}}{Bird-only phylogenies in current
 #'       Clements taxonomy, via the GitHub package \code{clootl}
 #'       (\url{https://github.com/eliotmiller/clootl}). Calls
@@ -237,10 +253,15 @@
 #'         `backend_meta$tree_provenance[[i]]` when `tree` is a
 #'         `multiPhylo`).}
 #'     }
-#'     Backend-specific fields (e.g. `taxon`, `n_grafted`, `backend`,
-#'     `type`, `tnrs_table`, `summary_format`, `source_citations`,
-#'     `reference`) are merged in at the top level by the wrapper that
-#'     called the backend.}
+#'     Backend-specific fields (e.g. `taxon`, `n_grafted`,
+#'     `grafted_tips`, `placement` for `rtrees`; `backend`, `type`,
+#'     `tnrs_table` for `fishtree` / `rotl`; `summary_format`,
+#'     `source_citations`, `reference` for `datelife`) are merged in
+#'     at the top level by the wrapper that called the backend. The
+#'     `rtrees`-specific `placement` slot is a tibble with one row per
+#'     unique input species and columns `input_name`, `tree_name`,
+#'     `placement_status` (`"exact"`, `"genus_added"`,
+#'     `"family_added"`, `"skipped"`, or `"unmatched"`).}
 #' }
 #'
 #' @details
@@ -962,26 +983,66 @@ pr_get_tree <- function(x,
     tree$tip.label
   }
 
-  # Determine in_query. rtrees may graft species at higher taxonomic
-  # nodes (genus/family); strip the trailing `*` rtrees adds to grafted
-  # tips before normalising.
-  ref_tips_clean <- sub("\\*$", "", ref_tips)
+  # Determine in_query. rtrees flags grafted tips with suffixes:
+  #   `**` -> grafted at family rank (`family_added`)
+  #   `*`  -> grafted at genus rank (`genus_added`)
+  #   (no suffix) -> exact match
+  # Strip both suffixes for normalised intersection. Order of stripping
+  # matters: `**` first, then `*`, so we never leave a stray `*` behind.
+  ref_tips_clean <- sub("\\*+$", "", ref_tips)
   norm_query <- pr_normalize_names(species)
   norm_tip   <- pr_normalize_names(ref_tips_clean)
   in_query   <- norm_query %in% norm_tip
 
-  # If show_grafted = TRUE rtrees flags grafted tips with a `*`. Surface
-  # the grafted set so users can see which species were placed on
-  # higher-rank stand-ins rather than at their actual position.
-  grafted <- grep("\\*$", ref_tips, value = TRUE)
+  # Per-input placement table (Ayumi #74) ---------------------------
+  # Columns:
+  #   input_name        original input
+  #   tree_name         actual tip label in the tree, or NA if dropped
+  #   placement_status  one of "exact", "genus_added", "family_added",
+  #                     "skipped" (rtrees decided not to graft it),
+  #                     "unmatched" (didn't reach rtrees at all)
+  classify_one <- function(tip) {
+    if (grepl("\\*\\*$", tip)) "family_added"
+    else if (grepl("\\*$", tip)) "genus_added"
+    else "exact"
+  }
+  # Map each normalised input to the tip (with its marker) it landed on.
+  # Use a vector lookup keyed by the *cleaned* (markerless) tip label.
+  tip_by_clean <- stats::setNames(ref_tips, norm_tip)
+  placement <- data.frame(
+    input_name       = species,
+    tree_name        = unname(tip_by_clean[norm_query]),
+    placement_status = vapply(
+      norm_query,
+      function(nq) {
+        if (!nq %in% norm_tip) "skipped"  # rtrees took the name but
+                                            # didn't put it in the tree
+        else classify_one(tip_by_clean[[nq]])
+      },
+      character(1L)
+    ),
+    stringsAsFactors = FALSE
+  )
+  # rtrees keeps the per-input row even for skipped species; if any
+  # of `species` somehow never made it past the dispatcher's
+  # normalisation (e.g. all-empty after stripping), mark as "unmatched"
+  # rather than "skipped" so the two failure modes stay distinct.
+  na_input_idx <- !nzchar(norm_query) | is.na(norm_query)
+  placement$placement_status[na_input_idx] <- "unmatched"
+
+  # If show_grafted = TRUE rtrees flags grafted tips with `*` / `**`.
+  # Surface the grafted set so users can see which species were placed
+  # on higher-rank stand-ins.
+  grafted_tips <- ref_tips[grepl("\\*+$", ref_tips)]
 
   list(
     tree     = tree,
     in_query = in_query,
     backend_meta = list(
-      taxon        = taxon,
-      n_grafted    = length(grafted),
-      grafted_tips = grafted
+      taxon         = taxon,
+      n_grafted     = length(grafted_tips),
+      grafted_tips  = grafted_tips,
+      placement     = tibble::as_tibble(placement)
     )
   )
 }
