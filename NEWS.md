@@ -1,5 +1,9 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 17: pr_tree_result mapping audit table (#73)
+
+* **`pr_get_tree()` and `pr_date_tree()` now return `result$mapping`.** The table has one row per unique input species or input tip, preserving the user-facing name, normalized name, backend query name, actual returned tree tip, whether it made it into the tree, the name-handling match type, and the rtrees placement status when available. This gives users an auditable per-name record without reconstructing it from `$matched`, `$unmatched`, and backend-specific metadata.
+
 ## Round 16: rtrees placement-status table (#74)
 
 Addresses Ayumi Mizuno's #74. **Issue remains open** — Ayumi to verify

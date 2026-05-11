@@ -84,6 +84,11 @@
 #'     to date.}
 #'   \item{`unmatched`}{Tip labels of the input absent from DateLife's
 #'     database (returned with no calibration applied).}
+#'   \item{`mapping`}{A tibble with one row per input tip label,
+#'     mirroring [pr_get_tree()]'s audit table: `input_name`,
+#'     `normalized_name`, `query_name`, `tree_name`, `in_tree`,
+#'     `match_type`, and `placement_status` (`NA` for DateLife
+#'     dating).}
 #'   \item{`source`}{Always `"datelife"` (paired with `pr_get_tree()`'s
 #'     dispatch).}
 #'   \item{`backend_meta`}{Includes `dating_method`, `calibrations`
@@ -151,10 +156,21 @@ pr_date_tree <- function(
     res$backend_meta,
     source = "datelife"
   )
+  input_tips <- .pr_first_tree_tip_labels(tree)
+  normalized_tips <- pr_normalize_names(input_tips)
+  mapping <- .pr_build_tree_mapping(
+    input_name = input_tips,
+    normalized_name = normalized_tips,
+    query_name = normalized_tips,
+    in_tree = input_tips %in% res$matched,
+    tree = res$tree,
+    backend_meta = res$backend_meta
+  )
   out <- list(
     tree = res$tree,
     matched = res$matched,
     unmatched = res$unmatched,
+    mapping = mapping,
     source = "datelife",
     backend_meta = res$backend_meta
   )

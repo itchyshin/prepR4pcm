@@ -11,7 +11,7 @@
 #      the right underlying function.
 #   3. Helpful errors: missing backend package; rtrees without taxon;
 #      empty species list.
-#   4. Result shape: matched + unmatched + tree + source +
+#   4. Result shape: matched + unmatched + mapping + tree + source +
 #      backend_meta + class("pr_tree_result").
 #   5. Print method: works without error and emits expected fields.
 
@@ -913,8 +913,97 @@ test_that("result has the documented class and components", {
   )
   res <- pr_get_tree(c("a b", "c d"), source = "rotl")
   expect_s3_class(res, "pr_tree_result")
-  expect_named(res, c("tree", "matched", "unmatched", "source", "backend_meta"))
+  expect_named(
+    res,
+    c("tree", "matched", "unmatched", "mapping", "source", "backend_meta")
+  )
   expect_s3_class(res$tree, "phylo")
+})
+
+
+test_that("result mapping audits original, query, and tree names", {
+  testthat::local_mocked_bindings(
+    .pr_get_tree_rotl = function(species, ...) {
+      list(
+        tree = mini_phylo(c("Corvus_corax", "Pica_pica")),
+        in_query = c(TRUE, TRUE, FALSE),
+        backend_meta = list()
+      )
+    },
+    .package = "prepR4pcm"
+  )
+
+  res <- pr_get_tree(
+    c("Corvus_corax", "Pica pica", "Madeup bird"),
+    source = "rotl",
+    tnrs = "never"
+  )
+
+  expect_s3_class(res$mapping, "tbl_df")
+  expect_named(
+    res$mapping,
+    c(
+      "input_name",
+      "normalized_name",
+      "query_name",
+      "tree_name",
+      "in_tree",
+      "match_type",
+      "placement_status"
+    )
+  )
+  expect_equal(
+    res$mapping$input_name,
+    c("Corvus_corax", "Pica pica", "Madeup bird")
+  )
+  expect_equal(
+    res$mapping$normalized_name,
+    c("Corvus corax", "Pica pica", "Madeup bird")
+  )
+  expect_equal(
+    res$mapping$tree_name,
+    c("Corvus_corax", "Pica_pica", NA_character_)
+  )
+  expect_equal(res$mapping$in_tree, c(TRUE, TRUE, FALSE))
+  expect_equal(res$mapping$match_type, c("normalized", "exact", "unmatched"))
+  expect_equal(res$mapping$placement_status, rep(NA_character_, 3L))
+})
+
+
+test_that("result mapping records TNRS substitutions as query names", {
+  testthat::local_mocked_bindings(
+    .pr_resolve_query = function(species, source, tnrs) {
+      list(
+        original = c("Corvas corax", "Pica pica"),
+        normalised = c("Corvas corax", "Pica pica"),
+        resolved = c("Corvus corax", "Pica pica"),
+        query = c("Corvus corax", "Pica pica"),
+        tnrs_replacements = c("Corvas corax" = "Corvus corax")
+      )
+    },
+    .pr_get_tree_rotl = function(species, ...) {
+      list(
+        tree = mini_phylo(c("Corvus_corax", "Pica_pica")),
+        in_query = rep(TRUE, length(species)),
+        backend_meta = list()
+      )
+    },
+    .package = "prepR4pcm"
+  )
+
+  res <- pr_get_tree(
+    c("Corvas corax", "Pica pica"),
+    source = "rotl",
+    tnrs = "always"
+  )
+
+  expect_equal(res$mapping$query_name, c("Corvus corax", "Pica pica"))
+  expect_equal(res$mapping$tree_name, c("Corvus_corax", "Pica_pica"))
+  expect_equal(res$mapping$match_type, c("tnrs", "exact"))
+  expect_equal(
+    res$backend_meta$tnrs_replacements,
+    c("Corvas corax" = "Corvus corax")
+  )
 })
 
 

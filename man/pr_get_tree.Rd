@@ -232,6 +232,17 @@ input} that did not resolve. Disjoint from \code{matched};
 \code{length(matched) + length(unmatched) == length(unique(input))}
 always holds. Inspect these and consider running them back
 through \code{\link[=reconcile_suggest]{reconcile_suggest()}} / a manual override.}
+\item{\code{mapping}}{A tibble with one row per unique input species:
+\code{input_name}, \code{normalized_name}, \code{query_name}, \code{tree_name},
+\code{in_tree}, \code{match_type}, and \code{placement_status}. This is the
+audit trail for name handling: \code{input_name} is what the user
+supplied, \code{normalized_name} is the result of
+\code{\link[=pr_normalize_names]{pr_normalize_names()}}, \code{query_name} is the backend query after
+optional TNRS, \code{tree_name} is the actual returned tip label, and
+\code{match_type} is one of \code{"exact"}, \code{"normalized"}, \code{"tnrs"}, or
+\code{"unmatched"}. For \code{source = "rtrees"}, \code{placement_status}
+carries the grafting status from \code{backend_meta$placement};
+otherwise it is \code{NA}.}
 \item{\code{source}}{The backend that produced the tree.}
 \item{\code{backend_meta}}{A named list of diagnostic information.
 Standard fields populated by the dispatcher:

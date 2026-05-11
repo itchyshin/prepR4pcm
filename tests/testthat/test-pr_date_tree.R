@@ -7,8 +7,9 @@
 #   2. Single-tree default returns a phylo with the pr_tree_result class.
 #   3. n_dated > 1 returns a multiPhylo (capped at n_dated).
 #   4. backend_meta$tree_provenance has one entry per returned tree.
-#   5. source is always "datelife".
-#   6. Helpful error when datelife isn't installed.
+#   5. mapping records per-tip audit rows.
+#   6. source is always "datelife".
+#   7. Helpful error when datelife isn't installed.
 
 mini_phylo <- function(tip_labels) {
   ape::read.tree(
@@ -120,6 +121,49 @@ test_that("pr_date_tree populates per-tree provenance", {
   expect_length(res$backend_meta$tree_provenance, 2L)
   expect_equal(res$backend_meta$tree_provenance[[1]]$source_index, 1L)
   expect_equal(res$backend_meta$tree_provenance[[2]]$source_index, 2L)
+})
+
+
+test_that("pr_date_tree returns a per-tip mapping table", {
+  tr <- mini_phylo(c("a", "b"))
+  testthat::local_mocked_bindings(
+    .pr_date_tree_datelife = function(
+      tree,
+      n_dated = 1L,
+      dating_method = "bladj",
+      ...
+    ) {
+      list(
+        tree = tree,
+        matched = tree$tip.label,
+        unmatched = character(),
+        backend_meta = list(
+          backend = "datelife",
+          dating_method = dating_method,
+          n_returned = 1L
+        )
+      )
+    },
+    .package = "prepR4pcm"
+  )
+
+  res <- pr_date_tree(tr)
+
+  expect_named(
+    res$mapping,
+    c(
+      "input_name",
+      "normalized_name",
+      "query_name",
+      "tree_name",
+      "in_tree",
+      "match_type",
+      "placement_status"
+    )
+  )
+  expect_equal(res$mapping$input_name, c("a", "b"))
+  expect_equal(res$mapping$tree_name, c("a", "b"))
+  expect_equal(res$mapping$in_tree, c(TRUE, TRUE))
 })
 
 

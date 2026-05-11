@@ -46,6 +46,11 @@ or a \code{multiPhylo} when \code{n_dated > 1}.}
 to date.}
 \item{\code{unmatched}}{Tip labels of the input absent from DateLife's
 database (returned with no calibration applied).}
+\item{\code{mapping}}{A tibble with one row per input tip label,
+mirroring \code{\link[=pr_get_tree]{pr_get_tree()}}'s audit table: \code{input_name},
+\code{normalized_name}, \code{query_name}, \code{tree_name}, \code{in_tree},
+\code{match_type}, and \code{placement_status} (\code{NA} for DateLife
+dating).}
 \item{\code{source}}{Always \code{"datelife"} (paired with \code{pr_get_tree()}'s
 dispatch).}
 \item{\code{backend_meta}}{Includes \code{dating_method}, \code{calibrations}

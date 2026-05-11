@@ -47,6 +47,14 @@ test_that("rtrees placement preserves original input names", {
     r$backend_meta$placement$input_name,
     c("Corvus_corax", "Pica_pica")
   )
+  expect_equal(
+    r$mapping[, c("input_name", "tree_name", "placement_status")],
+    tibble::tibble(
+      input_name = c("Corvus_corax", "Pica_pica"),
+      tree_name = c("Corvus_corax", "Pica_pica"),
+      placement_status = c("exact", "exact")
+    )
+  )
 })
 
 

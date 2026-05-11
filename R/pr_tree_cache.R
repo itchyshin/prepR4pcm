@@ -210,7 +210,8 @@ pr_tree_cache_clear <- function(confirm = TRUE, source = NULL) {
 ) {
   # Keep species/query order because the cached pr_tree_result stores
   # input-order-sensitive reporting vectors (`matched`, `unmatched`,
-  # placement tables). Backend options are serialised in a stable form.
+  # `mapping`, placement tables). Backend options are serialised in a
+  # stable form.
   extras <- .pr_tree_cache_extras(list(...))
   payload <- list(
     species = unique(as.character(species)),

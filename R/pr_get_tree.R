@@ -226,6 +226,17 @@
 #'     `length(matched) + length(unmatched) == length(unique(input))`
 #'     always holds. Inspect these and consider running them back
 #'     through [reconcile_suggest()] / a manual override.}
+#'   \item{`mapping`}{A tibble with one row per unique input species:
+#'     `input_name`, `normalized_name`, `query_name`, `tree_name`,
+#'     `in_tree`, `match_type`, and `placement_status`. This is the
+#'     audit trail for name handling: `input_name` is what the user
+#'     supplied, `normalized_name` is the result of
+#'     [pr_normalize_names()], `query_name` is the backend query after
+#'     optional TNRS, `tree_name` is the actual returned tip label, and
+#'     `match_type` is one of `"exact"`, `"normalized"`, `"tnrs"`, or
+#'     `"unmatched"`. For `source = "rtrees"`, `placement_status`
+#'     carries the grafting status from `backend_meta$placement`;
+#'     otherwise it is `NA`.}
 #'   \item{`source`}{The backend that produced the tree.}
 #'   \item{`backend_meta`}{A named list of diagnostic information.
 #'     Standard fields populated by the dispatcher:
@@ -534,11 +545,20 @@ pr_get_tree <- function(
     resolve_polytomies = resolve_polytomies,
     branch_lengths = branch_lengths
   )
+  mapping <- .pr_build_tree_mapping(
+    input_name = resolved$original,
+    normalized_name = resolved$normalised,
+    query_name = resolved$query,
+    in_tree = in_query,
+    tree = result$tree,
+    backend_meta = backend_meta
+  )
 
   out <- list(
     tree = result$tree,
     matched = matched,
     unmatched = unmatched,
+    mapping = mapping,
     source = source,
     backend_meta = backend_meta
   )
@@ -579,6 +599,98 @@ pr_get_tree <- function(
     ))
   }
   as.integer(x)
+}
+
+
+# Internal: per-input mapping table for pr_tree_result ---------------------
+
+.pr_build_tree_mapping <- function(
+  input_name,
+  normalized_name,
+  query_name,
+  in_tree,
+  tree,
+  backend_meta = list()
+) {
+  input_name <- as.character(input_name)
+  normalized_name <- as.character(normalized_name)
+  query_name <- as.character(query_name)
+  in_tree <- as.logical(in_tree)
+  in_tree[is.na(in_tree)] <- FALSE
+
+  tree_name <- .pr_lookup_tree_tip_names(query_name, tree)
+  placement_status <- rep(NA_character_, length(input_name))
+
+  placement <- backend_meta$placement
+  if (is.data.frame(placement)) {
+    placement_idx <- match(input_name, placement$input_name)
+    has_placement <- !is.na(placement_idx)
+
+    if ("tree_name" %in% names(placement)) {
+      tree_name[has_placement] <- as.character(
+        placement$tree_name[placement_idx[has_placement]]
+      )
+    }
+    if ("placement_status" %in% names(placement)) {
+      placement_status[has_placement] <- as.character(
+        placement$placement_status[placement_idx[has_placement]]
+      )
+    }
+  }
+
+  tree_name[!in_tree] <- NA_character_
+
+  tnrs_match <- in_tree &
+    !is.na(query_name) &
+    !is.na(normalized_name) &
+    query_name != normalized_name
+  normalized_match <- in_tree &
+    !tnrs_match &
+    !is.na(normalized_name) &
+    normalized_name != input_name
+
+  match_type <- rep("unmatched", length(input_name))
+  match_type[in_tree] <- "exact"
+  match_type[normalized_match] <- "normalized"
+  match_type[tnrs_match] <- "tnrs"
+
+  tibble::tibble(
+    input_name = input_name,
+    normalized_name = normalized_name,
+    query_name = query_name,
+    tree_name = tree_name,
+    in_tree = in_tree,
+    match_type = match_type,
+    placement_status = placement_status
+  )
+}
+
+
+.pr_lookup_tree_tip_names <- function(query_name, tree) {
+  out <- rep(NA_character_, length(query_name))
+  tip_labels <- .pr_first_tree_tip_labels(tree)
+  if (length(tip_labels) == 0L) {
+    return(out)
+  }
+
+  clean_tips <- sub("\\*+$", "", tip_labels)
+  normalized_query <- pr_normalize_names(query_name)
+  normalized_tips <- pr_normalize_names(clean_tips)
+  tip_by_normalized <- stats::setNames(tip_labels, normalized_tips)
+  hit <- normalized_query %in% names(tip_by_normalized)
+  out[hit] <- unname(tip_by_normalized[normalized_query[hit]])
+  out
+}
+
+
+.pr_first_tree_tip_labels <- function(tree) {
+  if (inherits(tree, "multiPhylo")) {
+    if (length(tree) == 0L) {
+      return(character())
+    }
+    return(tree[[1]]$tip.label)
+  }
+  tree$tip.label
 }
 
 
