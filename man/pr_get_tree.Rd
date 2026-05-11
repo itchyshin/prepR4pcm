@@ -142,7 +142,7 @@ is \code{multiPhylo}; otherwise \code{phylo}.}
 
 \item{cache}{Logical. Cache the result on disk and reuse it on
 subsequent identical calls? Default \code{FALSE}. When \code{TRUE}, the
-request is keyed by \verb{(species, source, n_tree, taxon, ...)} and
+request is keyed by \verb{(species, source, n_tree, taxon, tnrs, ...)} and
 stored at \code{\link[=pr_tree_cache_dir]{pr_tree_cache_dir()}}. See \code{\link[=pr_tree_cache_status]{pr_tree_cache_status()}}
 and \code{\link[=pr_tree_cache_clear]{pr_tree_cache_clear()}} for inspecting / wiping the cache.}
 

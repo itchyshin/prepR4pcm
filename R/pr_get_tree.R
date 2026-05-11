@@ -11,7 +11,6 @@
 #
 # Issue #42 (Ayumi Mizuno).
 
-
 #' Retrieve a candidate phylogeny for a species list
 #'
 #' Connects reconciled species names to an external phylogenetic resource
@@ -144,7 +143,7 @@
 #'   is `multiPhylo`; otherwise `phylo`.
 #' @param cache Logical. Cache the result on disk and reuse it on
 #'   subsequent identical calls? Default `FALSE`. When `TRUE`, the
-#'   request is keyed by `(species, source, n_tree, taxon, ...)` and
+#'   request is keyed by `(species, source, n_tree, taxon, tnrs, ...)` and
 #'   stored at [pr_tree_cache_dir()]. See [pr_tree_cache_status()]
 #'   and [pr_tree_cache_clear()] for inspecting / wiping the cache.
 #' @param tnrs A length-1 character vector. Run a TNRS preflight
@@ -326,47 +325,52 @@
 #' }
 #'
 #' @export
-pr_get_tree <- function(x,
-                        source = c("rotl", "rtrees", "clootl",
-                                   "fishtree", "datelife", "auto"),
-                        species_col = NULL,
-                        taxon = NULL,
-                        n_tree = 1L,
-                        cache = FALSE,
-                        tnrs = c("auto", "always", "never"),
-                        min_match = 0.8,
-                        check_ultrametric = TRUE,
-                        resolve_polytomies = FALSE,
-                        branch_lengths = NULL,
-                        ...) {
+pr_get_tree <- function(
+  x,
+  source = c("rotl", "rtrees", "clootl", "fishtree", "datelife", "auto"),
+  species_col = NULL,
+  taxon = NULL,
+  n_tree = 1L,
+  cache = FALSE,
+  tnrs = c("auto", "always", "never"),
+  min_match = 0.8,
+  check_ultrametric = TRUE,
+  resolve_polytomies = FALSE,
+  branch_lengths = NULL,
+  ...
+) {
   source <- match.arg(source)
-  tnrs   <- match.arg(tnrs)
+  tnrs <- match.arg(tnrs)
   if (!is.null(branch_lengths)) {
     branch_lengths <- match.arg(
       branch_lengths,
       choices = c("grafen", "compute.brlen", "unit")
     )
   }
-  if (!is.numeric(n_tree) || length(n_tree) != 1L || n_tree < 1L) {
+  n_tree <- .pr_validate_positive_integer(n_tree, "n_tree")
+  if (
+    !is.numeric(min_match) ||
+      length(min_match) != 1L ||
+      is.na(min_match) ||
+      !is.finite(min_match) ||
+      min_match < 0 ||
+      min_match > 1
+  ) {
     cli::cli_abort(
-      c("{.arg n_tree} must be a length-1 positive integer.",
-        "i" = "Got: {.val {n_tree}}.")
+      c(
+        "{.arg min_match} must be a length-1 numeric in [0, 1].",
+        "i" = "Got: {.val {min_match}}."
+      )
     )
   }
-  if (!is.numeric(min_match) || length(min_match) != 1L ||
-      min_match < 0 || min_match > 1) {
-    cli::cli_abort(
-      c("{.arg min_match} must be a length-1 numeric in [0, 1].",
-        "i" = "Got: {.val {min_match}}.")
-    )
-  }
-  n_tree <- as.integer(n_tree)
   species <- .pr_extract_species_for_tree(x, species_col)
 
   if (length(species) == 0) {
     cli::cli_abort(
-      c("No species names available to query the backend.",
-        "i" = "If you passed a {.cls reconciliation} object, ensure {.code mapping$name_y} contains resolved names.")
+      c(
+        "No species names available to query the backend.",
+        "i" = "If you passed a {.cls reconciliation} object, ensure {.code mapping$name_y} contains resolved names."
+      )
     )
   }
 
@@ -374,9 +378,15 @@ pr_get_tree <- function(x,
   # first one that resolves >= min_match * length(species). Drops to
   # the fall-through dispatcher.
   if (source == "auto") {
-    return(.pr_get_tree_auto(species, taxon = taxon, n_tree = n_tree,
-                              cache = cache, tnrs = tnrs,
-                              min_match = min_match, ...))
+    return(.pr_get_tree_auto(
+      species,
+      taxon = taxon,
+      n_tree = n_tree,
+      cache = cache,
+      tnrs = tnrs,
+      min_match = min_match,
+      ...
+    ))
   }
 
   # Build the original -> normalised -> resolved -> query mapping. This
@@ -389,8 +399,15 @@ pr_get_tree <- function(x,
 
   # Cache lookup ------------------------------------------------------
   if (isTRUE(cache)) {
-    key <- .pr_tree_cache_key(species_query, source = source,
-                               n_tree = n_tree, taxon = taxon, ...)
+    key <- .pr_tree_cache_key(
+      resolved$original,
+      source = source,
+      n_tree = n_tree,
+      taxon = taxon,
+      tnrs = tnrs,
+      query = species_query,
+      ...
+    )
     cached <- .pr_tree_cache_get(key, source)
     if (!is.null(cached)) {
       return(cached)
@@ -402,10 +419,14 @@ pr_get_tree <- function(x,
   # ORIGINAL input below.
   result <- switch(
     source,
-    rotl     = .pr_get_tree_rotl(species_query, n_tree = n_tree, ...),
-    rtrees   = .pr_get_tree_rtrees(species_query, n_tree = n_tree,
-                                    taxon = taxon, ...),
-    clootl   = .pr_get_tree_clootl(species_query, n_tree = n_tree, ...),
+    rotl = .pr_get_tree_rotl(species_query, n_tree = n_tree, ...),
+    rtrees = .pr_get_tree_rtrees(
+      species_query,
+      n_tree = n_tree,
+      taxon = taxon,
+      ...
+    ),
+    clootl = .pr_get_tree_clootl(species_query, n_tree = n_tree, ...),
     fishtree = .pr_get_tree_fishtree(species_query, n_tree = n_tree, ...),
     datelife = .pr_get_tree_datelife(species_query, n_tree = n_tree, ...)
   )
@@ -421,7 +442,7 @@ pr_get_tree <- function(x,
       "i" = "Expected {.cls logical} of length {length(resolved$original)}; got {.cls {class(in_query)[1]}} of length {length(in_query)}."
     ))
   }
-  matched   <- resolved$original[in_query]
+  matched <- resolved$original[in_query]
   unmatched <- resolved$original[!in_query]
 
   # Multi-tree reporting (#76) ---------------------------------------
@@ -429,16 +450,17 @@ pr_get_tree <- function(x,
   n_returned <- if (is_multi) length(result$tree) else 1L
 
   tip_set_consistent <- TRUE
-  dropped_per_tree   <- NULL
+  dropped_per_tree <- NULL
   if (is_multi && length(result$tree) > 1L) {
     tip_sets <- lapply(result$tree, function(t) sort(t$tip.label))
-    tip_set_consistent <- all(vapply(tip_sets[-1L],
-                                      function(s) identical(s, tip_sets[[1L]]),
-                                      logical(1L)))
+    tip_set_consistent <- all(vapply(
+      tip_sets[-1L],
+      function(s) identical(s, tip_sets[[1L]]),
+      logical(1L)
+    ))
     if (!tip_set_consistent) {
       union_tips <- Reduce(union, tip_sets)
-      dropped_per_tree <- lapply(tip_sets,
-                                  function(s) setdiff(union_tips, s))
+      dropped_per_tree <- lapply(tip_sets, function(s) setdiff(union_tips, s))
     }
   }
 
@@ -446,14 +468,20 @@ pr_get_tree <- function(x,
   # behaviour. If they do, it's a bug in this dispatcher or a backend
   # wrapper, not user error. (#73)
   stopifnot(
-    "matched must be a subset of unique input" =
-      all(matched %in% resolved$original),
-    "unmatched must be a subset of unique input" =
-      all(unmatched %in% resolved$original),
-    "matched + unmatched must cover unique input" =
-      length(matched) + length(unmatched) == length(resolved$original),
-    "matched and unmatched must be disjoint" =
-      length(intersect(matched, unmatched)) == 0L
+    "matched must be a subset of unique input" = all(
+      matched %in% resolved$original
+    ),
+    "unmatched must be a subset of unique input" = all(
+      unmatched %in% resolved$original
+    ),
+    "matched + unmatched must cover unique input" = length(matched) +
+      length(unmatched) ==
+      length(resolved$original),
+    "matched and unmatched must be disjoint" = length(intersect(
+      matched,
+      unmatched
+    )) ==
+      0L
   )
 
   # Build backend_meta. Start with whatever the wrapper returned (its
@@ -466,21 +494,33 @@ pr_get_tree <- function(x,
   } else {
     list()
   }
-  backend_meta <- utils::modifyList(wrapper_meta, list(
-    n_queried              = length(resolved$original),
-    n_requested            = as.integer(n_tree),
-    n_returned             = n_returned,
-    n_matched              = length(matched),
-    tnrs_replacements      = resolved$tnrs_replacements,
-    tip_set_consistent     = tip_set_consistent,
-    dropped_per_tree       = dropped_per_tree
-  ))
+  if (
+    identical(source, "rtrees") &&
+      is.data.frame(wrapper_meta$placement) &&
+      nrow(wrapper_meta$placement) == length(resolved$original)
+  ) {
+    wrapper_meta$placement$input_name <- resolved$original
+  }
+  backend_meta <- utils::modifyList(
+    wrapper_meta,
+    list(
+      n_queried = length(resolved$original),
+      n_requested = as.integer(n_tree),
+      n_returned = n_returned,
+      n_matched = length(matched),
+      tnrs_replacements = resolved$tnrs_replacements,
+      tip_set_consistent = tip_set_consistent,
+      dropped_per_tree = dropped_per_tree
+    )
+  )
 
   # Ensure backend_meta$tree_provenance is always present as a list with
   # one entry per returned tree, so downstream consumers (e.g. pigauto)
   # can pair tree[[i]] with backend_meta$tree_provenance[[i]].
   backend_meta <- .pr_ensure_tree_provenance(
-    result$tree, backend_meta, source
+    result$tree,
+    backend_meta,
+    source
   )
 
   # Post-process for the meta-analysis path -----------------------
@@ -492,14 +532,14 @@ pr_get_tree <- function(x,
   result$tree <- .pr_post_process_tree(
     result$tree,
     resolve_polytomies = resolve_polytomies,
-    branch_lengths     = branch_lengths
+    branch_lengths = branch_lengths
   )
 
   out <- list(
-    tree         = result$tree,
-    matched      = matched,
-    unmatched    = unmatched,
-    source       = source,
+    tree = result$tree,
+    matched = matched,
+    unmatched = unmatched,
+    source = source,
     backend_meta = backend_meta
   )
   class(out) <- "pr_tree_result"
@@ -523,15 +563,36 @@ pr_get_tree <- function(x,
 }
 
 
+# Internal: shared scalar positive-integer validation ---------------------
+
+.pr_validate_positive_integer <- function(x, arg) {
+  bad <- !is.numeric(x) ||
+    length(x) != 1L ||
+    is.na(x) ||
+    !is.finite(x) ||
+    x < 1L ||
+    x != as.integer(x)
+  if (bad) {
+    cli::cli_abort(c(
+      "`{arg}` must be a length-1 positive integer.",
+      "i" = "Got: {.val {x}}."
+    ))
+  }
+  as.integer(x)
+}
+
+
 # Internal: post-process a tree for the meta-analysis pattern --------
 #
 # Handles bifurcation (ape::multi2di with random = TRUE) and
 # branch-length assignment (ape::compute.brlen with the requested
 # method). Idempotent on multiPhylo (applies element-wise).
 
-.pr_post_process_tree <- function(tree,
-                                    resolve_polytomies = FALSE,
-                                    branch_lengths = NULL) {
+.pr_post_process_tree <- function(
+  tree,
+  resolve_polytomies = FALSE,
+  branch_lengths = NULL
+) {
   if (!isTRUE(resolve_polytomies) && is.null(branch_lengths)) {
     return(tree)
   }
@@ -540,10 +601,11 @@ pr_get_tree <- function(x,
       t <- ape::multi2di(t, random = TRUE)
     }
     if (!is.null(branch_lengths)) {
-      method <- switch(branch_lengths,
-        grafen          = "Grafen",
-        compute.brlen   = "Grafen",   # ape's default
-        unit            = NULL,
+      method <- switch(
+        branch_lengths,
+        grafen = "Grafen",
+        compute.brlen = "Grafen", # ape's default
+        unit = NULL,
         branch_lengths
       )
       if (identical(branch_lengths, "unit")) {
@@ -571,10 +633,16 @@ pr_get_tree <- function(x,
 .pr_check_tree_ultrametric <- function(tree, source) {
   # Don't bother for backends that don't pretend to produce
   # ultrametric output.
-  if (source == "rotl") return(invisible())
+  if (source == "rotl") {
+    return(invisible())
+  }
   ut <- .pr_is_tree_ultrametric(tree)
-  if (isTRUE(ut)) return(invisible())
-  if (is.na(ut))  return(invisible())   # no edge lengths, can't check
+  if (isTRUE(ut)) {
+    return(invisible())
+  }
+  if (is.na(ut)) {
+    return(invisible())
+  } # no edge lengths, can't check
   cli::cli_warn(c(
     "Tree returned by {.val {source}} is not strictly ultrametric.",
     "i" = "Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.",
@@ -594,7 +662,9 @@ pr_get_tree <- function(x,
     res <- vapply(tree, .pr_is_tree_ultrametric, logical(1))
     return(all(res))
   }
-  if (is.null(tree$edge.length)) return(NA)
+  if (is.null(tree$edge.length)) {
+    return(NA)
+  }
   tryCatch(
     isTRUE(ape::is.ultrametric(tree, tol = 1e-6)),
     error = function(e) NA
@@ -638,14 +708,15 @@ pr_get_tree <- function(x,
 
 
 .pr_resolve_query <- function(species, source, tnrs) {
-  original   <- unique(stats::na.omit(as.character(species)))
+  original <- unique(stats::na.omit(as.character(species)))
   normalised <- pr_normalize_names(original)
 
   needs_tnrs_default <- source %in% c("fishtree")
-  do_tnrs <- switch(tnrs,
-    auto    = needs_tnrs_default,
-    always  = TRUE,
-    never   = FALSE
+  do_tnrs <- switch(
+    tnrs,
+    auto = needs_tnrs_default,
+    always = TRUE,
+    never = FALSE
   )
 
   resolved <- normalised
@@ -658,8 +729,8 @@ pr_get_tree <- function(x,
     )
     if (!is.null(tnrs_res) && !is.null(tnrs_res$unique_name)) {
       replaced_idx <- !is.na(tnrs_res$unique_name) &
-                       nzchar(tnrs_res$unique_name) &
-                       tnrs_res$unique_name != normalised
+        nzchar(tnrs_res$unique_name) &
+        tnrs_res$unique_name != normalised
       resolved[replaced_idx] <- tnrs_res$unique_name[replaced_idx]
       if (any(replaced_idx)) {
         tnrs_replacements <- stats::setNames(
@@ -669,9 +740,11 @@ pr_get_tree <- function(x,
         n_repl <- length(tnrs_replacements)
         examples_n <- min(3L, n_repl)
         examples <- paste(
-          sprintf("'%s' -> '%s'",
-                  names(tnrs_replacements)[seq_len(examples_n)],
-                  unname(tnrs_replacements)[seq_len(examples_n)]),
+          sprintf(
+            "'%s' -> '%s'",
+            names(tnrs_replacements)[seq_len(examples_n)],
+            unname(tnrs_replacements)[seq_len(examples_n)]
+          ),
           collapse = "; "
         )
         cli::cli_warn(c(
@@ -693,10 +766,10 @@ pr_get_tree <- function(x,
   }
 
   list(
-    original          = original,
-    normalised        = normalised,
-    resolved          = resolved,
-    query             = resolved,
+    original = original,
+    normalised = normalised,
+    resolved = resolved,
+    query = resolved,
     tnrs_replacements = tnrs_replacements
   )
 }
@@ -708,9 +781,15 @@ pr_get_tree <- function(x,
 # >= min_match * length(species). If none meets the threshold, return
 # the best of the lot with a warning.
 
-.pr_get_tree_auto <- function(species, taxon = NULL, n_tree = 1L,
-                                cache = FALSE, tnrs = "auto",
-                                min_match = 0.8, ...) {
+.pr_get_tree_auto <- function(
+  species,
+  taxon = NULL,
+  n_tree = 1L,
+  cache = FALSE,
+  tnrs = "auto",
+  min_match = 0.8,
+  ...
+) {
   # Priority order: try the broadest-coverage CRAN backends first,
   # then taxon-specific, then GitHub-only.
   candidates <- c("rotl", "fishtree", "clootl", "datelife")
@@ -734,8 +813,15 @@ pr_get_tree <- function(x,
   attempts <- list()
   for (b in candidates) {
     res <- tryCatch(
-      pr_get_tree(species, source = b, taxon = taxon, n_tree = n_tree,
-                   cache = cache, tnrs = tnrs, ...),
+      pr_get_tree(
+        species,
+        source = b,
+        taxon = taxon,
+        n_tree = n_tree,
+        cache = cache,
+        tnrs = tnrs,
+        ...
+      ),
       error = function(e) NULL
     )
     if (is.null(res)) {
@@ -749,7 +835,7 @@ pr_get_tree <- function(x,
     }
     if (n_matched >= min_match * length(species)) {
       best$backend_meta$auto_attempts <- attempts
-      best$backend_meta$auto_chose    <- b
+      best$backend_meta$auto_chose <- b
       return(best)
     }
   }
@@ -762,7 +848,7 @@ pr_get_tree <- function(x,
     "i" = "Returning the best available result ({.val {best$source}}, {length(best$matched)}/{length(species)} matched)."
   ))
   best$backend_meta$auto_attempts <- attempts
-  best$backend_meta$auto_chose    <- best$source
+  best$backend_meta$auto_chose <- best$source
   best
 }
 
@@ -808,8 +894,10 @@ pr_get_tree <- function(x,
 .pr_get_tree_rotl <- function(species, n_tree = 1L, ...) {
   if (!requireNamespace("rotl", quietly = TRUE)) {
     cli::cli_abort(
-      c("The {.val rotl} backend requires the {.pkg rotl} package.",
-        "i" = 'Install with: {.code install.packages("rotl")}.')
+      c(
+        "The {.val rotl} backend requires the {.pkg rotl} package.",
+        "i" = 'Install with: {.code install.packages("rotl")}.'
+      )
     )
   }
 
@@ -841,7 +929,7 @@ pr_get_tree <- function(x,
   in_query <- matched_idx
 
   list(
-    tree     = tree,
+    tree = tree,
     in_query = in_query,
     backend_meta = list(tnrs_table = tnrs)
   )
@@ -853,9 +941,11 @@ pr_get_tree <- function(x,
 .pr_get_tree_clootl <- function(species, n_tree = 1L, ...) {
   if (!requireNamespace("clootl", quietly = TRUE)) {
     cli::cli_abort(
-      c("The {.val clootl} backend requires the {.pkg clootl} package.",
+      c(
+        "The {.val clootl} backend requires the {.pkg clootl} package.",
         "i" = 'Install with: {.code pak::pak("eliotmiller/clootl")} (GitHub-only).',
-        ">" = "See {.url https://github.com/eliotmiller/clootl} for details.")
+        ">" = "See {.url https://github.com/eliotmiller/clootl} for details."
+      )
     )
   }
 
@@ -895,7 +985,9 @@ pr_get_tree <- function(x,
   if (n_tree > 1L) {
     # `clootl::sampleTrees()` does not accept a `force` argument
     # (only `extractTree()` does), so don't inject one here.
-    if (is.null(call_args$count)) call_args$count <- n_tree
+    if (is.null(call_args$count)) {
+      call_args$count <- n_tree
+    }
     tree <- do.call(clootl::sampleTrees, call_args)
   } else {
     # Default `force = TRUE` so a species that isn't in the eBird /
@@ -903,11 +995,15 @@ pr_get_tree <- function(x,
     # than erroring out the whole call. The dispatcher records the
     # missing species in $unmatched (via the in_query vector this
     # wrapper returns). Users can opt out by passing `force = FALSE`.
-    if (is.null(call_args$force)) call_args$force <- TRUE
+    if (is.null(call_args$force)) {
+      call_args$force <- TRUE
+    }
     tree <- do.call(clootl::extractTree, call_args)
   }
 
-  if (is.null(tree) || !(inherits(tree, "phylo") || inherits(tree, "multiPhylo"))) {
+  if (
+    is.null(tree) || !(inherits(tree, "phylo") || inherits(tree, "multiPhylo"))
+  ) {
     cli::cli_abort(c(
       "{.pkg clootl} returned no tree for this species list.",
       "i" = "No queried species matched the requested eBird / Clements taxonomy.",
@@ -918,14 +1014,20 @@ pr_get_tree <- function(x,
   # Compute in_query: which queries does the returned tree contain?
   # Normalise both sides for the intersection (species is already
   # normalised by the dispatcher; tip labels may need light cleanup).
-  ref_tips <- if (inherits(tree, "multiPhylo")) tree[[1]]$tip.label else tree$tip.label
+  ref_tips <- if (inherits(tree, "multiPhylo")) {
+    tree[[1]]$tip.label
+  } else {
+    tree$tip.label
+  }
   norm_query <- pr_normalize_names(species)
-  norm_tip   <- pr_normalize_names(ref_tips)
-  in_query   <- norm_query %in% norm_tip
+  norm_tip <- pr_normalize_names(ref_tips)
+  in_query <- norm_query %in% norm_tip
 
   # Gather citation block via clootl::getCitations() if present.
   citations <- tryCatch(
-    if (exists("getCitations", envir = asNamespace("clootl"), inherits = FALSE)) {
+    if (
+      exists("getCitations", envir = asNamespace("clootl"), inherits = FALSE)
+    ) {
       get("getCitations", envir = asNamespace("clootl"))(
         if (inherits(tree, "multiPhylo")) tree[[1]] else tree
       )
@@ -944,17 +1046,21 @@ pr_get_tree <- function(x,
 .pr_get_tree_rtrees <- function(species, taxon = NULL, n_tree = 1L, ...) {
   if (!requireNamespace("rtrees", quietly = TRUE)) {
     cli::cli_abort(
-      c("The {.val rtrees} backend requires the {.pkg rtrees} package.",
+      c(
+        "The {.val rtrees} backend requires the {.pkg rtrees} package.",
         "i" = 'Install with: {.code pak::pak("daijiang/rtrees")} (GitHub-only).',
-        ">" = "See {.url https://daijiang.github.io/rtrees/} for details.")
+        ">" = "See {.url https://daijiang.github.io/rtrees/} for details."
+      )
     )
   }
 
   if (is.null(taxon) || !nzchar(taxon)) {
     cli::cli_abort(
-      c("The {.val rtrees} backend requires a {.arg taxon} argument.",
+      c(
+        "The {.val rtrees} backend requires a {.arg taxon} argument.",
         "i" = "Choose one of: {.val bird}, {.val mammal}, {.val fish}, {.val amphibian}, {.val reptile}, {.val plant}, {.val shark_ray}, {.val bee}, {.val butterfly}.",
-        ">" = "Example: {.code pr_get_tree(x, source = \"rtrees\", taxon = \"bird\")}.")
+        ">" = "Example: {.code pr_get_tree(x, source = \"rtrees\", taxon = \"bird\")}."
+      )
     )
   }
 
@@ -966,8 +1072,8 @@ pr_get_tree <- function(x,
   # only -- the count comes from the underlying mega-tree.
   # Single-tree taxa (bird default, etc.) ignore n_tree entirely.
   call_args <- list(...)
-  call_args$sp_list      <- species
-  call_args$taxon        <- taxon
+  call_args$sp_list <- species
+  call_args$taxon <- taxon
   call_args$show_grafted <- TRUE
 
   tree <- do.call(rtrees::get_tree, call_args)
@@ -991,8 +1097,8 @@ pr_get_tree <- function(x,
   # matters: `**` first, then `*`, so we never leave a stray `*` behind.
   ref_tips_clean <- sub("\\*+$", "", ref_tips)
   norm_query <- pr_normalize_names(species)
-  norm_tip   <- pr_normalize_names(ref_tips_clean)
-  in_query   <- norm_query %in% norm_tip
+  norm_tip <- pr_normalize_names(ref_tips_clean)
+  in_query <- norm_query %in% norm_tip
 
   # Per-input placement table (Ayumi #74) ---------------------------
   # Columns:
@@ -1002,22 +1108,30 @@ pr_get_tree <- function(x,
   #                     "skipped" (rtrees decided not to graft it),
   #                     "unmatched" (didn't reach rtrees at all)
   classify_one <- function(tip) {
-    if (grepl("\\*\\*$", tip)) "family_added"
-    else if (grepl("\\*$", tip)) "genus_added"
-    else "exact"
+    if (grepl("\\*\\*$", tip)) {
+      "family_added"
+    } else if (grepl("\\*$", tip)) {
+      "genus_added"
+    } else {
+      "exact"
+    }
   }
   # Map each normalised input to the tip (with its marker) it landed on.
   # Use a vector lookup keyed by the *cleaned* (markerless) tip label.
   tip_by_clean <- stats::setNames(ref_tips, norm_tip)
   placement <- data.frame(
-    input_name       = species,
-    tree_name        = unname(tip_by_clean[norm_query]),
+    input_name = species,
+    tree_name = unname(tip_by_clean[norm_query]),
     placement_status = vapply(
       norm_query,
       function(nq) {
-        if (!nq %in% norm_tip) "skipped"  # rtrees took the name but
-                                            # didn't put it in the tree
-        else classify_one(tip_by_clean[[nq]])
+        if (!nq %in% norm_tip) {
+          # rtrees took the name but
+          "skipped"
+        } else {
+          # didn't put it in the tree
+          classify_one(tip_by_clean[[nq]])
+        }
       },
       character(1L)
     ),
@@ -1036,13 +1150,13 @@ pr_get_tree <- function(x,
   grafted_tips <- ref_tips[grepl("\\*+$", ref_tips)]
 
   list(
-    tree     = tree,
+    tree = tree,
     in_query = in_query,
     backend_meta = list(
-      taxon         = taxon,
-      n_grafted     = length(grafted_tips),
-      grafted_tips  = grafted_tips,
-      placement     = tibble::as_tibble(placement)
+      taxon = taxon,
+      n_grafted = length(grafted_tips),
+      grafted_tips = grafted_tips,
+      placement = tibble::as_tibble(placement)
     )
   )
 }
@@ -1053,9 +1167,11 @@ pr_get_tree <- function(x,
 .pr_get_tree_fishtree <- function(species, n_tree = 1L, ...) {
   if (!requireNamespace("fishtree", quietly = TRUE)) {
     cli::cli_abort(
-      c("The {.val fishtree} backend requires the {.pkg fishtree} package.",
+      c(
+        "The {.val fishtree} backend requires the {.pkg fishtree} package.",
         "i" = 'Install with: {.code install.packages("fishtree")}.',
-        ">" = "Reference: Rabosky et al. (2018) {.emph Nature} 559:392 ({.href [doi:10.1038/s41586-018-0273-1](https://doi.org/10.1038/s41586-018-0273-1)}).")
+        ">" = "Reference: Rabosky et al. (2018) {.emph Nature} 559:392 ({.href [doi:10.1038/s41586-018-0273-1](https://doi.org/10.1038/s41586-018-0273-1)})."
+      )
     )
   }
 
@@ -1092,20 +1208,20 @@ pr_get_tree <- function(x,
     tree$tip.label
   }
   norm_query <- pr_normalize_names(species)
-  norm_tip   <- pr_normalize_names(ref_tips)  # pr_normalize_names handles _ -> space
-  in_query   <- norm_query %in% norm_tip
+  norm_tip <- pr_normalize_names(ref_tips) # pr_normalize_names handles _ -> space
+  in_query <- norm_query %in% norm_tip
 
   # Pull `type` from the call if user supplied it; default is chronogram.
   call_args <- list(...)
   type_used <- if (!is.null(call_args$type)) call_args$type else "chronogram"
 
   list(
-    tree     = tree,
+    tree = tree,
     in_query = in_query,
     backend_meta = list(
-      backend   = "fishtree",
-      type      = type_used,
-      warnings  = warns,
+      backend = "fishtree",
+      type = type_used,
+      warnings = warns,
       reference = "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
     )
   )
@@ -1114,14 +1230,20 @@ pr_get_tree <- function(x,
 
 # datelife backend: chronograms from a published database --------------
 
-.pr_get_tree_datelife <- function(species, n_tree = 1L,
-                                   summary_format = NULL,
-                                   use_tnrs = FALSE, ...) {
+.pr_get_tree_datelife <- function(
+  species,
+  n_tree = 1L,
+  summary_format = NULL,
+  use_tnrs = FALSE,
+  ...
+) {
   if (!requireNamespace("datelife", quietly = TRUE)) {
     cli::cli_abort(
-      c("The {.val datelife} backend requires the {.pkg datelife} package.",
+      c(
+        "The {.val datelife} backend requires the {.pkg datelife} package.",
         "i" = 'Install with: {.code pak::pak("phylotastic/datelife")} (GitHub-only; archived from CRAN in 2024).',
-        ">" = "See {.url https://github.com/phylotastic/datelife} for details.")
+        ">" = "See {.url https://github.com/phylotastic/datelife} for details."
+      )
     )
   }
 
@@ -1135,21 +1257,22 @@ pr_get_tree <- function(x,
   # datelife can resolve. use_tnrs = FALSE keeps this offline; users
   # who want TNRS pass use_tnrs = TRUE (or set tnrs = "always" at the
   # dispatcher level, which has already run before we get here).
-  query <- datelife::make_datelife_query(input = species,
-                                          use_tnrs = use_tnrs)
+  query <- datelife::make_datelife_query(input = species, use_tnrs = use_tnrs)
   matched_names <- query$cleaned_names
-  if (is.null(matched_names)) matched_names <- character()
+  if (is.null(matched_names)) {
+    matched_names <- character()
+  }
 
   # in_query: which species (as the dispatcher passed them) does
   # datelife recognise? Use normalised comparison.
   norm_query <- pr_normalize_names(species)
-  norm_keep  <- pr_normalize_names(matched_names)
-  in_query   <- norm_query %in% norm_keep
+  norm_keep <- pr_normalize_names(matched_names)
+  in_query <- norm_query %in% norm_keep
 
   res <- datelife::datelife_search(
-    input          = query,
+    input = query,
     summary_format = summary_format,
-    use_tnrs       = use_tnrs,
+    use_tnrs = use_tnrs,
     ...
   )
 
@@ -1158,11 +1281,15 @@ pr_get_tree <- function(x,
     res
   } else if (inherits(res, "multiPhylo")) {
     if (length(res) > n_tree) res[seq_len(n_tree)] else res
-  } else if (is.list(res) &&
-             all(vapply(res, inherits, logical(1), what = "phylo"))) {
+  } else if (
+    is.list(res) &&
+      all(vapply(res, inherits, logical(1), what = "phylo"))
+  ) {
     # phylo_all returns a named list of phylo: coerce to multiPhylo
     out <- res
-    if (length(out) > n_tree) out <- out[seq_len(n_tree)]
+    if (length(out) > n_tree) {
+      out <- out[seq_len(n_tree)]
+    }
     class(out) <- "multiPhylo"
     out
   } else {
@@ -1175,22 +1302,24 @@ pr_get_tree <- function(x,
 
   # Per-source citations come from the names of the multiPhylo (datelife
   # uses the source citation as the name).
-  source_citations <- if (inherits(tree, "multiPhylo") &&
-                          !is.null(names(tree))) {
+  source_citations <- if (
+    inherits(tree, "multiPhylo") &&
+      !is.null(names(tree))
+  ) {
     names(tree)
   } else {
     NULL
   }
 
   list(
-    tree     = tree,
+    tree = tree,
     in_query = in_query,
     backend_meta = list(
-      backend          = "datelife",
-      version          = as.character(utils::packageVersion("datelife")),
-      summary_format   = summary_format,
+      backend = "datelife",
+      version = as.character(utils::packageVersion("datelife")),
+      summary_format = summary_format,
       source_citations = source_citations,
-      reference        = "Sanchez Reyes et al. (2024) Syst. Biol. 73:470 (doi:10.1093/sysbio/syae015)"
+      reference = "Sanchez Reyes et al. (2024) Syst. Biol. 73:470 (doi:10.1093/sysbio/syae015)"
     )
   )
 }
@@ -1211,13 +1340,17 @@ pr_get_tree <- function(x,
 
   base_ref <- switch(
     source,
-    rotl     = "Open Tree of Life synthesis (OTT)",
-    rtrees   = "Daijiang Li, rtrees package (taxon-specific reference)",
-    clootl   = null_or(backend_meta$citations, "Clements taxonomy (clootl)"),
-    fishtree = null_or(backend_meta$reference,
-                       "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"),
-    datelife = null_or(backend_meta$reference,
-                       "Sanchez Reyes et al. (2024) Syst. Biol. 73:470"),
+    rotl = "Open Tree of Life synthesis (OTT)",
+    rtrees = "Daijiang Li, rtrees package (taxon-specific reference)",
+    clootl = null_or(backend_meta$citations, "Clements taxonomy (clootl)"),
+    fishtree = null_or(
+      backend_meta$reference,
+      "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
+    ),
+    datelife = null_or(
+      backend_meta$reference,
+      "Sanchez Reyes et al. (2024) Syst. Biol. 73:470"
+    ),
     "(unknown)"
   )
 
@@ -1235,10 +1368,14 @@ pr_get_tree <- function(x,
 
   calibration_method <- switch(
     source,
-    rotl     = "topology only (no calibration)",
-    rtrees   = "graft / no recalibration",
-    clootl   = "Clements posterior sample",
-    fishtree = if (n > 1) "stochastic polytomy resolution" else "best-guess chronogram",
+    rotl = "topology only (no calibration)",
+    rtrees = "graft / no recalibration",
+    clootl = "Clements posterior sample",
+    fishtree = if (n > 1) {
+      "stochastic polytomy resolution"
+    } else {
+      "best-guess chronogram"
+    },
     datelife = null_or(backend_meta$summary_format, "datelife summary"),
     NA_character_
   )
@@ -1246,11 +1383,14 @@ pr_get_tree <- function(x,
   prov <- vector("list", n)
   for (i in seq_len(n)) {
     prov[[i]] <- list(
-      source_index       = i,
-      citation           = per_tree_citations[[i]],
+      source_index = i,
+      citation = per_tree_citations[[i]],
       calibration_method = calibration_method,
-      n_tips             = if (is_multi) ape::Ntip(tree[[i]])
-                            else ape::Ntip(tree)
+      n_tips = if (is_multi) {
+        ape::Ntip(tree[[i]])
+      } else {
+        ape::Ntip(tree)
+      }
     )
   }
 
@@ -1270,12 +1410,10 @@ print.pr_tree_result <- function(x, ...) {
   # single phylo, else summarise the list.
   is_multi <- inherits(x$tree, "multiPhylo")
   n_tips_str <- if (is_multi) {
-    sprintf("%d tree%s", length(x$tree),
-            if (length(x$tree) == 1) "" else "s")
+    sprintf("%d tree%s", length(x$tree), if (length(x$tree) == 1) "" else "s")
   } else {
     n_tips <- ape::Ntip(x$tree)
-    sprintf("%d tip%s",
-            n_tips, if (n_tips == 1) "" else "s")
+    sprintf("%d tip%s", n_tips, if (n_tips == 1) "" else "s")
   }
   n_matched <- length(x$matched)
   n_unmatched <- length(x$unmatched)
@@ -1292,7 +1430,9 @@ print.pr_tree_result <- function(x, ...) {
     cli::cli_alert_info(
       "First {length(show)} unmatched: {.val {show}}"
     )
-    cli::cli_alert_info("Use {.code reconcile_suggest()} to find likely candidates.")
+    cli::cli_alert_info(
+      "Use {.code reconcile_suggest()} to find likely candidates."
+    )
   }
   invisible(x)
 }

@@ -122,38 +122,40 @@
 #' }
 #'
 #' @export
-pr_date_tree <- function(tree, n_dated = 1L,
-                          dating_method = "bladj",
-                          check_ultrametric = TRUE, ...) {
+pr_date_tree <- function(
+  tree,
+  n_dated = 1L,
+  dating_method = "bladj",
+  check_ultrametric = TRUE,
+  ...
+) {
   if (!inherits(tree, "phylo") && !inherits(tree, "multiPhylo")) {
     cli::cli_abort(c(
       "{.arg tree} must be a {.cls phylo} or {.cls multiPhylo} object.",
       "i" = "Got: {.cls {class(tree)[1]}}."
     ))
   }
-  if (!is.numeric(n_dated) || length(n_dated) != 1L || n_dated < 1L) {
-    cli::cli_abort(c(
-      "{.arg n_dated} must be a length-1 positive integer.",
-      "i" = "Got: {.val {n_dated}}."
-    ))
-  }
-  n_dated <- as.integer(n_dated)
+  n_dated <- .pr_validate_positive_integer(n_dated, "n_dated")
 
-  res <- .pr_date_tree_datelife(tree,
-                                 n_dated = n_dated,
-                                 dating_method = dating_method,
-                                 ...)
+  res <- .pr_date_tree_datelife(
+    tree,
+    n_dated = n_dated,
+    dating_method = dating_method,
+    ...
+  )
 
   # Standardise the result to the pr_tree_result contract used by
   # pr_get_tree().
   res$backend_meta <- .pr_ensure_tree_provenance(
-    res$tree, res$backend_meta, source = "datelife"
+    res$tree,
+    res$backend_meta,
+    source = "datelife"
   )
   out <- list(
-    tree         = res$tree,
-    matched      = res$matched,
-    unmatched    = res$unmatched,
-    source       = "datelife",
+    tree = res$tree,
+    matched = res$matched,
+    unmatched = res$unmatched,
+    source = "datelife",
     backend_meta = res$backend_meta
   )
   class(out) <- "pr_tree_result"
@@ -167,20 +169,26 @@ pr_date_tree <- function(tree, n_dated = 1L,
 
 # Internal: do the work via datelife::datelife_use() ---------------------
 
-.pr_date_tree_datelife <- function(tree, n_dated = 1L,
-                                    dating_method = "bladj", ...) {
+.pr_date_tree_datelife <- function(
+  tree,
+  n_dated = 1L,
+  dating_method = "bladj",
+  ...
+) {
   if (!requireNamespace("datelife", quietly = TRUE)) {
     cli::cli_abort(
-      c("{.fn pr_date_tree} requires the {.pkg datelife} package.",
+      c(
+        "{.fn pr_date_tree} requires the {.pkg datelife} package.",
         "i" = 'Install with: {.code pak::pak("phylotastic/datelife")} (GitHub-only; archived from CRAN in 2024).',
-        ">" = "See {.url https://github.com/phylotastic/datelife} for details.")
+        ">" = "See {.url https://github.com/phylotastic/datelife} for details."
+      )
     )
   }
 
   each <- n_dated > 1L
   out <- datelife::datelife_use(
-    input         = tree,
-    each          = each,
+    input = tree,
+    each = each,
     dating_method = dating_method,
     ...
   )
@@ -205,20 +213,20 @@ pr_date_tree <- function(tree, n_dated = 1L,
   } else {
     out$tip.label
   }
-  matched   <- intersect(input_tips, output_tips)
+  matched <- intersect(input_tips, output_tips)
   unmatched <- setdiff(input_tips, output_tips)
 
   list(
-    tree         = out,
-    matched      = matched,
-    unmatched    = unmatched,
+    tree = out,
+    matched = matched,
+    unmatched = unmatched,
     backend_meta = list(
-      backend       = "datelife",
-      version       = as.character(utils::packageVersion("datelife")),
+      backend = "datelife",
+      version = as.character(utils::packageVersion("datelife")),
       dating_method = dating_method,
-      calibrations  = attr(out, "datelife_calibrations"),
-      n_returned    = if (inherits(out, "multiPhylo")) length(out) else 1L,
-      reference     = "Sanchez Reyes et al. (2024) Syst. Biol. 73:470 (doi:10.1093/sysbio/syae015)"
+      calibrations = attr(out, "datelife_calibrations"),
+      n_returned = if (inherits(out, "multiPhylo")) length(out) else 1L,
+      reference = "Sanchez Reyes et al. (2024) Syst. Biol. 73:470 (doi:10.1093/sysbio/syae015)"
     )
   )
 }
