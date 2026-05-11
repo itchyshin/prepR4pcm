@@ -117,7 +117,23 @@ fish, amphibian, reptile, plant, shark/ray, bee, butterfly)
 via the GitHub package <code>rtrees</code>
 (<a href="https://daijiang.github.io/rtrees/" class="external-link">https://daijiang.github.io/rtrees/</a>). Requires
 <code>taxon = "&lt;group&gt;"</code>. Calls <code>get_tree()</code>. Install
-with <code>pak::pak("daijiang/rtrees")</code> (GitHub-only).</p></dd>
+with <code>pak::pak("daijiang/rtrees")</code> (GitHub-only).
+<strong>Grafting behaviour:</strong> when an input species is not in
+the chosen mega-tree, <code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> grafts it at
+the genus level (tip suffix <code>*</code>) or family level
+(<code>**</code>); if no co-family species is in the mega-tree, the
+species is dropped. The placement of every input species is
+reported per-row in <code>result$backend_meta$placement</code> (a
+tibble with columns <code>input_name</code>, <code>tree_name</code>,
+<code>placement_status</code> where <code>placement_status</code> is one
+of <code>"exact"</code>, <code>"genus_added"</code>, <code>"family_added"</code>,
+<code>"skipped"</code>, or <code>"unmatched"</code>). The grafting itself
+cannot be disabled at the wrapper level (rtrees 1.0.4 has no
+switch); to exclude grafted tips from a downstream analysis,
+filter the placement table on <code>placement_status == "exact"</code>
+and prune the tree to those tip labels. See
+<code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">?rtrees::get_tree</a></code> for upstream control (<code>scenario</code>
+<em>where</em> a graft is placed, but not <em>whether</em>).</p></dd>
 
 <dt><code>"clootl"</code></dt>
 <dd><p>Bird-only phylogenies in current
@@ -386,10 +402,15 @@ tree (so <code>tree[[i]]</code> pairs with
 <code>multiPhylo</code>).</p></dd>
 
 
-</dl><p>Backend-specific fields (e.g. <code>taxon</code>, <code>n_grafted</code>, <code>backend</code>,
-<code>type</code>, <code>tnrs_table</code>, <code>summary_format</code>, <code>source_citations</code>,
-<code>reference</code>) are merged in at the top level by the wrapper that
-called the backend.</p></dd>
+</dl><p>Backend-specific fields (e.g. <code>taxon</code>, <code>n_grafted</code>,
+<code>grafted_tips</code>, <code>placement</code> for <code>rtrees</code>; <code>backend</code>, <code>type</code>,
+<code>tnrs_table</code> for <code>fishtree</code> / <code>rotl</code>; <code>summary_format</code>,
+<code>source_citations</code>, <code>reference</code> for <code>datelife</code>) are merged in
+at the top level by the wrapper that called the backend. The
+<code>rtrees</code>-specific <code>placement</code> slot is a tibble with one row per
+unique input species and columns <code>input_name</code>, <code>tree_name</code>,
+<code>placement_status</code> (<code>"exact"</code>, <code>"genus_added"</code>,
+<code>"family_added"</code>, <code>"skipped"</code>, or <code>"unmatched"</code>).</p></dd>
 
 
 </dl></div>
