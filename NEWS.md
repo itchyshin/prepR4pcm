@@ -468,10 +468,12 @@ at issue #42 (Ayumi Mizuno) and tracked at issue #48. Across Rounds
   one. Default `n_tree = 1L` (back-compat). When `n_tree > 1`:
   - `"rotl"` -- still returns 1 (the synthesis tree); a one-shot
     warning explains that no posterior is available.
-  - `"rtrees"` -- pass-through to `rtrees::get_tree(n_tree = ...)`.
-  - `"clootl"` -- pass-through to
-    `clootl::extractTree(sample.size = n_tree)` for multiple
-    Clements posterior samples.
+  - `"rtrees"` -- `n_tree` is informational only; the number of
+    returned trees is fixed by the selected mega-tree and any
+    backend-specific arguments forwarded through `...`.
+  - `"clootl"` -- `n_tree = 1` calls `clootl::extractTree()`;
+    `n_tree > 1` calls `clootl::sampleTrees(count = n_tree)` and
+    requires the AvesData repo.
   - `"fishtree"` -- switches to `fishtree_complete_phylogeny()` for
     a multi-tree stochastic polytomy resolution.
   - `"datelife"` -- (new backend; see below) returns one chronogram
