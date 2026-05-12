@@ -1,5 +1,21 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 17: full reference list on `?pr_get_tree` + `?pr_tree_compare`
+
+Jimuel Celeste, Jr.'s #79 and #80. **Issues remain open** — Jimuel
+to verify and close from his end.
+
+* **`?pr_tree_compare` `@references`** (#79): Kuhner & Felsenstein
+  (1994) — the simulation comparison paper that introduced the
+  bipartition-matched correlation pattern — is now spelled out in
+  the help page with a DOI, alongside Robinson & Foulds (1981) for
+  the RF distance metric.
+* **`?pr_get_tree` `@references`** (#80): every author-year citation
+  in the help text now has a full reference: Jetz et al. (2012),
+  Rabosky et al. (2018), Upham et al. (2019), Sanchez Reyes et al.
+  (2024), Chang et al. (2019), Michonneau et al. (2016). Each entry
+  carries a DOI and a one-line "used by which backend" note.
+
 ## Round 17: pr_tree_result mapping audit table (#73)
 
 * **`pr_get_tree()` and `pr_date_tree()` now return `result$mapping`.** The table has one row per unique input species or input tip, preserving the user-facing name, normalized name, backend query name, actual returned tree tip, whether it made it into the tree, the name-handling match type, and the rtrees placement status when available. This gives users an auditable per-name record without reconstructing it from `$matched`, `$unmatched`, and backend-specific metadata.

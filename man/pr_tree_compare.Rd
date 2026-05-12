@@ -66,6 +66,16 @@ cmp <- pr_tree_compare(t1, t3)
 cmp$pairwise_jaccard
 
 }
+\references{
+Kuhner, M. K., & Felsenstein, J. (1994). A simulation comparison
+of phylogeny algorithms under equal and unequal evolutionary rates.
+\emph{Molecular Biology and Evolution} 11(3): 459--468.
+\doi{10.1093/oxfordjournals.molbev.a040126}
+
+Robinson, D. F., & Foulds, L. R. (1981). Comparison of phylogenetic
+trees. \emph{Mathematical Biosciences} 53(1--2): 131--147.
+\doi{10.1016/0025-5564(81)90043-2}
+}
 \seealso{
 \code{\link[=pr_get_tree]{pr_get_tree()}} for retrieval; \code{\link[=reconcile_apply]{reconcile_apply()}} for
 combining a chosen tree with a dataset.

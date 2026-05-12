@@ -338,6 +338,50 @@ lists the first few substitutions on the call itself.
 }
 
 }
+\references{
+Backend reference trees:
+
+Jetz, W., Thomas, G. H., Joy, J. B., Hartmann, K., & Mooers, A. O.
+(2012). The global diversity of birds in space and time.
+\emph{Nature} 491: 444--448. \doi{10.1038/nature11631}
+(Used by \code{rtrees} for \code{taxon = "bird"} and by BirdTree.)
+
+Rabosky, D. L., Chang, J., Title, P. O., Cowman, P. F., Sallan, L.,
+Friedman, M., Kaschner, K., Garilao, C., Near, T. J., Coll, M., &
+Alfaro, M. E. (2018). An inverse latitudinal gradient in speciation
+rate for marine fishes. \emph{Nature} 559: 392--395.
+\doi{10.1038/s41586-018-0273-1}
+(Fish Tree of Life; used by \code{source = "fishtree"} and by \code{rtrees}
+for \code{taxon = "fish"}.)
+
+Upham, N. S., Esselstyn, J. A., & Jetz, W. (2019). Inferring the
+mammal tree: Species-level sets of phylogenies for questions in
+ecology, evolution, and conservation. \emph{PLOS Biology} 17(12):
+e3000494. \doi{10.1371/journal.pbio.3000494}
+(VertLife mammal posterior; used by \code{rtrees} for \code{taxon = "mammal"}
+with \code{mammal_tree = "vertlife"}.)
+
+Sanchez Reyes, L. L., O'Meara, B. C., Brown, J. W., & McTavish, E.
+J. (2024). DateLife: Leveraging databases and analytical tools to
+reveal the dated Tree of Life. \emph{Systematic Biology} 73(2):
+470--485. \doi{10.1093/sysbio/syae015}
+(Used by \code{source = "datelife"} and by \code{pr_date_tree()}.)
+
+Methodology:
+
+Chang, J., Rabosky, D. L., & Alfaro, M. E. (2019). Estimating
+diversification rates on incompletely sampled phylogenies:
+Theoretical concerns and practical solutions. \emph{Systematic Biology}
+69(3): 602--611. \doi{10.1093/sysbio/syz081}
+(Stochastic polytomy resolution behind \code{fishtree_complete_phylogeny()}
+for \code{n_tree > 1}.)
+
+Michonneau, F., Brown, J. W., & Winter, D. J. (2016). rotl: an R
+package to interact with the Open Tree of Life data. \emph{Methods in
+Ecology and Evolution} 7(12): 1476--1481.
+\doi{10.1111/2041-210X.12593}
+(TNRS preflight and \code{source = "rotl"}.)
+}
 \seealso{
 \code{\link[=reconcile_tree]{reconcile_tree()}} / \code{\link[=reconcile_data]{reconcile_data()}} for producing the
 reconciled species list that feeds this function;

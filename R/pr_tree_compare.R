@@ -52,6 +52,16 @@
 #' @seealso [pr_get_tree()] for retrieval; [reconcile_apply()] for
 #'   combining a chosen tree with a dataset.
 #'
+#' @references
+#' Kuhner, M. K., & Felsenstein, J. (1994). A simulation comparison
+#' of phylogeny algorithms under equal and unequal evolutionary rates.
+#' *Molecular Biology and Evolution* 11(3): 459--468.
+#' \doi{10.1093/oxfordjournals.molbev.a040126}
+#'
+#' Robinson, D. F., & Foulds, L. R. (1981). Comparison of phylogenetic
+#' trees. *Mathematical Biosciences* 53(1--2): 131--147.
+#' \doi{10.1016/0025-5564(81)90043-2}
+#'
 #' @examples
 #' # Two trees with identical tip sets
 #' set.seed(1)
