@@ -129,6 +129,13 @@ to date.</p></dd>
 <dd><p>Tip labels of the input absent from DateLife's
 database (returned with no calibration applied).</p></dd>
 
+<dt><code>mapping</code></dt>
+<dd><p>A tibble with one row per input tip label,
+mirroring <code><a href="pr_get_tree.html">pr_get_tree()</a></code>'s audit table: <code>input_name</code>,
+<code>normalized_name</code>, <code>query_name</code>, <code>tree_name</code>, <code>in_tree</code>,
+<code>match_type</code>, and <code>placement_status</code> (<code>NA</code> for DateLife
+dating).</p></dd>
+
 <dt><code>source</code></dt>
 <dd><p>Always <code>"datelife"</code> (paired with <code><a href="pr_get_tree.html">pr_get_tree()</a></code>'s
 dispatch).</p></dd>

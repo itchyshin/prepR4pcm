@@ -43,6 +43,22 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
 <div class="section level3">
+<h3 id="round-full-reference-list-on-pr_get_tree--pr_tree_compare-0-4-0-9000">Round 17: full reference list on <code>?pr_get_tree</code> + <code>?pr_tree_compare</code>
+<a class="anchor" aria-label="anchor" href="#round-full-reference-list-on-pr_get_tree--pr_tree_compare-0-4-0-9000"></a></h3>
+<p>Jimuel Celeste, Jr.’s <a href="https://github.com/itchyshin/prepR4pcm/issues/79" class="external-link">#79</a> and <a href="https://github.com/itchyshin/prepR4pcm/issues/80" class="external-link">#80</a>. <strong>Issues remain open</strong> — Jimuel to verify and close from his end.</p>
+<ul><li>
+<strong><code><a href="../reference/pr_tree_compare.html">?pr_tree_compare</a></code> <code>@references</code></strong> (<a href="https://github.com/itchyshin/prepR4pcm/issues/79" class="external-link">#79</a>): Kuhner &amp; Felsenstein
+<ol start="1994" style="list-style-type: decimal"><li>— the simulation comparison paper that introduced the bipartition-matched correlation pattern — is now spelled out in the help page with a DOI, alongside Robinson &amp; Foulds (1981) for the RF distance metric.</li>
+</ol></li>
+<li>
+<strong><code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code> <code>@references</code></strong> (<a href="https://github.com/itchyshin/prepR4pcm/issues/80" class="external-link">#80</a>): every author-year citation in the help text now has a full reference: Jetz et al. (2012), Rabosky et al. (2018), Upham et al. (2019), Sanchez Reyes et al. (2024), Chang et al. (2019), Michonneau et al. (2016). Each entry carries a DOI and a one-line “used by which backend” note.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="round-pr_tree_result-mapping-audit-table-0-4-0-9000">Round 17: pr_tree_result mapping audit table (<a href="https://github.com/itchyshin/prepR4pcm/issues/73" class="external-link">#73</a>)<a class="anchor" aria-label="anchor" href="#round-pr_tree_result-mapping-audit-table-0-4-0-9000"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> and <code><a href="../reference/pr_date_tree.html">pr_date_tree()</a></code> now return <code>result$mapping</code>.</strong> The table has one row per unique input species or input tip, preserving the user-facing name, normalized name, backend query name, actual returned tree tip, whether it made it into the tree, the name-handling match type, and the rtrees placement status when available. This gives users an auditable per-name record without reconstructing it from <code>$matched</code>, <code>$unmatched</code>, and backend-specific metadata.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="round-rtrees-placement-status-table-0-4-0-9000">Round 16: rtrees placement-status table (<a href="https://github.com/itchyshin/prepR4pcm/issues/74" class="external-link">#74</a>)<a class="anchor" aria-label="anchor" href="#round-rtrees-placement-status-table-0-4-0-9000"></a></h3>
 <p>Addresses Ayumi Mizuno’s <a href="https://github.com/itchyshin/prepR4pcm/issues/74" class="external-link">#74</a>. <strong>Issue remains open</strong> — Ayumi to verify and close from her end.</p>
 <ul><li>
@@ -245,9 +261,9 @@
 <ul><li>
 <code>"rotl"</code> – still returns 1 (the synthesis tree); a one-shot warning explains that no posterior is available.</li>
 <li>
-<code>"rtrees"</code> – pass-through to <code>rtrees::get_tree(n_tree = ...)</code>.</li>
+<code>"rtrees"</code> – <code>n_tree</code> is informational only; the number of returned trees is fixed by the selected mega-tree and any backend-specific arguments forwarded through <code>...</code>.</li>
 <li>
-<code>"clootl"</code> – pass-through to <code>clootl::extractTree(sample.size = n_tree)</code> for multiple Clements posterior samples.</li>
+<code>"clootl"</code> – <code>n_tree = 1</code> calls <code><a href="https://rdrr.io/pkg/clootl/man/extractTree.html" class="external-link">clootl::extractTree()</a></code>; <code>n_tree &gt; 1</code> calls <code>clootl::sampleTrees(count = n_tree)</code> and requires the AvesData repo.</li>
 <li>
 <code>"fishtree"</code> – switches to <code>fishtree_complete_phylogeny()</code> for a multi-tree stochastic polytomy resolution.</li>
 <li>

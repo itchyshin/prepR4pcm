@@ -242,7 +242,7 @@ is <code>multiPhylo</code>; otherwise <code>phylo</code>.</p></dd>
 <dt id="arg-cache">cache<a class="anchor" aria-label="anchor" href="#arg-cache"></a></dt>
 <dd><p>Logical. Cache the result on disk and reuse it on
 subsequent identical calls? Default <code>FALSE</code>. When <code>TRUE</code>, the
-request is keyed by <code>(species, source, n_tree, taxon, ...)</code> and
+request is keyed by <code>(species, source, n_tree, taxon, tnrs, ...)</code> and
 stored at <code><a href="pr_tree_cache_dir.html">pr_tree_cache_dir()</a></code>. See <code><a href="pr_tree_cache_status.html">pr_tree_cache_status()</a></code>
 and <code><a href="pr_tree_cache_clear.html">pr_tree_cache_clear()</a></code> for inspecting / wiping the cache.</p></dd>
 
@@ -359,6 +359,19 @@ input</strong> that did not resolve. Disjoint from <code>matched</code>;
 always holds. Inspect these and consider running them back
 through <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code> / a manual override.</p></dd>
 
+<dt><code>mapping</code></dt>
+<dd><p>A tibble with one row per unique input species:
+<code>input_name</code>, <code>normalized_name</code>, <code>query_name</code>, <code>tree_name</code>,
+<code>in_tree</code>, <code>match_type</code>, and <code>placement_status</code>. This is the
+audit trail for name handling: <code>input_name</code> is what the user
+supplied, <code>normalized_name</code> is the result of
+<code><a href="pr_normalize_names.html">pr_normalize_names()</a></code>, <code>query_name</code> is the backend query after
+optional TNRS, <code>tree_name</code> is the actual returned tip label, and
+<code>match_type</code> is one of <code>"exact"</code>, <code>"normalized"</code>, <code>"tnrs"</code>, or
+<code>"unmatched"</code>. For <code>source = "rtrees"</code>, <code>placement_status</code>
+carries the grafting status from <code>backend_meta$placement</code>;
+otherwise it is <code>NA</code>.</p></dd>
+
 <dt><code>source</code></dt>
 <dd><p>The backend that produced the tree.</p></dd>
 
@@ -433,6 +446,50 @@ the <code>fishtree</code> backend under <code>tnrs = "auto"</code>), the replace
 recorded in <code>result$backend_meta$tnrs_replacements</code> as a named
 character vector <code>(original = resolved)</code>. A one-shot <code>cli</code> warning
 lists the first few substitutions on the call itself.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Backend reference trees:</p>
+<p>Jetz, W., Thomas, G. H., Joy, J. B., Hartmann, K., &amp; Mooers, A. O.
+(2012). The global diversity of birds in space and time.
+<em>Nature</em> 491: 444–448. <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>
+
+(Used by <code>rtrees</code> for <code>taxon = "bird"</code> and by BirdTree.)</p>
+<p>Rabosky, D. L., Chang, J., Title, P. O., Cowman, P. F., Sallan, L.,
+Friedman, M., Kaschner, K., Garilao, C., Near, T. J., Coll, M., &amp;
+Alfaro, M. E. (2018). An inverse latitudinal gradient in speciation
+rate for marine fishes. <em>Nature</em> 559: 392–395.
+<a href="https://doi.org/10.1038/s41586-018-0273-1" class="external-link">doi:10.1038/s41586-018-0273-1</a>
+
+(Fish Tree of Life; used by <code>source = "fishtree"</code> and by <code>rtrees</code>
+for <code>taxon = "fish"</code>.)</p>
+<p>Upham, N. S., Esselstyn, J. A., &amp; Jetz, W. (2019). Inferring the
+mammal tree: Species-level sets of phylogenies for questions in
+ecology, evolution, and conservation. <em>PLOS Biology</em> 17(12):
+e3000494. <a href="https://doi.org/10.1371/journal.pbio.3000494" class="external-link">doi:10.1371/journal.pbio.3000494</a>
+
+(VertLife mammal posterior; used by <code>rtrees</code> for <code>taxon = "mammal"</code>
+with <code>mammal_tree = "vertlife"</code>.)</p>
+<p>Sanchez Reyes, L. L., O'Meara, B. C., Brown, J. W., &amp; McTavish, E.
+J. (2024). DateLife: Leveraging databases and analytical tools to
+reveal the dated Tree of Life. <em>Systematic Biology</em> 73(2):
+470–485. <a href="https://doi.org/10.1093/sysbio/syae015" class="external-link">doi:10.1093/sysbio/syae015</a>
+
+(Used by <code>source = "datelife"</code> and by <code><a href="pr_date_tree.html">pr_date_tree()</a></code>.)</p>
+<p>Methodology:</p>
+<p>Chang, J., Rabosky, D. L., &amp; Alfaro, M. E. (2019). Estimating
+diversification rates on incompletely sampled phylogenies:
+Theoretical concerns and practical solutions. <em>Systematic Biology</em>
+69(3): 602–611. <a href="https://doi.org/10.1093/sysbio/syz081" class="external-link">doi:10.1093/sysbio/syz081</a>
+
+(Stochastic polytomy resolution behind <code>fishtree_complete_phylogeny()</code>
+for <code>n_tree &gt; 1</code>.)</p>
+<p>Michonneau, F., Brown, J. W., &amp; Winter, D. J. (2016). rotl: an R
+package to interact with the Open Tree of Life data. <em>Methods in
+Ecology and Evolution</em> 7(12): 1476–1481.
+<a href="https://doi.org/10.1111/2041-210X.12593" class="external-link">doi:10.1111/2041-210X.12593</a>
+
+(TNRS preflight and <code>source = "rotl"</code>.)</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

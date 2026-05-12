@@ -10,7 +10,7 @@
 # Cache shape:
 #   <cache_dir>/<source>/<hash>.rds   <-- saved pr_tree_result
 #
-# Hash is over (species, source, n_tree, taxon, ...args) with a
+# Hash is over (species, source, n_tree, taxon, tnrs, ...args) with a
 # fixed serialisation so equivalent calls produce the same key.
 
 #' Get or set the local tree-retrieval cache directory
@@ -92,34 +92,41 @@ pr_tree_cache_status <- function() {
   dir <- pr_tree_cache_dir()
   if (!dir.exists(dir)) {
     return(data.frame(
-      source   = character(),
-      hash     = character(),
-      size_kb  = numeric(),
+      source = character(),
+      hash = character(),
+      size_kb = numeric(),
       modified = as.POSIXct(character()),
       stringsAsFactors = FALSE
     ))
   }
-  files <- list.files(dir, pattern = "\\.rds$", recursive = TRUE,
-                      full.names = TRUE)
+  files <- list.files(
+    dir,
+    pattern = "\\.rds$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
   if (length(files) == 0L) {
     return(data.frame(
-      source   = character(),
-      hash     = character(),
-      size_kb  = numeric(),
+      source = character(),
+      hash = character(),
+      size_kb = numeric(),
       modified = as.POSIXct(character()),
       stringsAsFactors = FALSE
     ))
   }
-  rel    <- substring(files, nchar(dir) + 2L)
-  parts  <- strsplit(rel, "/", fixed = TRUE)
+  rel <- substring(files, nchar(dir) + 2L)
+  parts <- strsplit(rel, "/", fixed = TRUE)
   source <- vapply(parts, `[`, character(1), 1)
-  hash   <- vapply(parts, function(p) sub("\\.rds$", "", p[length(p)]),
-                    character(1))
-  info   <- file.info(files)
+  hash <- vapply(
+    parts,
+    function(p) sub("\\.rds$", "", p[length(p)]),
+    character(1)
+  )
+  info <- file.info(files)
   out <- data.frame(
-    source   = source,
-    hash     = hash,
-    size_kb  = round(info$size / 1024, 1),
+    source = source,
+    hash = hash,
+    size_kb = round(info$size / 1024, 1),
     modified = info$mtime,
     stringsAsFactors = FALSE
   )
@@ -158,19 +165,25 @@ pr_tree_cache_clear <- function(confirm = TRUE, source = NULL) {
     return(invisible(0L))
   }
   target <- if (is.null(source)) dir else file.path(dir, source)
-  files <- list.files(target, pattern = "\\.rds$", recursive = TRUE,
-                      full.names = TRUE)
+  files <- list.files(
+    target,
+    pattern = "\\.rds$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
   if (length(files) == 0L) {
     cli::cli_alert_info("Cache is empty.")
     return(invisible(0L))
   }
   if (confirm && interactive()) {
     msg <- if (is.null(source)) {
-      sprintf("Delete %d cache file(s) from '%s'? [y/N]: ",
-              length(files), dir)
+      sprintf("Delete %d cache file(s) from '%s'? [y/N]: ", length(files), dir)
     } else {
-      sprintf("Delete %d cache file(s) for source = '%s'? [y/N]: ",
-              length(files), source)
+      sprintf(
+        "Delete %d cache file(s) for source = '%s'? [y/N]: ",
+        length(files),
+        source
+      )
     }
     ans <- readline(msg)
     if (!tolower(ans) %in% c("y", "yes")) {
@@ -186,16 +199,28 @@ pr_tree_cache_clear <- function(confirm = TRUE, source = NULL) {
 
 # Internal: build a cache key from a request -------------------------
 
-.pr_tree_cache_key <- function(species, source, n_tree = 1L,
-                                taxon = NULL, ...) {
-  # Sort species so order doesn't affect the key; keep ... args
-  # serialised in a stable form.
+.pr_tree_cache_key <- function(
+  species,
+  source,
+  n_tree = 1L,
+  taxon = NULL,
+  tnrs = NULL,
+  query = NULL,
+  ...
+) {
+  # Keep species/query order because the cached pr_tree_result stores
+  # input-order-sensitive reporting vectors (`matched`, `unmatched`,
+  # `mapping`, placement tables). Backend options are serialised in a
+  # stable form.
+  extras <- .pr_tree_cache_extras(list(...))
   payload <- list(
-    species = sort(unique(as.character(species))),
-    source  = source,
-    n_tree  = as.integer(n_tree),
-    taxon   = taxon,
-    extras  = sort(names(list(...)))   # arg names only; values vary too much
+    species = unique(as.character(species)),
+    query = if (is.null(query)) NULL else unique(as.character(query)),
+    source = source,
+    n_tree = as.integer(n_tree),
+    taxon = taxon,
+    tnrs = tnrs,
+    extras = extras
   )
   # Use a serialisation that's stable across R sessions
   raw <- serialize(payload, connection = NULL, ascii = TRUE)
@@ -213,12 +238,30 @@ pr_tree_cache_clear <- function(confirm = TRUE, source = NULL) {
 }
 
 
+# Internal: stable representation of backend-specific cache arguments -----
+
+.pr_tree_cache_extras <- function(extras) {
+  if (length(extras) == 0L) {
+    return(list())
+  }
+  nm <- names(extras)
+  if (is.null(nm)) {
+    nm <- rep("", length(extras))
+  }
+  nm[!nzchar(nm)] <- paste0("..", which(!nzchar(nm)))
+  names(extras) <- nm
+  extras[order(names(extras))]
+}
+
+
 # Internal: read / write a cache entry --------------------------------
 
 .pr_tree_cache_get <- function(key, source) {
   dir <- pr_tree_cache_dir()
   path <- file.path(dir, source, paste0(key, ".rds"))
-  if (!file.exists(path)) return(NULL)
+  if (!file.exists(path)) {
+    return(NULL)
+  }
   tryCatch(readRDS(path), error = function(e) NULL)
 }
 

@@ -1,5 +1,25 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 17: full reference list on `?pr_get_tree` + `?pr_tree_compare`
+
+Jimuel Celeste, Jr.'s #79 and #80. **Issues remain open** — Jimuel
+to verify and close from his end.
+
+* **`?pr_tree_compare` `@references`** (#79): Kuhner & Felsenstein
+  (1994) — the simulation comparison paper that introduced the
+  bipartition-matched correlation pattern — is now spelled out in
+  the help page with a DOI, alongside Robinson & Foulds (1981) for
+  the RF distance metric.
+* **`?pr_get_tree` `@references`** (#80): every author-year citation
+  in the help text now has a full reference: Jetz et al. (2012),
+  Rabosky et al. (2018), Upham et al. (2019), Sanchez Reyes et al.
+  (2024), Chang et al. (2019), Michonneau et al. (2016). Each entry
+  carries a DOI and a one-line "used by which backend" note.
+
+## Round 17: pr_tree_result mapping audit table (#73)
+
+* **`pr_get_tree()` and `pr_date_tree()` now return `result$mapping`.** The table has one row per unique input species or input tip, preserving the user-facing name, normalized name, backend query name, actual returned tree tip, whether it made it into the tree, the name-handling match type, and the rtrees placement status when available. This gives users an auditable per-name record without reconstructing it from `$matched`, `$unmatched`, and backend-specific metadata.
+
 ## Round 16: rtrees placement-status table (#74)
 
 Addresses Ayumi Mizuno's #74. **Issue remains open** — Ayumi to verify
@@ -464,10 +484,12 @@ at issue #42 (Ayumi Mizuno) and tracked at issue #48. Across Rounds
   one. Default `n_tree = 1L` (back-compat). When `n_tree > 1`:
   - `"rotl"` -- still returns 1 (the synthesis tree); a one-shot
     warning explains that no posterior is available.
-  - `"rtrees"` -- pass-through to `rtrees::get_tree(n_tree = ...)`.
-  - `"clootl"` -- pass-through to
-    `clootl::extractTree(sample.size = n_tree)` for multiple
-    Clements posterior samples.
+  - `"rtrees"` -- `n_tree` is informational only; the number of
+    returned trees is fixed by the selected mega-tree and any
+    backend-specific arguments forwarded through `...`.
+  - `"clootl"` -- `n_tree = 1` calls `clootl::extractTree()`;
+    `n_tree > 1` calls `clootl::sampleTrees(count = n_tree)` and
+    requires the AvesData repo.
   - `"fishtree"` -- switches to `fishtree_complete_phylogeny()` for
     a multi-tree stochastic polytomy resolution.
   - `"datelife"` -- (new backend; see below) returns one chronogram

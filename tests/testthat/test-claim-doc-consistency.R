@@ -16,7 +16,9 @@
 
 skip_if_not_root_accessible <- function() {
   root <- .claim_root()
-  if (is.na(root)) skip("source tree not accessible")
+  if (is.na(root)) {
+    skip("source tree not accessible")
+  }
   root
 }
 
@@ -25,14 +27,21 @@ test_that("every authority in pr_valid_authorities() is named in getting-started
   skip_on_cran()
   root <- skip_if_not_root_accessible()
   vig <- file.path(root, "vignettes", "getting-started.Rmd")
-  if (!file.exists(vig)) skip("vignette not found")
+  if (!file.exists(vig)) {
+    skip("vignette not found")
+  }
   txt <- paste(readLines(vig, warn = FALSE), collapse = "\n")
   for (auth in pr_valid_authorities()) {
     # Match e.g. **`col`** or `col` in the authorities section
     pat <- sprintf("\\*?\\*?`%s`\\*?\\*?", auth)
-    expect_true(grepl(pat, txt, perl = TRUE),
-                info = sprintf("authority %s not mentioned as `%s` in getting-started.Rmd",
-                                auth, auth))
+    expect_true(
+      grepl(pat, txt, perl = TRUE),
+      info = sprintf(
+        "authority %s not mentioned as `%s` in getting-started.Rmd",
+        auth,
+        auth
+      )
+    )
   }
 })
 
@@ -41,15 +50,18 @@ test_that("every pr_get_tree(source = ...) value is documented in the Rd help pa
   skip_on_cran()
   root <- skip_if_not_root_accessible()
   rd_path <- file.path(root, "man", "pr_get_tree.Rd")
-  if (!file.exists(rd_path)) skip("Rd file not found")
+  if (!file.exists(rd_path)) {
+    skip("Rd file not found")
+  }
   rd_txt <- paste(readLines(rd_path, warn = FALSE), collapse = "\n")
 
   sources <- eval(formals(pr_get_tree)$source)
   for (src in sources) {
     pat <- sprintf('"%s"', src)
-    expect_true(grepl(pat, rd_txt, fixed = TRUE),
-                info = sprintf("source = '%s' not mentioned in pr_get_tree.Rd",
-                                src))
+    expect_true(
+      grepl(pat, rd_txt, fixed = TRUE),
+      info = sprintf("source = '%s' not mentioned in pr_get_tree.Rd", src)
+    )
   }
 })
 
@@ -58,10 +70,61 @@ test_that("every pr_get_tree(source = ...) backend is in the pkgdown reference i
   skip_on_cran()
   root <- skip_if_not_root_accessible()
   yml <- file.path(root, "_pkgdown.yml")
-  if (!file.exists(yml)) skip("_pkgdown.yml not found")
+  if (!file.exists(yml)) {
+    skip("_pkgdown.yml not found")
+  }
   yml_txt <- paste(readLines(yml, warn = FALSE), collapse = "\n")
-  expect_true(grepl("- pr_get_tree\\b", yml_txt),
-              info = "pr_get_tree should be in the pkgdown reference index")
+  expect_true(
+    grepl("- pr_get_tree\\b", yml_txt),
+    info = "pr_get_tree should be in the pkgdown reference index"
+  )
+})
+
+
+test_that("tree backend n_tree docs avoid stale backend API claims", {
+  skip_on_cran()
+  root <- skip_if_not_root_accessible()
+  doc_paths <- file.path(
+    root,
+    c(
+      "NEWS.md",
+      "_pkgdown.yml",
+      "README.md",
+      file.path("R", "pr_get_tree.R"),
+      file.path("man", "pr_get_tree.Rd"),
+      file.path("vignettes", "comparing-tree-backends.Rmd")
+    )
+  )
+  doc_paths <- doc_paths[file.exists(doc_paths)]
+  doc_txt <- paste(
+    vapply(
+      doc_paths,
+      function(path) paste(readLines(path, warn = FALSE), collapse = "\n"),
+      character(1)
+    ),
+    collapse = "\n"
+  )
+
+  stale_claims <- c(
+    "rtrees::get_tree(n_tree",
+    "extractTree(sample.size",
+    "sample.size = n_tree"
+  )
+  for (claim in stale_claims) {
+    expect_false(
+      grepl(claim, doc_txt, fixed = TRUE),
+      info = paste("stale n_tree backend claim still appears:", claim)
+    )
+  }
+
+  expect_true(
+    grepl("informational only", doc_txt, fixed = TRUE),
+    info = "rtrees docs should clarify that n_tree is informational"
+  )
+  expect_true(
+    grepl("sampleTrees(count", doc_txt, fixed = TRUE),
+    info = "clootl docs should name sampleTrees() for n_tree > 1"
+  )
 })
 
 
@@ -71,12 +134,9 @@ test_that("`pkg::` references in vignettes/man point to real packages", {
 
   # Collect every "pkg::" reference from R source, vignettes, and Rd.
   files <- c(
-    list.files(file.path(root, "vignettes"),
-               "\\.Rmd$", full.names = TRUE),
-    list.files(file.path(root, "R"),
-               "\\.R$", full.names = TRUE),
-    list.files(file.path(root, "man"),
-               "\\.Rd$", full.names = TRUE)
+    list.files(file.path(root, "vignettes"), "\\.Rmd$", full.names = TRUE),
+    list.files(file.path(root, "R"), "\\.R$", full.names = TRUE),
+    list.files(file.path(root, "man"), "\\.Rd$", full.names = TRUE)
   )
   pkgs <- character()
   for (f in files) {
@@ -90,8 +150,15 @@ test_that("`pkg::` references in vignettes/man point to real packages", {
   #   - "github" (a Remotes-prefix string)
   #   - "prepR4pcm" (the package itself)
   #   - "stats" / "utils" / "tools" etc (base packages)
-  base <- c("base", "stats", "utils", "tools", "graphics",
-             "grDevices", "methods")
+  base <- c(
+    "base",
+    "stats",
+    "utils",
+    "tools",
+    "graphics",
+    "grDevices",
+    "methods"
+  )
   internal <- c("github", "prepR4pcm")
   pkgs <- setdiff(pkgs, c(base, internal))
 
@@ -99,16 +166,18 @@ test_that("`pkg::` references in vignettes/man point to real packages", {
   desc <- read.dcf(file.path(root, "DESCRIPTION"))
   parse_field <- function(name) {
     v <- desc[1, name]
-    if (is.na(v)) return(character())
+    if (is.na(v)) {
+      return(character())
+    }
     parts <- trimws(strsplit(v, ",")[[1]])
     parts <- gsub("\\s*\\([^)]*\\)\\s*$", "", parts)
     parts <- gsub(",\\s*$", "", parts)
     parts[nzchar(parts)]
   }
-  imports  <- parse_field("Imports")
+  imports <- parse_field("Imports")
   suggests <- parse_field("Suggests")
   enhances <- parse_field("Enhances")
-  depends  <- setdiff(parse_field("Depends"), "R")
+  depends <- setdiff(parse_field("Depends"), "R")
   declared <- c(imports, suggests, enhances, depends)
 
   # External packages that we reference in docs/vignettes but
@@ -120,18 +189,19 @@ test_that("`pkg::` references in vignettes/man point to real packages", {
   # package name, not to require everything we ever mention to be
   # in our DESCRIPTION.
   external_ok <- c(
-    "pigauto",      # sister package; pigauto::multi_impute_trees() in vignettes
-    "pak",          # `pak::pak(...)` install instructions
-    "metafor",      # downstream consumer in meta-analysis vignette
-    "brms",         # `?pr_phylo_cor` mentions as downstream consumer
-    "glmmTMB",      # `?pr_phylo_cor` mentions as downstream consumer
-    "memoise",      # NEWS.md prose about caching strategy
-    "phangorn"      # comparing-tree-backends.Rmd: alternative consensus tool
+    "pigauto", # sister package; pigauto::multi_impute_trees() in vignettes
+    "pak", # `pak::pak(...)` install instructions
+    "metafor", # downstream consumer in meta-analysis vignette
+    "brms", # `?pr_phylo_cor` mentions as downstream consumer
+    "glmmTMB", # `?pr_phylo_cor` mentions as downstream consumer
+    "memoise", # NEWS.md prose about caching strategy
+    "phangorn" # comparing-tree-backends.Rmd: alternative consensus tool
   )
 
   unaccounted <- setdiff(pkgs, c(declared, external_ok))
   expect_equal(
-    length(unaccounted), 0,
+    length(unaccounted),
+    0,
     info = paste0(
       "These `pkg::` references appear in vignettes/R/man but the ",
       "package is not in DESCRIPTION's Imports/Suggests/Enhances/",
@@ -148,7 +218,9 @@ test_that("ott is documented as a taxadb authority, not as a separate R package"
   skip_on_cran()
   root <- skip_if_not_root_accessible()
   vig <- file.path(root, "vignettes", "getting-started.Rmd")
-  if (!file.exists(vig)) skip("vignette not found")
+  if (!file.exists(vig)) {
+    skip("vignette not found")
+  }
   txt <- paste(readLines(vig, warn = FALSE), collapse = "\n")
 
   # The vignette must explicitly say ott is NOT an R package and is
@@ -164,7 +236,9 @@ test_that("pr_date_tree help page explains n_dated semantics (one topology -> N 
   skip_on_cran()
   root <- skip_if_not_root_accessible()
   rd <- file.path(root, "man", "pr_date_tree.Rd")
-  if (!file.exists(rd)) skip("Rd not found")
+  if (!file.exists(rd)) {
+    skip("Rd not found")
+  }
   txt <- paste(readLines(rd, warn = FALSE), collapse = "\n")
   expect_true(
     grepl("share.*topology|do(es)? NOT change", txt, perl = TRUE),
