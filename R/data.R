@@ -233,36 +233,34 @@
 
 #' Mammal phylogenetic tree (example)
 #'
-#' A 5,987-tip mammal phylogeny, used by the
-#' `db-assembly-workflow_mammals` vignette to demonstrate reconciling
-#' species names from multiple trait sources against a tree. Tip
-#' labels use underscores (`Genus_species`); 76 tips representing
-#' Mesozoic stem-mammal fossils carry an `X_` prefix.
+#' A 5,987-tip subset of the Upham, Esselstyn & Jetz (2019) VertLife
+#' mammal phylogeny, used by the `db-assembly-workflow_mammals`
+#' vignette to demonstrate reconciling species names from multiple
+#' trait sources against a tree. Tip labels use underscores
+#' (`Genus_species`); 76 tips carry an `X_` prefix, denoting Mesozoic
+#' stem-mammal fossils grafted onto the molecular backbone via the
+#' Upham et al. "backbone-and-patch" framework.
 #'
-#' This tree is bundled as an example object only. The exact source
-#' phylogeny and any pruning / grafting steps that produced it are
-#' tracked at the issue that introduced the data
-#' (<https://github.com/itchyshin/prepR4pcm/issues/11>); the
-#' contributor (Santiago Ortega) will confirm the source when the
-#' issue is closed. Until then, treat the tree as illustrative only:
-#' it is sufficient for demonstrating the reconciliation cascade in
-#' the vignette but should not be cited directly in published work.
-#' If you need a published mammal phylogeny for analysis, see one of
-#' the references below.
+#' Source confirmed by Santiago Ortega, who contributed the data, on
+#' issue #11.
+#'
+#' If you use this tree in published work, please cite Upham et al.
+#' (2019) directly. The bundled object is a *subset* used for examples
+#' only --- for analysis-grade trees, download the full credible set
+#' from <http://vertlife.org/phylosubsets>.
 #'
 #' @format An object of class `phylo` (from the ape package), with
 #'   5,987 tips and 5,986 internal nodes.
 #'
-#' @source Provenance pending confirmation. See
-#'   \url{https://github.com/itchyshin/prepR4pcm/issues/11}.
+#' @source Upham, N.S., Esselstyn, J.A. & Jetz, W. (2019) Inferring
+#'   the mammal tree: Species-level sets of phylogenies for questions
+#'   in ecology, evolution, and conservation. \emph{PLOS Biology}
+#'   17(12):e3000494. \doi{10.1371/journal.pbio.3000494}.
+#'   Full credible sets at \url{http://vertlife.org/phylosubsets}.
 #'
 #' @references
-#' Established mammal phylogenies suitable for analysis include:
-#'
-#' Upham, N.S., Esselstyn, J.A. & Jetz, W. (2019) Inferring the
-#' mammal tree: Species-level sets of phylogenies for questions in
-#' ecology, evolution, and conservation. \emph{PLOS Biology}
-#' 17:e3000494. \doi{10.1371/journal.pbio.3000494}
+#' Other published mammal phylogenies suitable for comparative
+#' analysis (alternatives to Upham et al. 2019):
 #'
 #' Faurby, S. & Svenning, J.-C. (2015) A species-level phylogeny of
 #' all extant and late Quaternary extinct mammals using a novel
