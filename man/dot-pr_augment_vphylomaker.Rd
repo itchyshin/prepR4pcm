@@ -32,4 +32,14 @@ Plant-only alternative to the rtrees backend. Wraps
 \code{V.PhyloMaker2::phylo.maker()} so the user can pick a specific
 V.PhyloMaker scenario (S1 / S2 / S3, see Jin & Qian 2019).
 }
+\references{
+Jin, Y. & Qian, H. (2019). V.PhyloMaker: an R package that can
+generate very large phylogenies for vascular plants.
+\emph{Ecography} 42(8): 1353--1359. \doi{10.1111/ecog.04434}
+
+Jin, Y. & Qian, H. (2022). V.PhyloMaker2: an updated and enlarged R
+package that can generate very large phylogenies for vascular plants.
+\emph{Plant Diversity} 44(4): 335--339.
+\doi{10.1016/j.pld.2022.05.005}
+}
 \keyword{internal}

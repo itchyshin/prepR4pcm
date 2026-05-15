@@ -174,9 +174,28 @@
 #'   `multi_impute_trees()` for posterior-tree PCMs.
 #'
 #' @references
-#' Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+#' Paradis, E. & Schliep, K. (2019). ape 5.0: an environment for modern
 #' phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
-#' 35:526--528. \doi{10.1093/bioinformatics/bty633}
+#' 35: 526--528. \doi{10.1093/bioinformatics/bty633}
+#'
+#' Augmentation backends:
+#'
+#' Jin, Y. & Qian, H. (2019). V.PhyloMaker: an R package that can
+#' generate very large phylogenies for vascular plants.
+#' \emph{Ecography} 42(8): 1353--1359. \doi{10.1111/ecog.04434}
+#' (`source = "vphylomaker"`, fallback path.)
+#'
+#' Jin, Y. & Qian, H. (2022). V.PhyloMaker2: an updated and enlarged R
+#' package that can generate very large phylogenies for vascular plants.
+#' \emph{Plant Diversity} 44(4): 335--339.
+#' \doi{10.1016/j.pld.2022.05.005}
+#' (`source = "vphylomaker"`, preferred path.)
+#'
+#' Jin, Y. & Qian, H. (2023). U.PhyloMaker: an R package that can
+#' generate large phylogenetic trees for plants and animals.
+#' \emph{Plant Diversity} 45(3): 347--352.
+#' \doi{10.1016/j.pld.2022.12.007}
+#' (`source = "uphylomaker"`.)
 #'
 #' @examples
 #' # --- Example 1: genus-level placement with congener_median branch lengths ---
@@ -743,6 +762,17 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
 #' @param quiet Logical.
 #' @param ... Forwarded to `V.PhyloMaker2::phylo.maker()`.
 #' @return A list with `tree`, `augmented`, `skipped`, `backend_meta`.
+#'
+#' @references
+#' Jin, Y. & Qian, H. (2019). V.PhyloMaker: an R package that can
+#' generate very large phylogenies for vascular plants.
+#' \emph{Ecography} 42(8): 1353--1359. \doi{10.1111/ecog.04434}
+#'
+#' Jin, Y. & Qian, H. (2022). V.PhyloMaker2: an updated and enlarged R
+#' package that can generate very large phylogenies for vascular plants.
+#' \emph{Plant Diversity} 44(4): 335--339.
+#' \doi{10.1016/j.pld.2022.05.005}
+#'
 #' @keywords internal
 .pr_augment_vphylomaker <- function(species_to_add, tree,
                                       scenarios = "S3",
@@ -873,6 +903,13 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
 #' @param quiet Logical.
 #' @param ... Forwarded to `U.PhyloMaker::phylo.maker()`.
 #' @return A list with `tree`, `augmented`, `skipped`, `backend_meta`.
+#'
+#' @references
+#' Jin, Y. & Qian, H. (2023). U.PhyloMaker: an R package that can
+#' generate large phylogenetic trees for plants and animals.
+#' \emph{Plant Diversity} 45(3): 347--352.
+#' \doi{10.1016/j.pld.2022.12.007}
+#'
 #' @keywords internal
 .pr_augment_uphylomaker <- function(species_to_add, tree,
                                       gen.list = NULL,
