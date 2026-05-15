@@ -37,4 +37,10 @@ Universal (plants + animals) variant of the V.PhyloMaker grafting
 strategy. Wraps \code{U.PhyloMaker::phylo.maker()} so the user can pick
 a specific scenario.
 }
+\references{
+Jin, Y. & Qian, H. (2023). U.PhyloMaker: an R package that can
+generate large phylogenetic trees for plants and animals.
+\emph{Plant Diversity} 45(3): 347--352.
+\doi{10.1016/j.pld.2022.12.007}
+}
 \keyword{internal}

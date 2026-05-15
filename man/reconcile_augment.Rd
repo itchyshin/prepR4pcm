@@ -238,9 +238,28 @@ head(aug_near$augmented[, c("species", "placed_near", "method")])
 
 }
 \references{
-Paradis, E. & Schliep, K. (2019) ape 5.0: an environment for modern
+Paradis, E. & Schliep, K. (2019). ape 5.0: an environment for modern
 phylogenetics and evolutionary analyses in R. \emph{Bioinformatics}
-35:526--528. \doi{10.1093/bioinformatics/bty633}
+35: 526--528. \doi{10.1093/bioinformatics/bty633}
+
+Augmentation backends:
+
+Jin, Y. & Qian, H. (2019). V.PhyloMaker: an R package that can
+generate very large phylogenies for vascular plants.
+\emph{Ecography} 42(8): 1353--1359. \doi{10.1111/ecog.04434}
+(\code{source = "vphylomaker"}, fallback path.)
+
+Jin, Y. & Qian, H. (2022). V.PhyloMaker2: an updated and enlarged R
+package that can generate very large phylogenies for vascular plants.
+\emph{Plant Diversity} 44(4): 335--339.
+\doi{10.1016/j.pld.2022.05.005}
+(\code{source = "vphylomaker"}, preferred path.)
+
+Jin, Y. & Qian, H. (2023). U.PhyloMaker: an R package that can
+generate large phylogenetic trees for plants and animals.
+\emph{Plant Diversity} 45(3): 347--352.
+\doi{10.1016/j.pld.2022.12.007}
+(\code{source = "uphylomaker"}.)
 }
 \seealso{
 \code{\link[=reconcile_tree]{reconcile_tree()}} for the reconciliation step;

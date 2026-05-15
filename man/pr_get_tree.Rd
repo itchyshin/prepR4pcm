@@ -361,6 +361,13 @@ e3000494. \doi{10.1371/journal.pbio.3000494}
 (VertLife mammal posterior; used by \code{rtrees} for \code{taxon = "mammal"}
 with \code{mammal_tree = "vertlife"}.)
 
+Jin, Y. & Qian, H. (2019). V.PhyloMaker: an R package that can
+generate very large phylogenies for vascular plants.
+\emph{Ecography} 42(8): 1353--1359. \doi{10.1111/ecog.04434}
+(Vascular-plant mega-tree used by \code{rtrees} for \code{taxon = "plant"};
+also the basis for the \code{source = "vphylomaker"} augmentation
+backend in \code{\link[=reconcile_augment]{reconcile_augment()}}.)
+
 Sanchez Reyes, L. L., O'Meara, B. C., Brown, J. W., & McTavish, E.
 J. (2024). DateLife: Leveraging databases and analytical tools to
 reveal the dated Tree of Life. \emph{Systematic Biology} 73(2):
