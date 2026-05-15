@@ -36,7 +36,7 @@ pasting into supplementary materials, or archiving next to analysis
 outputs.
 }
 \details{
-\if{html}{\figure{report-screenshots/reconcile-report-top.png}{options: width="100\%" alt="Top of the reconciliation report: run header, coverage summary, and match-composition chart."}}
+\if{html}{\figure{reconcile-report-top.png}{options: width="100\%" alt="Top of the reconciliation report: run header, coverage summary, and match-composition chart."}}
 }
 \section{Layout}{
 

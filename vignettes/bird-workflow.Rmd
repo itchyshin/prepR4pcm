@@ -468,9 +468,9 @@ unresolved-species list make each decision auditable (Figure 2). The
 file is self-contained --- styles, charts, and tables are all inline
 --- so it can be archived or shared without external assets.
 
-![Top of the reconciliation report: run header, coverage summary, and match-composition chart.](../man/figures/report-screenshots/reconcile-report-top.png){width=100%}
+![Top of the reconciliation report: run header, coverage summary, and match-composition chart.](../man/figures/reconcile-report-top.png){width=100%}
 
-![Lower in the report: per-match-type tables (normalised, synonym, fuzzy, flagged) and the list of unresolved species.](../man/figures/report-screenshots/reconcile-report-tables.png){width=100%}
+![Lower in the report: per-match-type tables (normalised, synonym, fuzzy, flagged) and the list of unresolved species.](../man/figures/reconcile-report-tables.png){width=100%}
 
 ## Key points
 
