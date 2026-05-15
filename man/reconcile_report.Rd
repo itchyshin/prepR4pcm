@@ -35,6 +35,20 @@ unresolved / flagged species. The file has no external dependencies
 pasting into supplementary materials, or archiving next to analysis
 outputs.
 }
+\details{
+\if{html}{\figure{report-screenshots/reconcile-report-top.png}{options: width="100\%" alt="Top of the reconciliation report: run header, coverage summary, and match-composition chart."}}
+}
+\section{Layout}{
+
+The report opens with a run header (the originating
+\code{reconcile_tree()} / \code{reconcile_data()} call, timestamp, package
+version), the match-coverage summary, and a compact bar chart of
+match composition. Below those, per-match-type detail tables
+(normalised, synonym, fuzzy, flagged) and the unresolved-species
+list make each decision auditable. The \code{bird-workflow} vignette
+includes annotated screenshots of both sections.
+}
+
 \examples{
 data(avonet_subset)
 data(tree_jetz)

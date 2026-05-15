@@ -9,6 +9,17 @@
 #' pasting into supplementary materials, or archiving next to analysis
 #' outputs.
 #'
+#' \if{html}{\figure{report-screenshots/reconcile-report-top.png}{options: width="100\%" alt="Top of the reconciliation report: run header, coverage summary, and match-composition chart."}}
+#'
+#' @section Layout:
+#' The report opens with a run header (the originating
+#' `reconcile_tree()` / `reconcile_data()` call, timestamp, package
+#' version), the match-coverage summary, and a compact bar chart of
+#' match composition. Below those, per-match-type detail tables
+#' (normalised, synonym, fuzzy, flagged) and the unresolved-species
+#' list make each decision auditable. The `bird-workflow` vignette
+#' includes annotated screenshots of both sections.
+#'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param file A length-1 character vector. Output file path. Must end in `.html`.

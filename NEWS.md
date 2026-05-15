@@ -1,5 +1,19 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 18: mammal_tree_example provenance — Upham et al. 2019
+
+* **`?mammal_tree_example` now cites the source** (#11). The bundled
+  5,987-tip mammal phylogeny is a subset of the Upham, Esselstyn &
+  Jetz (2019) VertLife mammal phylogeny
+  ([doi:10.1371/journal.pbio.3000494](https://doi.org/10.1371/journal.pbio.3000494)).
+  Source confirmed by @Santiago-0rtega on issue #11. The previous
+  "provenance pending confirmation" wording has been removed from
+  the help page, the README, and the database-assembly vignette.
+  The 76 `X_`-prefixed tips representing Mesozoic stem-mammal
+  fossils are described as products of the Upham et al.
+  "backbone-and-patch" framework. Both vignette and `data-raw/`
+  bibliography files now carry a full `@Upham2019` bibentry.
+
 ## Round 17: full reference list on `?pr_get_tree` + `?pr_tree_compare`
 
 Jimuel Celeste, Jr.'s #79 and #80. **Issues remain open** — Jimuel

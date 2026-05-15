@@ -152,7 +152,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-05-03 05:49:12
+#>   Timestamp: 2026-05-13 11:47:15
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -344,12 +344,13 @@ in published work, please cite the original provider.
 - **TetrapodTraits** (`mammal_tetrapodtraits_example`): Moura et al.
   2024) *PLOS Biology* 22:e3002658.
         [doi:10.1371/journal.pbio.3002658](https://doi.org/10.1371/journal.pbio.3002658)
-- **Mammal phylogeny** (`mammal_tree_example`): provenance pending
-  confirmation; see [issue
-  \#11](https://github.com/itchyshin/prepR4pcm/issues/11). Bundled as an
-  example object only — if you need a published mammal phylogeny for
-  analysis, see Upham et al. 2019, Faurby & Svenning 2015, or
-  Bininda-Emonds et al. 2007 (full citations in `?mammal_tree_example`).
+- **Mammal phylogeny** (`mammal_tree_example`): a 5,987-tip subset of
+  the VertLife mammal phylogeny from Upham et al. (2019) *PLOS Biology*
+  17(12):e3000494
+  [doi:10.1371/journal.pbio.3000494](https://doi.org/10.1371/journal.pbio.3000494).
+  Bundled as an example object only — for analysis-grade trees, download
+  the full credible set from
+  [vertlife.org/phylosubsets](http://vertlife.org/phylosubsets).
 
 ## License
 

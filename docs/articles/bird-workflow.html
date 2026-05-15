@@ -130,7 +130,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-12 17:41:01</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-14 17:32:42</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -344,7 +344,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-12 17:41:19</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-14 17:32:59</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -652,9 +652,21 @@ decision. Useful for sharing with collaborators or archiving alongside
 your analysis:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/reconcile_report.html">reconcile_report</a></span><span class="op">(</span><span class="va">result</span>, file <span class="op">=</span> <span class="st">"reconciliation_report.html"</span><span class="op">)</span></span></code></pre></div>
-<p>The report includes match counts, detail tables for each match type
-(normalised, synonym, fuzzy, flagged), and lists of unresolved
-species.</p>
+<p>The report opens in any browser. It begins with the run header,
+match-coverage summary, and a small bar chart of match composition
+(Figure 1). Further down, per-match-type detail tables and the
+unresolved-species list make each decision auditable (Figure 2). The
+file is self-contained — styles, charts, and tables are all inline — so
+it can be archived or shared without external assets.</p>
+<div class="float">
+<img src="../reference/figures/report-screenshots/reconcile-report-top.png" style="width:100.0%" alt="Top of the reconciliation report: run header, coverage summary, and match-composition chart."><div class="figcaption">Top of the reconciliation report: run header,
+coverage summary, and match-composition chart.</div>
+</div>
+<div class="float">
+<img src="../reference/figures/report-screenshots/reconcile-report-tables.png" style="width:100.0%" alt="Lower in the report: per-match-type tables (normalised, synonym, fuzzy, flagged) and the list of unresolved species."><div class="figcaption">Lower in the report: per-match-type tables
+(normalised, synonym, fuzzy, flagged) and the list of unresolved
+species.</div>
+</div>
 </div>
 <div class="section level3">
 <h3 id="key-points">Key points<a class="anchor" aria-label="anchor" href="#key-points"></a>
