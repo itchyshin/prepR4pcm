@@ -199,13 +199,15 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
   }
 
   if (length(to_lookup) > 0) {
-    # Batch query: taxadb::filter_name accepts a character vector
+    # Batch query: taxadb::filter_name accepts a character vector.
+    # Only forward `version` when the caller supplied one — taxadb 0.2.1
+    # errors on `version = NULL` because parse_schema() runs
+    # `if (version == "latest")` and gets logical(0). Omitting the
+    # argument lets taxadb fall back to latest_version().
+    filter_args <- list(to_lookup, provider = authority)
+    if (!is.null(db_version)) filter_args$version <- db_version
     all_hits <- tryCatch(
-      taxadb::filter_name(
-        to_lookup,
-        provider = authority,
-        version = db_version
-      ),
+      do.call(taxadb::filter_name, filter_args),
       error = function(e) {
         cli_alert_warning(
           "taxadb lookup failed for {.val {authority}}: {conditionMessage(e)}. Names will be recorded as not found."
@@ -226,13 +228,16 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
         ))
       }
 
-      hits <- all_hits[all_hits$scientificName == name |
-                         all_hits$input == name, , drop = FALSE]
-
-      # taxadb may use an 'input' column to match query names
-      if (nrow(hits) == 0 && "input" %in% names(all_hits)) {
-        hits <- all_hits[all_hits$input == name, , drop = FALSE]
+      # Match on scientificName, and on `input` only if taxadb provides
+      # that column. taxadb 0.2.1 returns scientificName but not input,
+      # so unconditionally referencing all_hits$input returns NULL and
+      # `NULL == name` yields logical(0), which then collides with the
+      # length-N scientificName mask under tibble's strict subscripting.
+      match_mask <- all_hits$scientificName == name
+      if ("input" %in% names(all_hits)) {
+        match_mask <- match_mask | all_hits$input == name
       }
+      hits <- all_hits[match_mask, , drop = FALSE]
 
       if (nrow(hits) == 0) {
         return(tibble(
@@ -263,11 +268,9 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
 
       if (!is.na(accepted_id) && nchar(accepted_id) > 0) {
         tryCatch({
-          accepted_hit <- taxadb::filter_id(
-            accepted_id,
-            provider = authority,
-            version = db_version
-          )
+          id_args <- list(accepted_id, provider = authority)
+          if (!is.null(db_version)) id_args$version <- db_version
+          accepted_hit <- do.call(taxadb::filter_id, id_args)
           if (!is.null(accepted_hit) && nrow(accepted_hit) > 0) {
             return(tibble(
               input         = name,
