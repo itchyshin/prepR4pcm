@@ -112,22 +112,21 @@ chronograms aren't constrained to share a topology.
 }
 
 \examples{
-\dontrun{
-  # Example 1: date a single topology
-  library(ape)
-  tr  <- read.tree(text = "(Rhea_americana,(Pterocnemia_pennata,Struthio_camelus));")
-  res <- pr_date_tree(tr)
-  res$tree                       # phylo (chronogram)
-  res$backend_meta$dating_method # "bladj"
+\donttest{
+  if (requireNamespace("datelife", quietly = TRUE)) {
+    # Example 1: one chronogram from a topology
+    library(ape)
+    tr  <- read.tree(text =
+      "(Rhea_americana,(Pterocnemia_pennata,Struthio_camelus));")
+    res <- pr_date_tree(tr)
+    res$tree                       # phylo (chronogram)
+    res$backend_meta$dating_method # "bladj"
 
-  # Example 2: request multiple per-source chronograms (one per
-  # DateLife source)
-  res <- pr_date_tree(tr, n_dated = 5)
-  class(res$tree)                # multiPhylo
-  length(res$backend_meta$tree_provenance)  # 1 entry per tree
-
-  # Example 3: hand the result to pigauto for multi-tree PCMs
-  # mi  <- pigauto::multi_impute_trees(my_data, res$tree, m_per_tree = 5)
+    # Example 2: per-source chronograms for posterior-tree PCMs
+    res <- pr_date_tree(tr, n_dated = 5)
+    class(res$tree)                # "multiPhylo"
+    length(res$backend_meta$tree_provenance)  # one entry per tree
+  }
 }
 
 }
