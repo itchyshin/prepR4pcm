@@ -311,30 +311,38 @@ character vector \code{(original = resolved)}. A one-shot \code{cli} warning
 lists the first few substitutions on the call itself.
 }
 \examples{
-\dontrun{
-  # Example 1: drive from a reconciliation object (rotl, universal)
-  rec  <- reconcile_data(your_data, reference_dataset,
-                         x_species = "species")
-  res  <- pr_get_tree(rec, source = "rotl")
-  res$tree                  # phylo
-  length(res$matched)       # how many species placed
-  head(res$unmatched)       # unresolved species, if any
+\donttest{
+  # Example 1: birds via clootl (Clements taxonomy). Uses the
+  # bundled AVONET subset (657 species placed in the Clements tree).
+  data(avonet_subset)
+  if (requireNamespace("clootl", quietly = TRUE)) {
+    res <- pr_get_tree(avonet_subset, species_col = "Species1",
+                       source = "clootl")
+    ape::Ntip(res$tree)        # species placed in the tree
+    head(res$unmatched)        # names clootl could not resolve
+  }
 
-  # Example 2: birds, via clootl (Clements taxonomy)
-  res <- pr_get_tree(c("Corvus corax", "Pica pica"),
-                     source = "clootl")
+  # Example 2: fish via fishtree (Rabosky et al. 2018, time-calibrated)
+  if (requireNamespace("fishtree", quietly = TRUE)) {
+    res <- pr_get_tree(c("Salmo salar", "Esox lucius", "Gadus morhua"),
+                       source = "fishtree")
+    res$tree
+  }
 
-  # Example 3: fish via rtrees (taxon-specific mega-tree)
-  res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
-                     source = "rtrees", taxon = "fish")
+  # Example 3: anything via rotl (universal, network)
+  if (requireNamespace("rotl", quietly = TRUE)) {
+    res <- pr_get_tree(c("Homo sapiens", "Pan troglodytes",
+                         "Mus musculus"),
+                       source = "rotl")
+    res$tree
+  }
 
-  # Example 4: fish via fishtree (Rabosky et al. 2018, time-calibrated)
-  res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
-                     source = "fishtree")
-
-  # Example 5: from a data frame with custom species column
-  res <- pr_get_tree(my_df, source = "rotl",
-                     species_col = "scientific_name")
+  # Example 4: posterior of fish trees (50 trees, for multi-tree PCMs)
+  if (requireNamespace("fishtree", quietly = TRUE)) {
+    res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
+                       source = "fishtree", n_tree = 50)
+    class(res$tree)            # "multiPhylo"
+  }
 }
 
 }

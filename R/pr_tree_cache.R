@@ -152,10 +152,23 @@ pr_tree_cache_status <- function() {
 #' @seealso [pr_tree_cache_dir()] / [pr_tree_cache_status()].
 #'
 #' @examples
-#' \dontrun{
-#'   pr_tree_cache_clear(confirm = FALSE)
-#'   pr_tree_cache_clear(confirm = FALSE, source = "datelife")
-#' }
+#' # Demo against a throwaway cache so the user's real cache is untouched
+#' old_opt   <- getOption("prepR4pcm.cache_dir")
+#' tmp_cache <- file.path(tempdir(), "prepR4pcm-cache-demo")
+#' pr_tree_cache_dir(tmp_cache)
+#'
+#' # Drop two dummy entries so there is something to clear:
+#' dir.create(file.path(tmp_cache, "fishtree"), showWarnings = FALSE)
+#' dir.create(file.path(tmp_cache, "rotl"),     showWarnings = FALSE)
+#' saveRDS(NULL, file.path(tmp_cache, "fishtree", "abc.rds"))
+#' saveRDS(NULL, file.path(tmp_cache, "rotl",     "def.rds"))
+#'
+#' pr_tree_cache_status()                # 2 entries
+#' pr_tree_cache_clear(confirm = FALSE)  # removes both
+#' pr_tree_cache_status()                # empty
+#'
+#' # Restore the previous cache directory
+#' options(prepR4pcm.cache_dir = old_opt)
 #'
 #' @export
 pr_tree_cache_clear <- function(confirm = TRUE, source = NULL) {

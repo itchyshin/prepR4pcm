@@ -127,13 +127,52 @@ pr_detect_splits_lumps <- function(mapping) {
 #'   which surfaces the same splits/lumps across taxonomy versions.
 #'
 #' @examples
+#' # `reconcile_splits_lumps()` only surfaces rows that synonym lookup
+#' # resolved (`match_type == "synonym"`), which requires `authority`
+#' # to be non-NULL when building the reconciliation. The bundled-data
+#' # call below uses `authority = NULL` for speed, so the output is
+#' # empty:
 #' data(avonet_subset)
 #' data(tree_jetz)
 #' rec <- reconcile_tree(avonet_subset, tree_jetz,
-#'                       x_species = "Species1", authority = NULL)
+#'                       x_species = "Species1", authority = NULL,
+#'                       quiet = TRUE)
 #' sl <- reconcile_splits_lumps(rec, quiet = TRUE)
-#' sl$splits
-#' sl$lumps
+#' nrow(sl$splits); nrow(sl$lumps)   # 0 and 0
+#'
+#' # To show what the output looks like when splits and lumps DO turn
+#' # up, we hand-build a tiny reconciliation. In practice you would
+#' # obtain this by calling reconcile_tree(..., authority = "col").
+#' #
+#' #   * Acanthiza pusilla (data) was split in CoL into A. pusilla and
+#' #     A. apicalis  (1 x-name -> 2 y-names  ==>  split).
+#' #   * Parus caeruleus and Cyanistes caeruleus (data: old + new names)
+#' #     both map to Cyanistes caeruleus in CoL
+#' #                 (2 x-names -> 1 y-name  ==>  lump).
+#' demo_mapping <- tibble::tibble(
+#'   name_x        = c("Acanthiza pusilla", "Acanthiza pusilla",
+#'                     "Parus caeruleus",   "Cyanistes caeruleus"),
+#'   name_y        = c("Acanthiza pusilla", "Acanthiza apicalis",
+#'                     "Cyanistes caeruleus", "Cyanistes caeruleus"),
+#'   name_resolved = c("Acanthiza pusilla", "Acanthiza pusilla",
+#'                     "Cyanistes caeruleus", "Cyanistes caeruleus"),
+#'   match_type    = "synonym",
+#'   match_score   = 1,
+#'   match_source  = "col",
+#'   in_x          = TRUE,
+#'   in_y          = TRUE,
+#'   notes         = NA_character_
+#' )
+#' rec_demo <- structure(
+#'   list(mapping   = demo_mapping,
+#'        meta      = list(type = "data_tree", authority = "col"),
+#'        counts    = list(),
+#'        overrides = tibble::tibble()),
+#'   class = "reconciliation"
+#' )
+#' sl <- reconcile_splits_lumps(rec_demo, quiet = TRUE)
+#' sl$splits     # 1 row: Acanthiza pusilla split into 2 taxa
+#' sl$lumps      # 1 row: Parus + Cyanistes lumped into 1 taxon
 #'
 #' @export
 reconcile_splits_lumps <- function(reconciliation, quiet = FALSE) {

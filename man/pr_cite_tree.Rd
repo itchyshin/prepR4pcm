@@ -39,12 +39,29 @@ writing the methods section of a paper or when adding a tree
 provenance footnote to a figure.
 }
 \examples{
-\dontrun{
-  res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
-                     source = "fishtree")
-  pr_cite_tree(res)                         # text block
-  cat(pr_cite_tree(res, format = "markdown"))  # markdown
-  cat(pr_cite_tree(res, format = "bibtex"))    # bibtex
+# Build a minimal `pr_tree_result` by hand so the three citation
+# formats are visible without a network call. In real use this
+# object is returned by `pr_get_tree()` or `pr_date_tree()`.
+fake_res <- structure(
+  list(
+    source       = "fishtree",
+    tree         = ape::read.tree(text = "(Salmo_salar,Esox_lucius);"),
+    backend_meta = list(tree_provenance = list())
+  ),
+  class = "pr_tree_result"
+)
+
+cat(pr_cite_tree(fake_res, format = "text"))      # human-readable
+cat(pr_cite_tree(fake_res, format = "markdown"))  # for a README
+cat(pr_cite_tree(fake_res, format = "bibtex"))    # for a .bib file
+
+\donttest{
+  # Realistic use after actually retrieving a tree from a backend:
+  if (requireNamespace("fishtree", quietly = TRUE)) {
+    res <- pr_get_tree(c("Salmo salar", "Esox lucius"),
+                       source = "fishtree")
+    cat(pr_cite_tree(res, format = "markdown"))
+  }
 }
 
 }
