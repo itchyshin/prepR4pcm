@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,17 +121,32 @@
 <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
 </h2>
 <p><em>Starting point</em>: trait data + a phylogenetic tree. <em>If you don’t yet have a tree</em>, fetch one with <code><a href="reference/pr_get_tree.html">pr_get_tree()</a></code> (and optionally date it with <code><a href="reference/pr_date_tree.html">pr_date_tree()</a></code>) and continue from “Trait data + Phylogenetic tree” below; see the <a href="https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html">posterior-tree pipeline</a> vignette for the full pattern.</p>
-<p>The diagram below shows the steps. <strong>R objects and data files</strong> are in italics; <strong><code>prepR4pcm</code> functions</strong> that act on them are in plain monospace.</p>
-<blockquote>
-<p><em>Trait data</em> + <em>Phylogenetic tree</em>     ↓    <code><a href="reference/reconcile_tree.html">reconcile_tree()</a></code> <em>reconciliation</em>     ↓    Review: <code><a href="reference/reconcile_summary.html">reconcile_summary()</a></code>, <code><a href="reference/reconcile_plot.html">reconcile_plot()</a></code>, <code><a href="reference/reconcile_report.html">reconcile_report()</a></code>     ↓    Fix (if needed): <code><a href="reference/reconcile_override.html">reconcile_override()</a></code>, <code><a href="reference/reconcile_suggest.html">reconcile_suggest()</a></code>     ↓    <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> <em>Aligned data</em> + <em>Pruned tree</em>     ↓ PGLS / PGLMM / any PCM</p>
-</blockquote>
+<p>The diagram below shows the steps. <strong>R objects and data files</strong> are in rounded boxes; <strong><code>prepR4pcm</code> functions</strong> that act on them are on the arrows.</p>
+<pre class="mermaid"><code>flowchart TD
+  A(["&lt;i&gt;Trait data&lt;/i&gt;&lt;br&gt;+&lt;br&gt;&lt;i&gt;Phylogenetic tree&lt;/i&gt;"])
+  B(["&lt;i&gt;reconciliation&lt;/i&gt;"])
+  R["&lt;b&gt;Review&lt;/b&gt;&lt;br&gt;reconcile_summary()&lt;br&gt;reconcile_plot()&lt;br&gt;reconcile_report()&lt;br&gt;&lt;br&gt;&lt;b&gt;Fix (if needed)&lt;/b&gt;&lt;br&gt;reconcile_override()&lt;br&gt;reconcile_suggest()"]
+  C(["&lt;i&gt;Aligned data&lt;/i&gt;&lt;br&gt;+&lt;br&gt;&lt;i&gt;Pruned tree&lt;/i&gt;"])
+  D[/PGLS, PGLMM, or any PCM/]
+
+  A -- "reconcile_tree()" --&gt; B
+  B --&gt; R
+  R -- "reconcile_apply()" --&gt; C
+  C --&gt; D
+
+  classDef obj fill:#e8f4f8,stroke:#2c5e4f,stroke-width:2px
+  classDef inspect fill:#fffbe6,stroke:#a67c00,stroke-width:1.5px
+  classDef out fill:#fff4e8,stroke:#888,stroke-width:1.5px
+  class A,B,C obj
+  class R inspect
+  class D out</code></pre>
 <p>The first reconciliation pass produces a <em>reconciliation</em> object (an audit of every name match). You then review and fix; once you’re happy, <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> produces the aligned dataset and pruned tree that have matching species lists — the precondition for any phylogenetic comparative method.</p>
 </div>
 <div class="section level2">
 <h2 id="quick-example">Quick example<a class="anchor" aria-label="anchor" href="#quick-example"></a>
 </h2>
 <p>This example reconciles <code>avonet_subset</code> (919 species rows from AVONET, a global bird-trait database; Tobias et al. 2022) against <code>tree_jetz</code> (657 tips from the Jetz et al. 2012 bird phylogeny). It produces an aligned data frame and a pruned tree ready for downstream modelling — both sides have the same species, in matched order, ready for a PGLS or phylogenetic mixed model.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/emmanuelparadis/ape" class="external-link">ape</a></span><span class="op">)</span></span>
 <span></span>
@@ -156,7 +171,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-13 11:47:15</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-17 06:49:17</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -192,7 +207,7 @@
 <h2 id="quick-example--fetching-a-tree">Quick example — fetching a tree<a class="anchor" aria-label="anchor" href="#quick-example--fetching-a-tree"></a>
 </h2>
 <p>If you don’t already have a tree, fetch one. The snippet below pulls a 50-tree posterior of fish chronograms from the Fish Tree of Life (Rabosky et al. 2018) and asks <code><a href="reference/pr_cite_tree.html">pr_cite_tree()</a></code> to format the citations for your methods section:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox lucius"</span>, <span class="st">"Oncorhynchus mykiss"</span><span class="op">)</span>,</span>
 <span>  source <span class="op">=</span> <span class="st">"fishtree"</span>,</span>
@@ -233,17 +248,17 @@
 <p>Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Jain B, Celeste J, Poo Hernandez S (2026). <em>prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.</em> R package version 0.4.0. <a href="https://github.com/itchyshin/prepR4pcm" class="external-link uri">https://github.com/itchyshin/prepR4pcm</a></p>
 </blockquote>
 <p>BibTeX:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>            Jimuel Jr Celeste and Sergio {Poo Hernandez}},</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>            Jimuel Jr Celeste and Sergio {Poo Hernandez}},</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>}</span></code></pre></div>
 <p>Or run in R to get the same entry programmatically:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>citation("prepR4pcm")</code> warns <em>“no package ‘prepR4pcm’ was found”</em>, the installed copy is stale or in a library R isn’t searching. Re-install with <code>pak::pak("itchyshin/prepR4pcm")</code> and re-load (restart R if needed).</p>
 </div>
@@ -345,7 +360,12 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
@@ -364,7 +384,20 @@
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>
