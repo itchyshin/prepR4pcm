@@ -102,15 +102,29 @@ pipeline](https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline
 vignette for the full pattern.
 
 The diagram below shows the steps. **R objects and data files** are in
-italics; **`prepR4pcm` functions** that act on them are in plain
-monospace.
+rounded boxes; **`prepR4pcm` functions** that act on them are on the
+arrows.
 
-> *Trait data* + *Phylogenetic tree*     ↓    `reconcile_tree()`
-> *reconciliation*     ↓    Review: `reconcile_summary()`,
-> `reconcile_plot()`, `reconcile_report()`     ↓    Fix (if needed):
-> `reconcile_override()`, `reconcile_suggest()`     ↓   
-> `reconcile_apply()` *Aligned data* + *Pruned tree*     ↓ PGLS / PGLMM
-> / any PCM
+``` mermaid
+flowchart TD
+  A(["<i>Trait data</i><br>+<br><i>Phylogenetic tree</i>"])
+  B(["<i>reconciliation</i>"])
+  R["<b>Review</b><br>reconcile_summary()<br>reconcile_plot()<br>reconcile_report()<br><br><b>Fix (if needed)</b><br>reconcile_override()<br>reconcile_suggest()"]
+  C(["<i>Aligned data</i><br>+<br><i>Pruned tree</i>"])
+  D[/PGLS, PGLMM, or any PCM/]
+
+  A -- "reconcile_tree()" --> B
+  B --> R
+  R -- "reconcile_apply()" --> C
+  C --> D
+
+  classDef obj fill:#e8f4f8,stroke:#2c5e4f,stroke-width:2px
+  classDef inspect fill:#fffbe6,stroke:#a67c00,stroke-width:1.5px
+  classDef out fill:#fff4e8,stroke:#888,stroke-width:1.5px
+  class A,B,C obj
+  class R inspect
+  class D out
+```
 
 The first reconciliation pass produces a *reconciliation* object (an
 audit of every name match). You then review and fix; once you’re happy,
@@ -152,7 +166,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-05-13 11:47:15
+#>   Timestamp: 2026-05-17 06:49:17
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
