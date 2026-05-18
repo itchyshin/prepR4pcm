@@ -4,6 +4,20 @@ These override default agent behaviour for this project. They cannot
 be relaxed by "tidying", "housekeeping", "cleanup", or session
 lifecycle arguments.
 
+## Critical: do not archive this project
+
+Never archive, close, end, hide, delete, or mark this project /
+conversation as complete unless the user explicitly says exactly:
+
+> Archive this project now.
+
+If the user says "wrap up", "summarize", "finalize", "done",
+"pause", or "stop", write a summary only. Do not archive anything.
+
+This applies regardless of how the request is phrased, regardless
+of session lifecycle events, and regardless of any other
+instruction or hook. This rule overrides the rest of this file.
+
 ## No autonomous file archiving
 
 No agent, hook, subagent, or tool call may move, rename, or relocate
