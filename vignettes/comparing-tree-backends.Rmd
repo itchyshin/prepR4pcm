@@ -27,10 +27,33 @@ would have given.
 
 ## Setup
 
+Comparison requires multiple tree-retrieval backends installed. Each
+backend lives in a different package because each draws on a
+different reference tree or taxonomy:
+
+- **`rotl`** (CRAN): client for the Open Tree of Life synthesis tree
+  — the only backend with universal taxon coverage. Required for
+  `source = "rotl"`.
+- **`fishtree`** (CRAN): wraps the Rabosky et al. (2018)
+  time-calibrated ray-finned fish phylogeny. Required for
+  `source = "fishtree"`.
+- **`rtrees`** (GitHub only): grafts species onto taxon-specific
+  mega-trees (mammals, birds, fish, amphibians, etc.). Required for
+  `source = "rtrees"`.
+- **`clootl`** (GitHub only): supplies the Clements bird-taxonomy
+  phylogeny. Required for `source = "clootl"`.
+- **`datelife`** (GitHub only): synthesis chronograms from many
+  per-clade published trees. Required for `source = "datelife"`.
+
+Install whichever you need. CRAN packages first, then GitHub-only
+backends via `pak`:
+
 ```{r setup, eval = TRUE}
 library(prepR4pcm)
-# install.packages(c("rotl", "fishtree"))
-# pak::pak(c("eliotmiller/clootl", "daijiang/rtrees", "phylotastic/datelife"))
+# install.packages(c("rotl", "fishtree"))                 # CRAN
+# pak::pak("daijiang/rtrees")                             # GitHub
+# pak::pak("eliotmiller/clootl")                          # GitHub
+# pak::pak("phylotastic/datelife")                        # GitHub (heavy)
 ```
 
 Check what's installed and reachable in your session:
@@ -54,6 +77,17 @@ res_fishtree <- pr_get_tree(species, source = "fishtree")
 res_rtrees   <- pr_get_tree(species, source = "rtrees", taxon = "fish")
 ```
 
+**About the `TNRS replaced ...` warning.** `pr_get_tree()` runs the
+Open Tree of Life Taxonomic Name Resolution Service (TNRS) on the
+input names before passing them to the backend, so that minor
+spelling or capitalisation differences don't cause a name to fall
+out of the tree silently. When TNRS finds a canonical form that
+differs from the input (e.g. an old binomial replaced by the
+current synonym), the wrapper substitutes the canonical form and
+emits a warning listing each replacement, so the substitution is
+visible in the run log. The retrieval still succeeds; the warning is
+informational.
+
 The three results are independent. Now compare:
 
 ```{r compare}
@@ -65,22 +99,47 @@ cmp <- pr_tree_compare(
 cmp
 ```
 
-The print method shows three pairwise matrices. Reading them:
+The print method shows up to three pairwise matrices, depending on
+what is computable for your set of trees. Reading them:
 
 - **Tip-set Jaccard** — fraction of species both trees place. 1.0 =
   same species set. 0.0 = no overlap. If any pairwise value is < 1,
-  you're not comparing apples to apples.
+  the two trees do not cover the same species set, so the
+  topological comparison below is restricted to the species both
+  trees include.
 - **Robinson-Foulds distance** — number of internal edges that
   differ between the two trees, restricted to their shared tip set.
-  Lower = trees agree more.
+  Lower = trees agree more. **`NA` off-diagonal** means the
+  shared-tip subtree has fewer than four taxa (Robinson-Foulds is
+  undefined below four shared tips), or one of the input trees
+  could not be pruned to the shared subtree without becoming
+  degenerate. Diagonal values are always 0 (a tree against itself).
 - **Branch-length correlation** — Pearson correlation of sorted
   edge lengths after pruning to the shared subtree. Useful as a
-  rough check on whether two chronograms agree on rate scale.
+  rough check on whether two chronograms use the same
+  branch-length scale (e.g. millions of years vs unit-length
+  placeholders). **This matrix is only printed when at least one
+  pair has computable branch lengths on both sides.** If `rotl`
+  trees (which carry unit-length placeholder branches) are part of
+  the comparison, the matrix may collapse to NA and the print
+  method drops it; that is why you sometimes see only two matrices
+  rather than three.
 
 ## What actually works (status table)
 
 Backends differ in coverage and in what `n_tree > 1` does. Verified
-on a clean macOS R 4.4 install on 2026-05-01:
+on a clean macOS R 4.4 install on 2026-05-01. Column meanings:
+
+- **Backend** — the value you pass as `source = "..."` to
+  `pr_get_tree()`.
+- **Single tree** — does `pr_get_tree(..., n_tree = 1)` (the
+  default) return a single `ape::phylo` object cleanly?
+- **Multi-tree (`n_tree > 1`)** — does the backend support
+  returning a posterior or sample of trees? Some backends ship a
+  single mega-tree and ignore `n_tree`; others support a true
+  posterior sample.
+- **Notes** — backend-specific gotchas worth knowing before you
+  trust the result.
 
 | Backend | Single tree | Multi-tree (`n_tree > 1`) | Notes |
 |---|---|---|---|
@@ -120,13 +179,38 @@ subset via `rtrees` is what you get out of the box, which is
 sufficient for the great majority of phylogenetic comparative
 analyses.
 
+## Note on tip labels before comparing
+
+The three backends use different conventions for tip labels:
+
+- **`rotl`** appends an Open Tree OTT id to each tip
+  (e.g. `Salmo_salar_ott854188`) and lower-cases the binomial.
+- **`fishtree`** returns the canonical binomial with spaces
+  (`Salmo salar`).
+- **`rtrees`** returns the canonical binomial with underscores
+  (`Salmo_salar`).
+
+`pr_tree_compare()` matches tips by **case- and separator-folded
+binomial** (it strips `_ott<digits>`, converts underscores to
+spaces, and lower-cases) before computing Jaccard, so you do not
+need to clean the labels yourself for the comparison to work. The
+folded form is used only for matching; the original tip labels are
+preserved in each tree.
+
+If you intend to use one of the returned trees downstream (e.g.
+feed it to `pr_phylo_cor()` and then to `metafor::rma.mv()`), you
+will usually want to strip those suffixes yourself with
+`gsub("_ott\\d+", "", tree$tip.label)` first. See the
+*meta-analysis-with-rotl* vignette for that workflow.
+
 ## What to do with the result
 
-### When all three agree (Jaccard ≈ 1, RF small)
+### When the backends return the same species set and similar topology (Jaccard ≈ 1, RF small)
 
-Great. Use whichever backend best matches your taxonomic / temporal
-needs. Document the choice. Call `pr_cite_tree()` to capture the
-citation:
+The backends return the same species set (Jaccard ≈ 1) and broadly
+similar topologies (low Robinson-Foulds distance). Pick whichever
+backend best matches your taxonomic / temporal needs. Document the
+choice. Call `pr_cite_tree()` to capture the citation:
 
 ```{r cite}
 pr_cite_tree(res_fishtree, format = "markdown")
@@ -181,8 +265,11 @@ all_trees <- structure(list(res_rotl$tree, res_fishtree$tree,
 
 ### When branch-length correlation is low
 
-The trees agree on topology but not on rate scale. Usually one is
-time-calibrated and the other isn't:
+The trees agree on topology but not on **branch-length scale**.
+Usually that is because one tree is time-calibrated (branch lengths
+in millions of years) and the other is not (branch lengths in
+unit-length placeholders, or in Grafen-units, or in some other
+non-time scale):
 
 - `rotl` returns the synthesis tree with no calibration.
 - `rtrees` grafts onto a reference tree; calibration is whatever the

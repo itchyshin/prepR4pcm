@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,8 +77,9 @@
 <p>Phylogenetic meta-analysis is the dominant comparative workflow in
 ecology and evolutionary biology when the dataset spans many higher
 taxa: you compute an effect size per study, then fit a model that
-controls for shared evolutionary history. The standard recipe (Cinar et
-al. 2022, <em>Methods Ecol. Evol.</em> 13:383) looks like:</p>
+controls for shared evolutionary history.</p>
+<p>The standard recipe (Cinar et al. 2022, <em>Methods Ecol. Evol.</em>
+13:383) looks like:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Pull a topology from Open Tree of Life</strong> via
@@ -104,8 +105,9 @@ branches are available.</li>
 <code>brms</code>, <code>glmmTMB</code>, etc.) using the correlation
 matrix as a random-effect structure.</li>
 </ol>
-<p><code>prepR4pcm</code> wraps steps 1-3 into a one-call form, and step
-4 into a named helper. This vignette walks through the whole
+<p><code>prepR4pcm</code> wraps steps 1-3 into a single
+<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> call, and step 4 into a single
+<code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code> call. This vignette walks through the whole
 pipeline.</p>
 <div class="section level2">
 <h2 id="a-worked-example-thermal-tolerance-plasticity-across-animal-classes">A worked example: thermal-tolerance plasticity across animal
@@ -116,25 +118,42 @@ classes<a class="anchor" aria-label="anchor" href="#a-worked-example-thermal-tol
 Letters</em> 25(10):2245-2268, <a href="https://doi.org/10.1111/ele.14083" class="external-link">doi:10.1111/ele.14083</a>).
 Their dataset spans <strong>147 ectotherm species across 14 animal
 classes</strong> — fish, insects, reptiles, amphibians, crustaceans,
-bivalves, echinoderms, cephalopods, etc. This is exactly the cross-taxon
-case where rotl is the only practical option (no taxon-specific
-mega-tree covers all 14 classes).</p>
-<p>For brevity, we’ll use 13 representative species — one or two from
-each major class in the Pottier dataset:</p>
+bivalves, echinoderms, cephalopods, etc.</p>
+<p>This is the cross-taxon case where <code>rotl</code> is the only
+practical option for retrieval. The taxon-specific mega-tree backends
+each cover one clade only: <code>rtrees</code> ships separate mega-trees
+for mammals, birds, fish, amphibians, squamates and a handful of other
+taxa; <code>fishtree</code> covers ray-finned fish only;
+<code>clootl</code> covers birds only. None of those backends spans the
+14-class breadth of an ectotherm meta-analysis. The Open Tree of Life
+synthesis tree that <code>source = "rotl"</code> returns is the only
+single backend that places species drawn from every class in one
+tree.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
+<p>We will use three packages: <strong>prepR4pcm</strong> (this package,
+for the retrieve / clean / correlate pipeline), <strong>rotl</strong>
+(the Open Tree of Life client that
+<code>pr_get_tree(source = "rotl")</code> calls under the hood), and
+<strong>metafor</strong> (the meta-analysis engine that consumes the
+phylogenetic correlation matrix).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
-<span><span class="co"># Suggested for the analysis itself:</span></span>
-<span><span class="co"># install.packages("rotl")     # OTL access</span></span>
-<span><span class="co"># install.packages("metafor")  # the meta-analysis engine</span></span></code></pre></div>
+<span><span class="co"># install.packages("rotl")     # required: OTL access (called by pr_get_tree)</span></span>
+<span><span class="co"># install.packages("metafor")  # required: the meta-analysis engine</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="step-1-3-topology---bifurcating---grafen-branches-in-one-call">Step 1-3: topology -&gt; bifurcating -&gt; Grafen branches, in one
 call<a class="anchor" aria-label="anchor" href="#step-1-3-topology---bifurcating---grafen-branches-in-one-call"></a>
 </h2>
+<p>For brevity we use <strong>14 representative species</strong> — one
+or two from each major class in the Pottier dataset. Each class label
+below points at one or two species drawn from a different chunk of the
+ectotherm tree. We picked these classes because they are the ones
+contributing the most studies in Pottier et al. (2022); a real analysis
+would use all 147 species from the Pottier dataset.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">species</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="co"># Actinopterygii (ray-finned fish)</span></span>
@@ -160,45 +179,96 @@ call<a class="anchor" aria-label="anchor" href="#step-1-3-topology---bifurcating
 <span>  <span class="co"># Hyperoartia (lampreys)</span></span>
 <span>  <span class="st">"Petromyzon marinus"</span></span>
 <span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">species</span><span class="op">)</span>   <span class="co"># 14</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="the-manual-pipeline-without-prepr4pcm">The manual pipeline (without prepR4pcm)<a class="anchor" aria-label="anchor" href="#the-manual-pipeline-without-prepr4pcm"></a>
+</h3>
+<p>Before introducing the wrapper, here is the <strong>manual
+pipeline</strong> the Pottier et al. (2022) methods describe. It calls
+<code><a href="https://docs.ropensci.org/rotl/reference/tnrs_match_names.html" class="external-link">rotl::tnrs_match_names()</a></code> →
+<code><a href="https://docs.ropensci.org/rotl/reference/tol_induced_subtree.html" class="external-link">rotl::tol_induced_subtree()</a></code> →
+<code>ape::multi2di(random = TRUE)</code> →
+<code>ape::compute.brlen(method = "Grafen", power = 1)</code>. We use
+the <code>_manual</code> suffix on every object so the wrapper version
+below can sit next to it without overwriting anything:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Step 1: get the rotl topology (no extras)</span></span>
+<span><span class="va">res_manual</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rotl"</span><span class="op">)</span></span>
+<span><span class="va">tree_manual</span>   <span class="op">&lt;-</span> <span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span></span>
 <span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span></span>
+<span><span class="co"># Step 2: resolve polytomies at random (bifurcating tree)</span></span>
+<span><span class="va">tree_manual</span>   <span class="op">&lt;-</span> <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">multi2di</a></span><span class="op">(</span><span class="va">tree_manual</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Step 3: Grafen branch lengths</span></span>
+<span><span class="va">tree_manual</span>   <span class="op">&lt;-</span> <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/compute.brlen.html" class="external-link">compute.brlen</a></span><span class="op">(</span><span class="va">tree_manual</span>, method <span class="op">=</span> <span class="st">"Grafen"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">tree_manual</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tree_manual</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="the-same-in-one-call-with-prepr4pcm">The same in one call (with prepR4pcm)<a class="anchor" aria-label="anchor" href="#the-same-in-one-call-with-prepr4pcm"></a>
+</h3>
+<p><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> with <code>source = "rotl"</code>,
+<code>resolve_polytomies = TRUE</code>, and
+<code>branch_lengths = "grafen"</code> collapses the three steps above
+into one call:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span></span>
 <span>  <span class="va">species</span>,</span>
 <span>  source             <span class="op">=</span> <span class="st">"rotl"</span>,</span>
 <span>  resolve_polytomies <span class="op">=</span> <span class="cn">TRUE</span>,        <span class="co"># multi2di(random = TRUE)</span></span>
 <span>  branch_lengths     <span class="op">=</span> <span class="st">"grafen"</span>     <span class="co"># compute.brlen(method = "Grafen")</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">tree</span>           <span class="co"># ultrametric, bifurcating, Grafen branches</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">matched</span>        <span class="co"># species OTL successfully resolved</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">unmatched</span>      <span class="co"># species OTL couldn't place</span></span></code></pre></div>
-<p>The Pottier et al. methods description matches this almost exactly;
-they wrote the pipeline out in <code><a href="https://docs.ropensci.org/rotl/reference/tnrs_match_names.html" class="external-link">rotl::tnrs_match_names()</a></code> →
-<code><a href="https://docs.ropensci.org/rotl/reference/tol_induced_subtree.html" class="external-link">rotl::tol_induced_subtree()</a></code> →
-<code>ape::multi2di(random = TRUE)</code> →
-<code>ape::compute.brlen(method = "Grafen", power = 1)</code> →
-<code>ape::vcv(cor = TRUE)</code>. The two new arguments to
-<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> collapse those four lines (steps 2-4) into
-one.</p>
-<p>The two new arguments — <code>resolve_polytomies</code> and
-<code>branch_lengths</code> — collapse what would otherwise be three
-explicit pipeline steps:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># What `pr_get_tree(... resolve_polytomies = TRUE,</span></span>
-<span><span class="co">#                       branch_lengths   = "grafen")`</span></span>
-<span><span class="co"># is equivalent to (when source = "rotl"):</span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rotl"</span><span class="op">)</span>  <span class="co"># rotl topology</span></span>
-<span><span class="va">tr</span>  <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">tree</span></span>
-<span><span class="va">tr</span>  <span class="op">&lt;-</span> <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">multi2di</a></span><span class="op">(</span><span class="va">tr</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>        <span class="co"># bifurcate</span></span>
-<span><span class="va">tr</span>  <span class="op">&lt;-</span> <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/compute.brlen.html" class="external-link">compute.brlen</a></span><span class="op">(</span><span class="va">tr</span>, method <span class="op">=</span> <span class="st">"Grafen"</span><span class="op">)</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">tr</span></span></code></pre></div>
+<span><span class="va">res</span><span class="op">$</span><span class="va">tree</span>            <span class="co"># ultrametric, bifurcating, Grafen branches</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">matched</span>         <span class="co"># species OTL successfully resolved</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">unmatched</span>       <span class="co"># species OTL couldn't place</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>      <span class="co"># visualise the topology</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>  <span class="co"># has _ott&lt;digits&gt; suffixes (see note below)</span></span></code></pre></div>
+<p><strong>About the <code>_ott&lt;digits&gt;</code> suffixes.</strong>
+Open Tree of Life identifies every taxon by an OTT id
+(e.g. <code>Salmo_trutta_ott854188</code>). <code>rotl</code> appends
+that id to the tip label so a downstream tool can verify which OTT node
+was placed. The suffix is informative for provenance but it makes the
+tip labels disagree with the binomial names you almost certainly have in
+your trait data frame (<code>"Salmo trutta"</code> vs
+<code>"Salmo_trutta_ott854188"</code>). The meta-analysis step below
+strips the suffix and converts underscores to spaces before computing
+the correlation matrix.</p>
+</div>
+<div class="section level3">
+<h3 id="confirm-the-two-pipelines-produce-the-same-tree">Confirm the two pipelines produce the same tree<a class="anchor" aria-label="anchor" href="#confirm-the-two-pipelines-produce-the-same-tree"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Same tip set?</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setequal</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>, <span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span>   <span class="co"># TRUE</span></span>
+<span><span class="co"># Same branch-length range (modulo RNG order for the bifurcation)?</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">edge.length</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">edge.length</span><span class="op">)</span></span>
+<span><span class="co"># Side-by-side plot</span></span>
+<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span>, main <span class="op">=</span> <span class="st">"manual ape pipeline"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span>,        main <span class="op">=</span> <span class="st">"one-call pr_get_tree()"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="step-4-phylogenetic-correlation-matrix">Step 4: phylogenetic correlation matrix<a class="anchor" aria-label="anchor" href="#step-4-phylogenetic-correlation-matrix"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>The tree currently has <code>_ott&lt;digits&gt;</code> suffixes and
+underscores in its tip labels. Strip those before computing the
+correlation matrix so the row / column names match the binomials in your
+trait data:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"_ott\\d+"</span>, <span class="st">""</span>, <span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"_"</span>,        <span class="st">" "</span>,  <span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>                          <span class="co"># now "Salmo trutta", etc.</span></span></code></pre></div>
+<p>Now compute the phylogenetic correlation matrix:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">phy_cor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_phylo_cor.html">pr_phylo_cor</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>            <span class="co"># 9 x 9 (one row/col per species)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/isSymmetric-methods.html" class="external-link">isSymmetric</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>    <span class="co"># TRUE</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span> <span class="co"># TRUE (correlation matrix; ultrametric tree)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>            <span class="co"># 14 x 14 (one row/col per species)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/isSymmetric.html" class="external-link">isSymmetric</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>    <span class="co"># TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span> <span class="co"># TRUE (correlation matrix; ultrametric tree)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>       <span class="co"># matches the binomials in `species`</span></span></code></pre></div>
 <p><code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code> is a thin wrapper around
 <code>ape::vcv(tree, corr = TRUE)</code>. The function exists separately
 so the meta-analysis pattern is self-documenting and so the matrix can
@@ -213,18 +283,26 @@ temperatures. Sampling variance comes with each effect via the group
 sample sizes / SDs. Suppose you’ve already extracted those per-study,
 per-species (this is the realistic shape of an
 ectotherm-thermal-tolerance dataset):</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.metafor-project.org" class="external-link">metafor</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Toy effect-size data --- one row per study; one or more rows per</span></span>
-<span><span class="co"># species. Replace with your real extraction.</span></span>
+<span><span class="co"># Toy effect-size data. Start by including every species at least</span></span>
+<span><span class="co"># once (otherwise random sampling can leave some species out and</span></span>
+<span><span class="co"># rma.mv complains about "levels in species without matching rows</span></span>
+<span><span class="co"># in R"). Then add 16 extra studies sampled with replacement to get</span></span>
+<span><span class="co"># a realistic multi-study-per-species shape.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">toy_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">species</span>, <span class="fl">30</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">species</span>,                          <span class="co"># 14 guaranteed rows</span></span>
+<span>              <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">species</span>, <span class="fl">16</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span>,  <span class="co"># 16 extra</span></span>
 <span>  study   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"study_%02d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  yi      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span>, mean <span class="op">=</span> <span class="fl">0.20</span>, sd <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span>,   <span class="co"># lnRR</span></span>
 <span>  vi      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">30</span>, min <span class="op">=</span> <span class="fl">0.01</span>, max <span class="op">=</span> <span class="fl">0.08</span><span class="op">)</span>    <span class="co"># sampling variance</span></span>
 <span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Sanity-check: every species in the data is also a row in phy_cor.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">toy_df</span><span class="op">$</span><span class="va">species</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect</a></span><span class="op">(</span><span class="va">toy_df</span><span class="op">$</span><span class="va">species</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>   <span class="co"># 14</span></span>
 <span></span>
 <span><span class="co"># Fit: random study effect (within-study) + random species effect</span></span>
 <span><span class="co"># (between-species, with phylogenetic correlation structure).</span></span>
@@ -237,6 +315,32 @@ ectotherm-thermal-tolerance dataset):</p>
 <span>  method  <span class="op">=</span> <span class="st">"REML"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Alternative: align tree and data via <code>reconcile_*</code>
+first.</strong> If your trait data has species that aren’t in the tree
+(typos, synonyms, OTL gaps), the manual cleanup above won’t catch them.
+A more robust pattern uses <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> +
+<code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> on the cleaned tree to drop unresolved
+species and produce a pair guaranteed to match:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
+<span>  x         <span class="op">=</span> <span class="va">toy_df</span>,</span>
+<span>  tree      <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">tree</span>,    <span class="co"># already gsub-cleaned, see Step 4</span></span>
+<span>  x_species <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>  authority <span class="op">=</span> <span class="cn">NULL</span>          <span class="co"># skip synonym lookup; tree labels already binomials</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_apply.html">reconcile_apply</a></span><span class="op">(</span></span>
+<span>  <span class="va">result</span>,</span>
+<span>  data            <span class="op">=</span> <span class="va">toy_df</span>,</span>
+<span>  tree            <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>  species_col     <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>  drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">phy_cor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_phylo_cor.html">pr_phylo_cor</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://wviechtb.github.io/metafor/reference/rma.mv.html" class="external-link">rma.mv</a></span><span class="op">(</span><span class="va">yi</span> <span class="op">~</span> <span class="fl">1</span>, <span class="va">vi</span>,</span>
+<span>              random <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span> <span class="op">|</span> <span class="va">study</span>, <span class="op">~</span><span class="fl">1</span> <span class="op">|</span> <span class="va">species</span><span class="op">)</span>,</span>
+<span>              R      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>species <span class="op">=</span> <span class="va">phy_cor</span><span class="op">)</span>,</span>
+<span>              data   <span class="op">=</span> <span class="va">aligned</span><span class="op">$</span><span class="va">data</span>,</span>
+<span>              method <span class="op">=</span> <span class="st">"REML"</span><span class="op">)</span></span></code></pre></div>
 <p>The <code>R = list(species = phy_cor)</code> argument is what tells
 <code>metafor</code> that the species random effect has the correlation
 structure given by your phylogeny. The <code>~1 | study</code>
@@ -255,11 +359,11 @@ al. ran into this with <em>Potamilus alatus</em> (a freshwater mussel) —
 OTL’s induced subtree errored on it, so they pulled it out of the tnrs
 match, generated the tree without it, then grafted it back manually with
 <code>ape::bind.tip()</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Pottier et al.'s approach (paraphrased from their Rmd)</span></span>
-<span><span class="va">taxa.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxa</span>, <span class="va">ott_id</span> <span class="op">!=</span> <span class="st">"732215"</span><span class="op">)</span> <span class="co"># remove Potamilus alatus</span></span>
+<span><span class="va">taxa.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxa</span>, <span class="va">ott_id</span> <span class="op">!=</span> <span class="st">"732215"</span><span class="op">)</span> <span class="co"># remove Potamilus alatus</span></span>
 <span><span class="va">phylo_tree</span> <span class="op">&lt;-</span> <span class="fu">tol_induced_subtree</span><span class="op">(</span>ott_ids <span class="op">=</span> <span class="va">taxa.tree</span><span class="op">$</span><span class="va">ott_id</span><span class="op">)</span></span>
-<span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">multi2di</a></span><span class="op">(</span><span class="va">phylo_tree</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu">multi2di</span><span class="op">(</span><span class="va">phylo_tree</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu">bind.tip</span><span class="op">(</span><span class="va">binary.tree</span>, tip.label <span class="op">=</span> <span class="st">"Potamilus_alatus"</span>,</span>
 <span>                        where <span class="op">=</span> <span class="fl">95</span><span class="op">)</span>            <span class="co"># grafted into Bivalvia</span></span></code></pre></div>
 <p>In <code>prepR4pcm</code>, the equivalent of “graft species back in”
@@ -268,7 +372,7 @@ gives you the OTL-resolved tree, call <code><a href="../reference/reconcile_augm
 with the residually unresolved species; it does the genus-level (or
 MRCA-level) placement automatically and records the placement in
 <code>$augmented</code> for the methods section:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Step 0 in your workflow: reconcile data names against the tree.</span></span>
 <span><span class="co"># Any species OTL didn't place lands in `unresolved`; you can</span></span>
 <span><span class="co"># graft them onto the tree as sister to a congener (genus-level</span></span>
@@ -290,7 +394,7 @@ Taxonomic Information System.”</p>
 </h2>
 <p>In principle you could replace Grafen branches with biologically real
 ones from datelife:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Alternative: get rotl topology, then date it with datelife</span></span>
 <span><span class="va">res</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rotl"</span>,</span>
 <span>                      resolve_polytomies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>   <span class="co"># NO branch_lengths</span></span>
@@ -412,7 +516,20 @@ Soc. B 326: 119–157. <a href="https://doi.org/10.1098/rstb.1989.0106" class="e
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>

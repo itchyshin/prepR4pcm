@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,10 +85,39 @@ have given.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
+<p>Comparison requires multiple tree-retrieval backends installed. Each
+backend lives in a different package because each draws on a different
+reference tree or taxonomy:</p>
+<ul>
+<li>
+<strong><code>rotl</code></strong> (CRAN): client for the Open Tree
+of Life synthesis tree — the only backend with universal taxon coverage.
+Required for <code>source = "rotl"</code>.</li>
+<li>
+<strong><code>fishtree</code></strong> (CRAN): wraps the Rabosky et
+al. (2018) time-calibrated ray-finned fish phylogeny. Required for
+<code>source = "fishtree"</code>.</li>
+<li>
+<strong><code>rtrees</code></strong> (GitHub only): grafts species
+onto taxon-specific mega-trees (mammals, birds, fish, amphibians, etc.).
+Required for <code>source = "rtrees"</code>.</li>
+<li>
+<strong><code>clootl</code></strong> (GitHub only): supplies the
+Clements bird-taxonomy phylogeny. Required for
+<code>source = "clootl"</code>.</li>
+<li>
+<strong><code>datelife</code></strong> (GitHub only): synthesis
+chronograms from many per-clade published trees. Required for
+<code>source = "datelife"</code>.</li>
+</ul>
+<p>Install whichever you need. CRAN packages first, then GitHub-only
+backends via <code>pak</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
-<span><span class="co"># install.packages(c("rotl", "fishtree"))</span></span>
-<span><span class="co"># pak::pak(c("eliotmiller/clootl", "daijiang/rtrees", "phylotastic/datelife"))</span></span></code></pre></div>
+<span><span class="co"># install.packages(c("rotl", "fishtree"))                 # CRAN</span></span>
+<span><span class="co"># pak::pak("daijiang/rtrees")                             # GitHub</span></span>
+<span><span class="co"># pak::pak("eliotmiller/clootl")                          # GitHub</span></span>
+<span><span class="co"># pak::pak("phylotastic/datelife")                        # GitHub (heavy)</span></span></code></pre></div>
 <p>Check what’s installed and reachable in your session:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pr_get_tree_status.html">pr_get_tree_status</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -118,6 +147,16 @@ backends. Compare.</p>
 <span><span class="va">res_rotl</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rotl"</span><span class="op">)</span></span>
 <span><span class="va">res_fishtree</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"fishtree"</span><span class="op">)</span></span>
 <span><span class="va">res_rtrees</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rtrees"</span>, taxon <span class="op">=</span> <span class="st">"fish"</span><span class="op">)</span></span></code></pre></div>
+<p><strong>About the <code>TNRS replaced ...</code> warning.</strong>
+<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> runs the Open Tree of Life Taxonomic Name
+Resolution Service (TNRS) on the input names before passing them to the
+backend, so that minor spelling or capitalisation differences don’t
+cause a name to fall out of the tree silently. When TNRS finds a
+canonical form that differs from the input (e.g. an old binomial
+replaced by the current synonym), the wrapper substitutes the canonical
+form and emits a warning listing each replacement, so the substitution
+is visible in the run log. The retrieval still succeeds; the warning is
+informational.</p>
 <p>The three results are independent. Now compare:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_tree_compare.html">pr_tree_compare</a></span><span class="op">(</span></span>
@@ -126,27 +165,58 @@ backends. Compare.</p>
 <span>  rtrees   <span class="op">=</span> <span class="va">res_rtrees</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">cmp</span></span></code></pre></div>
-<p>The print method shows three pairwise matrices. Reading them:</p>
+<p>The print method shows up to three pairwise matrices, depending on
+what is computable for your set of trees. Reading them:</p>
 <ul>
 <li>
 <strong>Tip-set Jaccard</strong> — fraction of species both trees
 place. 1.0 = same species set. 0.0 = no overlap. If any pairwise value
-is &lt; 1, you’re not comparing apples to apples.</li>
+is &lt; 1, the two trees do not cover the same species set, so the
+topological comparison below is restricted to the species both trees
+include.</li>
 <li>
 <strong>Robinson-Foulds distance</strong> — number of internal edges
 that differ between the two trees, restricted to their shared tip set.
-Lower = trees agree more.</li>
+Lower = trees agree more. <strong><code>NA</code> off-diagonal</strong>
+means the shared-tip subtree has fewer than four taxa (Robinson-Foulds
+is undefined below four shared tips), or one of the input trees could
+not be pruned to the shared subtree without becoming degenerate.
+Diagonal values are always 0 (a tree against itself).</li>
 <li>
 <strong>Branch-length correlation</strong> — Pearson correlation of
 sorted edge lengths after pruning to the shared subtree. Useful as a
-rough check on whether two chronograms agree on rate scale.</li>
+rough check on whether two chronograms use the same branch-length scale
+(e.g. millions of years vs unit-length placeholders). <strong>This
+matrix is only printed when at least one pair has computable branch
+lengths on both sides.</strong> If <code>rotl</code> trees (which carry
+unit-length placeholder branches) are part of the comparison, the matrix
+may collapse to NA and the print method drops it; that is why you
+sometimes see only two matrices rather than three.</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="what-actually-works-status-table">What actually works (status table)<a class="anchor" aria-label="anchor" href="#what-actually-works-status-table"></a>
 </h2>
 <p>Backends differ in coverage and in what <code>n_tree &gt; 1</code>
-does. Verified on a clean macOS R 4.4 install on 2026-05-01:</p>
+does. Verified on a clean macOS R 4.4 install on 2026-05-01. Column
+meanings:</p>
+<ul>
+<li>
+<strong>Backend</strong> — the value you pass as
+<code>source = "..."</code> to <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>.</li>
+<li>
+<strong>Single tree</strong> — does
+<code>pr_get_tree(..., n_tree = 1)</code> (the default) return a single
+<code><a href="https://rdrr.io/pkg/ape/man/read.tree.html" class="external-link">ape::phylo</a></code> object cleanly?</li>
+<li>
+<strong>Multi-tree (<code>n_tree &gt; 1</code>)</strong> — does the
+backend support returning a posterior or sample of trees? Some backends
+ship a single mega-tree and ignore <code>n_tree</code>; others support a
+true posterior sample.</li>
+<li>
+<strong>Notes</strong> — backend-specific gotchas worth knowing
+before you trust the result.</li>
+</ul>
 <table class="table">
 <colgroup>
 <col width="25%">
@@ -244,14 +314,45 @@ sufficient for the great majority of phylogenetic comparative
 analyses.</p>
 </div>
 <div class="section level2">
+<h2 id="note-on-tip-labels-before-comparing">Note on tip labels before comparing<a class="anchor" aria-label="anchor" href="#note-on-tip-labels-before-comparing"></a>
+</h2>
+<p>The three backends use different conventions for tip labels:</p>
+<ul>
+<li>
+<strong><code>rotl</code></strong> appends an Open Tree OTT id to
+each tip (e.g. <code>Salmo_salar_ott854188</code>) and lower-cases the
+binomial.</li>
+<li>
+<strong><code>fishtree</code></strong> returns the canonical
+binomial with spaces (<code>Salmo salar</code>).</li>
+<li>
+<strong><code>rtrees</code></strong> returns the canonical binomial
+with underscores (<code>Salmo_salar</code>).</li>
+</ul>
+<p><code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code> matches tips by <strong>case- and
+separator-folded binomial</strong> (it strips
+<code>_ott&lt;digits&gt;</code>, converts underscores to spaces, and
+lower-cases) before computing Jaccard, so you do not need to clean the
+labels yourself for the comparison to work. The folded form is used only
+for matching; the original tip labels are preserved in each tree.</p>
+<p>If you intend to use one of the returned trees downstream (e.g. feed
+it to <code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code> and then to
+<code><a href="https://wviechtb.github.io/metafor/reference/rma.mv.html" class="external-link">metafor::rma.mv()</a></code>), you will usually want to strip those
+suffixes yourself with <code>gsub("_ott\\d+", "", tree$tip.label)</code>
+first. See the <em>meta-analysis-with-rotl</em> vignette for that
+workflow.</p>
+</div>
+<div class="section level2">
 <h2 id="what-to-do-with-the-result">What to do with the result<a class="anchor" aria-label="anchor" href="#what-to-do-with-the-result"></a>
 </h2>
 <div class="section level3">
-<h3 id="when-all-three-agree-jaccard-1-rf-small">When all three agree (Jaccard ≈ 1, RF small)<a class="anchor" aria-label="anchor" href="#when-all-three-agree-jaccard-1-rf-small"></a>
+<h3 id="when-the-backends-return-the-same-species-set-and-similar-topology-jaccard-1-rf-small">When the backends return the same species set and similar topology
+(Jaccard ≈ 1, RF small)<a class="anchor" aria-label="anchor" href="#when-the-backends-return-the-same-species-set-and-similar-topology-jaccard-1-rf-small"></a>
 </h3>
-<p>Great. Use whichever backend best matches your taxonomic / temporal
-needs. Document the choice. Call <code><a href="../reference/pr_cite_tree.html">pr_cite_tree()</a></code> to capture
-the citation:</p>
+<p>The backends return the same species set (Jaccard ≈ 1) and broadly
+similar topologies (low Robinson-Foulds distance). Pick whichever
+backend best matches your taxonomic / temporal needs. Document the
+choice. Call <code><a href="../reference/pr_cite_tree.html">pr_cite_tree()</a></code> to capture the citation:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pr_cite_tree.html">pr_cite_tree</a></span><span class="op">(</span><span class="va">res_fishtree</span>, format <span class="op">=</span> <span class="st">"markdown"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -300,8 +401,11 @@ reflect the tree-choice uncertainty honestly.</p>
 <div class="section level3">
 <h3 id="when-branch-length-correlation-is-low">When branch-length correlation is low<a class="anchor" aria-label="anchor" href="#when-branch-length-correlation-is-low"></a>
 </h3>
-<p>The trees agree on topology but not on rate scale. Usually one is
-time-calibrated and the other isn’t:</p>
+<p>The trees agree on topology but not on <strong>branch-length
+scale</strong>. Usually that is because one tree is time-calibrated
+(branch lengths in millions of years) and the other is not (branch
+lengths in unit-length placeholders, or in Grafen-units, or in some
+other non-time scale):</p>
 <ul>
 <li>
 <code>rotl</code> returns the synthesis tree with no
@@ -399,7 +503,20 @@ vignette</a> for the prepR4pcm → pigauto integration.</li>
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>

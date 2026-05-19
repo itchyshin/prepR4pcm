@@ -54,6 +54,7 @@ Suggests:
     knitr,
     MCMCglmm,
     phytools,
+    piggyback,
     pkgdown,
     readr,
     rmarkdown,
