@@ -61,9 +61,11 @@ cover one clade only: `rtrees` ships separate mega-trees for
 mammals, birds, fish, amphibians, squamates and a handful of other
 taxa; `fishtree` covers ray-finned fish only; `clootl` covers birds
 only. None of those backends spans the 14-class breadth of an
-ectotherm meta-analysis. The Open Tree of Life synthesis tree that
-`source = "rotl"` returns is the only single backend that places
-species drawn from every class in one tree.
+ectotherm meta-analysis. The Open Tree of Life is a synthetic tree
+(i.e. a composite made by merging other trees). Parameter
+`source = "rotl"` from the prepR4pcm package function
+`pr_get_tree()` returns a single tree spanning every class in the
+dataset.
 
 ## Setup
 
@@ -161,15 +163,7 @@ plot(res$tree)      # visualise the topology
 res$tree$tip.label  # has _ott<digits> suffixes (see note below)
 ```
 
-**About the `_ott<digits>` suffixes.** Open Tree of Life identifies
-every taxon by an OTT id (e.g. `Salmo_trutta_ott854188`). `rotl`
-appends that id to the tip label so a downstream tool can verify
-which OTT node was placed. The suffix is informative for
-provenance but it makes the tip labels disagree with the binomial
-names you almost certainly have in your trait data frame
-(`"Salmo trutta"` vs `"Salmo_trutta_ott854188"`). The
-meta-analysis step below strips the suffix and converts underscores
-to spaces before computing the correlation matrix.
+![The 14-species tree returned by the one-call pipeline (`pr_get_tree(source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")`): ultrametric, fully bifurcating, with Grafen branch lengths. Tip labels are shown cleaned of the OTT-id suffixes.](../man/figures/meta-analysis-tree.png){width=100%}
 
 ### Confirm the two pipelines produce the same tree
 
@@ -185,6 +179,18 @@ plot(res_manual$tree, main = "manual ape pipeline")
 plot(res$tree,        main = "one-call pr_get_tree()")
 par(op)
 ```
+
+![The manual `ape` pipeline (left) and the one-call `pr_get_tree()` (right) produce the same tree — same topology, same Grafen branch lengths.](../man/figures/meta-analysis-pipeline-compare.png){width=100%}
+
+**About the `_ott<digits>` suffixes.** Open Tree of Life identifies
+every taxon by an OTT id (e.g. `Salmo_trutta_ott854188`). `rotl`
+appends that id to the tip label so a downstream tool can verify
+which OTT node was placed. The suffix is informative for
+provenance but it makes the tip labels disagree with the binomial
+names you almost certainly have in your trait data frame
+(`"Salmo trutta"` vs `"Salmo_trutta_ott854188"`). The
+meta-analysis step below strips the suffix and converts underscores
+to spaces before computing the correlation matrix.
 
 ## Step 4: phylogenetic correlation matrix
 
@@ -295,7 +301,7 @@ including population, family, and shared-trial random effects (see
 their `Statistical_analyses.Rmd`). The phylogenetic component is
 the same `R = list(species = phy_cor)` either way.
 
-## Manual additions when OTL doesn't have a species
+## Manual tree grafting when OTL doesn't have a species
 
 A common situation: OTL doesn't have one of your species. Pottier
 et al. ran into this with *Potamilus alatus* (a freshwater mussel)
