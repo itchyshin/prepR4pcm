@@ -125,10 +125,11 @@ each cover one clade only: <code>rtrees</code> ships separate mega-trees
 for mammals, birds, fish, amphibians, squamates and a handful of other
 taxa; <code>fishtree</code> covers ray-finned fish only;
 <code>clootl</code> covers birds only. None of those backends spans the
-14-class breadth of an ectotherm meta-analysis. The Open Tree of Life
-synthesis tree that <code>source = "rotl"</code> returns is the only
-single backend that places species drawn from every class in one
-tree.</p>
+14-class breadth of an ectotherm meta-analysis. The Open Tree of Life is
+a synthetic tree (i.e. a composite made by merging other trees).
+Parameter <code>source = "rotl"</code> from the prepR4pcm package
+function <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> returns a single tree spanning every
+class in the dataset.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
@@ -224,16 +225,13 @@ into one call:</p>
 <span><span class="va">res</span><span class="op">$</span><span class="va">unmatched</span>       <span class="co"># species OTL couldn't place</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>      <span class="co"># visualise the topology</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>  <span class="co"># has _ott&lt;digits&gt; suffixes (see note below)</span></span></code></pre></div>
-<p><strong>About the <code>_ott&lt;digits&gt;</code> suffixes.</strong>
-Open Tree of Life identifies every taxon by an OTT id
-(e.g. <code>Salmo_trutta_ott854188</code>). <code>rotl</code> appends
-that id to the tip label so a downstream tool can verify which OTT node
-was placed. The suffix is informative for provenance but it makes the
-tip labels disagree with the binomial names you almost certainly have in
-your trait data frame (<code>"Salmo trutta"</code> vs
-<code>"Salmo_trutta_ott854188"</code>). The meta-analysis step below
-strips the suffix and converts underscores to spaces before computing
-the correlation matrix.</p>
+<div class="float">
+<img src="../reference/figures/meta-analysis-tree.png" style="width:100.0%" alt='The 14-species tree returned by the one-call pipeline (pr_get_tree(source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")): ultrametric, fully bifurcating, with Grafen branch lengths. Tip labels are shown cleaned of the OTT-id suffixes.'><div class="figcaption">The 14-species tree returned by the one-call
+pipeline
+(<code>pr_get_tree(source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")</code>):
+ultrametric, fully bifurcating, with Grafen branch lengths. Tip labels
+are shown cleaned of the OTT-id suffixes.</div>
+</div>
 </div>
 <div class="section level3">
 <h3 id="confirm-the-two-pipelines-produce-the-same-tree">Confirm the two pipelines produce the same tree<a class="anchor" aria-label="anchor" href="#confirm-the-two-pipelines-produce-the-same-tree"></a>
@@ -249,6 +247,21 @@ the correlation matrix.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span>, main <span class="op">=</span> <span class="st">"manual ape pipeline"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span>,        main <span class="op">=</span> <span class="st">"one-call pr_get_tree()"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="../reference/figures/meta-analysis-pipeline-compare.png" style="width:100.0%" alt="The manual ape pipeline (left) and the one-call pr_get_tree() (right) produce the same tree — same topology, same Grafen branch lengths."><div class="figcaption">The manual <code>ape</code> pipeline (left) and
+the one-call <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> (right) produce the same tree —
+same topology, same Grafen branch lengths.</div>
+</div>
+<p><strong>About the <code>_ott&lt;digits&gt;</code> suffixes.</strong>
+Open Tree of Life identifies every taxon by an OTT id
+(e.g. <code>Salmo_trutta_ott854188</code>). <code>rotl</code> appends
+that id to the tip label so a downstream tool can verify which OTT node
+was placed. The suffix is informative for provenance but it makes the
+tip labels disagree with the binomial names you almost certainly have in
+your trait data frame (<code>"Salmo trutta"</code> vs
+<code>"Salmo_trutta_ott854188"</code>). The meta-analysis step below
+strips the suffix and converts underscores to spaces before computing
+the correlation matrix.</p>
 </div>
 </div>
 <div class="section level2">
@@ -352,7 +365,7 @@ their <code>Statistical_analyses.Rmd</code>). The phylogenetic component
 is the same <code>R = list(species = phy_cor)</code> either way.</p>
 </div>
 <div class="section level2">
-<h2 id="manual-additions-when-otl-doesnt-have-a-species">Manual additions when OTL doesn’t have a species<a class="anchor" aria-label="anchor" href="#manual-additions-when-otl-doesnt-have-a-species"></a>
+<h2 id="manual-tree-grafting-when-otl-doesnt-have-a-species">Manual tree grafting when OTL doesn’t have a species<a class="anchor" aria-label="anchor" href="#manual-tree-grafting-when-otl-doesnt-have-a-species"></a>
 </h2>
 <p>A common situation: OTL doesn’t have one of your species. Pottier et
 al. ran into this with <em>Potamilus alatus</em> (a freshwater mussel) —
