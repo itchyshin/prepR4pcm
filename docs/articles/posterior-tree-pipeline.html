@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,53 +118,63 @@ axes of uncertainty.</li>
 <span><span class="co"># pak::pak("itchyshin/pigauto")</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="step-1-reconcile-names">Step 1 — Reconcile names<a class="anchor" aria-label="anchor" href="#step-1-reconcile-names"></a>
+<h2 id="step-1-retrieve-a-posterior-of-trees">Step 1 — Retrieve a posterior of trees<a class="anchor" aria-label="anchor" href="#step-1-retrieve-a-posterior-of-trees"></a>
 </h2>
 <p>Start with whatever names appear in your dataset. They never quite
-match the tree’s tip labels.</p>
+match a tree’s tip labels — formatting drifts, synonyms creep in.
+<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> copes: it normalises every name (underscores,
+whitespace, authority strings) and, for the <code>fishtree</code>
+backend, resolves synonyms through Open Tree of Life’s Taxonomic Name
+Resolution Service before querying the backend.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Your data and your tree — typically loaded from disk</span></span>
+<code class="sourceCode R"><span><span class="co"># Your trait data — typically loaded from disk. Names need not be</span></span>
+<span><span class="co"># tidy: `Esox_lucius` carries an underscore, which pr_get_tree()</span></span>
+<span><span class="co"># normalises away.</span></span>
 <span><span class="va">my_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  species   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox lucius"</span>, <span class="st">"Esox_lucius"</span>,</span>
-<span>                <span class="st">"Oncorhynchus mykiss"</span><span class="op">)</span>,</span>
-<span>  body_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">98</span>, <span class="fl">130</span>, <span class="cn">NA</span>, <span class="fl">50</span><span class="op">)</span>   <span class="co"># NA is OK; pigauto will impute</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Reconcile names against a published taxonomic authority. Catches</span></span>
-<span><span class="co"># typos, formatting drift, and synonymy.</span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_data.html">reconcile_data</a></span><span class="op">(</span><span class="va">my_data</span>,</span>
-<span>                      x_species <span class="op">=</span> <span class="st">"species"</span>,</span>
-<span>                      authority <span class="op">=</span> <span class="st">"col"</span><span class="op">)</span>  <span class="co"># Catalogue of Life</span></span>
-<span><span class="va">rec</span>   <span class="co"># one-line summary of matched / unmatched / counts</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="step-2-get-a-posterior-of-trees">Step 2 — Get a posterior of trees<a class="anchor" aria-label="anchor" href="#step-2-get-a-posterior-of-trees"></a>
-</h2>
+<span>  species   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox_lucius"</span>, <span class="st">"Oncorhynchus mykiss"</span><span class="op">)</span>,</span>
+<span>  body_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">98</span>, <span class="cn">NA</span>, <span class="fl">50</span><span class="op">)</span>        <span class="co"># NA is fine; pigauto will impute it</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Every backend that <em>can</em> return multiple trees does so via
 <code>n_tree &gt; 1</code>. Here we ask <code>fishtree</code> for 50
 stochastic resolutions (Chang, Rabosky, Alfaro 2019, <em>Syst.
 Biol.</em>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">rec</span>,</span>
-<span>                     source <span class="op">=</span> <span class="st">"fishtree"</span>,</span>
-<span>                     n_tree <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">my_data</span>,</span>
+<span>                     species_col <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>                     source      <span class="op">=</span> <span class="st">"fishtree"</span>,</span>
+<span>                     n_tree      <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>             <span class="co"># "multiPhylo"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>            <span class="co"># 50</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">matched</span><span class="op">)</span>         <span class="co"># how many species placed</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">unmatched</span><span class="op">)</span>         <span class="co"># species absent from fishtree</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>      <span class="co"># "multiPhylo"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>     <span class="co"># 50</span></span>
+<span><span class="va">trees</span><span class="op">$</span><span class="va">matched</span>          <span class="co"># the 3 species, in their original input form</span></span>
+<span><span class="va">trees</span><span class="op">$</span><span class="va">unmatched</span>        <span class="co"># character(0) — every species was placed</span></span>
 <span></span>
-<span><span class="co"># Per-tree provenance: one entry per tree</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">)</span>  <span class="co"># 50</span></span>
-<span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
+<span><span class="co"># Per-tree provenance: one entry per returned tree</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">)</span>   <span class="co"># 50</span></span>
+<span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="co">#&gt; $source_index</span></span>
+<span><span class="co">#&gt; [1] 1</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; $citation</span></span>
+<span><span class="co">#&gt; [1] "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; $calibration_method</span></span>
+<span><span class="co">#&gt; [1] "stochastic polytomy resolution"</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; $n_tips</span></span>
+<span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
+<p><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> records what happened to every name in
+<code>trees$mapping</code> (one row per input species), so a name that
+quietly fell out of the tree cannot go unnoticed.</p>
 <p>For the universal-but-slower option, use
 <code>source = "datelife"</code> — the chronogram-database backend that
 returns one calibrated tree per source (Hedges, Bininda-Emonds, Upham,
 etc.).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">rec</span>,</span>
-<span>                     source <span class="op">=</span> <span class="st">"datelife"</span>,</span>
-<span>                     n_tree <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">my_data</span>,</span>
+<span>                     species_col <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>                     source      <span class="op">=</span> <span class="st">"datelife"</span>,</span>
+<span>                     n_tree      <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="co"># trees$tree is multiPhylo; per-source citations are in</span></span>
 <span><span class="co"># trees$backend_meta$tree_provenance[[i]]$citation</span></span></code></pre></div>
 <p>If you already have a topology and want to <em>date</em> it (rather
@@ -189,10 +199,41 @@ al. 2019), then pass that <code>multiPhylo</code> to
 topology × source cross-product.</p>
 </div>
 <div class="section level2">
+<h2 id="step-2-reconcile-the-data-to-the-posterior">Step 2 — Reconcile the data to the posterior<a class="anchor" aria-label="anchor" href="#step-2-reconcile-the-data-to-the-posterior"></a>
+</h2>
+<p><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> resolves names well enough to
+<em>retrieve</em> a tree, but the modelling step needs a data frame
+whose rows line up one-to-one with the tree’s tips.
+<code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> matches your data against the retrieved
+topology, and <code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> returns the aligned
+data–tree pair. The 50 posterior trees share one tip set, so reconciling
+against the first tree aligns the data to all of them.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">my_data</span>, <span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>                      x_species <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>                      authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>   <span class="co"># tree tips are plain binomials</span></span>
+<span><span class="va">rec</span>        <span class="co"># match summary: 1 exact, 2 normalized, 0 unresolved</span></span>
+<span></span>
+<span><span class="va">aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_apply.html">reconcile_apply</a></span><span class="op">(</span><span class="va">rec</span>,</span>
+<span>                           data            <span class="op">=</span> <span class="va">my_data</span>,</span>
+<span>                           tree            <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>                           species_col     <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>                           drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">aligned</span><span class="op">$</span><span class="va">data</span>    <span class="co"># one row per tree tip — the model-ready frame</span></span>
+<span><span class="co">#&gt;               species body_size</span></span>
+<span><span class="co">#&gt; 1         Salmo salar        98</span></span>
+<span><span class="co">#&gt; 2         Esox_lucius        NA</span></span>
+<span><span class="co">#&gt; 3 Oncorhynchus mykiss        50</span></span></code></pre></div>
+<p><code>aligned$data</code> carries one row per species in the tree,
+with <code>Esox_lucius</code> keeping the <code>NA</code> that pigauto
+will impute; <code>aligned$tree</code> is the matching pruned tree.</p>
+</div>
+<div class="section level2">
 <h2 id="step-3-format-citations-do-this-before-you-submit">Step 3 — Format citations (do this <em>before</em> you submit)<a class="anchor" aria-label="anchor" href="#step-3-format-citations-do-this-before-you-submit"></a>
 </h2>
 <p>Reviewers ask. Save yourself the round-trip.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plain text for an email or a methods paragraph</span></span>
 <span><span class="fu"><a href="../reference/pr_cite_tree.html">pr_cite_tree</a></span><span class="op">(</span><span class="va">trees</span><span class="op">)</span></span>
 <span></span>
@@ -212,11 +253,11 @@ topology × source cross-product.</p>
 complete-data imputations <em>per tree</em>. The output knows which
 imputation came from which tree, and pigauto’s pooling step later uses
 that index.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">pigauto</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 5 imputations per tree × 50 trees = 250 complete datasets</span></span>
-<span><span class="va">mi</span> <span class="op">&lt;-</span> <span class="fu">multi_impute_trees</span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">aligned</span>,</span>
+<span><span class="va">mi</span> <span class="op">&lt;-</span> <span class="fu">multi_impute_trees</span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>                         trees      <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
 <span>                         m_per_tree <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
@@ -389,7 +430,20 @@ speciation rate for marine fishes.</em> Nature 559: 392–395. <a href="https://
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>
