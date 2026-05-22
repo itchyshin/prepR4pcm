@@ -86,3 +86,62 @@ test_that(".pr_resolve_query is unaffected when no normalised names collide", {
   res <- .pr_resolve_query(input, source = "fishtree", tnrs = "always")
   expect_equal(res$query, input, ignore_attr = TRUE)
 })
+
+
+# Regression tests: tnrs_match_names()'s `unique_name` carries Open Tree
+# homonym / rank qualifiers (e.g. "Oncorhynchus mykiss (species in
+# domain Eukaryota)"). .pr_resolve_query() must strip these before the
+# resolved name reaches the backend query, and must not mistake a
+# qualifier-only difference for a genuine TNRS substitution.
+
+test_that(".pr_resolve_query strips OTL qualifiers from the resolved query", {
+  skip_if_not_installed("rotl")
+
+  # TNRS echoes each name back with a trailing "(species in domain ...)"
+  # qualifier but makes no genuine substitution.
+  testthat::local_mocked_bindings(
+    tnrs_match_names = fake_tnrs_factory(
+      function(u) paste0(u, " (species in domain Eukaryota)")
+    ),
+    .package = "rotl"
+  )
+
+  input <- c("Salmo salar", "Esox lucius")
+  # A qualifier-only difference is not a substitution: no warning fires
+  # and `tnrs_replacements` stays NULL.
+  expect_no_warning(
+    res <- .pr_resolve_query(input, source = "fishtree", tnrs = "always")
+  )
+  expect_equal(res$query, c("Salmo salar", "Esox lucius"),
+               ignore_attr = TRUE)
+  expect_null(res$tnrs_replacements)
+})
+
+test_that(".pr_resolve_query records a genuine substitution with the qualifier stripped", {
+  skip_if_not_installed("rotl")
+
+  # TNRS rewrites "Esox lucius" -> "Esox reichertii" AND tacks on an OTL
+  # rank qualifier. The substitution must be recorded; the qualifier
+  # must not leak into either the query or the replacement map.
+  testthat::local_mocked_bindings(
+    tnrs_match_names = fake_tnrs_factory(
+      function(u) ifelse(u == "Esox lucius",
+                         "Esox reichertii (species in domain Eukaryota)",
+                         u)
+    ),
+    .package = "rotl"
+  )
+
+  input <- c("Salmo salar", "Esox lucius")
+  res <- suppressWarnings(
+    .pr_resolve_query(input, source = "fishtree", tnrs = "always")
+  )
+
+  expect_equal(res$query, c("Salmo salar", "Esox reichertii"),
+               ignore_attr = TRUE)
+  # the substitution is recorded, keyed by the original input ...
+  expect_named(res$tnrs_replacements, "Esox lucius")
+  # ... and its value is the clean binomial, not "Esox reichertii (...)"
+  expect_equal(unname(res$tnrs_replacements), "Esox reichertii",
+               ignore_attr = TRUE)
+})

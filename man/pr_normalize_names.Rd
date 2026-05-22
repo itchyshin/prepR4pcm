@@ -40,6 +40,9 @@ space (\code{Homo_sapiens} -> \verb{Homo sapiens}).
 \item Strip authority strings and year, including multi-author
 and parenthetical forms (\verb{Corvus corax (Linnaeus, 1758)} ->
 \verb{Corvus corax}).
+\item Strip any other trailing parenthetical qualifier, such as
+the Open Tree of Life homonym / rank flags that \code{rotl} returns
+(\verb{Prunella (genus in kingdom Archaeplastida)} -> \code{Prunella}).
 \item Fold diacritics to ASCII (\verb{Passer domesticus} stays as
 \verb{Passer domesticus}; accented characters are simplified).
 \item Standardise case: genus capitalised, epithet lowercase.

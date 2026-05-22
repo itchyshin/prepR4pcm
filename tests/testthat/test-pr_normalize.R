@@ -197,6 +197,30 @@ test_that("authority stripping handles parenthetical and non-parenthetical forms
 })
 
 
+test_that("trailing parenthetical qualifiers (OTL homonym/rank flags) are stripped", {
+  # rotl::tnrs_match_names() returns `unique_name` values with Open Tree
+  # homonym / rank qualifiers appended; these must not survive
+  # normalisation or they leak into a backend query and break matching.
+  cases <- list(
+    list(in_ = "Oncorhynchus mykiss (species in domain Eukaryota)",
+         out = "Oncorhynchus mykiss"),
+    list(in_ = "Prunella (genus in kingdom Archaeplastida)",
+         out = "Prunella"),
+    list(in_ = "Anolis sagrei (genus in kingdom Animalia)",
+         out = "Anolis sagrei"),
+    # a clean binomial is left untouched
+    list(in_ = "Salmo salar", out = "Salmo salar")
+  )
+  for (case in cases) {
+    expect_equal(
+      as.character(pr_normalize_names(case$in_)),
+      case$out,
+      info = sprintf("input: %s", case$in_)
+    )
+  }
+})
+
+
 test_that("rank='subspecies' preserves trinomials and rank-marked forms", {
   cases <- list(
     list(in_ = "Parus major major",                   out = "Parus major major"),

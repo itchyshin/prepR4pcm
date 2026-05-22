@@ -17,6 +17,9 @@
 #'   \item Strip authority strings and year, including multi-author
 #'     and parenthetical forms (`Corvus corax (Linnaeus, 1758)` ->
 #'     `Corvus corax`).
+#'   \item Strip any other trailing parenthetical qualifier, such as
+#'     the Open Tree of Life homonym / rank flags that `rotl` returns
+#'     (`Prunella (genus in kingdom Archaeplastida)` -> `Prunella`).
 #'   \item Fold diacritics to ASCII (`Passer domesticus` stays as
 #'     `Passer domesticus`; accented characters are simplified).
 #'   \item Standardise case: genus capitalised, epithet lowercase.
@@ -90,6 +93,14 @@ pr_normalize_names <- function(names, rank = c("species", "subspecies")) {
 
   # Also handles "L." or "Author, Year" patterns
   names <- pr_strip_authority(names)
+
+  # 6b. Strip any other trailing parenthetical qualifier. Open Tree of
+  # Life's TNRS appends homonym / rank flags to the `unique_name` it
+  # returns (e.g. "Salmo salar (species in domain Eukaryota)",
+  # "Prunella (genus in kingdom Archaeplastida)"). pr_strip_authority()
+  # only catches the (Author, Year) form; a trailing parenthetical is
+  # never part of a name you would match against a tree tip.
+  names <- sub("\\s*\\([^()]*\\)\\s*$", "", names, perl = TRUE)
 
   # 7. Standardise hybrid signs
   names <- gsub("\\s*\u00d7\\s*", " x ", names)  # multiplication sign
