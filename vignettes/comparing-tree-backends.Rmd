@@ -15,10 +15,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-`prepR4pcm` ships five tree-retrieval backends. They draw on
-different reference trees, different taxonomies, and different
-calibration approaches. So they disagree. The question is *how
-much*, and *where*.
+`prepR4pcm` can fetch a phylogenetic tree for your species from five
+different sources. We call each source a *backend* — an external
+package, wrapped by `pr_get_tree()`, that supplies a tree. The five
+backends draw on different reference trees, different taxonomies,
+and different calibration approaches, so the tree you get depends on
+which backend you pick. This vignette answers *how much* they
+disagree, and *where*.
 
 This vignette walks through `pr_tree_compare()` and shows how to
 use it to make a defensible backend choice for your dataset — or to
@@ -31,19 +34,26 @@ Comparison requires multiple tree-retrieval backends installed. Each
 backend lives in a different package because each draws on a
 different reference tree or taxonomy:
 
-- **`rotl`** (CRAN): client for the Open Tree of Life synthesis tree
-  — the only backend with universal taxon coverage. Required for
-  `source = "rotl"`.
-- **`fishtree`** (CRAN): wraps the Rabosky et al. (2018)
-  time-calibrated ray-finned fish phylogeny. Required for
+- **`rotl`** (CRAN): client for the
+  [Open Tree of Life](https://tree.opentreeoflife.org) synthesis
+  tree — the only backend with universal taxon coverage. Required
+  for `source = "rotl"`.
+- **`fishtree`** (CRAN): wraps the
+  [Fish Tree of Life](https://fishtreeoflife.org) (Rabosky et al.
+  2018), a time-calibrated ray-finned fish phylogeny. Required for
   `source = "fishtree"`.
-- **`rtrees`** (GitHub only): grafts species onto taxon-specific
-  mega-trees (mammals, birds, fish, amphibians, etc.). Required for
-  `source = "rtrees"`.
-- **`clootl`** (GitHub only): supplies the Clements bird-taxonomy
-  phylogeny. Required for `source = "clootl"`.
-- **`datelife`** (GitHub only): synthesis chronograms from many
-  per-clade published trees. Required for `source = "datelife"`.
+- **`rtrees`**
+  ([github.com/daijiang/rtrees](https://github.com/daijiang/rtrees)):
+  grafts species onto taxon-specific mega-trees (mammals, birds,
+  fish, amphibians, etc.). Required for `source = "rtrees"`.
+- **`clootl`**
+  ([github.com/eliotmiller/clootl](https://github.com/eliotmiller/clootl)):
+  supplies a phylogeny in the current Clements bird taxonomy.
+  Required for `source = "clootl"`.
+- **`datelife`**
+  ([datelife.org](https://www.datelife.org)): synthesis chronograms
+  assembled from many per-clade published trees. Required for
+  `source = "datelife"`.
 
 Install whichever you need. CRAN packages first, then GitHub-only
 backends via `pak`:
@@ -228,6 +238,7 @@ cmp$shared_tips        # species placed by all backends
 ```
 
 Common causes:
+
 - **Taxonomy difference.** rotl uses Open Tree taxonomy; fishtree
   uses its own; clootl uses Clements. The *same* species may have
   different canonical names.
@@ -243,24 +254,31 @@ Open Tree's TNRS first. See `?pr_get_tree`.
 The trees agree on which species exist but disagree on how they're
 related. This is the genuinely interesting case.
 
-- For exploratory PCMs, run your model on each tree and report the
-  range of estimates.
-- For a definitive analysis, pick the backend with the strongest
-  underlying paper for your taxon (fishtree for fish, clootl for
-  birds, datelife for everything else when you need calibration).
+- For exploratory analyses, fit your model on each tree and report
+  the range of estimates across them.
+- For the analysis you intend to publish, pick the backend whose
+  underlying phylogeny is the best-established for your taxon — the
+  most recent, most densely sampled peer-reviewed tree for that
+  group: `fishtree` for ray-finned fish, `clootl` for birds, and
+  `datelife` for groups that need time-calibrated branch lengths
+  and have no taxon-specific tree.
 
 The companion package
 [pigauto](https://itchyshin.github.io/pigauto/) is built for this:
 hand it the multiPhylo of every backend's tree, fit your model on
-each, and pool the results via Rubin's rules. The resulting
-intervals reflect the tree-choice uncertainty honestly.
+each, and pool the results via Rubin's rules. A single-tree
+analysis reports its confidence intervals as if the tree were known
+exactly — but it is not, and a different backend would have given a
+different tree. Pooling across the backends' trees widens the
+intervals to absorb that *tree-choice uncertainty*, so the reported
+intervals are not falsely narrow.
 
 ```{r pigauto-multi-backend}
 # Fitting across backends (not just within a backend's posterior)
 all_trees <- structure(list(res_rotl$tree, res_fishtree$tree,
                             res_rtrees$tree[[1]]),
                        class = "multiPhylo")
-# pigauto::multi_impute_trees(rec$aligned, all_trees, m_per_tree = 5)
+# pigauto::multi_impute_trees(trait_data, all_trees, m_per_tree = 5)
 ```
 
 ### When branch-length correlation is low
@@ -326,9 +344,10 @@ pr_tree_cache_dir("./.tree-cache")
 ## See also
 
 - `?pr_tree_compare` — full reference for the comparison function.
-- `?pr_get_tree` — retrieval entry point.
-- `?pr_get_tree_status` — backend health probe.
-- `?pr_tree_cache_dir` — cache management.
+- `?pr_get_tree` — the main function for fetching a tree.
+- `?pr_get_tree_status` — lists which backends are installed and
+  reachable in your session.
+- `?pr_tree_cache_dir` — manage the on-disk cache of retrieved trees.
 - The
   [posterior-tree pipeline vignette](posterior-tree-pipeline.html)
   for the prepR4pcm → pigauto integration.

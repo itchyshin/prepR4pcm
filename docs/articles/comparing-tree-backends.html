@@ -74,10 +74,13 @@
 
     
     
-<p><code>prepR4pcm</code> ships five tree-retrieval backends. They draw
-on different reference trees, different taxonomies, and different
-calibration approaches. So they disagree. The question is <em>how
-much</em>, and <em>where</em>.</p>
+<p><code>prepR4pcm</code> can fetch a phylogenetic tree for your species
+from five different sources. We call each source a <em>backend</em> — an
+external package, wrapped by <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>, that supplies a
+tree. The five backends draw on different reference trees, different
+taxonomies, and different calibration approaches, so the tree you get
+depends on which backend you pick. This vignette answers <em>how
+much</em> they disagree, and <em>where</em>.</p>
 <p>This vignette walks through <code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code> and shows
 how to use it to make a defensible backend choice for your dataset — or
 to report which backend choice you made and what the alternatives would
@@ -90,24 +93,24 @@ backend lives in a different package because each draws on a different
 reference tree or taxonomy:</p>
 <ul>
 <li>
-<strong><code>rotl</code></strong> (CRAN): client for the Open Tree
-of Life synthesis tree — the only backend with universal taxon coverage.
-Required for <code>source = "rotl"</code>.</li>
+<strong><code>rotl</code></strong> (CRAN): client for the <a href="https://tree.opentreeoflife.org" class="external-link">Open Tree of Life</a> synthesis
+tree — the only backend with universal taxon coverage. Required for
+<code>source = "rotl"</code>.</li>
 <li>
-<strong><code>fishtree</code></strong> (CRAN): wraps the Rabosky et
-al. (2018) time-calibrated ray-finned fish phylogeny. Required for
+<strong><code>fishtree</code></strong> (CRAN): wraps the <a href="https://fishtreeoflife.org" class="external-link">Fish Tree of Life</a> (Rabosky et al.
+2018), a time-calibrated ray-finned fish phylogeny. Required for
 <code>source = "fishtree"</code>.</li>
 <li>
-<strong><code>rtrees</code></strong> (GitHub only): grafts species
-onto taxon-specific mega-trees (mammals, birds, fish, amphibians, etc.).
-Required for <code>source = "rtrees"</code>.</li>
+<strong><code>rtrees</code></strong> (<a href="https://github.com/daijiang/rtrees" class="external-link">github.com/daijiang/rtrees</a>):
+grafts species onto taxon-specific mega-trees (mammals, birds, fish,
+amphibians, etc.). Required for <code>source = "rtrees"</code>.</li>
 <li>
-<strong><code>clootl</code></strong> (GitHub only): supplies the
-Clements bird-taxonomy phylogeny. Required for
+<strong><code>clootl</code></strong> (<a href="https://github.com/eliotmiller/clootl" class="external-link">github.com/eliotmiller/clootl</a>):
+supplies a phylogeny in the current Clements bird taxonomy. Required for
 <code>source = "clootl"</code>.</li>
 <li>
-<strong><code>datelife</code></strong> (GitHub only): synthesis
-chronograms from many per-clade published trees. Required for
+<strong><code>datelife</code></strong> (<a href="https://www.datelife.org" class="external-link">datelife.org</a>): synthesis chronograms
+assembled from many per-clade published trees. Required for
 <code>source = "datelife"</code>.</li>
 </ul>
 <p>Install whichever you need. CRAN packages first, then GitHub-only
@@ -365,13 +368,19 @@ unique-to lists:</p>
 <code class="sourceCode R"><span><span class="va">cmp</span><span class="op">$</span><span class="va">unique_to</span><span class="op">$</span><span class="va">rotl</span>     <span class="co"># species rotl placed but the others didn't</span></span>
 <span><span class="va">cmp</span><span class="op">$</span><span class="va">unique_to</span><span class="op">$</span><span class="va">fishtree</span> <span class="co"># species fishtree placed but the others didn't</span></span>
 <span><span class="va">cmp</span><span class="op">$</span><span class="va">shared_tips</span>        <span class="co"># species placed by all backends</span></span></code></pre></div>
-<p>Common causes: - <strong>Taxonomy difference.</strong> rotl uses Open
-Tree taxonomy; fishtree uses its own; clootl uses Clements. The
-<em>same</em> species may have different canonical names. -
-<strong>Coverage gap.</strong> A species is in one reference tree but
-not another (often a recently described species). -
+<p>Common causes:</p>
+<ul>
+<li>
+<strong>Taxonomy difference.</strong> rotl uses Open Tree taxonomy;
+fishtree uses its own; clootl uses Clements. The <em>same</em> species
+may have different canonical names.</li>
+<li>
+<strong>Coverage gap.</strong> A species is in one reference tree
+but not another (often a recently described species).</li>
+<li>
 <strong>Synonymy.</strong> One backend matches via synonymy, another
-doesn’t.</p>
+doesn’t.</li>
+</ul>
 <p>Mitigation: re-run with <code>tnrs = "always"</code> to harmonise
 names via Open Tree’s TNRS first. See <code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code>.</p>
 </div>
@@ -381,22 +390,29 @@ names via Open Tree’s TNRS first. See <code><a href="../reference/pr_get_tree.
 <p>The trees agree on which species exist but disagree on how they’re
 related. This is the genuinely interesting case.</p>
 <ul>
-<li>For exploratory PCMs, run your model on each tree and report the
-range of estimates.</li>
-<li>For a definitive analysis, pick the backend with the strongest
-underlying paper for your taxon (fishtree for fish, clootl for birds,
-datelife for everything else when you need calibration).</li>
+<li>For exploratory analyses, fit your model on each tree and report the
+range of estimates across them.</li>
+<li>For the analysis you intend to publish, pick the backend whose
+underlying phylogeny is the best-established for your taxon — the most
+recent, most densely sampled peer-reviewed tree for that group:
+<code>fishtree</code> for ray-finned fish, <code>clootl</code> for
+birds, and <code>datelife</code> for groups that need time-calibrated
+branch lengths and have no taxon-specific tree.</li>
 </ul>
 <p>The companion package <a href="https://itchyshin.github.io/pigauto/" class="external-link">pigauto</a> is built for
 this: hand it the multiPhylo of every backend’s tree, fit your model on
-each, and pool the results via Rubin’s rules. The resulting intervals
-reflect the tree-choice uncertainty honestly.</p>
+each, and pool the results via Rubin’s rules. A single-tree analysis
+reports its confidence intervals as if the tree were known exactly — but
+it is not, and a different backend would have given a different tree.
+Pooling across the backends’ trees widens the intervals to absorb that
+<em>tree-choice uncertainty</em>, so the reported intervals are not
+falsely narrow.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fitting across backends (not just within a backend's posterior)</span></span>
 <span><span class="va">all_trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/structure.html" class="external-link">structure</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">res_rotl</span><span class="op">$</span><span class="va">tree</span>, <span class="va">res_fishtree</span><span class="op">$</span><span class="va">tree</span>,</span>
 <span>                            <span class="va">res_rtrees</span><span class="op">$</span><span class="va">tree</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>                       class <span class="op">=</span> <span class="st">"multiPhylo"</span><span class="op">)</span></span>
-<span><span class="co"># pigauto::multi_impute_trees(rec$aligned, all_trees, m_per_tree = 5)</span></span></code></pre></div>
+<span><span class="co"># pigauto::multi_impute_trees(trait_data, all_trees, m_per_tree = 5)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="when-branch-length-correlation-is-low">When branch-length correlation is low<a class="anchor" aria-label="anchor" href="#when-branch-length-correlation-is-low"></a>
@@ -475,11 +491,14 @@ median tree across these three backends?”, use
 <code><a href="../reference/pr_tree_compare.html">?pr_tree_compare</a></code> — full reference for the comparison
 function.</li>
 <li>
-<code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code> — retrieval entry point.</li>
+<code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code> — the main function for fetching a
+tree.</li>
 <li>
-<code><a href="../reference/pr_get_tree_status.html">?pr_get_tree_status</a></code> — backend health probe.</li>
+<code><a href="../reference/pr_get_tree_status.html">?pr_get_tree_status</a></code> — lists which backends are
+installed and reachable in your session.</li>
 <li>
-<code><a href="../reference/pr_tree_cache_dir.html">?pr_tree_cache_dir</a></code> — cache management.</li>
+<code><a href="../reference/pr_tree_cache_dir.html">?pr_tree_cache_dir</a></code> — manage the on-disk cache of
+retrieved trees.</li>
 <li>The <a href="posterior-tree-pipeline.html">posterior-tree pipeline
 vignette</a> for the prepR4pcm → pigauto integration.</li>
 </ul>
