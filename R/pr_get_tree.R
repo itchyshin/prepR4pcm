@@ -894,15 +894,27 @@ pr_get_tree <- function(
   tnrs_replacements <- NULL
 
   if (do_tnrs && requireNamespace("rotl", quietly = TRUE)) {
+    # `rotl::tnrs_match_names()` de-duplicates (and may reorder) its
+    # input, so its rows do NOT line up 1:1 with `normalised` when two
+    # distinct inputs normalise to the same string (e.g. "Esox lucius"
+    # and "Esox_lucius" both normalise to "Esox lucius"). Query the
+    # unique normalised names, then realign each result back to every
+    # element of `normalised` by the lowercased `search_string` that
+    # rotl echoes. Comparing `tnrs_res$unique_name` against `normalised`
+    # directly recycles a short vector against a long one and silently
+    # mis-matches species.
+    uniq_norm <- unique(normalised)
     tnrs_res <- tryCatch(
-      rotl::tnrs_match_names(normalised),
+      rotl::tnrs_match_names(uniq_norm),
       error = function(e) NULL
     )
     if (!is.null(tnrs_res) && !is.null(tnrs_res$unique_name)) {
-      replaced_idx <- !is.na(tnrs_res$unique_name) &
-        nzchar(tnrs_res$unique_name) &
-        tnrs_res$unique_name != normalised
-      resolved[replaced_idx] <- tnrs_res$unique_name[replaced_idx]
+      row <- match(tolower(normalised), tnrs_res$search_string)
+      matched_name <- tnrs_res$unique_name[row]
+      replaced_idx <- !is.na(matched_name) &
+        nzchar(matched_name) &
+        matched_name != normalised
+      resolved[replaced_idx] <- matched_name[replaced_idx]
       if (any(replaced_idx)) {
         tnrs_replacements <- stats::setNames(
           resolved[replaced_idx],
