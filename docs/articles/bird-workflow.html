@@ -130,7 +130,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-15 11:47:45</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-22 11:51:30</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -344,7 +344,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-15 11:48:03</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-22 11:51:48</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -580,7 +580,6 @@ tree using genus-level placement:</p>
 <span>  <span class="va">result</span>,</span>
 <span>  <span class="va">tree_jetz</span>,</span>
 <span>  where <span class="op">=</span> <span class="st">"genus"</span>,                <span class="co"># sister to a random congener</span></span>
-<span></span>
 <span>  branch_length <span class="op">=</span> <span class="st">"congener_median"</span>,  <span class="co"># median terminal branch of congeners</span></span>
 <span>  seed <span class="op">=</span> <span class="fl">42</span>,                      <span class="co"># for reproducibility</span></span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -790,7 +789,20 @@ modern phylogenetics and evolutionary analyses in R.
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>

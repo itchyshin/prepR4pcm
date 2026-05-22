@@ -7,8 +7,10 @@
 # `[doi:10.xxx](https://doi.org/10.xxx)`.
 #
 # This test scans every .Rmd / README.md for bare doi: outside of a
-# completed markdown link. If any survive, the deployed site has dead
-# links.
+# completed markdown link and outside fenced code blocks. If any
+# survive in prose, the deployed site has dead links. (A bare doi:
+# inside a ``` fence is literal text -- pandoc does not auto-link
+# inside code -- so those carry no dead-link risk.)
 
 test_that("no bare doi: URIs in user-facing files (issue: PR #28 regression)", {
   skip_on_cran()
@@ -28,8 +30,17 @@ test_that("no bare doi: URIs in user-facing files (issue: PR #28 regression)", {
   bad_lines <- character()
   for (f in files) {
     src <- readLines(f, warn = FALSE)
+    in_code_fence <- FALSE
     for (i in seq_along(src)) {
       line <- src[i]
+      # Toggle in/out of fenced code blocks. A bare `doi:` inside a
+      # ``` fence is literal text (pandoc does not auto-link inside
+      # code), so it is not a dead-link risk and is skipped.
+      if (grepl("^\\s*```", line)) {
+        in_code_fence <- !in_code_fence
+        next
+      }
+      if (in_code_fence) next
       # Look for a `doi:10.xxx` substring whose preceding char is
       # NOT `]`+`(` (markdown link) and NOT inside `[...]` brackets.
       # Cheap heuristic: every `doi:10.` must have a preceding `[`

@@ -400,7 +400,6 @@ aug <- reconcile_augment(
   result,
   tree_jetz,
   where = "genus",                # sister to a random congener
-
   branch_length = "congener_median",  # median terminal branch of congeners
   seed = 42,                      # for reproducibility
   quiet = TRUE
