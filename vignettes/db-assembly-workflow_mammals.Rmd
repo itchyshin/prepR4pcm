@@ -51,6 +51,11 @@ clean object ready for downstream comparative analyses.
 
 ## Setup
 
+The worked example draws on five packages: **dplyr** for the table
+manipulations, **readr** for tolerant number parsing, **stringr**
+for tidying raw species strings, **ape** for the phylogeny, and
+**prepR4pcm** for reconciling species names against the tree.
+
 ```{r setup, message = FALSE}
 library(dplyr)
 library(readr)
@@ -117,9 +122,10 @@ The source tables were sampled from real database structures, using
 only the columns needed for this example. They mirror three common
 inputs for mammal comparative work: the Amniote life-history
 database [@Myhrvold2015], PanTHERIA [@Jones2009], and TetrapodTraits
-[@Moura2024]. The bundled tree is a 5,987-tip subset of the VertLife
-mammal phylogeny [@Upham2019]; for analysis-grade trees download
-the full credible set from <http://vertlife.org/phylosubsets>.
+[@Moura2024]. The bundled tree is a subset of the VertLife mammal
+phylogeny [@Upham2019]; the next code chunk reports its exact tip
+count. For analysis-grade trees download the full credible set from
+<http://vertlife.org/phylosubsets>.
 
 ```{r load-example-objects}
 data(mammal_amniote_example)
@@ -219,6 +225,13 @@ source_coverage <- db_long_raw |>
 knitr::kable(source_coverage)
 ```
 
+In this table `n_records` is the number of rows the source
+contributes and `n_species` the number of distinct species; each
+`*_records` column counts the rows where that trait has a
+non-missing, positive value. Those counts sit well below
+`n_records` — no single database measures every trait for every
+species, which is exactly why combining sources is worthwhile.
+
 ## Step 3: Reconcile species names with the tree
 
 Name reconciliation is done on the unique source names, not on every
@@ -251,7 +264,10 @@ reconcile_summary(rec0, detail = "brief")
 ```
 
 The mapping table records which source names matched the tree and
-which need review.
+which need review. In it, `name_x` is the raw source name, `name_y`
+the tree tip it resolved to, `match_type` records how the two were
+linked, and `in_x` / `in_y` flag whether the name is present in the
+data and in the tree.
 
 ```{r mapping-pass-0}
 mapping0 <- reconcile_mapping(rec0)
@@ -429,6 +445,12 @@ trait_coverage <- db_species_summary |>
 
 knitr::kable(trait_coverage)
 ```
+
+Each `*_species` column counts the species with a non-missing value
+for that trait. Some species still carry `NA`: even with three
+sources combined, not every species has every trait measured.
+Downstream comparative models handle these gaps through imputation
+or complete-case analysis.
 
 ## Step 6: Align the database and the tree
 
