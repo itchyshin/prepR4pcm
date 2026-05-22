@@ -4,7 +4,7 @@
 # in R/ or vignettes/ is guarded so that the package functions /
 # vignettes degrade gracefully when the Suggests dependency is absent.
 #
-# Three buckets per Suggests entry, in priority order:
+# Four buckets per Suggests entry, in priority order:
 #
 #   R-guarded:   referenced under R/ AND at least one
 #                requireNamespace(<pkg>, quietly = TRUE) check exists
@@ -20,8 +20,19 @@
 #                are tooling Suggests that don't need user-facing
 #                guards because they're only invoked by the package
 #                infrastructure.
+#
+#   Transitive:  a Suggests entry declared only so the dependency
+#                resolver installs it for another Suggests' own
+#                dependency chain -- not called by prepR4pcm itself.
+#                Held in `transitive_suggests` below.
 
 allowlisted <- c("knitr", "rmarkdown", "testthat", "pkgdown", "spelling")
+
+# Transitive-only Suggests: declared in `Suggests:` not because
+# prepR4pcm calls them, but so the dependency resolver installs them
+# for a GitHub-only Suggests' own dependency chain. `piggyback` backs
+# `megatrees`, a transitive dependency of the `rtrees` backend (PR #91).
+transitive_suggests <- c("piggyback")
 
 
 .find_root_with_dirs <- function(dirs) {
@@ -75,7 +86,7 @@ test_that("every Suggests package is conditionally guarded", {
   vig_blob <- read_all(vig_files)
 
   for (pkg in pkgs) {
-    if (pkg %in% allowlisted) next
+    if (pkg %in% allowlisted || pkg %in% transitive_suggests) next
 
     in_r        <- grepl(paste0("\\b", pkg, "::"), r_blob, perl = TRUE) ||
                    grepl(paste0("requireNamespace\\(\\s*[\"']", pkg, "[\"']"),
