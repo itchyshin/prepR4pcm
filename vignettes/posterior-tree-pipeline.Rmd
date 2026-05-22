@@ -91,20 +91,10 @@ length(trees$tree)     # 50
 trees$matched          # the 3 species, in their original input form
 trees$unmatched        # character(0) — every species was placed
 
-# Per-tree provenance: one entry per returned tree
+# Per-tree provenance: one list entry per returned tree, each
+# recording source_index, citation, calibration_method, and n_tips.
 length(trees$backend_meta$tree_provenance)   # 50
-trees$backend_meta$tree_provenance[[1]]
-#> $source_index
-#> [1] 1
-#>
-#> $citation
-#> [1] "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
-#>
-#> $calibration_method
-#> [1] "stochastic polytomy resolution"
-#>
-#> $n_tips
-#> [1] 3
+trees$backend_meta$tree_provenance[[1]]      # the provenance of tree 1
 ```
 
 `pr_get_tree()` records what happened to every name in
