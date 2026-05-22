@@ -57,56 +57,69 @@ library(prepR4pcm)
 # pak::pak("itchyshin/pigauto")
 ```
 
-## Step 1 — Reconcile names
+## Step 1 — Retrieve a posterior of trees
 
 Start with whatever names appear in your dataset. They never quite
-match the tree's tip labels.
+match a tree's tip labels — formatting drifts, synonyms creep in.
+`pr_get_tree()` copes: it normalises every name (underscores,
+whitespace, authority strings) and, for the `fishtree` backend,
+resolves synonyms through Open Tree of Life's Taxonomic Name
+Resolution Service before querying the backend.
 
-```{r reconcile, eval = FALSE}
-# Your data and your tree — typically loaded from disk
+```{r data}
+# Your trait data — typically loaded from disk. Names need not be
+# tidy: `Esox_lucius` carries an underscore, which pr_get_tree()
+# normalises away.
 my_data <- data.frame(
-  species   = c("Salmo salar", "Esox lucius", "Esox_lucius",
-                "Oncorhynchus mykiss"),
-  body_size = c(98, 130, NA, 50)   # NA is OK; pigauto will impute
+  species   = c("Salmo salar", "Esox_lucius", "Oncorhynchus mykiss"),
+  body_size = c(98, NA, 50)        # NA is fine; pigauto will impute it
 )
-
-# Reconcile names against a published taxonomic authority. Catches
-# typos, formatting drift, and synonymy.
-rec <- reconcile_data(my_data,
-                      x_species = "species",
-                      authority = "col")  # Catalogue of Life
-rec   # one-line summary of matched / unmatched / counts
 ```
-
-## Step 2 — Get a posterior of trees
 
 Every backend that *can* return multiple trees does so via
 `n_tree > 1`. Here we ask `fishtree` for 50 stochastic resolutions
 (Chang, Rabosky, Alfaro 2019, *Syst. Biol.*).
 
 ```{r retrieve, eval = FALSE}
-trees <- pr_get_tree(rec,
-                     source = "fishtree",
-                     n_tree = 50)
+trees <- pr_get_tree(my_data,
+                     species_col = "species",
+                     source      = "fishtree",
+                     n_tree      = 50)
 
-class(trees$tree)             # "multiPhylo"
-length(trees$tree)            # 50
-length(trees$matched)         # how many species placed
-head(trees$unmatched)         # species absent from fishtree
+class(trees$tree)      # "multiPhylo"
+length(trees$tree)     # 50
+trees$matched          # the 3 species, in their original input form
+trees$unmatched        # character(0) — every species was placed
 
-# Per-tree provenance: one entry per tree
-length(trees$backend_meta$tree_provenance)  # 50
+# Per-tree provenance: one entry per returned tree
+length(trees$backend_meta$tree_provenance)   # 50
 trees$backend_meta$tree_provenance[[1]]
+#> $source_index
+#> [1] 1
+#>
+#> $citation
+#> [1] "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"
+#>
+#> $calibration_method
+#> [1] "stochastic polytomy resolution"
+#>
+#> $n_tips
+#> [1] 3
 ```
+
+`pr_get_tree()` records what happened to every name in
+`trees$mapping` (one row per input species), so a name that quietly
+fell out of the tree cannot go unnoticed.
 
 For the universal-but-slower option, use `source = "datelife"` —
 the chronogram-database backend that returns one calibrated tree per
 source (Hedges, Bininda-Emonds, Upham, etc.).
 
 ```{r datelife, eval = FALSE}
-trees <- pr_get_tree(rec,
-                     source = "datelife",
-                     n_tree = 50)
+trees <- pr_get_tree(my_data,
+                     species_col = "species",
+                     source      = "datelife",
+                     n_tree      = 50)
 # trees$tree is multiPhylo; per-source citations are in
 # trees$backend_meta$tree_provenance[[i]]$citation
 ```
@@ -133,6 +146,38 @@ To get 50 different *topologies*, fetch them separately first (e.g.
 100 mammal topologies sampled from VertLife / Upham et al. 2019),
 then pass that `multiPhylo` to `pr_date_tree()` to date each one.
 That gives you the topology × source cross-product.
+
+## Step 2 — Reconcile the data to the posterior
+
+`pr_get_tree()` resolves names well enough to *retrieve* a tree, but
+the modelling step needs a data frame whose rows line up one-to-one
+with the tree's tips. `reconcile_tree()` matches your data against
+the retrieved topology, and `reconcile_apply()` returns the aligned
+data–tree pair. The 50 posterior trees share one tip set, so
+reconciling against the first tree aligns the data to all of them.
+
+```{r reconcile, eval = FALSE}
+rec <- reconcile_tree(my_data, trees$tree[[1]],
+                      x_species = "species",
+                      authority = NULL)   # tree tips are plain binomials
+rec        # match summary: 1 exact, 2 normalized, 0 unresolved
+
+aligned <- reconcile_apply(rec,
+                           data            = my_data,
+                           tree            = trees$tree[[1]],
+                           species_col     = "species",
+                           drop_unresolved = TRUE)
+
+aligned$data    # one row per tree tip — the model-ready frame
+#>               species body_size
+#> 1         Salmo salar        98
+#> 2         Esox_lucius        NA
+#> 3 Oncorhynchus mykiss        50
+```
+
+`aligned$data` carries one row per species in the tree, with
+`Esox_lucius` keeping the `NA` that pigauto will impute;
+`aligned$tree` is the matching pruned tree.
 
 ## Step 3 — Format citations (do this *before* you submit)
 
@@ -161,7 +206,7 @@ later uses that index.
 library(pigauto)
 
 # 5 imputations per tree × 50 trees = 250 complete datasets
-mi <- multi_impute_trees(rec$aligned,
+mi <- multi_impute_trees(aligned$data,
                          trees      = trees$tree,
                          m_per_tree = 5)
 
