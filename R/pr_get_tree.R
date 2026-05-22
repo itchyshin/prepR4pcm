@@ -226,17 +226,22 @@
 #'     `length(matched) + length(unmatched) == length(unique(input))`
 #'     always holds. Inspect these and consider running them back
 #'     through [reconcile_suggest()] / a manual override.}
-#'   \item{`mapping`}{A tibble with one row per unique input species:
-#'     `input_name`, `normalized_name`, `query_name`, `tree_name`,
-#'     `in_tree`, `match_type`, and `placement_status`. This is the
-#'     audit trail for name handling: `input_name` is what the user
-#'     supplied, `normalized_name` is the result of
+#'   \item{`mapping`}{A tibble with one row per unique input species.
+#'     Core columns: `input_name`, `normalized_name`, `query_name`,
+#'     `tree_name`, `in_tree`, `match_type`, and `placement_status`.
+#'     This is the audit trail for name handling: `input_name` is what
+#'     the user supplied, `normalized_name` is the result of
 #'     [pr_normalize_names()], `query_name` is the backend query after
 #'     optional TNRS, `tree_name` is the actual returned tip label, and
 #'     `match_type` is one of `"exact"`, `"normalized"`, `"tnrs"`, or
 #'     `"unmatched"`. For `source = "rtrees"`, `placement_status`
 #'     carries the grafting status from `backend_meta$placement`;
-#'     otherwise it is `NA`.}
+#'     otherwise it is `NA`. Four further columns record what `rotl`'s
+#'     TNRS resolver reported for each name: `tnrs_number_matches`,
+#'     `tnrs_is_synonym`, `tnrs_approximate_match`, and `tnrs_flags`.
+#'     These are `NA` for backends or `tnrs` settings where TNRS did
+#'     not run. `tnrs_number_matches > 1` flags a homonym, meaning the
+#'     resolved name is only one of several candidate taxa.}
 #'   \item{`source`}{The backend that produced the tree.}
 #'   \item{`backend_meta`}{A named list of diagnostic information.
 #'     Standard fields populated by the dispatcher:
@@ -289,6 +294,13 @@
 #' recorded in `result$backend_meta$tnrs_replacements` as a named
 #' character vector `(original = resolved)`. A one-shot `cli` warning
 #' lists the first few substitutions on the call itself.
+#'
+#' TNRS also returns structured match metadata. `pr_get_tree()` records
+#' it per name in the `mapping` tibble: `tnrs_number_matches`,
+#' `tnrs_is_synonym`, `tnrs_approximate_match`, and `tnrs_flags`. When a
+#' name resolves to more than one taxon (`tnrs_number_matches > 1`, a
+#' homonym), a one-shot `cli` warning names the affected species, since
+#' the resolved name is then only one of several candidates.
 #'
 #' @seealso [reconcile_tree()] / [reconcile_data()] for producing the
 #'   reconciled species list that feeds this function;
@@ -610,7 +622,8 @@ pr_get_tree <- function(
     query_name = resolved$query,
     in_tree = in_query,
     tree = result$tree,
-    backend_meta = backend_meta
+    backend_meta = backend_meta,
+    tnrs_audit = resolved$tnrs_audit
   )
 
   out <- list(
@@ -669,7 +682,8 @@ pr_get_tree <- function(
   query_name,
   in_tree,
   tree,
-  backend_meta = list()
+  backend_meta = list(),
+  tnrs_audit = NULL
 ) {
   input_name <- as.character(input_name)
   normalized_name <- as.character(normalized_name)
@@ -713,6 +727,32 @@ pr_get_tree <- function(
   match_type[normalized_match] <- "normalized"
   match_type[tnrs_match] <- "tnrs"
 
+  # TNRS match-quality columns. Present (as NA) even for backends or
+  # `tnrs` settings where TNRS did not run, so the mapping schema is
+  # stable across every call.
+  n_rows <- length(input_name)
+  has_audit <- is.data.frame(tnrs_audit) && nrow(tnrs_audit) == n_rows
+  tnrs_number_matches <- if (has_audit) {
+    as.integer(tnrs_audit$tnrs_number_matches)
+  } else {
+    rep(NA_integer_, n_rows)
+  }
+  tnrs_is_synonym <- if (has_audit) {
+    as.logical(tnrs_audit$tnrs_is_synonym)
+  } else {
+    rep(NA, n_rows)
+  }
+  tnrs_approximate_match <- if (has_audit) {
+    as.logical(tnrs_audit$tnrs_approximate_match)
+  } else {
+    rep(NA, n_rows)
+  }
+  tnrs_flags <- if (has_audit) {
+    as.character(tnrs_audit$tnrs_flags)
+  } else {
+    rep(NA_character_, n_rows)
+  }
+
   tibble::tibble(
     input_name = input_name,
     normalized_name = normalized_name,
@@ -720,7 +760,11 @@ pr_get_tree <- function(
     tree_name = tree_name,
     in_tree = in_tree,
     match_type = match_type,
-    placement_status = placement_status
+    placement_status = placement_status,
+    tnrs_number_matches = tnrs_number_matches,
+    tnrs_is_synonym = tnrs_is_synonym,
+    tnrs_approximate_match = tnrs_approximate_match,
+    tnrs_flags = tnrs_flags
   )
 }
 
@@ -878,6 +922,60 @@ pr_get_tree <- function(
 }
 
 
+# Internal: pull TNRS's structured match-quality columns
+# (number_matches, is_synonym, approximate_match, flags) out of a
+# tnrs_match_names() result and realign them to `normalised` via the
+# `row` index. rotl always returns these columns; the NULL guard means
+# a test mock or an upstream rotl change degrades to NA rather than
+# erroring. Returns a tibble with one row per element of `row`.
+.pr_tnrs_audit_table <- function(tnrs_res, row) {
+  n <- length(row)
+  realign <- function(name, na_value, coerce) {
+    v <- tnrs_res[[name]]
+    if (is.null(v)) {
+      return(rep(na_value, n))
+    }
+    if (is.list(v)) {
+      v <- vapply(v, function(x) paste(x, collapse = ","), character(1))
+    }
+    coerce(v[row])
+  }
+  tibble::tibble(
+    tnrs_number_matches = realign("number_matches", NA_integer_, as.integer),
+    tnrs_is_synonym = realign("is_synonym", NA, as.logical),
+    tnrs_approximate_match = realign("approximate_match", NA, as.logical),
+    tnrs_flags = realign("flags", NA_character_, as.character)
+  )
+}
+
+
+# Internal: emit a one-shot cli warning when TNRS reports more than one
+# taxonomic match for an input name (a homonym). The resolved name is
+# then only one of several candidate taxa, so the user should inspect
+# `result$mapping`. `input` and `number_matches` are index-aligned.
+.pr_warn_tnrs_homonyms <- function(input, number_matches) {
+  homonym <- !is.na(number_matches) & number_matches > 1L
+  if (!any(homonym)) {
+    return(invisible())
+  }
+  n_hom <- sum(homonym)
+  examples_n <- min(3L, n_hom)
+  examples <- paste(
+    sprintf(
+      "'%s' (%d matches)",
+      input[homonym][seq_len(examples_n)],
+      number_matches[homonym][seq_len(examples_n)]
+    ),
+    collapse = "; "
+  )
+  cli::cli_warn(c(
+    "TNRS found multiple taxonomic matches for {n_hom} input name{?s} (possible homonym{?s}).",
+    "i" = "The resolved name is only one candidate taxon; check {.code result$mapping$tnrs_number_matches} and {.code result$mapping$tnrs_flags}.",
+    ">" = "e.g. {examples}"
+  ))
+}
+
+
 .pr_resolve_query <- function(species, source, tnrs) {
   original <- unique(stats::na.omit(as.character(species)))
   normalised <- pr_normalize_names(original)
@@ -892,6 +990,7 @@ pr_get_tree <- function(
 
   resolved <- normalised
   tnrs_replacements <- NULL
+  tnrs_audit <- NULL
 
   if (do_tnrs && requireNamespace("rotl", quietly = TRUE)) {
     # `rotl::tnrs_match_names()` de-duplicates (and may reorder) its
@@ -918,6 +1017,12 @@ pr_get_tree <- function(
       # leaks into the query and the species silently fails to match a
       # tree tip.
       matched_name <- as.character(pr_normalize_names(matched_name))
+
+      # Capture TNRS's structured match-quality columns so pr_get_tree()
+      # can surface them per name in `result$mapping`. Realigned to
+      # `normalised` by the same `row` index used for `matched_name`.
+      tnrs_audit <- .pr_tnrs_audit_table(tnrs_res, row)
+
       replaced_idx <- !is.na(matched_name) &
         nzchar(matched_name) &
         matched_name != normalised
@@ -943,6 +1048,10 @@ pr_get_tree <- function(
           ">" = "e.g. {examples}"
         ))
       }
+
+      # Flag homonyms: TNRS reporting more than one match means the
+      # resolved name is only one of several candidate taxa.
+      .pr_warn_tnrs_homonyms(original, tnrs_audit$tnrs_number_matches)
     }
   } else if (do_tnrs && !requireNamespace("rotl", quietly = TRUE)) {
     if (!isTRUE(getOption("prepR4pcm.tnrs_warning_shown"))) {
@@ -960,7 +1069,8 @@ pr_get_tree <- function(
     normalised = normalised,
     resolved = resolved,
     query = resolved,
-    tnrs_replacements = tnrs_replacements
+    tnrs_replacements = tnrs_replacements,
+    tnrs_audit = tnrs_audit
   )
 }
 

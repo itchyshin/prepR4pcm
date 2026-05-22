@@ -87,8 +87,9 @@
 #'   \item{`mapping`}{A tibble with one row per input tip label,
 #'     mirroring [pr_get_tree()]'s audit table: `input_name`,
 #'     `normalized_name`, `query_name`, `tree_name`, `in_tree`,
-#'     `match_type`, and `placement_status` (`NA` for DateLife
-#'     dating).}
+#'     `match_type`, `placement_status`, and the four `tnrs_*`
+#'     columns. `placement_status` and the `tnrs_*` columns are `NA`
+#'     for DateLife dating, which applies no TNRS step.}
 #'   \item{`source`}{Always `"datelife"` (paired with `pr_get_tree()`'s
 #'     dispatch).}
 #'   \item{`backend_meta`}{Includes `dating_method`, `calibrations`

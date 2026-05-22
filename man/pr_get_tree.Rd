@@ -232,17 +232,22 @@ input} that did not resolve. Disjoint from \code{matched};
 \code{length(matched) + length(unmatched) == length(unique(input))}
 always holds. Inspect these and consider running them back
 through \code{\link[=reconcile_suggest]{reconcile_suggest()}} / a manual override.}
-\item{\code{mapping}}{A tibble with one row per unique input species:
-\code{input_name}, \code{normalized_name}, \code{query_name}, \code{tree_name},
-\code{in_tree}, \code{match_type}, and \code{placement_status}. This is the
-audit trail for name handling: \code{input_name} is what the user
-supplied, \code{normalized_name} is the result of
+\item{\code{mapping}}{A tibble with one row per unique input species.
+Core columns: \code{input_name}, \code{normalized_name}, \code{query_name},
+\code{tree_name}, \code{in_tree}, \code{match_type}, and \code{placement_status}.
+This is the audit trail for name handling: \code{input_name} is what
+the user supplied, \code{normalized_name} is the result of
 \code{\link[=pr_normalize_names]{pr_normalize_names()}}, \code{query_name} is the backend query after
 optional TNRS, \code{tree_name} is the actual returned tip label, and
 \code{match_type} is one of \code{"exact"}, \code{"normalized"}, \code{"tnrs"}, or
 \code{"unmatched"}. For \code{source = "rtrees"}, \code{placement_status}
 carries the grafting status from \code{backend_meta$placement};
-otherwise it is \code{NA}.}
+otherwise it is \code{NA}. Four further columns record what \code{rotl}'s
+TNRS resolver reported for each name: \code{tnrs_number_matches},
+\code{tnrs_is_synonym}, \code{tnrs_approximate_match}, and \code{tnrs_flags}.
+These are \code{NA} for backends or \code{tnrs} settings where TNRS did
+not run. \code{tnrs_number_matches > 1} flags a homonym, meaning the
+resolved name is only one of several candidate taxa.}
 \item{\code{source}}{The backend that produced the tree.}
 \item{\code{backend_meta}}{A named list of diagnostic information.
 Standard fields populated by the dispatcher:
@@ -309,6 +314,13 @@ the \code{fishtree} backend under \code{tnrs = "auto"}), the replacement is
 recorded in \code{result$backend_meta$tnrs_replacements} as a named
 character vector \code{(original = resolved)}. A one-shot \code{cli} warning
 lists the first few substitutions on the call itself.
+
+TNRS also returns structured match metadata. \code{pr_get_tree()} records
+it per name in the \code{mapping} tibble: \code{tnrs_number_matches},
+\code{tnrs_is_synonym}, \code{tnrs_approximate_match}, and \code{tnrs_flags}. When a
+name resolves to more than one taxon (\code{tnrs_number_matches > 1}, a
+homonym), a one-shot \code{cli} warning names the affected species, since
+the resolved name is then only one of several candidates.
 }
 \examples{
 \donttest{
