@@ -16,12 +16,12 @@ knitr::opts_chunk$set(
 ```
 
 `prepR4pcm` can fetch a phylogenetic tree for your species from five
-different sources. We call each source a *backend* — an external
-package, wrapped by `pr_get_tree()`, that supplies a tree. The five
-backends draw on different reference trees, different taxonomies,
-and different calibration approaches, so the tree you get depends on
-which backend you pick. This vignette answers *how much* they
-disagree, and *where*.
+different *backends* — external packages, each wrapped by
+`pr_get_tree()`, that supply a tree from a different reference
+source. The five backends draw on different reference trees,
+different taxonomies, and different calibration approaches, so the
+tree you get depends on which backend you pick. This vignette
+answers *how much* they disagree, and *where*.
 
 This vignette walks through `pr_tree_compare()` and shows how to
 use it to make a defensible backend choice for your dataset — or to

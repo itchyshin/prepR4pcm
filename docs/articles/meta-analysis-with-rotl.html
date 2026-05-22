@@ -83,9 +83,10 @@ controls for shared evolutionary history.</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Pull a topology from Open Tree of Life</strong> via
-<code>rotl</code>. OTL gives you tip labels and branching structure; the
-edge lengths it returns are unit-length placeholders — <strong>not
-biologically meaningful</strong> time/divergence values.</li>
+<code>rotl</code>. Open Tree of Life gives you tip labels and branching
+structure; the edge lengths it returns are unit-length placeholders —
+<strong>not biologically meaningful</strong> time/divergence
+values.</li>
 <li>
 <strong>Resolve polytomies at random</strong> via
 <code>ape::multi2di(random = TRUE)</code>. The phylogenetic correlation
@@ -120,16 +121,18 @@ Their dataset spans <strong>147 ectotherm species across 14 animal
 classes</strong> — fish, insects, reptiles, amphibians, crustaceans,
 bivalves, echinoderms, cephalopods, etc.</p>
 <p>This is the cross-taxon case where <code>rotl</code> is the only
-practical option for retrieval. The taxon-specific mega-tree backends
-each cover one clade only: <code>rtrees</code> ships separate mega-trees
-for mammals, birds, fish, amphibians, squamates and a handful of other
-taxa; <code>fishtree</code> covers ray-finned fish only;
-<code>clootl</code> covers birds only. None of those backends spans the
-14-class breadth of an ectotherm meta-analysis. The Open Tree of Life is
-a synthetic tree (i.e. a composite made by merging other trees).
-Parameter <code>source = "rotl"</code> from the prepR4pcm package
-function <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> returns a single tree spanning every
-class in the dataset.</p>
+practical option for retrieval. The taxon-specific mega-tree
+<em>backends</em> (the external tree-source packages that
+<code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> draws on) each cover one clade only:
+<code>rtrees</code> ships separate mega-trees for mammals, birds, fish,
+amphibians, squamates and a handful of other taxa; <code>fishtree</code>
+covers ray-finned fish only; <code>clootl</code> covers birds only. None
+of those backends spans the 14-class breadth of an ectotherm
+meta-analysis. The Open Tree of Life is a synthetic tree (i.e. a
+composite made by merging other trees). Parameter
+<code>source = "rotl"</code> from the prepR4pcm package function <a href="https://itchyshin.github.io/prepR4pcm/reference/pr_get_tree.html"><code>pr_get_tree()</code></a>
+returns a single tree spanning every class in the dataset, without
+branch lengths.</p>
 </div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
@@ -142,7 +145,7 @@ for the retrieve / clean / correlate pipeline), <strong>rotl</strong>
 phylogenetic correlation matrix).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
-<span><span class="co"># install.packages("rotl")     # required: OTL access (called by pr_get_tree)</span></span>
+<span><span class="co"># install.packages("rotl")     # required: Open Tree of Life access</span></span>
 <span><span class="co"># install.packages("metafor")  # required: the meta-analysis engine</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -221,16 +224,16 @@ into one call:</p>
 <span>  branch_lengths     <span class="op">=</span> <span class="st">"grafen"</span>     <span class="co"># compute.brlen(method = "Grafen")</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">tree</span>            <span class="co"># ultrametric, bifurcating, Grafen branches</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">matched</span>         <span class="co"># species OTL successfully resolved</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">unmatched</span>       <span class="co"># species OTL couldn't place</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">matched</span>         <span class="co"># species Open Tree of Life resolved</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">unmatched</span>       <span class="co"># species Open Tree of Life couldn't place</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>      <span class="co"># visualise the topology</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>  <span class="co"># has _ott&lt;digits&gt; suffixes (see note below)</span></span></code></pre></div>
 <div class="float">
-<img src="../reference/figures/meta-analysis-tree.png" style="width:100.0%" alt='The 14-species tree returned by the one-call pipeline (pr_get_tree(source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")): ultrametric, fully bifurcating, with Grafen branch lengths. Tip labels are shown cleaned of the OTT-id suffixes.'><div class="figcaption">The 14-species tree returned by the one-call
+<img src="../reference/figures/meta-analysis-tree.png" style="width:100.0%" alt='The 14-species tree returned by the one-call pipeline (pr_get_tree(source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")): ultrametric, fully bifurcating, with Grafen branch lengths. Tip labels are shown cleaned of the OTT id suffixes.'><div class="figcaption">The 14-species tree returned by the one-call
 pipeline
 (<code>pr_get_tree(source = "rotl", resolve_polytomies = TRUE, branch_lengths = "grafen")</code>):
 ultrametric, fully bifurcating, with Grafen branch lengths. Tip labels
-are shown cleaned of the OTT-id suffixes.</div>
+are shown cleaned of the OTT id suffixes.</div>
 </div>
 </div>
 <div class="section level3">
@@ -328,12 +331,14 @@ ectotherm-thermal-tolerance dataset):</p>
 <span>  method  <span class="op">=</span> <span class="st">"REML"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Alternative: align tree and data via <code>reconcile_*</code>
-first.</strong> If your trait data has species that aren’t in the tree
-(typos, synonyms, OTL gaps), the manual cleanup above won’t catch them.
-A more robust pattern uses <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> +
-<code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> on the cleaned tree to drop unresolved
-species and produce a pair guaranteed to match:</p>
+<p><strong>A more robust alternative to the Step 4 label
+cleanup.</strong> The <code><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub()</a></code> cleanup in Step 4 fixes label
+<em>formatting</em>, but it cannot catch species that are in your trait
+data yet absent from the tree (typos, synonyms, Open Tree of Life gaps).
+For those, align tree and data with <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code> +
+<code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> instead of the manual
+<code><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub()</a></code>: this drops unresolved species and returns a
+data–tree pair guaranteed to match:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
 <span>  x         <span class="op">=</span> <span class="va">toy_df</span>,</span>
@@ -365,36 +370,97 @@ their <code>Statistical_analyses.Rmd</code>). The phylogenetic component
 is the same <code>R = list(species = phy_cor)</code> either way.</p>
 </div>
 <div class="section level2">
-<h2 id="manual-tree-grafting-when-otl-doesnt-have-a-species">Manual tree grafting when OTL doesn’t have a species<a class="anchor" aria-label="anchor" href="#manual-tree-grafting-when-otl-doesnt-have-a-species"></a>
+<h2 id="manual-tree-grafting-when-open-tree-of-life-doesnt-have-a-species">Manual tree grafting when Open Tree of Life doesn’t have a
+species<a class="anchor" aria-label="anchor" href="#manual-tree-grafting-when-open-tree-of-life-doesnt-have-a-species"></a>
 </h2>
-<p>A common situation: OTL doesn’t have one of your species. Pottier et
-al. ran into this with <em>Potamilus alatus</em> (a freshwater mussel) —
-OTL’s induced subtree errored on it, so they pulled it out of the tnrs
-match, generated the tree without it, then grafted it back manually with
-<code>ape::bind.tip()</code>:</p>
+<p>A common situation: Open Tree of Life doesn’t have one of your
+species. Pottier et al. ran into this with <em>Potamilus alatus</em> (a
+freshwater mussel) — Open Tree of Life’s induced subtree errored on it,
+so they pulled it out of the TNRS match, generated the tree without it,
+then grafted it back manually with <code>ape::bind.tip()</code>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Pottier et al.'s approach (paraphrased from their Rmd)</span></span>
-<span><span class="va">taxa.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxa</span>, <span class="va">ott_id</span> <span class="op">!=</span> <span class="st">"732215"</span><span class="op">)</span> <span class="co"># remove Potamilus alatus</span></span>
+<span></span>
+<span><span class="co"># Drop Potamilus alatus from the OTT id list: Open Tree of Life's</span></span>
+<span><span class="co"># induced-subtree service errors when this id is included.</span></span>
+<span><span class="va">taxa.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxa</span>, <span class="va">ott_id</span> <span class="op">!=</span> <span class="st">"732215"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Build the topology from the remaining OTT ids.</span></span>
 <span><span class="va">phylo_tree</span> <span class="op">&lt;-</span> <span class="fu">tol_induced_subtree</span><span class="op">(</span>ott_ids <span class="op">=</span> <span class="va">taxa.tree</span><span class="op">$</span><span class="va">ott_id</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Resolve polytomies at random so the tree is strictly bifurcating</span></span>
+<span><span class="co"># (a full-rank phylogenetic correlation matrix needs this).</span></span>
 <span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu">multi2di</span><span class="op">(</span><span class="va">phylo_tree</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Graft Potamilus alatus back as a new tip at node 95 (inside</span></span>
+<span><span class="co"># Bivalvia). Attaching a tip *at* an existing node gives that node</span></span>
+<span><span class="co"># an extra child -- a polytomy -- which is why multi2di() ran first.</span></span>
 <span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu">bind.tip</span><span class="op">(</span><span class="va">binary.tree</span>, tip.label <span class="op">=</span> <span class="st">"Potamilus_alatus"</span>,</span>
-<span>                        where <span class="op">=</span> <span class="fl">95</span><span class="op">)</span>            <span class="co"># grafted into Bivalvia</span></span></code></pre></div>
-<p>In <code>prepR4pcm</code>, the equivalent of “graft species back in”
-is <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>. After <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>
-gives you the OTL-resolved tree, call <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>
-with the residually unresolved species; it does the genus-level (or
-MRCA-level) placement automatically and records the placement in
-<code>$augmented</code> for the methods section:</p>
+<span>                        where <span class="op">=</span> <span class="fl">95</span><span class="op">)</span></span></code></pre></div>
+<p>In <code>prepR4pcm</code>, the equivalent of “graft a species back
+in” is <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>. Reconcile your trait data
+against the retrieved tree first; any species the tree does not carry
+lands in the reconciliation as <code>unresolved</code>.
+<code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> then grafts each unresolved species
+that has a congener already in the tree, and records the placement in
+<code>$augmented</code> for the methods section.</p>
+<p>The worked example below adds <em>Anolis carolinensis</em> — a
+congener of <em>Anolis sagrei</em>, already in the 14-species tree from
+Steps 1-3 — and shows the species counts before and after grafting:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Step 0 in your workflow: reconcile data names against the tree.</span></span>
-<span><span class="co"># Any species OTL didn't place lands in `unresolved`; you can</span></span>
-<span><span class="co"># graft them onto the tree as sister to a congener (genus-level</span></span>
-<span><span class="co"># placement; cite the taxonomic source for the placement, just as</span></span>
-<span><span class="co"># Cinar et al. cite ITIS).</span></span>
-<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_data.html">reconcile_data</a></span><span class="op">(</span><span class="va">my_effect_size_df</span>, x_species <span class="op">=</span> <span class="st">"species"</span>,</span>
-<span>                       authority <span class="op">=</span> <span class="st">"itis"</span><span class="op">)</span></span>
-<span><span class="va">aug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_augment.html">reconcile_augment</a></span><span class="op">(</span><span class="va">rec</span>, <span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>   <span class="co"># graft unresolved species</span></span>
-<span><span class="va">phy_cor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_phylo_cor.html">pr_phylo_cor</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Trait data carrying one species the retrieved tree lacks: Anolis</span></span>
+<span><span class="co"># carolinensis, a congener of Anolis sagrei (which is in the tree).</span></span>
+<span><span class="va">graft_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>, <span class="st">"Anolis carolinensis"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">graft_df</span><span class="op">)</span>               <span class="co"># 15 species in the trait data</span></span>
+<span></span>
+<span><span class="co"># Reconcile data names against the tree: 14 match, 1 is unresolved.</span></span>
+<span><span class="va">rec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span><span class="va">graft_df</span>, <span class="va">res</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                      x_species <span class="op">=</span> <span class="st">"species"</span>, authority <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Graft each unresolved species next to a congener already in the tree.</span></span>
+<span><span class="va">aug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_augment.html">reconcile_augment</a></span><span class="op">(</span><span class="va">rec</span>, <span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">aug</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">original_n_tips</span>     <span class="co"># 14  (tree tips before grafting)</span></span>
+<span><span class="va">aug</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">augmented_n_tips</span>    <span class="co"># 15  (tree tips after grafting)</span></span>
+<span><span class="va">aug</span><span class="op">$</span><span class="va">augmented</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"placed_near"</span>, <span class="st">"n_congeners"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;               species   placed_near n_congeners</span></span>
+<span><span class="co">#&gt; 1 Anolis carolinensis Anolis sagrei           1</span></span></code></pre></div>
+<p>The trait data has 15 species; the retrieved tree had only 14 tips;
+after <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> the tree carries all 15. Plotting
+the tree before and after makes the single added tip visible:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># reconcile_augment() writes the grafted tip label with an</span></span>
+<span><span class="co"># underscore; convert to a space for a consistent set of binomials.</span></span>
+<span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"_"</span>, <span class="st">" "</span>, <span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">original</span>, main <span class="op">=</span> <span class="st">"Before grafting: 14 tips"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span>,     main <span class="op">=</span> <span class="st">"After reconcile_augment(): 15 tips"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
+<div class="float">
+<img src="../reference/figures/meta-analysis-graft-compare.png" style="width:100.0%" alt="Left: the 14-tip Open Tree of Life topology before grafting. Right: the same tree after reconcile_augment() grafts Anolis carolinensis (15 tips). The new species is added as a bifurcating sister to its congener Anolis sagrei, so the tree stays strictly bifurcating and needs no follow-up multi2di()."><div class="figcaption">Left: the 14-tip Open Tree of Life topology
+before grafting. Right: the same tree after
+<code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> grafts <em>Anolis carolinensis</em> (15
+tips). The new species is added as a bifurcating sister to its congener
+<em>Anolis sagrei</em>, so the tree stays strictly bifurcating and needs
+no follow-up <code>multi2di()</code>.</div>
+</div>
+<p><strong>Why the augmented tree has no polytomy.</strong> Manual
+<code>bind.tip(where = 95)</code> attaches the new tip <em>at</em> node
+95, so that node gains a third child — a polytomy — which is why the
+Pottier pipeline runs <code>multi2di()</code> afterwards.
+<code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>, with its default
+<code>where = "genus"</code>, instead inserts the new species part-way
+<em>along</em> the terminal branch of a congener: it splits that branch
+into a new two-way node, with the new species as one of the two
+children. The result is strictly bifurcating
+(<code>ape::is.binary(aug$tree)</code> returns <code>TRUE</code>), so no
+follow-up <code>multi2di()</code> is needed. Passing
+<code>branch_length = "zero"</code> or <code>where = "near"</code>
+attaches the tip at an existing node instead, and so produces a polytomy
+by design; see <code><a href="../reference/reconcile_augment.html">?reconcile_augment</a></code>.</p>
 <p>The same one-species-manually-added pattern shows up in Cinar et
 al. (2022, <em>Methods Ecol. Evol.</em> 13:383), where <em>Villosa
 delumbis</em> was added based on ITIS — they describe it as “Polytomies
@@ -403,24 +469,24 @@ manually added to the tree based on information from the Integrated
 Taxonomic Information System.”</p>
 </div>
 <div class="section level2">
-<h2 id="why-grafen-and-not-datelife-a-time-calibrated-tree">Why Grafen (and not datelife / a time-calibrated tree)?<a class="anchor" aria-label="anchor" href="#why-grafen-and-not-datelife-a-time-calibrated-tree"></a>
+<h2 id="why-grafen-and-not-datelife-a-time-calibrated-tree">Why Grafen (and not DateLife / a time-calibrated tree)?<a class="anchor" aria-label="anchor" href="#why-grafen-and-not-datelife-a-time-calibrated-tree"></a>
 </h2>
 <p>In principle you could replace Grafen branches with biologically real
-ones from datelife:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Alternative: get rotl topology, then date it with datelife</span></span>
+ones from DateLife:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Alternative: get rotl topology, then date it with DateLife</span></span>
 <span><span class="va">res</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span><span class="va">species</span>, source <span class="op">=</span> <span class="st">"rotl"</span>,</span>
 <span>                      resolve_polytomies <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>   <span class="co"># NO branch_lengths</span></span>
-<span><span class="va">dated</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_date_tree.html">pr_date_tree</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>                   <span class="co"># datelife dates it</span></span>
+<span><span class="va">dated</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_date_tree.html">pr_date_tree</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>                   <span class="co"># DateLife dates it</span></span>
 <span><span class="va">phy_cor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_phylo_cor.html">pr_phylo_cor</a></span><span class="op">(</span><span class="va">dated</span><span class="op">)</span></span></code></pre></div>
 <p>For most phylogenetic meta-analyses, <strong>we recommend
-Grafen</strong>, not datelife, for three reasons:</p>
+Grafen</strong>, not DateLife, for three reasons:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Coverage.</strong> DateLife synthesises from per-clade
 published chronograms. For a cross-taxon dataset like Pottier’s
 (lampreys, bivalves, insects, fish, mammals etc., spanning 14 animal
-classes), datelife usually can’t return a chronogram covering all of
+classes), DateLife usually can’t return a chronogram covering all of
 them — its database is sparse outside well-studied single-clade groups
 (mammals, birds, fish).</li>
 <li>
@@ -434,10 +500,10 @@ scale, so the choice between Grafen-units and time-units matters less
 than it would for, say, a Brownian-motion rate estimate.</li>
 <li>
 <strong>Reproducibility.</strong> Grafen’s method is deterministic
-given the topology; datelife results depend on which chronograms are in
+given the topology; DateLife results depend on which chronograms are in
 their database the day you run it.</li>
 </ol>
-<p><strong>Use datelife instead</strong> when:</p>
+<p><strong>Use DateLife instead</strong> when:</p>
 <ul>
 <li>Your taxa fall within a single, well-studied clade (mammals, birds,
 insects-Lepidoptera, fish — see <code><a href="../reference/pr_date_tree.html">?pr_date_tree</a></code>).</li>
@@ -487,12 +553,13 @@ vignette</a>.</li>
 </h2>
 <ul>
 <li>
-<code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code> — the retrieval entry point.</li>
+<code><a href="../reference/pr_get_tree.html">?pr_get_tree</a></code> — the main function for fetching a
+tree.</li>
 <li>
 <code><a href="../reference/pr_phylo_cor.html">?pr_phylo_cor</a></code> — the correlation-matrix wrapper.</li>
 <li>
-<code><a href="../reference/reconcile_augment.html">?reconcile_augment</a></code> — for grafting species OTL didn’t
-place.</li>
+<code><a href="../reference/reconcile_augment.html">?reconcile_augment</a></code> — for grafting species Open Tree of
+Life didn’t place.</li>
 <li>Pottier, Burke, Drobniak, Lagisz, Nakagawa (2022). <em>Developmental
 plasticity in thermal tolerance: ontogenetic variation, persistence, and
 future directions.</em> Ecology Letters 25(10): 2245–2268. <a href="https://doi.org/10.1111/ele.14083" class="external-link">doi:10.1111/ele.14083</a>.

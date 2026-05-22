@@ -75,11 +75,11 @@
     
     
 <p><code>prepR4pcm</code> can fetch a phylogenetic tree for your species
-from five different sources. We call each source a <em>backend</em> — an
-external package, wrapped by <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>, that supplies a
-tree. The five backends draw on different reference trees, different
-taxonomies, and different calibration approaches, so the tree you get
-depends on which backend you pick. This vignette answers <em>how
+from five different <em>backends</em> — external packages, each wrapped
+by <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>, that supply a tree from a different
+reference source. The five backends draw on different reference trees,
+different taxonomies, and different calibration approaches, so the tree
+you get depends on which backend you pick. This vignette answers <em>how
 much</em> they disagree, and <em>where</em>.</p>
 <p>This vignette walks through <code><a href="../reference/pr_tree_compare.html">pr_tree_compare()</a></code> and shows
 how to use it to make a defensible backend choice for your dataset — or
