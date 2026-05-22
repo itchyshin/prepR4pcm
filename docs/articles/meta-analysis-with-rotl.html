@@ -426,7 +426,12 @@ Steps 1-3 — and shows the species counts before and after grafting:</p>
 <span><span class="va">aug</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">augmented_n_tips</span>    <span class="co"># 15  (tree tips after grafting)</span></span>
 <span><span class="va">aug</span><span class="op">$</span><span class="va">augmented</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"placed_near"</span>, <span class="st">"n_congeners"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;               species   placed_near n_congeners</span></span>
-<span><span class="co">#&gt; 1 Anolis carolinensis Anolis sagrei           1</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 Anolis carolinensis Anolis sagrei           1</span></span>
+<span></span>
+<span><span class="co"># The augmented tree is ready for a comparative model: still fully</span></span>
+<span><span class="co"># resolved, and still ultrametric.</span></span>
+<span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/is.binary.tree.html" class="external-link">is.binary</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>       <span class="co"># TRUE</span></span>
+<span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/is.ultrametric.html" class="external-link">is.ultrametric</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>  <span class="co"># TRUE</span></span></code></pre></div>
 <p>The trait data has 15 species; the retrieved tree had only 14 tips;
 after <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> the tree carries all 15. Plotting
 the tree before and after makes the single added tip visible:</p>
@@ -440,12 +445,13 @@ the tree before and after makes the single added tip visible:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span>,     main <span class="op">=</span> <span class="st">"After reconcile_augment(): 15 tips"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="../reference/figures/meta-analysis-graft-compare.png" style="width:100.0%" alt="Left: the 14-tip Open Tree of Life topology before grafting. Right: the same tree after reconcile_augment() grafts Anolis carolinensis (15 tips). The new species is added as a bifurcating sister to its congener Anolis sagrei, so the tree stays strictly bifurcating and needs no follow-up multi2di()."><div class="figcaption">Left: the 14-tip Open Tree of Life topology
+<img src="../reference/figures/meta-analysis-graft-compare.png" style="width:100.0%" alt="Left: the 14-tip Open Tree of Life topology before grafting. Right: the same tree after reconcile_augment() grafts Anolis carolinensis (15 tips). The new species joins as a bifurcating sister to its congener Anolis sagrei, and its terminal branch is adjusted so every tip stays aligned at the present: the augmented tree is bifurcating and ultrametric, ready for pr_phylo_cor()."><div class="figcaption">Left: the 14-tip Open Tree of Life topology
 before grafting. Right: the same tree after
 <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> grafts <em>Anolis carolinensis</em> (15
-tips). The new species is added as a bifurcating sister to its congener
-<em>Anolis sagrei</em>, so the tree stays strictly bifurcating and needs
-no follow-up <code>multi2di()</code>.</div>
+tips). The new species joins as a bifurcating sister to its congener
+<em>Anolis sagrei</em>, and its terminal branch is adjusted so every tip
+stays aligned at the present: the augmented tree is bifurcating and
+ultrametric, ready for <code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code>.</div>
 </div>
 <p><strong>Why the augmented tree has no polytomy.</strong> Manual
 <code>bind.tip(where = 95)</code> attaches the new tip <em>at</em> node
@@ -461,6 +467,17 @@ follow-up <code>multi2di()</code> is needed. Passing
 <code>branch_length = "zero"</code> or <code>where = "near"</code>
 attaches the tip at an existing node instead, and so produces a polytomy
 by design; see <code><a href="../reference/reconcile_augment.html">?reconcile_augment</a></code>.</p>
+<p><strong>The augmented tree also stays ultrametric.</strong>
+Phylogenetic comparative methods — <code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code>, PGLS,
+phylogenetic meta-analysis — need an ultrametric tree: every species
+sits the same distance from the root, because all are extant and have
+had the same time to evolve. A grafted tip would not land exactly at the
+present on its own, so <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> adjusts each
+grafted tip’s terminal branch afterwards to restore ultrametricity
+(<code>ape::is.ultrametric(aug$tree)</code> returns <code>TRUE</code>).
+The augmented tree therefore feeds straight into
+<code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code> and a phylogenetic meta-analysis, exactly as
+in Steps 4-5.</p>
 <p>The same one-species-manually-added pattern shows up in Cinar et
 al. (2022, <em>Methods Ecol. Evol.</em> 13:383), where <em>Villosa
 delumbis</em> was added based on ITIS — they describe it as “Polytomies

@@ -104,6 +104,11 @@
 #'       where you want to see the effect of adding species without
 #'       assuming any divergence time.}
 #'   }
+#'   When the input tree is ultrametric, each grafted tip's terminal
+#'   edge is adjusted after placement so the augmented tree stays
+#'   ultrametric --- a requirement of phylogenetic comparative
+#'   methods. `branch_length` then governs the initial graft only;
+#'   `"zero"` is exempt, since it asks for a polytomy by construction.
 #' @param seed A length-1 integer or `NULL`. When non-`NULL` and
 #'   `source = "internal"`, a fixed seed for the random congener
 #'   choice when `where = "genus"`, making the call reproducible.
@@ -491,6 +496,33 @@ reconcile_augment <- function(reconciliation,
       cli_alert_warning(
         "Skipped species had no congener in the tree. See $skipped for details."
       )
+    }
+  }
+
+  # Preserve ultrametricity. Each new tip's terminal edge is set from
+  # `branch_length` independently of where it attached, so a grafted
+  # tip generally does not land at the present and the tree stops
+  # being ultrametric -- which comparative methods (PGLS, phylogenetic
+  # meta-analysis) require. When the input tree was ultrametric, and
+  # the user did not ask for zero-length (polytomy) grafts, adjust each
+  # grafted tip's terminal edge so it reaches the common root-to-tip
+  # depth. Adjusting one terminal edge moves only that tip, so a single
+  # depth snapshot suffices even for several (or chained) grafts.
+  if (branch_length != "zero" &&
+      nrow(augmented) > 0L &&
+      !is.null(original_tree$edge.length) &&
+      isTRUE(tryCatch(ape::is.ultrametric(original_tree, tol = 1e-6),
+                      error = function(e) FALSE))) {
+    grafted_tips <- setdiff(tree$tip.label, original_tree$tip.label)
+    depths <- ape::node.depth.edgelength(tree)
+    target <- max(depths[match(original_tree$tip.label, tree$tip.label)])
+    for (gt in grafted_tips) {
+      tip_idx  <- match(gt, tree$tip.label)
+      edge_idx <- match(tip_idx, tree$edge[, 2])
+      if (!is.na(edge_idx)) {
+        tree$edge.length[edge_idx] <-
+          tree$edge.length[edge_idx] + (target - depths[tip_idx])
+      }
     }
   }
 

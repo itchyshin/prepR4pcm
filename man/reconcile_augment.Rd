@@ -56,7 +56,12 @@ sampled and the median is unreliable.}
 sister taxon (or MRCA). Use for exploratory sensitivity checks
 where you want to see the effect of adding species without
 assuming any divergence time.}
-}}
+}
+When the input tree is ultrametric, each grafted tip's terminal
+edge is adjusted after placement so the augmented tree stays
+ultrametric --- a requirement of phylogenetic comparative
+methods. \code{branch_length} then governs the initial graft only;
+\code{"zero"} is exempt, since it asks for a polytomy by construction.}
 
 \item{seed}{A length-1 integer or \code{NULL}. When non-\code{NULL} and
 \code{source = "internal"}, a fixed seed for the random congener

@@ -504,3 +504,34 @@ test_that("source = 'internal' (default) records meta$source", {
   res <- reconcile_augment(setup$rec, setup$tree, seed = 42, quiet = TRUE)
   expect_equal(res$meta$source, "internal")
 })
+
+
+test_that("grafting onto an ultrametric tree yields an ultrametric tree", {
+  # An explicitly ultrametric 5-tip tree: every tip at root-depth 10.
+  # Comparative methods (PGLS, phylogenetic meta-analysis) require an
+  # ultrametric tree, so reconcile_augment() must not break it.
+  tree <- ape::read.tree(
+    text = "((Aus_one:6,Aus_two:6):4,((Bus_one:3,Bus_two:3):4,Cus_one:7):3);"
+  )
+  expect_true(ape::is.ultrametric(tree))
+
+  df <- data.frame(
+    species = c(gsub("_", " ", tree$tip.label), "Aus three"),
+    stringsAsFactors = FALSE
+  )
+  rec <- reconcile_tree(df, tree, x_species = "species",
+                        authority = NULL, quiet = TRUE)
+
+  for (where in c("genus", "near")) {
+    for (bl in c("congener_median", "half_terminal")) {
+      aug <- suppressWarnings(suppressMessages(
+        reconcile_augment(rec, tree, where = where, branch_length = bl,
+                          seed = 42, quiet = TRUE)
+      ))
+      expect_true(
+        ape::is.ultrametric(aug$tree),
+        info = sprintf("where=%s branch_length=%s", where, bl)
+      )
+    }
+  }
+})

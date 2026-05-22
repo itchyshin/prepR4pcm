@@ -365,6 +365,11 @@ aug$meta$augmented_n_tips    # 15  (tree tips after grafting)
 aug$augmented[, c("species", "placed_near", "n_congeners")]
 #>               species   placed_near n_congeners
 #> 1 Anolis carolinensis Anolis sagrei           1
+
+# The augmented tree is ready for a comparative model: still fully
+# resolved, and still ultrametric.
+ape::is.binary(aug$tree)       # TRUE
+ape::is.ultrametric(aug$tree)  # TRUE
 ```
 
 The trait data has 15 species; the retrieved tree had only 14
@@ -382,7 +387,7 @@ plot(aug$tree,     main = "After reconcile_augment(): 15 tips")
 par(op)
 ```
 
-![Left: the 14-tip Open Tree of Life topology before grafting. Right: the same tree after `reconcile_augment()` grafts *Anolis carolinensis* (15 tips). The new species is added as a bifurcating sister to its congener *Anolis sagrei*, so the tree stays strictly bifurcating and needs no follow-up `multi2di()`.](../man/figures/meta-analysis-graft-compare.png){width=100%}
+![Left: the 14-tip Open Tree of Life topology before grafting. Right: the same tree after `reconcile_augment()` grafts *Anolis carolinensis* (15 tips). The new species joins as a bifurcating sister to its congener *Anolis sagrei*, and its terminal branch is adjusted so every tip stays aligned at the present: the augmented tree is bifurcating and ultrametric, ready for `pr_phylo_cor()`.](../man/figures/meta-analysis-graft-compare.png){width=100%}
 
 **Why the augmented tree has no polytomy.** Manual
 `bind.tip(where = 95)` attaches the new tip *at* node 95, so that
@@ -396,6 +401,17 @@ two children. The result is strictly bifurcating
 `multi2di()` is needed. Passing `branch_length = "zero"` or
 `where = "near"` attaches the tip at an existing node instead, and
 so produces a polytomy by design; see `?reconcile_augment`.
+
+**The augmented tree also stays ultrametric.** Phylogenetic
+comparative methods — `pr_phylo_cor()`, PGLS, phylogenetic
+meta-analysis — need an ultrametric tree: every species sits the
+same distance from the root, because all are extant and have had the
+same time to evolve. A grafted tip would not land exactly at the
+present on its own, so `reconcile_augment()` adjusts each grafted
+tip's terminal branch afterwards to restore ultrametricity
+(`ape::is.ultrametric(aug$tree)` returns `TRUE`). The augmented tree
+therefore feeds straight into `pr_phylo_cor()` and a phylogenetic
+meta-analysis, exactly as in Steps 4-5.
 
 The same one-species-manually-added pattern shows up in Cinar et
 al. (2022, *Methods Ecol. Evol.* 13:383), where *Villosa delumbis*
