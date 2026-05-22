@@ -911,6 +911,13 @@ pr_get_tree <- function(
     if (!is.null(tnrs_res) && !is.null(tnrs_res$unique_name)) {
       row <- match(tolower(normalised), tnrs_res$search_string)
       matched_name <- tnrs_res$unique_name[row]
+      # `tnrs_match_names()`'s `unique_name` carries Open Tree homonym /
+      # rank qualifiers (e.g. "Oncorhynchus mykiss (species in domain
+      # Eukaryota)"). Run it back through pr_normalize_names() so the
+      # backend query is a clean binomial; otherwise the qualifier
+      # leaks into the query and the species silently fails to match a
+      # tree tip.
+      matched_name <- as.character(pr_normalize_names(matched_name))
       replaced_idx <- !is.na(matched_name) &
         nzchar(matched_name) &
         matched_name != normalised
