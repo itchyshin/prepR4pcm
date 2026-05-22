@@ -149,20 +149,10 @@ Biol.</em>).</p>
 <span><span class="va">trees</span><span class="op">$</span><span class="va">matched</span>          <span class="co"># the 3 species, in their original input form</span></span>
 <span><span class="va">trees</span><span class="op">$</span><span class="va">unmatched</span>        <span class="co"># character(0) — every species was placed</span></span>
 <span></span>
-<span><span class="co"># Per-tree provenance: one entry per returned tree</span></span>
+<span><span class="co"># Per-tree provenance: one list entry per returned tree, each</span></span>
+<span><span class="co"># recording source_index, citation, calibration_method, and n_tips.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">)</span>   <span class="co"># 50</span></span>
-<span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="co">#&gt; $source_index</span></span>
-<span><span class="co">#&gt; [1] 1</span></span>
-<span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt; $citation</span></span>
-<span><span class="co">#&gt; [1] "Rabosky et al. (2018) Nature 559:392 (doi:10.1038/s41586-018-0273-1)"</span></span>
-<span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt; $calibration_method</span></span>
-<span><span class="co">#&gt; [1] "stochastic polytomy resolution"</span></span>
-<span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt; $n_tips</span></span>
-<span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
+<span><span class="va">trees</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">tree_provenance</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>      <span class="co"># the provenance of tree 1</span></span></code></pre></div>
 <p><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> records what happened to every name in
 <code>trees$mapping</code> (one row per input species), so a name that
 quietly fell out of the tree cannot go unnoticed.</p>
