@@ -158,7 +158,11 @@ test_that("pr_date_tree returns a per-tip mapping table", {
       "tree_name",
       "in_tree",
       "match_type",
-      "placement_status"
+      "placement_status",
+      "tnrs_number_matches",
+      "tnrs_is_synonym",
+      "tnrs_approximate_match",
+      "tnrs_flags"
     )
   )
   expect_equal(res$mapping$input_name, c("a", "b"))

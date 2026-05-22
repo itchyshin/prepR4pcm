@@ -1,5 +1,20 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 19: TNRS match metadata in the tree mapping table
+
+* **`pr_get_tree()`'s `result$mapping` now records what TNRS reported
+  for each name.** Four columns are added: `tnrs_number_matches`,
+  `tnrs_is_synonym`, `tnrs_approximate_match`, and `tnrs_flags`,
+  carrying the structured output of `rotl::tnrs_match_names()`. They
+  are `NA` for backends or `tnrs` settings where TNRS did not run, so
+  the mapping schema stays stable across calls. When a name resolves
+  to more than one taxon (`tnrs_number_matches > 1`, a homonym),
+  `pr_get_tree()` emits a one-shot warning naming the affected
+  species, since the resolved name is then only one of several
+  candidates. This extends the Round 17 audit table: a user can see
+  not just which name was queried but how `rotl`'s resolver
+  classified the match.
+
 ## Round 18: mammal_tree_example provenance — Upham et al. 2019
 
 * **`?mammal_tree_example` now cites the source** (#11). The bundled

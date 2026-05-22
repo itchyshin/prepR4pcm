@@ -49,8 +49,9 @@ database (returned with no calibration applied).}
 \item{\code{mapping}}{A tibble with one row per input tip label,
 mirroring \code{\link[=pr_get_tree]{pr_get_tree()}}'s audit table: \code{input_name},
 \code{normalized_name}, \code{query_name}, \code{tree_name}, \code{in_tree},
-\code{match_type}, and \code{placement_status} (\code{NA} for DateLife
-dating).}
+\code{match_type}, \code{placement_status}, and the four \verb{tnrs_*}
+columns. \code{placement_status} and the \verb{tnrs_*} columns are \code{NA}
+for DateLife dating, which applies no TNRS step.}
 \item{\code{source}}{Always \code{"datelife"} (paired with \code{pr_get_tree()}'s
 dispatch).}
 \item{\code{backend_meta}}{Includes \code{dating_method}, \code{calibrations}

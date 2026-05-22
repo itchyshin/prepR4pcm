@@ -949,7 +949,11 @@ test_that("result mapping audits original, query, and tree names", {
       "tree_name",
       "in_tree",
       "match_type",
-      "placement_status"
+      "placement_status",
+      "tnrs_number_matches",
+      "tnrs_is_synonym",
+      "tnrs_approximate_match",
+      "tnrs_flags"
     )
   )
   expect_equal(
@@ -967,6 +971,9 @@ test_that("result mapping audits original, query, and tree names", {
   expect_equal(res$mapping$in_tree, c(TRUE, TRUE, FALSE))
   expect_equal(res$mapping$match_type, c("normalized", "exact", "unmatched"))
   expect_equal(res$mapping$placement_status, rep(NA_character_, 3L))
+  # tnrs = "never": the TNRS audit columns are present but all NA
+  expect_true(all(is.na(res$mapping$tnrs_number_matches)))
+  expect_true(all(is.na(res$mapping$tnrs_flags)))
 })
 
 
