@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,6 +90,11 @@ for downstream comparative analyses.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
+<p>The worked example draws on five packages: <strong>dplyr</strong> for
+the table manipulations, <strong>readr</strong> for tolerant number
+parsing, <strong>stringr</strong> for tidying raw species strings,
+<strong>ape</strong> for the phylogeny, and <strong>prepR4pcm</strong>
+for reconciling species names against the tree.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://readr.tidyverse.org" class="external-link">readr</a></span><span class="op">)</span></span>
@@ -104,8 +109,9 @@ for downstream comparative analyses.</p>
 source tables were sampled from real database structures, using only the
 columns needed for this example. They mirror three common inputs for
 mammal comparative work: the Amniote life-history database <span class="citation">(Myhrvold et al. 2015)</span>, PanTHERIA <span class="citation">(Jones et al. 2009)</span>, and TetrapodTraits <span class="citation">(Moura et al. 2024)</span>. The bundled tree is a
-5,987-tip subset of the VertLife mammal phylogeny <span class="citation">(Upham et al. 2019)</span>; for analysis-grade trees
-download the full credible set from <a href="http://vertlife.org/phylosubsets" class="external-link uri">http://vertlife.org/phylosubsets</a>.</p>
+subset of the VertLife mammal phylogeny <span class="citation">(Upham et
+al. 2019)</span>; the next code chunk reports its exact tip count. For
+analysis-grade trees download the full credible set from <a href="http://vertlife.org/phylosubsets" class="external-link uri">http://vertlife.org/phylosubsets</a>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mammal_amniote_example</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">mammal_pantheria_example</span><span class="op">)</span></span>
@@ -390,6 +396,12 @@ column so the provenance of each value is retained.</p>
 </tr>
 </tbody>
 </table>
+<p>In this table <code>n_records</code> is the number of rows the source
+contributes and <code>n_species</code> the number of distinct species;
+each <code>*_records</code> column counts the rows where that trait has
+a non-missing, positive value. Those counts sit well below
+<code>n_records</code> — no single database measures every trait for
+every species, which is exactly why combining sources is worthwhile.</p>
 </div>
 <div class="section level2">
 <h2 id="step-3-reconcile-species-names-with-the-tree">Step 3: Reconcile species names with the tree<a class="anchor" aria-label="anchor" href="#step-3-reconcile-species-names-with-the-tree"></a>
@@ -457,7 +469,7 @@ reproducible.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; === Reconciliation Report ===</span></span>
 <span><span class="co">#&gt; Type: data_tree</span></span>
-<span><span class="co">#&gt; Timestamp: 2026-05-14 17:33:14</span></span>
+<span><span class="co">#&gt; Timestamp: 2026-05-22 11:20:43</span></span>
 <span><span class="co">#&gt; Package: prepR4pcm 0.4.0.9000</span></span>
 <span><span class="co">#&gt; Authority: NONE (version: latest)</span></span>
 <span><span class="co">#&gt; Rank: species</span></span>
@@ -471,7 +483,11 @@ reproducible.</p>
 <span><span class="co">#&gt;   Unresolved:  5393 (x only) + 76 (y only)</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>The mapping table records which source names matched the tree and
-which need review.</p>
+which need review. In it, <code>name_x</code> is the raw source name,
+<code>name_y</code> the tree tip it resolved to, <code>match_type</code>
+records how the two were linked, and <code>in_x</code> /
+<code>in_y</code> flag whether the name is present in the data and in
+the tree.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mapping0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">rec0</span><span class="op">)</span></span>
 <span></span>
@@ -1099,6 +1115,11 @@ source records and keep simple provenance columns.</p>
 <td align="right">1975</td>
 </tr></tbody>
 </table>
+<p>Each <code>*_species</code> column counts the species with a
+non-missing value for that trait. Some species still carry
+<code>NA</code>: even with three sources combined, not every species has
+every trait measured. Downstream comparative models handle these gaps
+through imputation or complete-case analysis.</p>
 </div>
 <div class="section level2">
 <h2 id="step-6-align-the-database-and-the-tree">Step 6: Align the database and the tree<a class="anchor" aria-label="anchor" href="#step-6-align-the-database-and-the-tree"></a>
@@ -1337,7 +1358,20 @@ Biology</em> 17: e3000494. <a href="https://doi.org/10.1371/journal.pbio.3000494
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>
