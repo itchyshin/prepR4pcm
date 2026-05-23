@@ -120,6 +120,13 @@ your downstream phylogeny is from the Open Tree synthesis.</p></dd>
 locally with <span class="pkg">taxadb</span> for testing. Intended for examples
 and unit tests; not for analysis.</p></dd>
 
+<dt><code>"gnverifier"</code></dt>
+<dd><p>HTTP-backed verification against ~100
+sources via the Global Names verifier; no local database
+download. See <code><a href="../articles/getting-started.html">vignette("getting-started")</a></code> for the
+trade-off (wider coverage, requires network and the
+<span class="pkg">httr2</span> package).</p></dd>
+
 <dt><code>NULL</code></dt>
 <dd><p>Skip the synonym stage entirely. Useful for quick
 checks or when <span class="pkg">taxadb</span> is unavailable. Stages 1, 2 and 4
@@ -294,7 +301,19 @@ how many species are gained or lost by switching taxonomies).</p>
 
 
 
-
-
-  </body></html>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script></body></html>
 

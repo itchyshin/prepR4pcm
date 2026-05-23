@@ -360,17 +360,22 @@ always holds. Inspect these and consider running them back
 through <code><a href="reconcile_suggest.html">reconcile_suggest()</a></code> / a manual override.</p></dd>
 
 <dt><code>mapping</code></dt>
-<dd><p>A tibble with one row per unique input species:
-<code>input_name</code>, <code>normalized_name</code>, <code>query_name</code>, <code>tree_name</code>,
-<code>in_tree</code>, <code>match_type</code>, and <code>placement_status</code>. This is the
-audit trail for name handling: <code>input_name</code> is what the user
-supplied, <code>normalized_name</code> is the result of
+<dd><p>A tibble with one row per unique input species.
+Core columns: <code>input_name</code>, <code>normalized_name</code>, <code>query_name</code>,
+<code>tree_name</code>, <code>in_tree</code>, <code>match_type</code>, and <code>placement_status</code>.
+This is the audit trail for name handling: <code>input_name</code> is what
+the user supplied, <code>normalized_name</code> is the result of
 <code><a href="pr_normalize_names.html">pr_normalize_names()</a></code>, <code>query_name</code> is the backend query after
 optional TNRS, <code>tree_name</code> is the actual returned tip label, and
 <code>match_type</code> is one of <code>"exact"</code>, <code>"normalized"</code>, <code>"tnrs"</code>, or
 <code>"unmatched"</code>. For <code>source = "rtrees"</code>, <code>placement_status</code>
 carries the grafting status from <code>backend_meta$placement</code>;
-otherwise it is <code>NA</code>.</p></dd>
+otherwise it is <code>NA</code>. Four further columns record what <code>rotl</code>'s
+TNRS resolver reported for each name: <code>tnrs_number_matches</code>,
+<code>tnrs_is_synonym</code>, <code>tnrs_approximate_match</code>, and <code>tnrs_flags</code>.
+These are <code>NA</code> for backends or <code>tnrs</code> settings where TNRS did
+not run. <code>tnrs_number_matches &gt; 1</code> flags a homonym, meaning the
+resolved name is only one of several candidate taxa.</p></dd>
 
 <dt><code>source</code></dt>
 <dd><p>The backend that produced the tree.</p></dd>
@@ -446,6 +451,12 @@ the <code>fishtree</code> backend under <code>tnrs = "auto"</code>), the replace
 recorded in <code>result$backend_meta$tnrs_replacements</code> as a named
 character vector <code>(original = resolved)</code>. A one-shot <code>cli</code> warning
 lists the first few substitutions on the call itself.</p>
+<p>TNRS also returns structured match metadata. <code>pr_get_tree()</code> records
+it per name in the <code>mapping</code> tibble: <code>tnrs_number_matches</code>,
+<code>tnrs_is_synonym</code>, <code>tnrs_approximate_match</code>, and <code>tnrs_flags</code>. When a
+name resolves to more than one taxon (<code>tnrs_number_matches &gt; 1</code>, a
+homonym), a one-shot <code>cli</code> warning names the affected species, since
+the resolved name is then only one of several candidates.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -612,14 +623,11 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 <span class="r-in"><span>                       source <span class="op">=</span> <span class="st">"fishtree"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="va">res</span><span class="op">$</span><span class="va">tree</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>TNRS replaced 1 input name with OTL-resolved form.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> See `result$backend_meta$tnrs_replacements` for the full mapping.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> → e.g. 'Gadus morhua' -&gt; 'Gadus morhua (species in domain Eukaryota)'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Phylogenetic tree with 2 tips and 1 internal node.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Phylogenetic tree with 3 tips and 2 internal nodes.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Tip labels:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Salmo_salar, Esox_lucius</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Gadus_morhua, Salmo_salar, Esox_lucius</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rooted; includes branch length(s).</span>
 <span class="r-in"><span></span></span>
@@ -668,7 +676,19 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 
 
 
-
-
-  </body></html>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script></body></html>
 

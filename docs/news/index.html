@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,24 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="prepr4pcm-0409000-development-version">prepR4pcm 0.4.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0409000-development-version"></a></h2>
+<div class="section level3">
+<h3 id="round-optional-gnverifier-authority-for-synonym-resolution-0-4-0-9000">Round 21: optional gnverifier authority for synonym resolution<a class="anchor" aria-label="anchor" href="#round-optional-gnverifier-authority-for-synonym-resolution-0-4-0-9000"></a></h3>
+<ul><li>
+<p><strong><code>authority = "gnverifier"</code></strong> is now accepted by every <code>reconcile_*</code> function (<code><a href="../reference/reconcile_data.html">reconcile_data()</a></code>, <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>, <code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code>, <code><a href="../reference/reconcile_to_trees.html">reconcile_to_trees()</a></code>, <code><a href="../reference/reconcile_trees.html">reconcile_trees()</a></code>). It routes the synonym stage of the cascade through the <a href="https://verifier.globalnames.org/" class="external-link">Global Names verifier</a> over HTTP instead of a local  database — broader source coverage (~100 sources in one round-trip, including Catalogue of Life, ITIS, GBIF, NCBI, Open Tree) and no ~100 MB local cache to maintain, in exchange for needing network access at lookup time and the  package (added to <code>Suggests</code>). Defaults stay <code>authority = "col"</code> (taxadb); the new option is opt-in.</p>
+<p>Companion to Round 20’s <code>pr_normalize_names(parser = "gnparser")</code>: both opt-in paths plug a different stage of the cascade into the Global Names Architecture. Network failure degrades to all-names-not-found with a single warning so the rest of the matching cascade keeps running.</p>
+<p>Documentation footprint (intentionally compact): a single canonical description lives in <code><a href="../articles/getting-started.html">vignette("getting-started")</a></code> under “Using a taxonomic authority”; every <code>@param authority</code> docstring carries a one-sentence pointer to it. No other vignette is touched.</p>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="round-optional-gnparser-backend-for-name-normalisation-0-4-0-9000">Round 20: optional gnparser backend for name normalisation<a class="anchor" aria-label="anchor" href="#round-optional-gnparser-backend-for-name-normalisation-0-4-0-9000"></a></h3>
+<ul><li>
+<strong><code>pr_normalize_names(parser = "gnparser")</code></strong> routes parsing through <a href="https://CRAN.R-project.org/package=rgnparser" class="external-link">rgnparser</a>, the R wrapper for the <a href="https://github.com/gnames/gnparser" class="external-link">gnparser</a> Go binary (part of the Global Names Architecture). The default stays <code>parser = "internal"</code> (the package’s regex cascade, no external dependency); set <code>parser = "gnparser"</code> for hardened parsing of hybrid signs, complex multi-author year strings, and trailing parentheticals (Open Tree homonym / rank flags) — the classes of edge case the internal cascade has had to learn one by one. The gnparser path returns the same shape and <code>normalisation_log</code> attribute as the internal path, so the two are drop-in interchangeable. Errors helpfully when <code>rgnparser</code> or the <code>gnparser</code> binary is missing, pointing the user at install steps and the <code>parser = "internal"</code> fallback.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="round-tnrs-match-metadata-in-the-tree-mapping-table-0-4-0-9000">Round 19: TNRS match metadata in the tree mapping table<a class="anchor" aria-label="anchor" href="#round-tnrs-match-metadata-in-the-tree-mapping-table-0-4-0-9000"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code>’s <code>result$mapping</code> now records what TNRS reported for each name.</strong> Four columns are added: <code>tnrs_number_matches</code>, <code>tnrs_is_synonym</code>, <code>tnrs_approximate_match</code>, and <code>tnrs_flags</code>, carrying the structured output of <code><a href="https://docs.ropensci.org/rotl/reference/tnrs_match_names.html" class="external-link">rotl::tnrs_match_names()</a></code>. They are <code>NA</code> for backends or <code>tnrs</code> settings where TNRS did not run, so the mapping schema stays stable across calls. When a name resolves to more than one taxon (<code>tnrs_number_matches &gt; 1</code>, a homonym), <code><a href="../reference/pr_get_tree.html">pr_get_tree()</a></code> emits a one-shot warning naming the affected species, since the resolved name is then only one of several candidates. This extends the Round 17 audit table: a user can see not just which name was queried but how <code>rotl</code>’s resolver classified the match.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="round-mammal_tree_example-provenance--upham-et-al-0-4-0-9000">Round 18: mammal_tree_example provenance — Upham et al. 2019<a class="anchor" aria-label="anchor" href="#round-mammal_tree_example-provenance--upham-et-al-0-4-0-9000"></a></h3>
 <ul><li>
@@ -464,7 +482,19 @@
 
 
 
-
-
-  </body></html>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script></body></html>
 

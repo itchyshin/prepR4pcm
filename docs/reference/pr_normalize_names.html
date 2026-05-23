@@ -62,7 +62,11 @@ reconciliation — for example, when building a crosswalk by hand.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pr_normalize_names</span><span class="op">(</span><span class="va">names</span>, rank <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"subspecies"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pr_normalize_names</span><span class="op">(</span></span>
+<span>  <span class="va">names</span>,</span>
+<span>  rank <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"subspecies"</span><span class="op">)</span>,</span>
+<span>  parser <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"internal"</span>, <span class="st">"gnparser"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -87,6 +91,30 @@ trinomials become binomials (<code>Parus major major</code> -&gt;
 
 </dl></dd>
 
+
+<dt id="arg-parser">parser<a class="anchor" aria-label="anchor" href="#arg-parser"></a></dt>
+<dd><p>A length-1 character vector. Which parsing engine to
+use:</p><dl><dt><code>"internal"</code> (default)</dt>
+<dd><p>The package's own regex-based
+cascade described above. No external dependency.</p></dd>
+
+<dt><code>"gnparser"</code></dt>
+<dd><p>Delegates parsing to
+<code><a href="https://docs.ropensci.org/rgnparser/reference/gn_parse_tidy.html" class="external-link">rgnparser::gn_parse_tidy()</a></code>, which wraps the
+<a href="https://github.com/gnames/gnparser" class="external-link">gnparser</a> Go binary
+(part of the Global Names Architecture). Handles hybrid
+signs, complex multi-author year strings, and trailing
+parentheticals (Open Tree homonym / rank flags) more
+robustly than the internal cascade. Requires both the
+<span class="pkg">rgnparser</span> R package and the <code>gnparser</code> binary on the
+system PATH; the function errors helpfully if either is
+missing. Returns the same shape and <code>normalisation_log</code>
+attribute as the internal path, so the two are drop-in
+interchangeable.</p></dd>
+
+
+</dl></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -101,6 +129,9 @@ space (<code>Homo_sapiens</code> -&gt; <code>Homo sapiens</code>).</p></li>
 <li><p>Strip authority strings and year, including multi-author
 and parenthetical forms (<code>Corvus corax (Linnaeus, 1758)</code> -&gt;
 <code>Corvus corax</code>).</p></li>
+<li><p>Strip any other trailing parenthetical qualifier, such as
+the Open Tree of Life homonym / rank flags that <code>rotl</code> returns
+(<code>Prunella (genus in kingdom Archaeplastida)</code> -&gt; <code>Prunella</code>).</p></li>
 <li><p>Fold diacritics to ASCII (<code>Passer domesticus</code> stays as
 <code>Passer domesticus</code>; accented characters are simplified).</p></li>
 <li><p>Standardise case: genus capitalised, epithet lowercase.</p></li>
@@ -169,7 +200,19 @@ labels out of a tree prior to normalising them.</p>
 
 
 
-
-
-  </body></html>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script></body></html>
 

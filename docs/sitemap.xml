@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://itchyshin.github.io/prepR4pcm/404.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/CLAUDE.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/LICENSE-text.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/bird-workflow.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html</loc></url>
@@ -17,6 +18,9 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/dot-pr_augment_rtrees.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/dot-pr_augment_uphylomaker.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/dot-pr_augment_vphylomaker.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/dot-pr_lookup_gnverifier.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/dot-pr_lookup_taxadb.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/dot-pr_normalize_gnparser.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/index.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/mammal_amniote_example.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/mammal_pantheria_example.html</loc></url>

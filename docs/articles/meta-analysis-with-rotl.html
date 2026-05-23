@@ -241,7 +241,7 @@ are shown cleaned of the OTT id suffixes.</div>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Same tip set?</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setequal</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>, <span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span>   <span class="co"># TRUE</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">setequal</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span>, <span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span><span class="op">)</span>   <span class="co"># TRUE</span></span>
 <span><span class="co"># Same branch-length range (modulo RNG order for the bifurcation)?</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">edge.length</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">res_manual</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="va">edge.length</span><span class="op">)</span></span>
@@ -282,7 +282,7 @@ trait data:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">phy_cor</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pr_phylo_cor.html">pr_phylo_cor</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>            <span class="co"># 14 x 14 (one row/col per species)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/isSymmetric.html" class="external-link">isSymmetric</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>    <span class="co"># TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/isSymmetric-methods.html" class="external-link">isSymmetric</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>    <span class="co"># TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span> <span class="co"># TRUE (correlation matrix; ultrametric tree)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span>       <span class="co"># matches the binomials in `species`</span></span></code></pre></div>
 <p><code><a href="../reference/pr_phylo_cor.html">pr_phylo_cor()</a></code> is a thin wrapper around
@@ -318,7 +318,7 @@ ectotherm-thermal-tolerance dataset):</p>
 <span></span>
 <span><span class="co"># Sanity-check: every species in the data is also a row in phy_cor.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">toy_df</span><span class="op">$</span><span class="va">species</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect</a></span><span class="op">(</span><span class="va">toy_df</span><span class="op">$</span><span class="va">species</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>   <span class="co"># 14</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/setops.html" class="external-link">intersect</a></span><span class="op">(</span><span class="va">toy_df</span><span class="op">$</span><span class="va">species</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">phy_cor</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>   <span class="co"># 14</span></span>
 <span></span>
 <span><span class="co"># Fit: random study effect (within-study) + random species effect</span></span>
 <span><span class="co"># (between-species, with phylogenetic correlation structure).</span></span>
@@ -383,14 +383,14 @@ then grafted it back manually with <code>ape::bind.tip()</code>:</p>
 <span></span>
 <span><span class="co"># Drop Potamilus alatus from the OTT id list: Open Tree of Life's</span></span>
 <span><span class="co"># induced-subtree service errors when this id is included.</span></span>
-<span><span class="va">taxa.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxa</span>, <span class="va">ott_id</span> <span class="op">!=</span> <span class="st">"732215"</span><span class="op">)</span></span>
+<span><span class="va">taxa.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">taxa</span>, <span class="va">ott_id</span> <span class="op">!=</span> <span class="st">"732215"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Build the topology from the remaining OTT ids.</span></span>
 <span><span class="va">phylo_tree</span> <span class="op">&lt;-</span> <span class="fu">tol_induced_subtree</span><span class="op">(</span>ott_ids <span class="op">=</span> <span class="va">taxa.tree</span><span class="op">$</span><span class="va">ott_id</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Resolve polytomies at random so the tree is strictly bifurcating</span></span>
 <span><span class="co"># (a full-rank phylogenetic correlation matrix needs this).</span></span>
-<span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu">multi2di</span><span class="op">(</span><span class="va">phylo_tree</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">binary.tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">multi2di</a></span><span class="op">(</span><span class="va">phylo_tree</span>, random <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Graft Potamilus alatus back as a new tip at node 95 (inside</span></span>
 <span><span class="co"># Bivalvia). Attaching a tip *at* an existing node gives that node</span></span>
@@ -456,14 +456,14 @@ ultrametric, ready for <code><a href="../reference/pr_phylo_cor.html">pr_phylo_c
 <p><strong>Why the augmented tree has no polytomy.</strong> Manual
 <code>bind.tip(where = 95)</code> attaches the new tip <em>at</em> node
 95, so that node gains a third child — a polytomy — which is why the
-Pottier pipeline runs <code>multi2di()</code> afterwards.
+Pottier pipeline runs <code><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">multi2di()</a></code> afterwards.
 <code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code>, with its default
 <code>where = "genus"</code>, instead inserts the new species part-way
 <em>along</em> the terminal branch of a congener: it splits that branch
 into a new two-way node, with the new species as one of the two
 children. The result is strictly bifurcating
 (<code>ape::is.binary(aug$tree)</code> returns <code>TRUE</code>), so no
-follow-up <code>multi2di()</code> is needed. Passing
+follow-up <code><a href="https://rdrr.io/pkg/ape/man/multi2di.html" class="external-link">multi2di()</a></code> is needed. Passing
 <code>branch_length = "zero"</code> or <code>where = "near"</code>
 attaches the tip at an existing node instead, and so produces a polytomy
 by design; see <code><a href="../reference/reconcile_augment.html">?reconcile_augment</a></code>.</p>

@@ -130,7 +130,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-22 11:51:30</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-23 11:24:41</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -344,7 +344,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-22 11:51:48</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-23 11:24:58</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -584,11 +584,6 @@ tree using genus-level placement:</p>
 <span>  seed <span class="op">=</span> <span class="fl">42</span>,                      <span class="co"># for reproducibility</span></span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Tree returned by <span style="color: #0000BB;">"internal"</span> is not strictly ultrametric.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.</span></span>
-<span><span class="co">#&gt; → To force: `phytools::force.ultrametric(result$tree)` or</span></span>
-<span><span class="co">#&gt;   `ape::chronos(result$tree)`.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> To suppress this check: pass `check_ultrametric = FALSE`.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original tips: %d\nAugmented tips: %d\n"</span>,</span>
 <span>            <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">original</span><span class="op">)</span>, <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
