@@ -1,436 +1,235 @@
-# prepR4pcm 0.4.0.9000 (development version)
+# prepR4pcm 0.5.0
 
-## Round 21: optional gnverifier authority for synonym resolution
+This release adds two opt-in Global Names Architecture backends, a
+phylogenetic-meta-analysis workflow, and a substantial round of
+tree-handling audit metadata. All existing API contracts are preserved
+unless explicitly called out under *Breaking changes*.
 
-* **`authority = "gnverifier"`** is now accepted by every `reconcile_*`
-  function (`reconcile_data()`, `reconcile_tree()`, `reconcile_multi()`,
-  `reconcile_to_trees()`, `reconcile_trees()`). It routes the synonym
-  stage of the cascade through the
-  [Global Names verifier](https://verifier.globalnames.org/) over HTTP
-  instead of a local \pkg{taxadb} database — broader source coverage
-  (~100 sources in one round-trip, including Catalogue of Life, ITIS,
-  GBIF, NCBI, Open Tree) and no ~100 MB local cache to maintain, in
-  exchange for needing network access at lookup time and the
-  \pkg{httr2} package (added to `Suggests`). Defaults stay
-  `authority = "col"` (taxadb); the new option is opt-in.
+## New features
 
-  Companion to Round 20's `pr_normalize_names(parser = "gnparser")`:
-  both opt-in paths plug a different stage of the cascade into the
-  Global Names Architecture. Network failure degrades to
-  all-names-not-found with a single warning so the rest of the
-  matching cascade keeps running.
+### Optional Global Names backends
 
-  Documentation footprint (intentionally compact): a single canonical
-  description lives in `vignette("getting-started")` under "Using a
-  taxonomic authority"; every `@param authority` docstring carries a
-  one-sentence pointer to it. No other vignette is touched.
+* **`pr_normalize_names(parser = "gnparser")`** routes parsing through
+  [rgnparser](https://CRAN.R-project.org/package=rgnparser), the R
+  wrapper for the [gnparser](https://github.com/gnames/gnparser) Go
+  binary. Set `parser = "gnparser"` for hardened parsing of hybrid
+  signs, complex multi-author year strings, and Open Tree homonym /
+  rank flag parentheticals. Returns the same shape and
+  `normalisation_log` attribute as the internal cascade, so the two
+  are drop-in interchangeable. Default stays `parser = "internal"`
+  (zero-dependency).
 
-## Round 20: optional gnparser backend for name normalisation
+* **`authority = "gnverifier"`** is accepted by every `reconcile_*`
+  function (`reconcile_data()`, `reconcile_tree()`,
+  `reconcile_multi()`, `reconcile_to_trees()`, `reconcile_trees()`).
+  It routes the synonym stage through the
+  [Global Names verifier](https://verifier.globalnames.org/) over
+  HTTP (~100 sources in one round-trip) instead of a local taxadb
+  database. No ~100 MB local cache; requires network access and
+  `httr2`. Default stays `authority = "col"` (taxadb).
 
-* **`pr_normalize_names(parser = "gnparser")`** routes parsing
-  through [rgnparser](https://CRAN.R-project.org/package=rgnparser),
-  the R wrapper for the [gnparser](https://github.com/gnames/gnparser)
-  Go binary (part of the Global Names Architecture). The default
-  stays `parser = "internal"` (the package's regex cascade, no
-  external dependency); set `parser = "gnparser"` for hardened
-  parsing of hybrid signs, complex multi-author year strings, and
-  trailing parentheticals (Open Tree homonym / rank flags) — the
-  classes of edge case the internal cascade has had to learn one by
-  one. The gnparser path returns the same shape and
-  `normalisation_log` attribute as the internal path, so the two are
-  drop-in interchangeable. Errors helpfully when `rgnparser` or the
-  `gnparser` binary is missing, pointing the user at install steps
-  and the `parser = "internal"` fallback.
+### Tree-handling audit metadata
 
-## Round 19: TNRS match metadata in the tree mapping table
+* **`pr_get_tree()` / `pr_date_tree()` now return `result$mapping`** —
+  one row per unique input species, with the user-facing name,
+  normalised name, backend query name, returned tree tip, match type,
+  and rtrees placement status when available. Replaces ad-hoc
+  reconstruction from `$matched` + `$unmatched` + backend-specific
+  metadata (#73).
 
-* **`pr_get_tree()`'s `result$mapping` now records what TNRS reported
-  for each name.** Four columns are added: `tnrs_number_matches`,
-  `tnrs_is_synonym`, `tnrs_approximate_match`, and `tnrs_flags`,
-  carrying the structured output of `rotl::tnrs_match_names()`. They
-  are `NA` for backends or `tnrs` settings where TNRS did not run, so
-  the mapping schema stays stable across calls. When a name resolves
-  to more than one taxon (`tnrs_number_matches > 1`, a homonym),
-  `pr_get_tree()` emits a one-shot warning naming the affected
-  species, since the resolved name is then only one of several
-  candidates. This extends the Round 17 audit table: a user can see
-  not just which name was queried but how `rotl`'s resolver
-  classified the match.
+* **TNRS match metadata in `result$mapping`** — four new columns
+  (`tnrs_number_matches`, `tnrs_is_synonym`, `tnrs_approximate_match`,
+  `tnrs_flags`) carry the structured output of
+  `rotl::tnrs_match_names()`. Homonyms (`tnrs_number_matches > 1`)
+  trigger a one-shot warning naming the affected species.
 
-## Round 18: mammal_tree_example provenance — Upham et al. 2019
+* **`result$backend_meta$placement` (rtrees only)** — per-input table
+  with `input_name`, `tree_name`, `placement_status` (`exact` /
+  `genus_added` / `family_added` / `skipped` / `unmatched`). Filter
+  to `placement_status == "exact"` to drop grafted tips from a
+  sensitivity analysis (#74).
 
-* **`?mammal_tree_example` now cites the source** (#11). The bundled
-  5,987-tip mammal phylogeny is a subset of the Upham, Esselstyn &
-  Jetz (2019) VertLife mammal phylogeny
-  ([doi:10.1371/journal.pbio.3000494](https://doi.org/10.1371/journal.pbio.3000494)).
-  Source confirmed by @Santiago-0rtega on issue #11. The previous
-  "provenance pending confirmation" wording has been removed from
-  the help page, the README, and the database-assembly vignette.
-  The 76 `X_`-prefixed tips representing Mesozoic stem-mammal
-  fossils are described as products of the Upham et al.
-  "backbone-and-patch" framework. Both vignette and `data-raw/`
-  bibliography files now carry a full `@Upham2019` bibentry.
+* **TNRS substitutions are now auditable** —
+  `result$backend_meta$tnrs_replacements` lists every name TNRS
+  changed; a one-shot warning shows the first three. Silent name
+  correction is no longer possible (#72).
 
-## Round 17: full reference list on `?pr_get_tree` + `?pr_tree_compare`
+* **Multi-tree reporting fields** on `pr_get_tree()` — `backend_meta`
+  gains `n_requested`, `tip_set_consistent`, and `dropped_per_tree`
+  (#76).
 
-Jimuel Celeste, Jr.'s #79 and #80. **Issues remain open** — Jimuel
-to verify and close from his end.
+### Phylogenetic meta-analysis path
 
-* **`?pr_tree_compare` `@references`** (#79): Kuhner & Felsenstein
-  (1994) — the simulation comparison paper that introduced the
-  bipartition-matched correlation pattern — is now spelled out in
-  the help page with a DOI, alongside Robinson & Foulds (1981) for
-  the RF distance metric.
-* **`?pr_get_tree` `@references`** (#80): every author-year citation
-  in the help text now has a full reference: Jetz et al. (2012),
-  Rabosky et al. (2018), Upham et al. (2019), Sanchez Reyes et al.
-  (2024), Chang et al. (2019), Michonneau et al. (2016). Each entry
-  carries a DOI and a one-line "used by which backend" note.
-
-## Round 17: pr_tree_result mapping audit table (#73)
-
-* **`pr_get_tree()` and `pr_date_tree()` now return `result$mapping`.** The table has one row per unique input species or input tip, preserving the user-facing name, normalized name, backend query name, actual returned tree tip, whether it made it into the tree, the name-handling match type, and the rtrees placement status when available. This gives users an auditable per-name record without reconstructing it from `$matched`, `$unmatched`, and backend-specific metadata.
-
-## Round 16: rtrees placement-status table (#74)
-
-Addresses Ayumi Mizuno's #74. **Issue remains open** — Ayumi to verify
-and close from her end.
-
-* **New `result$backend_meta$placement` (rtrees only).** When
-  `source = "rtrees"`, the result now carries a per-input placement
-  table — one row per unique input species, with columns:
-  `input_name`, `tree_name`, `placement_status`. The status is one of
-  `"exact"` (species was already in the mega-tree), `"genus_added"`
-  (grafted at the genus level by `rtrees::get_tree`; tip carries a
-  `*` suffix), `"family_added"` (grafted at the family level; `**`
-  suffix), `"skipped"` (rtrees decided not to graft, e.g. no co-family
-  species in the mega-tree), or `"unmatched"` (didn't reach rtrees at
-  all). To exclude grafted tips from a downstream analysis: filter
-  the placement table on `placement_status == "exact"` and prune the
-  tree to those tip labels.
-* **`?pr_get_tree` documents the rtrees grafting behaviour** under
-  the `rtrees` entry of `source`, naming the `*` / `**` convention
-  and pointing at `?rtrees::get_tree` for upstream control. The wrapper
-  cannot disable grafting at its level — rtrees 1.0.4 has no such
-  switch; `scenario = "at_basal_node"` vs `"random_below_basal"` only
-  affects *where* a graft lands once a graft has been chosen.
-* Existing `n_grafted` and `grafted_tips` fields in `backend_meta`
-  are preserved (back-compat).
-* New regression tests in
-  `tests/testthat/test-pr_get_tree-rtrees-placement.R` (7 tests
-  pinning the contract: columns, enum values, one row per unique
-  input, status correctness for exact / genus-added / skipped cases).
-
-## Round 15: pr_get_tree name-matching cascade + accounting invariants
-
-Addresses Ayumi Mizuno's #72, #73, #75, #76. **Issues remain open** —
-Ayumi to verify and close from her end.
-
-* **Bug fix — `pr_get_tree()` matched/unmatched accounting (#73).**
-  When TNRS ran (`tnrs = "always"` or the auto-default for `fishtree`),
-  the `matched` and `unmatched` slots referred to TNRS-resolved names
-  rather than the user's original input. Names that TNRS mapped to
-  OTL homonyms in plant taxonomy could appear in `unmatched` even
-  though the user never input them. Three invariants are now
-  enforced inside the dispatcher tail (`stopifnot()`):
-    - `matched` is always a subset of `unique(input)`,
-    - `unmatched` is always a subset of `unique(input)`,
-    - `length(matched) + length(unmatched) == length(unique(input))`.
-  The `matched` slot now preserves the user's *original input format*
-  (underscores stay underscores, etc.) — the wrapper no longer reports
-  against intermediate forms.
-* **TNRS substitutions are now auditable (#72).**
-  `result$backend_meta$tnrs_replacements` is a named character vector
-  `(original = resolved)` listing every name TNRS changed. A one-shot
-  `cli::cli_warn()` shows the first three substitutions on the call
-  itself, so silent name correction is no longer possible.
-* **Name-format normalisation is uniform across backends (#75).**
-  `pr_get_tree()` now runs `pr_normalize_names()` on every input
-  before backend lookup, for every backend. Underscore-form
-  (`Genus_species`), OTT-id-suffixed (`Genus species ott770315`),
-  authority-laden (`Genus species (Linnaeus, 1758)`), and
-  multi-whitespace inputs all resolve uniformly. The `matched` slot
-  preserves the user's original input format.
-* **Multi-tree returns gain reporting fields (#76).**
-  `backend_meta` now includes `n_requested` (the `n_tree` arg you
-  passed), `tip_set_consistent` (logical: do all trees share the same
-  tip set?), and `dropped_per_tree` (list of character vectors when
-  trees disagree, `NULL` when they agree).
-
-Internal refactor: a new `.pr_resolve_query()` builds the
-`original → normalised → resolved → query` mapping table and replaces
-the simpler `.pr_tnrs_preflight()` (kept as a thin compat shim).
-Backend wrappers are simplified and now return `list(tree, in_query,
-backend_meta)`; matched/unmatched accounting is done once in the
-dispatcher.
-
-Tests: 7 new regression tests in
-`tests/testthat/test-pr_get_tree-name-matching.R` pin each
-invariant. Existing tests for the internal TNRS preflight were
-updated to mock `.pr_resolve_query` instead.
-
-## Round 14: clootl performance fix (#70) + small doc fixes
-
-* **Bug fix — `pr_get_tree(source = "clootl")`** now accepts underscore-separated species names by converting them to the space-separated form expected by `clootl`, while preserving the user's original names in `$matched` / `$unmatched` (#75). All-unmatched clootl requests now error cleanly instead of falling through to `ape::Ntip(NULL)`.
-* **Bug fix — `reconcile_apply()`** now validates an explicit `species_col` before filtering data, so a typo errors clearly instead of silently returning zero data rows.
-* **Performance fix — `pr_get_tree(source = "clootl")` is now
-  ~250× faster** on large bird species lists (#70, reported by
-  Ayumi Mizuno). For 10,597 birds: 3.6 s after, vs. >15 min
-  (never finished) before. Two contributing causes:
-    - **TNRS preflight no longer runs for clootl by default.**
-      `clootl` uses the eBird / Clements taxonomy; the previous
-      default routed through `rotl::tnrs_match_names()`, which
-      resolves to Open Tree of Life names — different from
-      Clements names, so it usually didn't improve matching, and
-      the OTL API call was the dominant cost. Users who want it
-      can still opt in with `tnrs = "always"`.
-    - **`force = TRUE` is now passed to `clootl::extractTree()`**
-      so a single unmatched species doesn't error out the whole
-      call. Unmatched names are still surfaced via the result's
-      `$unmatched` slot.
-  Two new live regression tests in
-  `tests/testthat/test-live-backend-smoke.R` lock in the fix:
-  one asserts a 200-species request finishes in < 30 s with
-  default args; the other asserts the wrapper tolerates an
-  unmatched name and surfaces it in `$unmatched`.
-* **Doc fix — `?pr_normalize_names`** (#18, reported by Sergio
-  Poo Hernandez): the `\description{}` block previously contained
-  only the British- vs American-spelling explanation, displacing
-  the actual function description into `\details{}`. Reordered:
-  the function description is now in `\description{}`; the
-  spelling note moved to a `\note{}` block.
-
-## Round 13: landing page reflects tree-fetching/dating; new author
-
-* **README / landing page** broadened so the visible body content
-  matches what the package actually does. Previously the page led
-  with name-reconciliation as if that were the whole story. Now the
-  opening explicitly names both halves of the prerequisite that
-  `prepR4pcm` solves: (1) reconcile names; (2) retrieve and date
-  trees. Specific changes:
-  - New first-paragraph framing.
-  - New "Tree retrieval and dating" features bullet covering
-    `pr_get_tree()` (5 backends), `pr_date_tree()` (DateLife
-    chronograms), and `pr_cite_tree()` (auto-formatted citations).
-  - Short note above the workflow diagram pointing readers to
-    `pr_get_tree()` / `pr_date_tree()` if they don't yet have a tree.
-  - New "Quick example — fetching a tree" snippet (50-tree fishtree
-    posterior + `pr_cite_tree()`).
-  - The 3 vignettes that were missing from the in-page list
-    ("Posterior-Tree Pipeline", "Comparing Tree Backends",
-    "Phylogenetic Meta-Analysis with rotl") are now linked.
-* **New author**: Bhavya Jain added to `Authors@R` (DESCRIPTION) and
-  the citation block (README + `inst/CITATION`). Position: 6th of
-  8, between Malgorzata Lagisz and Jimuel Jr Celeste.
-
-## Round 12: clootl single-tree path now works out of the box
-
-* **Bug fix — `pr_get_tree(source = "clootl", n_tree = 1)`**: previously
-  errored with `object 'clootl_data' not found` unless the user had
-  loaded `library(clootl)` first. The wrapper now temporarily attaches
-  the `clootl` namespace for the duration of the call (and detaches
-  on exit, leaving the user's search path unchanged). The single-tree
-  path uses the v1.6 / 2025 taxonomy bundled with `clootl` and works
-  on a fresh install with no AvesData repo. `n_tree > 1` still calls
-  `clootl::sampleTrees()` and so still requires a one-time
-  `clootl::get_avesdata_repo(".")`; that's documented.
-* **Documentation honesty pass**: the
-  [comparing-tree-backends](https://itchyshin.github.io/prepR4pcm/articles/comparing-tree-backends.html)
-  and [posterior-tree-pipeline](https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html)
-  vignettes had `clootl` flagged ❌ "broken: needs AvesData" for both
-  single- and multi-tree retrieval. That was over-pessimistic for the
-  single-tree case, which is the common one. Tables corrected.
-* **Abbreviation fix** in
-  [meta-analysis-with-rotl](https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html):
-  `OToL` → `OTL` (the abbreviation used by the official `rotl` vignettes
-  and the rOpenSci documentation).
-* **Vignette polish**: posterior-tree-pipeline.Rmd had a stale
-  reference to "round 6" / "future round" jargon and an outdated
-  "no built-in cache yet" note (a built-in cache has shipped since
-  0.4.0). Both removed.
-* **New regression tests** in `tests/testthat/test-live-backend-smoke.R`:
-  one for the single-tree clootl path (asserts a phylo, asserts no
-  search-path leak), one for the multi-tree path (asserts the helpful
-  "AvesData repo not found" error when the repo isn't set up).
-
-## Round 11: consistency audit + clearer pr_date_tree semantics
-
-* **`?pr_date_tree` clarified**: a new "What `n_dated > 1` actually
-  returns" section. Common point of confusion: passing one topology
-  with `n_dated = 50` returns 50 chronograms that *share* that
-  topology but differ in branch lengths (one per DateLife source
-  paper in the database) — not 50 different topologies. The
-  posterior-tree-pipeline vignette gets the same clarification.
-* **getting-started.Rmd, "Example 3: Using a taxonomic authority"**:
-  framing rewritten to make explicit that `col`, `itis`, `gbif`,
-  `ncbi`, `ott`, `itis_test` are *taxadb authority names*, not R
-  packages. Note added that `ott` (Open Tree Taxonomy) is not the
-  same as `rotl` (the R package that retrieves trees from Open
-  Tree of Life) — they're related but separate things.
-* **README round-2 follow-up** (Mal Lagisz, #61 follow-up comment):
-  - Opening paragraph rewritten per Mal's wording.
-  - "Below you'll find" rewritten per Mal's wording.
-  - Typical-workflow diagram switched from a code-block to a
-    blockquote with `*italic*` markup so the italics actually
-    render (italics inside a code block are literal asterisks).
-  - Quick-example post-script: replaced `nrow()` + `ape::Ntip()`
-    with `intersect()` / `setdiff()` so the alignment check is on
-    *species names*, not just counts (per Mal's note that "the
-    species names should match exactly").
-  - "ending in PGLS and phylogenetic GLMM fits" → "ending in
-    fitting the PGLS and phylogenetic GLMM".
-  - **prepR4pcm** bolded in the Citation section.
-* **Audit findings (no action needed)**: every `pkg::fn` reference
-  in vignettes / R / man pages was verified — `pigauto::`,
-  `U.PhyloMaker::`, `metafor::`, `caper::`, `phylolm::` are all
-  either inside `eval = FALSE` chunks or guarded at runtime by
-  `requireNamespace()`. URLs in vignettes are 200/303 except for a
-  GBIF Cloudflare 403 bot-block (browser users see 200).
-* **VertLife backend**: research surfaced that the data download
-  URLs are public CC0 (verified live), 1-2 GB per archive. For
-  the 99% case, `source = "rtrees", taxon = "mammal"` already
-  returns the 100-tree posterior subset via `megatrees`, so a
-  full-download `source = "vertlife"` backend was deferred. A
-  "Where are the VertLife trees?" section in
-  comparing-tree-backends.Rmd points users to the right backend.
-
-## Documentation polish (Mal Lagisz feedback)
-
-* **README** revised per #61: clearer Features-section definitions
-  ("taxonomy crosswalks", "override tables", "unresolved species",
-  "sensitivity analyses with and without augmented tips" all now
-  defined inline, with sentence-level context); Typical-workflow
-  diagram now visually distinguishes data objects (italics) from
-  function names (plain text), with a short explanatory paragraph;
-  Quick-example description states the data sizes (919 species
-  rows, 657 tips) instead of saying "small sample" without
-  context; one long sentence in the Quick example was split into
-  two; "ships" → "contains"; added a one-line note for users who
-  see `citation("prepR4pcm")` warn that the package is not
-  installed (re-install with `pak::pak("itchyshin/prepR4pcm")`).
-* **getting-started.Rmd** revised per #64: full pass over the
-  vignette covering 28 specific items from Mal's feedback.
-  Highlights: clearer "what is reconciliation / aligned objects"
-  introduction; expanded mismatch-types section with worked
-  examples for formatting / synonymy / typos / missing names;
-  per-column explanation of the `reconcile_mapping()` output
-  (what `name_x`, `name_y`, `name_resolved`, `match_type`,
-  `match_score`, `in_x`, `in_y`, `notes` mean); the `tree`-creation
-  chunk now also shows `tree$tip.label` and `plot(tree)`; the
-  pruned-tree chunk shows `plot(aligned$tree)`; "reconciliation
-  object" terminology consistently replaced with concrete
-  references to the `result` variable name; Example 2 (data ↔
-  data) gains framing prose explaining that the same matching
-  cascade applies between two datasets; a definition of "taxonomic
-  authority" with a list of supported authorities and their
-  websites (col, itis, gbif, ncbi, ott, itis_test); "Labs" →
-  "Researchers"; "CSV path" → "a file in a CSV format"; the
-  hypothetical-`my_data` / `my_tree` chunks are now explicitly
-  labelled as hypothetical so users don't try to run them; the
-  Typical-workflow chunk's `read.csv("species_traits.csv")` and
-  `ape::read.tree("species_tree.nwk")` lines are also explicitly
-  labelled as hypothetical paths.
-* **comparing-tree-backends.Rmd**: new "Where are the VertLife
-  trees?" section explaining that `source = "rtrees", taxon =
-  "mammal"` already returns a 100-tree posterior subset of
-  Upham/Jetz-Pyron/Tonini/Stein/Jetz via the `megatrees` package,
-  so users asking for VertLife data don't need to look elsewhere
-  unless they want the full 10K-tree posterior (which still
-  requires manual download from vertlife.org).
-
-## Phylogenetic meta-analysis path
-
-* **`pr_get_tree()` gains `resolve_polytomies` and
-  `branch_lengths` arguments.** When the topology comes from `rotl`
-  (the dominant choice for cross-taxon meta-analysis), the user
-  typically needs a strictly bifurcating tree with non-trivial
-  branch lengths -- e.g. via `ape::multi2di(random = TRUE)` and
-  `ape::compute.brlen(method = "Grafen")`. Before this round users
-  had to call those manually. Now:
+* **`pr_get_tree()` gains `resolve_polytomies` and `branch_lengths`
+  arguments.** When the topology comes from `rotl`,
   `pr_get_tree(species, source = "rotl", resolve_polytomies = TRUE,
   branch_lengths = "grafen")` returns a tree ready for
-  `metafor::rma.mv()`. Defaults preserve back-compat
-  (`resolve_polytomies = FALSE`, `branch_lengths = NULL`). Refs
-  Cinar et al. 2022 (*Methods Ecol. Evol.* 13:383) and Pottier et
-  al. 2022 (*Ecology Letters* 25:2245), who use this exact pattern.
-* **New: `pr_phylo_cor(tree)`.** Thin wrapper around
+  `metafor::rma.mv()`. Defaults preserve back-compat.
+
+* **New: `pr_phylo_cor(tree)`** — thin wrapper around
   `ape::vcv(tree, corr = TRUE)` that turns the tree into the
   phylogenetic correlation matrix accepted by `metafor::rma.mv()`,
   `MCMCglmm::MCMCglmm()`, `glmmTMB::glmmTMB()`, and `brms::brm()` as
   a random-effect structure. Accepts `phylo`, `multiPhylo`, or
   `pr_tree_result` input.
-* **New vignette: "Phylogenetic meta-analysis with rotl +
-  prepR4pcm"** -- end-to-end walk from species names through rotl
-  topology, bifurcating + Grafen branches, correlation matrix, to
-  `metafor::rma.mv()`, using a 13-species cross-taxon subset of
-  the Pottier et al. 2022 thermal-tolerance dataset (lampreys,
-  bivalves, insects, fish, amphibians, reptiles, cephalopods,
-  echinoderms). Includes a "Grafen vs datelife" tradeoff
-  discussion explaining why Grafen is the practical default for
-  cross-taxon meta-analysis.
-* Live tests in `test-meta-analysis-path.R` exercise the new args
-  and the correlation-matrix wrapper end-to-end on real ape calls
-  (no mocking of ape itself).
 
-## CI cleanup
+* **New vignette: "Phylogenetic meta-analysis with rotl + prepR4pcm"** —
+  end-to-end walk from species names through rotl topology,
+  bifurcating + Grafen branches, correlation matrix, to
+  `metafor::rma.mv()`. Uses a 13-species cross-taxon subset of
+  Pottier et al. 2022's thermal-tolerance dataset.
+
+## Bug fixes
+
+* **`reconcile_augment()` keeps grafted trees ultrametric.** When the
+  input tree is ultrametric and `branch_length != "zero"`, a post-graft
+  correction ensures the augmented tips reach the present, so
+  downstream PGLS / BM / OU models see a valid tree. Regression test
+  pinned (PR #105, Losia Lagisz).
+
+* **`pr_get_tree()` matched / unmatched accounting** now enforces
+  three invariants: `matched` ⊆ `unique(input)`, `unmatched` ⊆
+  `unique(input)`, and `|matched| + |unmatched| == |unique(input)|`.
+  The `matched` slot preserves the user's original input format
+  (underscores stay underscores). Previously, TNRS-resolved names
+  could leak through (#73).
+
+* **`pr_get_tree(source = "clootl")` is now ~250× faster** on large
+  bird species lists (3.6 s vs > 15 min for 10,597 birds; #70). TNRS
+  preflight no longer runs for clootl by default (clootl uses
+  Clements taxonomy, not OTL); `force = TRUE` is passed to
+  `clootl::extractTree()` so a single unmatched species doesn't
+  error out the whole call.
+
+* **`pr_get_tree(source = "clootl")` accepts underscore-separated
+  names** by converting them to the space-separated form `clootl`
+  expects, while preserving the user's originals in `$matched` /
+  `$unmatched` (#75).
+
+* **`pr_get_tree(source = "clootl", n_tree = 1)` no longer requires
+  `library(clootl)`** — the wrapper temporarily attaches the namespace
+  for the duration of the call.
+
+* **`reconcile_apply()` validates `species_col`** before filtering
+  data, so a typo errors clearly instead of silently returning zero
+  data rows.
+
+* **`reconcile_multi()` no longer undercounts** dataset-specific
+  matches when the same species appears in different formats across
+  datasets (e.g. `Homo_sapiens` vs `Homo sapiens`). The cascade gains
+  a `multi_x = TRUE` mode; the mapping gains the documented
+  `in_<dataset>` logical columns (#10, Ayumi Mizuno).
+
+* **`reconcile_summary()` no longer auto-prints when assigned.** The
+  formatted report lives on the returned object's `formatted_text`
+  slot and renders via `print.reconciliation_summary()` (#12, Ayumi
+  Mizuno).
+
+* **Trailing parenthetical leak fixed in name normalisation.** The
+  internal cascade now strips any trailing parenthetical, catching
+  Open Tree's `(species in domain Eukaryota)` and similar TNRS
+  leak-through.
+
+* **`pr_lookup_authority()` and `pr_ensure_db()`** no longer print
+  raw `{.pkg ...}` / `{.code ...}` cli template strings; errors route
+  through `cli::cli_abort()` (#4, Eduardo Santos).
+
+* **Removed `V.PhyloMaker3`** from `Suggests` and `Remotes` — the
+  repo doesn't exist. `vphylomaker` augment backend now prefers
+  `V.PhyloMaker2` with a fallback to `V.PhyloMaker`.
+
+## Documentation
+
+* **New cover prose on the README and landing page** — names both
+  halves of the prerequisite that `prepR4pcm` solves: reconcile names
+  *and* retrieve / date trees. New "Quick example — fetching a tree"
+  snippet.
+
+* **Three new vignettes** (in addition to the meta-analysis one
+  above):
+  * **"Posterior-tree pipeline (prepR4pcm + pigauto)"** — chaining
+    `reconcile_data()` → `pr_get_tree()` →
+    `pigauto::multi_impute_trees()`.
+  * **"Comparing tree backends"** — when do they agree?
+  * **"Assembling mammal trait databases for PCMs"**
+    (`db-assembly-workflow_mammals`, Santiago Ortega; closes #11) —
+    combining Amniote / PanTHERIA / TetrapodTraits, reconciling,
+    applying manual corrections, producing a tree-aligned
+    species-level data frame.
+
+* **`?pr_get_tree` and `?pr_tree_compare` `@references`** are now
+  spelled out with DOIs (#79, #80, Jimuel Celeste, Jr.). Every
+  author-year citation in the help text has a full reference (Jetz,
+  Rabosky, Upham, Sanchez Reyes, Chang, Michonneau, Kuhner &
+  Felsenstein, Robinson & Foulds).
+
+* **`?mammal_tree_example` cites Upham et al. 2019** (#11). The
+  bundled 5,987-tip mammal phylogeny is documented as a subset of
+  the VertLife mammal phylogeny, with the 76 `X_`-prefixed Mesozoic
+  stem-mammal fossils described as products of the Upham et al.
+  "backbone-and-patch" framework.
+
+* **`?pr_date_tree` clarifies `n_dated > 1` semantics** — one
+  topology with `n_dated = 50` returns 50 chronograms sharing the
+  topology but differing in branch lengths (one per DateLife source),
+  not 50 different topologies.
+
+* **`getting-started.Rmd`** makes explicit that `col`, `itis`, `gbif`,
+  `ncbi`, `ott`, `itis_test` are taxadb authority names, not R
+  packages, and that `ott` (Open Tree Taxonomy) differs from `rotl`
+  (the R package that retrieves trees from Open Tree of Life).
+  Expanded mismatch-types section with worked examples for
+  formatting / synonymy / typos.
+
+* **Several rounds of README and vignette feedback** from Mal Lagisz
+  (#53, #61, #64) — clearer Features definitions, typical-workflow
+  diagram, Quick example, sentence-level revisions throughout.
+  Detailed feedback from Ayumi Mizuno (#1) seeded the multi-row
+  species and asymmetric datasets vignette subsections.
+
+* **Logo redesign** — tree tips align with matrix rows. Favicons
+  regenerated.
+
+* **New author**: Bhavya Jain added to `Authors@R` and the citation
+  block.
+
+## Build, CI, and dependencies
+
+* **`httr2` and `rgnparser` added to `Suggests`** — for the new
+  `authority = "gnverifier"` and `parser = "gnparser"` backends
+  respectively.
 
 * **CI workflow trimmed** to `pull_request` + `workflow_dispatch`
-  only (was: `push` + `pull_request`), Linux-only by default (was:
-  full macOS / Windows / Linux x 3 R-version matrix). The
-  `workflow_dispatch` trigger has an `os` input -- set it to `full`
-  before a release / CRAN submission to re-run the full matrix
-  manually. Saves GitHub Actions minutes (~85% reduction) and
-  matches the team's "local checks over CI" preference per
-  `CLAUDE.md`.
-* **`datelife` moved from `Suggests` + `Remotes` to `Enhances`**
-  in `DESCRIPTION`. Reason: datelife was archived from CRAN in
-  2024 and has a heavy transitive dep tree (`bold`, `phylobase`,
-  Bioconductor packages) that pak's resolver cannot install on
-  clean CI images. `Enhances` declares the relationship so R CMD
-  check is happy, but pak doesn't try to auto-install it. Users
-  who want the datelife backend run
-  `pak::pak("phylotastic/datelife")` themselves; the runtime
-  `requireNamespace("datelife")` guard in
-  `.pr_get_tree_datelife()` and `.pr_date_tree_datelife()`
-  produces a clear install hint when datelife is missing.
-* `\pkg{datelife}` references in roxygen replaced with
-  `\code{datelife}` to match the new dependency status.
+  only, Linux-only by default. The `workflow_dispatch` trigger has
+  an `os` input set to `full` before a release / CRAN submission for
+  the full macOS / Windows / Linux × 3 R-version matrix. Saves ~85%
+  of GitHub Actions minutes.
 
-## Bug fixes and documentation polish
+* **`datelife` moved from `Suggests` + `Remotes` to `Enhances`** —
+  datelife was archived from CRAN in 2024 and has a heavy transitive
+  dep tree pak's resolver can't install on clean CI. Users opt in
+  with `pak::pak("phylotastic/datelife")`.
 
-* `reconcile_multi()` no longer undercounts dataset-specific matches
-  when the same species appears in different formats across datasets
-  (e.g. `Homo_sapiens` in one dataset and `Homo sapiens` in another).
-  The cascade gains a `multi_x = TRUE` mode that allows multiple x
-  names to resolve to the same tree tip via normalisation, which
-  `reconcile_multi()` now uses. The mapping also gains the
-  documented `in_<dataset>` logical columns (one per input dataset)
-  that were missing from the implementation. With these changes the
-  per-dataset join `match(your_data$species, mapping$name_x)` is
-  reliable: every species in every input dataset finds its row.
-  Refs #10 (Ayumi Mizuno).
-* `reconcile_summary()` no longer prints to the console when its
-  result is assigned to a variable. The formatted report now lives
-  on the returned object's `formatted_text` slot and renders via
-  the `print.reconciliation_summary()` method, so R's REPL
-  auto-prints the report only when the function is called at the
-  prompt without assignment. Refs #12 (Ayumi Mizuno).
-* README: rewritten the introduction to spell out *why* species-name
-  mismatches matter for PCMs, expanded the worked examples for each
-  mismatch type (formatting, synonymy, typos), expanded the PGLS /
-  PCM acronyms, moved the Quick example after Typical workflow,
-  added inline framing prose around the Quick example, fixed broken
-  / missing links for the Clements checklist and BirdLife-BirdTree
-  crosswalk, added an inline citation block (text + BibTeX) so
-  users don't need to run `citation("prepR4pcm")` to see what to
-  cite, and clarified that bundled datasets are *subsets* of the
-  full upstream sources. Refs #53 (Malgorzata Lagisz).
-* Fixed: removed `V.PhyloMaker3` from `Suggests` and `Remotes` --
-  the repo was hallucinated in Round 8 and doesn't exist on GitHub
-  (`jinyizju/V.PhyloMaker3` returns 404). The `vphylomaker` augment
-  backend now prefers `V.PhyloMaker2` (the actual current version)
-  with a fallback to the original `V.PhyloMaker`. The fix preserves
-  the public API of `reconcile_augment(source = "vphylomaker")`.
+* **`piggyback` allowlisted** in the Suggests-vs-Remotes consistency
+  test.
+
+* **`dplyr`, `readr`, and `stringr`** moved from `Suggests` to
+  `Imports` (used routinely in the package).
+
+## Tests
+
+* `tests/testthat/test-pr_lookup_gnverifier.R` — gnverifier helper
+  (happy-path mix, network-failure degradation, `db_version` warning,
+  mismatched-response shape, session-cache hit, missing-httr2 abort,
+  live integration against `verifier.globalnames.org`).
+* `tests/testthat/test-pr_normalize.R` — gnparser backend (mocked +
+  live).
+* Regression tests for the rtrees placement table, the TNRS metadata
+  columns, the multi-tree reporting fields, the clootl performance
+  fix, the ultrametric-preserving graft, and the matched/unmatched
+  invariants.
+* Existing combinatorial test layer (252 `test_that()` blocks,
+  ~2,737 expectations) carried forward unchanged.
 
 # prepR4pcm 0.4.0
 
