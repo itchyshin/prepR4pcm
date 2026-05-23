@@ -37,6 +37,24 @@
 #'       `Parus major`).}
 #'     \item{`"subspecies"`}{Keep trinomials intact.}
 #'   }
+#' @param parser A length-1 character vector. Which parsing engine to
+#'   use:
+#'   \describe{
+#'     \item{`"internal"` (default)}{The package's own regex-based
+#'       cascade described above. No external dependency.}
+#'     \item{`"gnparser"`}{Delegates parsing to
+#'       [rgnparser::gn_parse_tidy()], which wraps the
+#'       [gnparser](https://github.com/gnames/gnparser) Go binary
+#'       (part of the Global Names Architecture). Handles hybrid
+#'       signs, complex multi-author year strings, and trailing
+#'       parentheticals (Open Tree homonym / rank flags) more
+#'       robustly than the internal cascade. Requires both the
+#'       \pkg{rgnparser} R package and the `gnparser` binary on the
+#'       system PATH; the function errors helpfully if either is
+#'       missing. Returns the same shape and `normalisation_log`
+#'       attribute as the internal path, so the two are drop-in
+#'       interchangeable.}
+#'   }
 #'
 #' @return A character vector of normalised names, the same length as
 #'   `names`, with an attribute `"normalisation_log"` --- a tibble
@@ -65,8 +83,13 @@
 #' pr_normalize_names("Parus major major", rank = "subspecies")
 #'
 #' @export
-pr_normalize_names <- function(names, rank = c("species", "subspecies")) {
+pr_normalize_names <- function(names, rank = c("species", "subspecies"),
+                               parser = c("internal", "gnparser")) {
   rank <- match.arg(rank)
+  parser <- match.arg(parser)
+  if (parser == "gnparser") {
+    return(.pr_normalize_gnparser(names, rank))
+  }
   original <- names
 
   # 1. Coerce to character, handle NA
@@ -237,4 +260,110 @@ pr_standardise_case <- function(names) {
 
     paste(parts, collapse = " ")
   }, character(1), USE.NAMES = FALSE)
+}
+
+
+#' Normalise scientific names via the gnparser backend
+#'
+#' Internal helper for `pr_normalize_names(parser = "gnparser")`.
+#' Routes parsing through [rgnparser::gn_parse_tidy()] (which wraps
+#' the `gnparser` Go binary, part of the Global Names Architecture),
+#' then applies the same `rank` and case-standardisation contract as
+#' the internal cascade so the return value is interchangeable.
+#'
+#' @param names Character vector of raw scientific names.
+#' @param rank One of `"species"` or `"subspecies"`.
+#' @return Character vector with `normalisation_log` attribute.
+#' @keywords internal
+.pr_normalize_gnparser <- function(names, rank) {
+  if (!requireNamespace("rgnparser", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "{.code parser = \"gnparser\"} requires the {.pkg rgnparser} package.",
+      "i" = 'Install with {.code install.packages("rgnparser")}.',
+      ">" = "Or use {.code parser = \"internal\"} (the zero-dependency default)."
+    ))
+  }
+
+  original <- names
+  names <- as.character(names)
+  is_na <- is.na(names)
+  empty <- !is_na & !nzchar(trimws(names))
+
+  to_parse <- names
+  # gn_parse_tidy fails on NA / empty input -- swap in a placeholder so
+  # the call succeeds, then restore NA / empty afterwards.
+  to_parse[is_na | empty] <- "x"
+
+  parsed <- tryCatch(
+    rgnparser::gn_parse_tidy(to_parse),
+    error = function(e) {
+      msg <- conditionMessage(e)
+      if (grepl("gnparser not found", msg, fixed = TRUE)) {
+        cli::cli_abort(c(
+          "{.pkg rgnparser} needs the {.code gnparser} Go binary, which is not installed.",
+          "i" = "On macOS: {.code brew install gnparser}.",
+          "i" = "Otherwise download a release from {.url https://github.com/gnames/gnparser/releases}.",
+          ">" = "Or use {.code parser = \"internal\"} (the zero-dependency default)."
+        ))
+      }
+      cli::cli_abort(c(
+        "{.fn rgnparser::gn_parse_tidy} failed.",
+        "x" = "Underlying error: {msg}"
+      ))
+    }
+  )
+
+  # Extract the canonical binomial. Prefer `canonicalsimple` (no
+  # authorship, no hybrid marks); fall back to `canonicalfull` /
+  # `canonicalstem` so an upstream rgnparser column rename does not
+  # silently break us.
+  canonical <- if ("canonicalsimple" %in% colnames(parsed)) {
+    parsed$canonicalsimple
+  } else if ("canonicalfull" %in% colnames(parsed)) {
+    parsed$canonicalfull
+  } else if ("canonicalstem" %in% colnames(parsed)) {
+    parsed$canonicalstem
+  } else {
+    cli::cli_abort(c(
+      "Unexpected {.pkg rgnparser} output: no canonical column found.",
+      "i" = "Columns returned: {.val {colnames(parsed)}}."
+    ))
+  }
+  canonical <- as.character(canonical)
+
+  # Unparseable names yield NA / "" from gn_parse_tidy. Fall back to
+  # the input so we never silently drop a name (the internal path
+  # also passes garbage through).
+  fallback <- is.na(canonical) | !nzchar(canonical)
+  canonical[fallback] <- names[fallback]
+
+  # Use "" as a placeholder for NA / empty through the downstream
+  # helpers (pr_standardise_case() does not accept NA); restore NA at
+  # the very end.
+  canonical[is_na] <- ""
+  canonical[empty] <- ""
+
+  # `canonicalsimple` keeps trinomials; trim to a binomial when
+  # rank = "species", mirroring the internal cascade's behaviour.
+  if (rank == "species") {
+    canonical <- pr_strip_infraspecific(canonical)
+  }
+
+  # Case standardisation + final trim (matches the internal path so
+  # the two backends are drop-in compatible).
+  canonical <- pr_standardise_case(canonical)
+  canonical <- trimws(canonical)
+
+  # Restore NA in their original positions.
+  canonical[is_na] <- NA_character_
+
+  # normalisation_log attribute -- same contract as the internal path.
+  changed <- !is_na & (original != canonical)
+  log <- tibble(
+    original   = original,
+    normalised = canonical,
+    changed    = changed
+  )
+  attr(canonical, "normalisation_log") <- log
+  canonical
 }
