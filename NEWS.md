@@ -1,5 +1,20 @@
 # prepR4pcm 0.5.0.9000 (development version)
 
+* **pkgdown workflow fix.** `dependencies: '"most"'` in
+  `.github/workflows/pkgdown.yaml` tells pak to skip `Enhances`
+  (i.e. `datelife`) during lockfile resolution. The
+  `workflow_dispatch` rebuild no longer fails on "Can't find
+  package called datelife". The day-to-day path is unaffected:
+  GitHub Pages still serves the docs straight from `main:/docs/`.
+
+* **`comparing-tree-backends.Rmd` gains a "Branch lengths and
+  time-calibration" section** with a per-backend comparison table
+  and a practical decision tree for choosing between `fishtree` /
+  `clootl` / `rtrees` / `datelife` / Grafen pseudo-time when you
+  need real divergence-time branch lengths. Surfaces the
+  alternative path when `datelife` isn't installable on a given
+  system.
+
 # prepR4pcm 0.5.0
 
 This release adds two opt-in Global Names Architecture backends, a

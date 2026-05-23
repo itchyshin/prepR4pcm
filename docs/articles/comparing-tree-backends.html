@@ -294,6 +294,124 @@ please open an issue at <a href="https://github.com/itchyshin/prepR4pcm/issues" 
 with your <code><a href="../reference/pr_get_tree_status.html">pr_get_tree_status()</a></code> output and the error.</p>
 </div>
 <div class="section level2">
+<h2 id="branch-lengths-and-time-calibration">Branch lengths and time-calibration<a class="anchor" aria-label="anchor" href="#branch-lengths-and-time-calibration"></a>
+</h2>
+<p>Phylogenetic comparative methods (PGLS with Pagel’s λ, Brownian
+motion, OU, phylogenetic meta-analysis) need branch lengths that
+correspond to <em>time</em> — not just topology. Backends differ in what
+branch lengths they produce:</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Backend</th>
+<th>Branch lengths produced</th>
+<th>Real time?</th>
+<th>Taxonomic scope</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>rotl</code> (default)</td>
+<td>None — synthesis topology only</td>
+<td>No</td>
+<td>Universal</td>
+</tr>
+<tr class="even">
+<td>
+<code>rotl</code> +
+<code>resolve_polytomies = TRUE, branch_lengths = "grafen"</code>
+</td>
+<td>Grafen ρ = 1 arbitrary depths</td>
+<td>No (arbitrary)</td>
+<td>Universal</td>
+</tr>
+<tr class="odd">
+<td><code>fishtree</code></td>
+<td>Yes — divergence times from Rabosky et al. 2018</td>
+<td><strong>Yes</strong></td>
+<td>Ray-finned fish</td>
+</tr>
+<tr class="even">
+<td><code>clootl</code></td>
+<td>Yes — Bird Tree consensus branches</td>
+<td><strong>Yes</strong></td>
+<td>Birds (current Clements)</td>
+</tr>
+<tr class="odd">
+<td>
+<code>rtrees</code> (any <code>taxon</code>)</td>
+<td>Yes — branches from <code>megatrees</code> posterior</td>
+<td><strong>Yes</strong></td>
+<td>Birds, mammals, fish, amphibians, reptiles, plants, sharks, bees,
+butterflies</td>
+</tr>
+<tr class="even">
+<td><code>datelife</code></td>
+<td>Yes — SDM-summary chronograms or per-source candidates</td>
+<td><strong>Yes</strong></td>
+<td>Universal</td>
+</tr>
+<tr class="odd">
+<td><code>pr_date_tree(tree)</code></td>
+<td>Yes — calibrates <em>your</em> topology via DateLife</td>
+<td><strong>Yes</strong></td>
+<td>Universal</td>
+</tr>
+<tr class="even">
+<td>Manual <code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> with user calibration points</td>
+<td>Yes</td>
+<td><strong>Yes</strong></td>
+<td>Universal</td>
+</tr>
+</tbody>
+</table>
+<p>The decision tree, in practice:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Is your taxon covered by a dedicated time-calibrated
+backend?</strong> For fish use <code>fishtree</code>; for birds,
+mammals, amphibians, squamates, sharks, or plants use
+<code>rtrees</code> with the matching <code>taxon</code>. These are
+pre-computed, pre-dated, and need no extra dependencies.</li>
+<li>
+<strong>Is your taxon set cross-clade (e.g. a thermal-tolerance
+dataset spanning lampreys, bivalves, insects, fish, amphibians,
+reptiles)?</strong> Then your options are:
+<ol style="list-style-type: lower-alpha">
+<li>
+<code>datelife</code> for a real time-calibrated solution. Install
+via <code>pak::pak("phylotastic/datelife")</code>. Heavy dependency tree
+(Bioconductor, BOLD); usually works on macOS / Linux with system libs,
+sometimes flaky on Windows.</li>
+<li>
+<code>rotl + resolve_polytomies = TRUE, branch_lengths = "grafen"</code>
+for Grafen pseudo-time. Defensible for phylogenetic meta- analysis where
+you mainly need a correlation structure, not real divergence times (this
+is the pattern Cinar et al. 2022 and Pottier et al. 2022 use). See the
+<a href="meta-analysis-with-rotl.html">phylogenetic meta-analysis
+vignette</a> for a worked example.</li>
+<li>Hand-curated calibration points + <code><a href="https://rdrr.io/pkg/ape/man/chronos.html" class="external-link">ape::chronos()</a></code> if you
+have published divergence-time estimates for a small set of nodes.</li>
+</ol>
+</li>
+<li>
+<strong>Do you already have a topology you want
+time-calibrated?</strong> <code>pr_date_tree(your_tree)</code> wraps
+<code>datelife::datelife_use()</code> and has the same install
+requirement as the <code>datelife</code> backend.</li>
+</ol>
+<p>If <code>datelife</code> is the option you want and it won’t install
+on your system, the practical fallbacks (in roughly preferred order)
+are: the dedicated taxon backend if one exists for your taxa; Grafen
+pseudo-time for meta-analysis-style use; or hand calibration for small,
+well-studied taxon sets.</p>
+</div>
+<div class="section level2">
 <h2 id="where-are-the-vertlife-trees">Where are the VertLife trees?<a class="anchor" aria-label="anchor" href="#where-are-the-vertlife-trees"></a>
 </h2>
 <p>A common question: <em>“I want the VertLife / Upham et al. 2019
