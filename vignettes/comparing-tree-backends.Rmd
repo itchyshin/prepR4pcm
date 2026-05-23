@@ -165,6 +165,57 @@ issue at
 [itchyshin/prepR4pcm](https://github.com/itchyshin/prepR4pcm/issues)
 with your `pr_get_tree_status()` output and the error.
 
+## Branch lengths and time-calibration
+
+Phylogenetic comparative methods (PGLS with Pagel's λ, Brownian
+motion, OU, phylogenetic meta-analysis) need branch lengths that
+correspond to *time* — not just topology. Backends differ in what
+branch lengths they produce:
+
+| Backend | Branch lengths produced | Real time? | Taxonomic scope |
+|---|---|---|---|
+| `rotl` (default) | None — synthesis topology only | No | Universal |
+| `rotl` + `resolve_polytomies = TRUE, branch_lengths = "grafen"` | Grafen ρ = 1 arbitrary depths | No (arbitrary) | Universal |
+| `fishtree` | Yes — divergence times from Rabosky et al. 2018 | **Yes** | Ray-finned fish |
+| `clootl` | Yes — Bird Tree consensus branches | **Yes** | Birds (current Clements) |
+| `rtrees` (any `taxon`) | Yes — branches from `megatrees` posterior | **Yes** | Birds, mammals, fish, amphibians, reptiles, plants, sharks, bees, butterflies |
+| `datelife` | Yes — SDM-summary chronograms or per-source candidates | **Yes** | Universal |
+| `pr_date_tree(tree)` | Yes — calibrates *your* topology via DateLife | **Yes** | Universal |
+| Manual `ape::chronos()` with user calibration points | Yes | **Yes** | Universal |
+
+The decision tree, in practice:
+
+1. **Is your taxon covered by a dedicated time-calibrated backend?**
+   For fish use `fishtree`; for birds, mammals, amphibians, squamates,
+   sharks, or plants use `rtrees` with the matching `taxon`. These
+   are pre-computed, pre-dated, and need no extra dependencies.
+2. **Is your taxon set cross-clade (e.g. a thermal-tolerance dataset
+   spanning lampreys, bivalves, insects, fish, amphibians, reptiles)?**
+   Then your options are:
+    a. `datelife` for a real time-calibrated solution. Install via
+      `pak::pak("phylotastic/datelife")`. Heavy dependency tree
+      (Bioconductor, BOLD); usually works on macOS / Linux with
+      system libs, sometimes flaky on Windows.
+    b. `rotl + resolve_polytomies = TRUE, branch_lengths = "grafen"`
+      for Grafen pseudo-time. Defensible for phylogenetic meta-
+      analysis where you mainly need a correlation structure, not
+      real divergence times (this is the pattern Cinar et al. 2022
+      and Pottier et al. 2022 use). See the
+      [phylogenetic meta-analysis vignette](meta-analysis-with-rotl.html)
+      for a worked example.
+    c. Hand-curated calibration points + `ape::chronos()` if you
+      have published divergence-time estimates for a small set of
+      nodes.
+3. **Do you already have a topology you want time-calibrated?**
+   `pr_date_tree(your_tree)` wraps `datelife::datelife_use()` and
+   has the same install requirement as the `datelife` backend.
+
+If `datelife` is the option you want and it won't install on your
+system, the practical fallbacks (in roughly preferred order) are:
+the dedicated taxon backend if one exists for your taxa; Grafen
+pseudo-time for meta-analysis-style use; or hand calibration for
+small, well-studied taxon sets.
+
 ## Where are the VertLife trees?
 
 A common question: *"I want the VertLife / Upham et al. 2019 mammal
