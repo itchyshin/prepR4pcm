@@ -56,10 +56,15 @@ test_that("the supported-authority list matches taxadb's documented providers (i
   # included "common" (which OTT does not ship). Round 2 restricts
   # to schema = "dwc" -- see pr_ensure_db().
   #
-  # The valid list now mirrors ?taxadb::td_create's documented
-  # providers exactly.
-  expected <- c("col", "itis", "gbif", "ncbi", "ott", "itis_test")
-  expect_setequal(pr_valid_authorities(), expected)
+  # The taxadb-backed entries now mirror ?taxadb::td_create's documented
+  # providers exactly. Round 21 added `gnverifier` as a non-taxadb,
+  # HTTP-backed authority (see .pr_lookup_gnverifier()); this test
+  # checks the taxadb-served subset, not the full valid list.
+  expected_taxadb <- c("col", "itis", "gbif", "ncbi", "ott", "itis_test")
+  expect_setequal(
+    setdiff(pr_valid_authorities(), "gnverifier"),
+    expected_taxadb
+  )
 })
 
 test_that("removed authorities produce a helpful migration error (issue #5 follow-up)", {

@@ -46,6 +46,11 @@ your downstream phylogeny is from the Open Tree synthesis.}
 \item{\code{"itis_test"}}{A small bundled subset of ITIS, cached
 locally with \pkg{taxadb} for testing. Intended for examples
 and unit tests; not for analysis.}
+\item{\code{"gnverifier"}}{HTTP-backed verification against ~100
+sources via the Global Names verifier; no local database
+download. See \code{vignette("getting-started")} for the
+trade-off (wider coverage, requires network and the
+\pkg{httr2} package).}
 \item{\code{NULL}}{Skip the synonym stage entirely. Useful for quick
 checks or when \pkg{taxadb} is unavailable. Stages 1, 2 and 4
 still run.}

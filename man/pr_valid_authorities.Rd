@@ -8,10 +8,12 @@ pr_valid_authorities()
 }
 \description{
 Returns the set of authority codes that the package accepts when
-resolving species-name synonyms via \pkg{taxadb}. The list mirrors
-\pkg{taxadb}'s own documented providers (see \code{?taxadb::td_create})
-so that every value here is genuinely callable in the underlying
-database:
+resolving species-name synonyms. Most are served by \pkg{taxadb}
+(a local database mirroring the providers documented in
+\code{?taxadb::td_create}); \code{"gnverifier"} is the one HTTP-backed
+authority, calling the Global Names Architecture
+\href{https://verifier.globalnames.org/}{verifier service} instead of a
+local database.
 }
 \details{
 \describe{
@@ -31,6 +33,12 @@ ship for OTT under \pkg{taxadb} v22.12.}
 \item{\code{"itis_test"}}{A small bundled subset of ITIS, cached
 locally with \pkg{taxadb} for testing. Intended for examples
 and unit tests; not for analysis.}
+\item{\code{"gnverifier"}}{Global Names verifier --- HTTP-backed
+verification against ~100 authoritative sources (Catalogue of
+Life, ITIS, GBIF, NCBI, Open Tree, ...). No local database is
+downloaded; requires network access and the \pkg{httr2} package.
+Useful when you want broader source coverage than any single
+taxadb provider, or want to avoid the ~100 MB taxadb download.}
 }
 
 Five authority codes that previous versions of the package

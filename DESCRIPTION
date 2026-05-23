@@ -51,6 +51,7 @@ Suggests:
     digest,
     dplyr,
     fishtree,
+    httr2,
     knitr,
     MCMCglmm,
     phytools,

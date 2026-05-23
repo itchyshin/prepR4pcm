@@ -136,7 +136,10 @@ test_that("every entry in pr_valid_authorities() actually works against taxadb (
     )
   }
 
-  for (auth in pr_valid_authorities()) {
+  # The valid list also includes `gnverifier`, which is HTTP-backed
+  # (not taxadb-served) — exclude it from this live taxadb parity check.
+  taxadb_authorities <- setdiff(pr_valid_authorities(), "gnverifier")
+  for (auth in taxadb_authorities) {
     result <- tryCatch(
       taxadb::filter_name("Homo sapiens", provider = auth),
       error = function(e) e
