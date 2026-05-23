@@ -57,6 +57,7 @@ Suggests:
     piggyback,
     pkgdown,
     readr,
+    rgnparser,
     rmarkdown,
     rotl,
     rtrees,

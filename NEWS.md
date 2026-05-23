@@ -1,5 +1,22 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 20: optional gnparser backend for name normalisation
+
+* **`pr_normalize_names(parser = "gnparser")`** routes parsing
+  through [rgnparser](https://CRAN.R-project.org/package=rgnparser),
+  the R wrapper for the [gnparser](https://github.com/gnames/gnparser)
+  Go binary (part of the Global Names Architecture). The default
+  stays `parser = "internal"` (the package's regex cascade, no
+  external dependency); set `parser = "gnparser"` for hardened
+  parsing of hybrid signs, complex multi-author year strings, and
+  trailing parentheticals (Open Tree homonym / rank flags) — the
+  classes of edge case the internal cascade has had to learn one by
+  one. The gnparser path returns the same shape and
+  `normalisation_log` attribute as the internal path, so the two are
+  drop-in interchangeable. Errors helpfully when `rgnparser` or the
+  `gnparser` binary is missing, pointing the user at install steps
+  and the `parser = "internal"` fallback.
+
 ## Round 19: TNRS match metadata in the tree mapping table
 
 * **`pr_get_tree()`'s `result$mapping` now records what TNRS reported

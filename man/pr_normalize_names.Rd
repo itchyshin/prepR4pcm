@@ -4,7 +4,11 @@
 \alias{pr_normalize_names}
 \title{Normalise scientific names to a canonical form}
 \usage{
-pr_normalize_names(names, rank = c("species", "subspecies"))
+pr_normalize_names(
+  names,
+  rank = c("species", "subspecies"),
+  parser = c("internal", "gnparser")
+)
 }
 \arguments{
 \item{names}{A character vector of scientific names (any length;
@@ -17,6 +21,25 @@ each element is a single name). \code{NA} values are preserved as
 trinomials become binomials (\verb{Parus major major} ->
 \verb{Parus major}).}
 \item{\code{"subspecies"}}{Keep trinomials intact.}
+}}
+
+\item{parser}{A length-1 character vector. Which parsing engine to
+use:
+\describe{
+\item{\code{"internal"} (default)}{The package's own regex-based
+cascade described above. No external dependency.}
+\item{\code{"gnparser"}}{Delegates parsing to
+\code{\link[rgnparser:gn_parse_tidy]{rgnparser::gn_parse_tidy()}}, which wraps the
+\href{https://github.com/gnames/gnparser}{gnparser} Go binary
+(part of the Global Names Architecture). Handles hybrid
+signs, complex multi-author year strings, and trailing
+parentheticals (Open Tree homonym / rank flags) more
+robustly than the internal cascade. Requires both the
+\pkg{rgnparser} R package and the \code{gnparser} binary on the
+system PATH; the function errors helpfully if either is
+missing. Returns the same shape and \code{normalisation_log}
+attribute as the internal path, so the two are drop-in
+interchangeable.}
 }}
 }
 \value{
