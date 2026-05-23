@@ -42,7 +42,9 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0.9000" id="prepr4pcm-0509000-development-version">prepR4pcm 0.5.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0509000-development-version"></a></h2>
-</div>
+<ul><li><p><strong>pkgdown workflow fix.</strong> <code>dependencies: '"most"'</code> in <code>.github/workflows/pkgdown.yaml</code> tells pak to skip <code>Enhances</code> (i.e. <code>datelife</code>) during lockfile resolution. The <code>workflow_dispatch</code> rebuild no longer fails on “Can’t find package called datelife”. The day-to-day path is unaffected: GitHub Pages still serves the docs straight from <code>main:/docs/</code>.</p></li>
+<li><p><strong><code>comparing-tree-backends.Rmd</code> gains a “Branch lengths and time-calibration” section</strong> with a per-backend comparison table and a practical decision tree for choosing between <code>fishtree</code> / <code>clootl</code> / <code>rtrees</code> / <code>datelife</code> / Grafen pseudo-time when you need real divergence-time branch lengths. Surfaces the alternative path when <code>datelife</code> isn’t installable on a given system.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="prepr4pcm-050">prepR4pcm 0.5.0<a class="anchor" aria-label="anchor" href="#prepr4pcm-050"></a></h2>
 <p>This release adds two opt-in Global Names Architecture backends, a phylogenetic-meta-analysis workflow, and a substantial round of tree-handling audit metadata. All existing API contracts are preserved unless explicitly called out under <em>Breaking changes</em>.</p>
