@@ -36,15 +36,18 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::pkgdown, local::.
-          # "most" = Depends + Imports + LinkingTo + Suggests, but NOT
-          # Enhances. We have `Enhances: datelife`, which pak cannot
-          # resolve on a clean CI runner: datelife was archived from
-          # CRAN in 2024-08, and its transitive dep tree (bold,
-          # phylobase, Bioconductor packages) doesn't install cleanly
-          # via pak alone. pkgdown still gets every Suggest it needs
-          # to render the vignettes; users who want datelife install
-          # it themselves via `pak::pak("phylotastic/datelife")`.
-          dependencies: '"most"'
+          # Depends + Imports + LinkingTo + Suggests, but NOT Enhances.
+          # We have `Enhances: datelife`, which pak cannot resolve on a
+          # clean CI runner: datelife was archived from CRAN in 2024-08,
+          # and its transitive dep tree (bold, phylobase, Bioconductor
+          # packages) doesn't install cleanly via pak alone. pkgdown
+          # still gets every Suggest it needs to render the vignettes;
+          # users who want datelife install it themselves via
+          # `pak::pak("phylotastic/datelife")`.
+          # pak's named shortcuts ("hard", "soft", "all") don't have a
+          # "exclude only Enhances" option, so we pass the explicit
+          # field vector.
+          dependencies: 'c("Depends", "Imports", "LinkingTo", "Suggests")'
           needs: website
 
       - name: Build site (verification only; not deployed)
