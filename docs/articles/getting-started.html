@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -196,7 +196,7 @@ tree.</li>
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-14 17:33:23</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-23 09:24:18</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -367,7 +367,7 @@ Here is a toy example:</p>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-14 17:33:23</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-05-23 09:24:18</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -467,13 +467,15 @@ which are synonyms (alternative names referring to the same taxon).
 prepR4pcm can use such an authority to recognise that two syntactically
 different names refer to the same species — the “synonym” stage of the
 matching cascade.</p>
-<p>The authorities below are <strong>databases served by the <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> package</strong>
-(Norman et al. 2020). They are not R packages themselves —
-<code>authority = "col"</code> just tells <code>prepR4pcm</code> to look
-up synonyms in the taxadb-cached copy of the Catalogue of Life database,
-and so on for the others. The first call for a given authority downloads
-its database to your local taxadb cache (~100 MB); subsequent calls are
-fast and work offline.</p>
+<p>Most authorities below are <strong>databases served by the <a href="https://docs.ropensci.org/taxadb/" class="external-link">taxadb</a> package</strong>
+(Norman et al. 2020) — <code>authority = "col"</code> tells
+<code>prepR4pcm</code> to look up synonyms in the taxadb-cached copy of
+the Catalogue of Life, and so on. The first call for a taxadb provider
+downloads its database to your local cache (~100 MB); subsequent calls
+are fast and work offline. One alternative, <code>"gnverifier"</code>,
+is HTTP-backed instead of taxadb: it calls the <a href="https://verifier.globalnames.org/" class="external-link">Global Names verifier</a> on
+each lookup. No database to download, but each lookup needs network
+access and the package.</p>
 <ul>
 <li>
 <strong><code>col</code></strong> — Catalogue of Life (<a href="https://www.catalogueoflife.org/" class="external-link">catalogueoflife.org</a>). Broad
@@ -502,8 +504,14 @@ synonym-resolution step to use the same taxonomy as the tree.</li>
 <strong><code>itis_test</code></strong> — small bundled subset of
 ITIS used for the package’s own examples and tests; not a
 general-purpose authority.</li>
+<li>
+<strong><code>gnverifier</code></strong> — Global Names verifier (<a href="https://verifier.globalnames.org/" class="external-link">verifier.globalnames.org</a>).
+Verifies names against ~100 authoritative sources (CoL, ITIS, GBIF,
+NCBI, Open Tree, …) in one HTTP call. Wider source coverage than any
+single taxadb provider and no ~100 MB local download, but each call
+needs network access and the package.</li>
 </ul>
-<p>These mirror the providers documented in
+<p>The taxadb-backed entries mirror the providers documented in
 <code><a href="https://rdrr.io/pkg/taxadb/man/td_create.html" class="external-link">?taxadb::td_create</a></code>.</p>
 <p><strong>When should you set <code>authority</code>?</strong></p>
 <p>Use <code>authority = NULL</code> (skip synonym lookup) when:</p>
@@ -513,11 +521,22 @@ general-purpose authority.</li>
 (most formatting differences are caught by the normalisation stage
 anyway).</li>
 </ul>
-<p>Set <code>authority = "col"</code> (or another provider) when names
-differ because of genuine taxonomic revisions — species moved to a
+<p>Set <code>authority = "col"</code> (or another taxadb provider) when
+names differ because of genuine taxonomic revisions — species moved to a
 different genus, splits, or lumps. The first run downloads a local
 database (~100 MB); subsequent runs are fast because the database is
 cached.</p>
+<p>Use <code>authority = "gnverifier"</code> when you would rather query
+the Global Names verifier over HTTP than maintain a local taxadb
+database. It is the right pick when you want broader source coverage
+than any one taxadb provider (it consults ~100 sources per call), when
+you do not want to download a ~100 MB cache, or when you would like the
+synonym stage to silently benefit from upstream-source improvements
+without re-downloading anything. The trade-off: every call needs network
+access (we degrade to “name not found” on failure, so the rest of the
+cascade still runs), and the request adds a round-trip to
+<code>verifier.globalnames.org</code>. Install
+(<code>install.packages("httr2")</code>) before first use.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requires taxadb and a local database download (automatic on first use)</span></span>
 <span><span class="va">result3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
@@ -678,7 +697,20 @@ phylogenetic comparative methods (and other things). <em>PeerJ</em>
 
 
 
-
-
-  </body>
+  <script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  // pkgdown emits ```mermaid``` as <pre class="mermaid"><code>...</code></pre>
+  // (or, for some pandoc paths, <pre><code class="language-mermaid">).
+  // Mermaid.js wants <div class="mermaid"> with raw text content, so we
+  // unwrap the <code> and replace the <pre> with a <div>.
+  document.querySelectorAll('pre.mermaid > code, pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const div = document.createElement('div');
+    div.className = 'mermaid';
+    div.textContent = codeEl.textContent;
+    pre.replaceWith(div);
+  });
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+</script>
+</body>
 </html>

@@ -1,5 +1,30 @@
 # prepR4pcm 0.4.0.9000 (development version)
 
+## Round 21: optional gnverifier authority for synonym resolution
+
+* **`authority = "gnverifier"`** is now accepted by every `reconcile_*`
+  function (`reconcile_data()`, `reconcile_tree()`, `reconcile_multi()`,
+  `reconcile_to_trees()`, `reconcile_trees()`). It routes the synonym
+  stage of the cascade through the
+  [Global Names verifier](https://verifier.globalnames.org/) over HTTP
+  instead of a local \pkg{taxadb} database — broader source coverage
+  (~100 sources in one round-trip, including Catalogue of Life, ITIS,
+  GBIF, NCBI, Open Tree) and no ~100 MB local cache to maintain, in
+  exchange for needing network access at lookup time and the
+  \pkg{httr2} package (added to `Suggests`). Defaults stay
+  `authority = "col"` (taxadb); the new option is opt-in.
+
+  Companion to Round 20's `pr_normalize_names(parser = "gnparser")`:
+  both opt-in paths plug a different stage of the cascade into the
+  Global Names Architecture. Network failure degrades to
+  all-names-not-found with a single warning so the rest of the
+  matching cascade keeps running.
+
+  Documentation footprint (intentionally compact): a single canonical
+  description lives in `vignette("getting-started")` under "Using a
+  taxonomic authority"; every `@param authority` docstring carries a
+  one-sentence pointer to it. No other vignette is touched.
+
 ## Round 20: optional gnparser backend for name normalisation
 
 * **`pr_normalize_names(parser = "gnparser")`** routes parsing

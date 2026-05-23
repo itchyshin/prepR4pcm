@@ -6,10 +6,12 @@
 #' Valid taxonomic authorities
 #'
 #' Returns the set of authority codes that the package accepts when
-#' resolving species-name synonyms via \pkg{taxadb}. The list mirrors
-#' \pkg{taxadb}'s own documented providers (see `?taxadb::td_create`)
-#' so that every value here is genuinely callable in the underlying
-#' database:
+#' resolving species-name synonyms. Most are served by \pkg{taxadb}
+#' (a local database mirroring the providers documented in
+#' `?taxadb::td_create`); `"gnverifier"` is the one HTTP-backed
+#' authority, calling the Global Names Architecture
+#' [verifier service](https://verifier.globalnames.org/) instead of a
+#' local database.
 #'
 #' \describe{
 #'   \item{`"col"`}{Catalogue of Life. The default and a sensible
@@ -28,6 +30,12 @@
 #'   \item{`"itis_test"`}{A small bundled subset of ITIS, cached
 #'     locally with \pkg{taxadb} for testing. Intended for examples
 #'     and unit tests; not for analysis.}
+#'   \item{`"gnverifier"`}{Global Names verifier --- HTTP-backed
+#'     verification against ~100 authoritative sources (Catalogue of
+#'     Life, ITIS, GBIF, NCBI, Open Tree, ...). No local database is
+#'     downloaded; requires network access and the \pkg{httr2} package.
+#'     Useful when you want broader source coverage than any single
+#'     taxadb provider, or want to avoid the ~100 MB taxadb download.}
 #' }
 #'
 #' Five authority codes that previous versions of the package
@@ -40,7 +48,7 @@
 #'
 #' @keywords internal
 pr_valid_authorities <- function() {
-  c("col", "itis", "gbif", "ncbi", "ott", "itis_test")
+  c("col", "itis", "gbif", "ncbi", "ott", "itis_test", "gnverifier")
 }
 
 # Authorities that earlier versions of the package incorrectly listed
@@ -155,18 +163,26 @@ pr_ensure_db <- function(authority, db_version = NULL) {
 
 #' Look up names in a taxonomic authority
 #'
-#' For each name, queries the local taxadb database and returns the accepted
-#' name, taxonomic status, and taxon ID.
+#' For each name, queries the configured authority and returns the accepted
+#' name, taxonomic status, and taxon ID. Most authorities are backed by a
+#' local \pkg{taxadb} database; `authority = "gnverifier"` calls the
+#' Global Names HTTP verifier instead.
 #'
 #' @param names Character vector of scientific names.
-#' @param authority A length-1 character vector. Authority code (e.g., `"col"`).
-#' @param db_version A length-1 character vector or NULL.
+#' @param authority A length-1 character vector. Authority code (e.g.,
+#'   `"col"`). Pass `"gnverifier"` for HTTP-backed verification against
+#'   ~100 sources; see `vignette("getting-started")` for the trade-off.
+#' @param db_version A length-1 character vector or NULL. Ignored when
+#'   `authority = "gnverifier"` (the GNverifier service does not expose
+#'   per-snapshot versions); a non-NULL value emits a single warning.
 #'
 #' @return A tibble with columns: `input`, `accepted_name`, `status`,
 #'   `taxon_id`, `authority`.
 #' @keywords internal
 pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
-  pr_ensure_db(authority, db_version)
+  if (authority != "gnverifier") {
+    pr_ensure_db(authority, db_version)
+  }
 
   unique_names <- unique(names[!is.na(names)])
 
@@ -199,6 +215,38 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
   }
 
   if (length(to_lookup) > 0) {
+    if (authority == "gnverifier") {
+      new_results_df <- .pr_lookup_gnverifier(to_lookup, db_version)
+    } else {
+      new_results_df <- .pr_lookup_taxadb(to_lookup, authority, db_version)
+    }
+
+    # Update cache
+    if (!is.null(cached)) {
+      assign(cache_key, rbind(cached, new_results_df), envir = .pr_cache)
+    } else {
+      assign(cache_key, new_results_df, envir = .pr_cache)
+    }
+  }
+
+  # Return results for all requested names
+  full_cache <- get(cache_key, envir = .pr_cache)
+  full_cache[full_cache$input %in% unique_names, ]
+}
+
+
+#' Look up names in a taxadb-backed authority
+#'
+#' Internal helper extracted from `pr_lookup_authority()` so the
+#' taxadb path can sit alongside the gnverifier path without
+#' duplicating the cache machinery in `pr_lookup_authority()`.
+#'
+#' @param to_lookup Character vector of names to look up.
+#' @param authority A length-1 character vector. Authority code.
+#' @param db_version A length-1 character vector or NULL.
+#' @return A tibble with the same 5 columns as `pr_lookup_authority()`.
+#' @keywords internal
+.pr_lookup_taxadb <- function(to_lookup, authority, db_version = NULL) {
     # Batch query: taxadb::filter_name accepts a character vector.
     # Only forward `version` when the caller supplied one — taxadb 0.2.1
     # errors on `version = NULL` because parse_schema() runs
@@ -293,17 +341,139 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
       )
     })
 
-    new_results_df <- do.call(rbind, new_results)
+    do.call(rbind, new_results)
+}
 
-    # Update cache
-    if (!is.null(cached)) {
-      assign(cache_key, rbind(cached, new_results_df), envir = .pr_cache)
-    } else {
-      assign(cache_key, new_results_df, envir = .pr_cache)
-    }
+
+#' Look up names via the Global Names verifier (HTTP)
+#'
+#' Internal helper for `pr_lookup_authority(authority = "gnverifier")`.
+#' POSTs the input vector to the
+#' [Global Names verifier](https://verifier.globalnames.org/) and maps
+#' each `bestResult` back to the 5-column tibble contract used by the
+#' taxadb path. Returns all-rows-`not_found` and emits a single
+#' warning on network failure, mirroring the taxadb branch's
+#' degradation behaviour so the cascade above keeps running.
+#'
+#' @param names Character vector of names to verify.
+#' @param db_version Ignored; emits a single warning if non-NULL.
+#' @return A tibble with the same 5 columns as `pr_lookup_authority()`.
+#' @keywords internal
+.pr_lookup_gnverifier <- function(names, db_version = NULL) {
+  if (!requireNamespace("httr2", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "{.code authority = \"gnverifier\"} requires the {.pkg httr2} package.",
+      "i" = 'Install with {.code install.packages("httr2")}.',
+      ">" = "Or pick a taxadb-backed authority (e.g. {.val col})."
+    ))
   }
 
-  # Return results for all requested names
-  full_cache <- get(cache_key, envir = .pr_cache)
-  full_cache[full_cache$input %in% unique_names, ]
+  if (!is.null(db_version)) {
+    cli::cli_warn(c(
+      "{.arg db_version} is ignored when {.code authority = \"gnverifier\"}.",
+      "i" = "The Global Names verifier does not expose per-snapshot versions."
+    ))
+  }
+
+  not_found <- function(n) {
+    tibble(
+      input         = n,
+      accepted_name = NA_character_,
+      status        = rep("not_found", length(n)),
+      taxon_id      = NA_character_,
+      authority     = rep("gnverifier", length(n))
+    )
+  }
+
+  body <- list(nameStrings = as.list(names))
+
+  resp <- tryCatch(
+    {
+      req <- httr2::request("https://verifier.globalnames.org/api/v1/verifications")
+      req <- httr2::req_body_json(req, body)
+      req <- httr2::req_user_agent(
+        req,
+        "prepR4pcm (https://github.com/itchyshin/prepR4pcm)"
+      )
+      httr2::req_perform(req)
+    },
+    error = function(e) e
+  )
+
+  if (inherits(resp, "error")) {
+    cli::cli_warn(c(
+      "GNverifier lookup failed: {conditionMessage(resp)}.",
+      "i" = "Names will be recorded as not found; the rest of the cascade still runs."
+    ))
+    return(not_found(names))
+  }
+
+  parsed <- tryCatch(
+    httr2::resp_body_json(resp, simplifyVector = FALSE),
+    error = function(e) e
+  )
+
+  if (inherits(parsed, "error")) {
+    cli::cli_warn(c(
+      "GNverifier returned an unparseable response: {conditionMessage(parsed)}.",
+      "i" = "Names will be recorded as not found."
+    ))
+    return(not_found(names))
+  }
+
+  # The verifier returns `{"names": [...]}` (since v1). Older deployments
+  # used `namesList`. Accept either so a transparent server update does
+  # not break us.
+  results <- parsed[["names"]] %||% parsed[["namesList"]]
+  if (is.null(results) || length(results) != length(names)) {
+    cli::cli_warn(c(
+      "GNverifier response shape did not match the request.",
+      "i" = "Names will be recorded as not found."
+    ))
+    return(not_found(names))
+  }
+
+  rows <- lapply(seq_along(names), function(i) {
+    entry <- results[[i]]
+    best  <- entry[["bestResult"]]
+    if (is.null(best)) {
+      return(tibble(
+        input         = names[[i]],
+        accepted_name = NA_character_,
+        status        = "not_found",
+        taxon_id      = NA_character_,
+        authority     = "gnverifier"
+      ))
+    }
+
+    accepted <- best[["currentCanonicalSimple"]] %||%
+                best[["currentCanonicalFull"]]   %||%
+                best[["matchedCanonicalSimple"]] %||%
+                NA_character_
+    accepted <- if (length(accepted) && nzchar(accepted)) accepted else NA_character_
+
+    match_type <- best[["matchType"]] %||% ""
+    current    <- best[["currentName"]] %||% best[["currentCanonicalSimple"]] %||% ""
+    matched    <- best[["matchedName"]] %||% best[["matchedCanonicalSimple"]] %||% ""
+
+    status <- if (identical(match_type, "Exact") &&
+                  nzchar(current) && nzchar(matched) &&
+                  identical(current, matched)) {
+      "accepted"
+    } else {
+      "synonym"
+    }
+
+    tibble(
+      input         = names[[i]],
+      accepted_name = as.character(accepted),
+      status        = status,
+      taxon_id      = as.character(best[["recordId"]] %||%
+                                   best[["taxonId"]]  %||%
+                                   NA_character_),
+      authority     = "gnverifier"
+    )
+  })
+
+  do.call(rbind, rows)
 }
