@@ -1,6 +1,6 @@
 Package: prepR4pcm
 Title: Prepare Data and Trees for Phylogenetic Comparative Methods
-Version: 0.5.0
+Version: 0.5.0.9000
 Authors@R: c(
     person("Shinichi", "Nakagawa",
            email = "s.nakagawa@unsw.edu.au",
