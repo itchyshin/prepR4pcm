@@ -3,7 +3,7 @@ Title: Prepare Data and Trees for Phylogenetic Comparative Methods
 Version: 0.5.1
 Authors@R: c(
     person("Shinichi", "Nakagawa",
-           email = "s.nakagawa@unsw.edu.au",
+           email = "itchyshin@gmail.com",
            role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-7765-5182")),
     person("Santiago", "Ortega",

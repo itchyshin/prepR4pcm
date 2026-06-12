@@ -154,11 +154,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID}) [copyright holder]
+\strong{Maintainer}: Shinichi Nakagawa \email{itchyshin@gmail.com} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID}) [copyright holder]
+  \item Shinichi Nakagawa \email{itchyshin@gmail.com} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID}) [copyright holder]
   \item Santiago Ortega
   \item Ayumi Mizuno
   \item Eduardo S.A. Santos
