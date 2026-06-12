@@ -41,6 +41,8 @@ All packages in `Suggests` are used conditionally:
 * `clootl`, `rtrees` — optional backends of `pr_get_tree()` (issue
   #42). Each is guarded by runtime availability checks and returns a
   targeted install message when unavailable.
+* `piggyback` — used indirectly by the optional `rtrees`/`megatrees`
+  backend to download reference-tree data in non-CRAN backend tests.
 * `knitr`, `rmarkdown` — used by the vignette builder.
 * `dplyr`, `pkgdown`, `testthat` — used only by tests, vignettes, and
   site building.

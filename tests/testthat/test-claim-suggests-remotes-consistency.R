@@ -17,8 +17,8 @@
 .cran_allowlist <- c(
   "ape", "cli", "rlang", "tibble",
   "caper", "clootl", "digest", "dplyr", "fishtree", "httr2", "knitr",
-  "MCMCglmm", "phytools", "pkgdown", "readr", "rgnparser", "rmarkdown",
-  "rotl", "rtrees", "spelling", "stringr", "taxadb",
+  "MCMCglmm", "phytools", "piggyback", "pkgdown", "readr", "rgnparser",
+  "rmarkdown", "rotl", "rtrees", "spelling", "stringr", "taxadb",
   "testthat",
   # standard packages bundled with R
   "stats", "tools", "utils", "graphics", "grDevices", "methods"

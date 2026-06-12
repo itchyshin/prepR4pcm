@@ -31,7 +31,7 @@ allowlisted <- c("knitr", "rmarkdown", "testthat", "pkgdown", "spelling")
 # Transitive-only Suggests: declared in `Suggests:` not because
 # prepR4pcm calls them, but so the dependency resolver installs them
 # for another Suggests' own dependency chain.
-transitive_suggests <- character(0)
+transitive_suggests <- "piggyback"
 
 
 .find_root_with_dirs <- function(dirs) {
