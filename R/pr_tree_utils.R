@@ -1,5 +1,10 @@
 # Tree utilities -----------------------------------------------------------
 
+pr_namespace_available <- function(package) {
+  requireNamespace(package, quietly = TRUE)
+}
+
+
 #' Extract tip labels from a phylogenetic tree
 #'
 #' Return the tip labels of a tree as a character vector, whether the

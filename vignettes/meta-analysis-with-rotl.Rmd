@@ -50,7 +50,7 @@ through the whole pipeline.
 We'll mirror the phylogeny construction from Pottier et al. (2022)
 "Developmental plasticity in thermal tolerance" (*Ecology
 Letters* 25(10):2245-2268,
-[doi:10.1111/ele.14083](https://doi.org/10.1111/ele.14083)). Their
+DOI 10.1111/ele.14083). Their
 dataset spans **147 ectotherm species across 14 animal classes** —
 fish, insects, reptiles, amphibians, crustaceans, bivalves,
 echinoderms, cephalopods, etc.
@@ -495,20 +495,20 @@ branch_lengths = "grafen")` is the practical default.
 - Pottier, Burke, Drobniak, Lagisz, Nakagawa (2022). *Developmental
   plasticity in thermal tolerance: ontogenetic variation, persistence,
   and future directions.* Ecology Letters 25(10): 2245--2268.
-  [doi:10.1111/ele.14083](https://doi.org/10.1111/ele.14083).
+  DOI 10.1111/ele.14083.
   Source code: [github.com/p-pottier/Dev_plasticity_thermal_tolerance](https://github.com/p-pottier/Dev_plasticity_thermal_tolerance).
 - Cinar, Nakagawa, & Viechtbauer (2022). *Phylogenetic multilevel
   meta-analysis: a simulation study on the importance of modelling
   the phylogeny.* Methods Ecol. Evol. 13(2): 383--395.
-  [doi:10.1111/2041-210X.13760](https://doi.org/10.1111/2041-210X.13760).
+  DOI 10.1111/2041-210X.13760.
 - Michonneau, Brown, & Winter (2016). *rotl: an R package to
   interact with the Open Tree of Life data.* Methods Ecol. Evol.
   7(12): 1476--1481.
-  [doi:10.1111/2041-210X.12593](https://doi.org/10.1111/2041-210X.12593).
+  DOI 10.1111/2041-210X.12593.
 - Paradis & Schliep (2019). *ape 5.0: an environment for modern
   phylogenetics and evolutionary analyses in R.* Bioinformatics
   35(3): 526--528.
-  [doi:10.1093/bioinformatics/bty633](https://doi.org/10.1093/bioinformatics/bty633).
+  DOI 10.1093/bioinformatics/bty633.
 - Grafen (1989). *The phylogenetic regression.* Phil. Trans. R.
   Soc. B 326: 119--157.
-  [doi:10.1098/rstb.1989.0106](https://doi.org/10.1098/rstb.1989.0106).
+  DOI 10.1098/rstb.1989.0106.

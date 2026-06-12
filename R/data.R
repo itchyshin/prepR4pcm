@@ -247,7 +247,7 @@
 #' If you use this tree in published work, please cite Upham et al.
 #' (2019) directly. The bundled object is a *subset* used for examples
 #' only --- for analysis-grade trees, download the full credible set
-#' from <http://vertlife.org/phylosubsets>.
+#' from <https://vertlife.org/phylosubsets/>.
 #'
 #' @format An object of class `phylo` (from the ape package), with
 #'   5,987 tips and 5,986 internal nodes.
@@ -256,7 +256,7 @@
 #'   the mammal tree: Species-level sets of phylogenies for questions
 #'   in ecology, evolution, and conservation. \emph{PLOS Biology}
 #'   17(12):e3000494. \doi{10.1371/journal.pbio.3000494}.
-#'   Full credible sets at \url{http://vertlife.org/phylosubsets}.
+#'   Full credible sets at \url{https://vertlife.org/phylosubsets/}.
 #'
 #' @references
 #' Other published mammal phylogenies suitable for comparative

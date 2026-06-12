@@ -1,4 +1,8 @@
-# prepR4pcm 0.5.0.9000 (development version)
+# prepR4pcm 0.5.1
+
+* **CRAN preparation.** Release metadata, README installation guidance, and bundled-data citation links were updated for the first CRAN submission.
+
+* **pkgdown publishing guard.** The pkgdown build wrapper now removes loose agent-instruction pages from the generated site and search index before GitHub Pages deployment.
 
 * **pkgdown workflow fix.** `dependencies: '"most"'` in
   `.github/workflows/pkgdown.yaml` tells pak to skip `Enhances`

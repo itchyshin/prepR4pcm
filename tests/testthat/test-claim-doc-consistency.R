@@ -165,6 +165,9 @@ test_that("`pkg::` references in vignettes/man point to real packages", {
   # Read DESCRIPTION's full dep set
   desc <- read.dcf(file.path(root, "DESCRIPTION"))
   parse_field <- function(name) {
+    if (!name %in% colnames(desc)) {
+      return(character())
+    }
     v <- desc[1, name]
     if (is.na(v)) {
       return(character())
@@ -195,7 +198,11 @@ test_that("`pkg::` references in vignettes/man point to real packages", {
     "brms", # `?pr_phylo_cor` mentions as downstream consumer
     "glmmTMB", # `?pr_phylo_cor` mentions as downstream consumer
     "memoise", # NEWS.md prose about caching strategy
-    "phangorn" # comparing-tree-backends.Rmd: alternative consensus tool
+    "phangorn", # comparing-tree-backends.Rmd: alternative consensus tool
+    "datelife", # optional GitHub-only backend, guarded at runtime
+    "U.PhyloMaker", # optional GitHub-only augmentation backend
+    "V.PhyloMaker", # optional GitHub-only augmentation backend
+    "V.PhyloMaker2" # optional GitHub-only augmentation backend
   )
 
   unaccounted <- setdiff(pkgs, c(declared, external_ok))

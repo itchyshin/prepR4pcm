@@ -224,7 +224,8 @@ from the chosen backend, pruned to the matched species.}
 \item{\code{matched}}{Character vector of names from the user's
 \strong{original input} (preserving the input format, including any
 underscores) that resolved to a tip in \code{tree}. The dispatcher
-enforces \verb{matched ⊆ unique(input)} --- TNRS substitution,
+enforces that matched names are a subset of \code{unique(input)} ---
+TNRS substitution,
 normalisation, and backend-internal name juggling cannot leak
 intermediate names into this slot.}
 \item{\code{unmatched}}{Character vector of names from the \strong{original
@@ -323,7 +324,7 @@ homonym), a one-shot \code{cli} warning names the affected species, since
 the resolved name is then only one of several candidates.
 }
 \examples{
-\donttest{
+if (interactive()) {
   # Example 1: birds via clootl (Clements taxonomy). Uses the
   # bundled AVONET subset (657 species placed in the Clements tree).
   data(avonet_subset)

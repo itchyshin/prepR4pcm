@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,8 +94,11 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>Install the development version from GitHub:</p>
+<p>Install the CRAN release:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
+<p>Install the development version from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"itchyshin/prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -146,7 +149,7 @@
 <h2 id="quick-example">Quick example<a class="anchor" aria-label="anchor" href="#quick-example"></a>
 </h2>
 <p>This example reconciles <code>avonet_subset</code> (919 species rows from AVONET, a global bird-trait database; Tobias et al. 2022) against <code>tree_jetz</code> (657 tips from the Jetz et al. 2012 bird phylogeny). It produces an aligned data frame and a pruned tree ready for downstream modelling — both sides have the same species, in matched order, ready for a PGLS or phylogenetic mixed model.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/emmanuelparadis/ape" class="external-link">ape</a></span><span class="op">)</span></span>
 <span></span>
@@ -171,7 +174,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-06-11 19:21:16</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-06-11 20:48:25</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -207,7 +210,7 @@
 <h2 id="quick-example--fetching-a-tree">Quick example — fetching a tree<a class="anchor" aria-label="anchor" href="#quick-example--fetching-a-tree"></a>
 </h2>
 <p>If you don’t already have a tree, fetch one. The snippet below pulls a 50-tree posterior of fish chronograms from the Fish Tree of Life (Rabosky et al. 2018) and asks <code><a href="reference/pr_cite_tree.html">pr_cite_tree()</a></code> to format the citations for your methods section:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/pr_get_tree.html">pr_get_tree</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Salmo salar"</span>, <span class="st">"Esox lucius"</span>, <span class="st">"Oncorhynchus mykiss"</span><span class="op">)</span>,</span>
 <span>  source <span class="op">=</span> <span class="st">"fishtree"</span>,</span>
@@ -248,19 +251,19 @@
 <p>Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Jain B, Celeste J, Poo Hernandez S (2026). <em>prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods.</em> R package version 0.4.0. <a href="https://github.com/itchyshin/prepR4pcm" class="external-link uri">https://github.com/itchyshin/prepR4pcm</a></p>
 </blockquote>
 <p>BibTeX:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>            Jimuel Jr Celeste and Sergio {Poo Hernandez}},</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.4.0},</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="dt">title</span>  = {prepR4pcm: Prepare Data and Trees for Phylogenetic Comparative Methods},</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="dt">author</span> = {Shinichi Nakagawa and Santiago Ortega and Ayumi Mizuno and</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>            Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>            Jimuel Jr Celeste and Sergio {Poo Hernandez}},</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="dt">year</span>   = {2026},</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.5.1},</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/itchyshin/prepR4pcm},</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>}</span></code></pre></div>
 <p>Or run in R to get the same entry programmatically:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"prepR4pcm"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>citation("prepR4pcm")</code> warns <em>“no package ‘prepR4pcm’ was found”</em>, the installed copy is stale or in a library R isn’t searching. Re-install with <code>pak::pak("itchyshin/prepR4pcm")</code> and re-load (restart R if needed).</p>
+<p>If <code>citation("prepR4pcm")</code> warns <em>“no package ‘prepR4pcm’ was found”</em>, the installed copy is stale or in a library R isn’t searching. Install the CRAN release with <code>install.packages("prepR4pcm")</code>, or install the development version with <code>pak::pak("itchyshin/prepR4pcm")</code>, then re-load (restart R if needed).</p>
 </div>
 <div class="section level2">
 <h2 id="key-dependencies">Key dependencies<a class="anchor" aria-label="anchor" href="#key-dependencies"></a>
@@ -279,40 +282,33 @@
 <p><strong>Bird data (used by the bird-workflow vignette):</strong></p>
 <ul>
 <li>
-<strong>AVONET</strong> (<code>avonet_subset</code>): Tobias et al. (2022) <em>Ecology Letters</em> 25:581–597. <a href="https://doi.org/10.1111/ele.13898" class="external-link">doi:10.1111/ele.13898</a>
-</li>
+<strong>AVONET</strong> (<code>avonet_subset</code>): Tobias et al. (2022) <em>Ecology Letters</em> 25:581–597. DOI 10.1111/ele.13898</li>
 <li>
-<strong>NestTrait v2</strong> (<code>nesttrait_subset</code>): Chia et al. (2023) <em>Scientific Data</em> 10:923. <a href="https://doi.org/10.1038/s41597-023-02837-1" class="external-link">doi:10.1038/s41597-023-02837-1</a>
-</li>
+<strong>NestTrait v2</strong> (<code>nesttrait_subset</code>): Chia et al. (2023) <em>Scientific Data</em> 10:923. DOI 10.1038/s41597-023-02837-1</li>
 <li>
-<strong>Plumage lightness</strong> (<code>delhey_subset</code>): Delhey et al. (2019) <em>Ecology Letters</em> 22:726–736. <a href="https://doi.org/10.1111/ele.13233" class="external-link">doi:10.1111/ele.13233</a>
-</li>
+<strong>Plumage lightness</strong> (<code>delhey_subset</code>): Delhey et al. (2019) <em>Ecology Letters</em> 22:726–736. DOI 10.1111/ele.13233</li>
 <li>
-<strong>Jetz phylogeny</strong> (<code>tree_jetz</code>): Jetz et al. (2012) <em>Nature</em> 491:444–448. <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>
-</li>
+<strong>Jetz phylogeny</strong> (<code>tree_jetz</code>): Jetz et al. (2012) <em>Nature</em> 491:444–448. DOI 10.1038/nature11631</li>
 <li>
-<strong>Clements checklist</strong> (<code>tree_clements25</code>): Clements et al. (2025) eBird/Clements Checklist of Birds of the World, v2025 (<a href="https://www.birds.cornell.edu/clementschecklist/" class="external-link uri">https://www.birds.cornell.edu/clementschecklist/</a>).</li>
+<strong>Clements checklist</strong> (<code>tree_clements25</code>): Clements et al. (2025) eBird/Clements Checklist of Birds of the World, v2025.</li>
 <li>
-<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): distributed with AVONET (Tobias et al. 2022, <a href="https://doi.org/10.1111/ele.13898" class="external-link">doi:10.1111/ele.13898</a>); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>) taxonomy.</li>
+<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): distributed with AVONET (Tobias et al. 2022, DOI 10.1111/ele.13898); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, DOI 10.1038/nature11631) taxonomy.</li>
 </ul>
 <p><strong>Mammal data (used by the mammal database-assembly vignette):</strong></p>
 <ul>
 <li>
-<strong>Amniote life-history</strong> (<code>mammal_amniote_example</code>): Myhrvold et al. (2015) <em>Ecology</em> 96:3109. <a href="https://doi.org/10.1890/15-0846R.1" class="external-link">doi:10.1890/15-0846R.1</a>
-</li>
+<strong>Amniote life-history</strong> (<code>mammal_amniote_example</code>): Myhrvold et al. (2015) <em>Ecology</em> 96:3109. DOI 10.1890/15-0846R.1</li>
 <li>
-<strong>PanTHERIA</strong> (<code>mammal_pantheria_example</code>): Jones et al. (2009) <em>Ecology</em> 90:2648. <a href="https://doi.org/10.1890/08-1494.1" class="external-link">doi:10.1890/08-1494.1</a>
-</li>
+<strong>PanTHERIA</strong> (<code>mammal_pantheria_example</code>): Jones et al. (2009) <em>Ecology</em> 90:2648. DOI 10.1890/08-1494.1</li>
 <li>
 <strong>TetrapodTraits</strong> (<code>mammal_tetrapodtraits_example</code>): Moura et al.
 <ol start="2024" style="list-style-type: decimal">
 <li>
-<em>PLOS Biology</em> 22:e3002658. <a href="https://doi.org/10.1371/journal.pbio.3002658" class="external-link">doi:10.1371/journal.pbio.3002658</a>
-</li>
+<em>PLOS Biology</em> 22:e3002658. DOI 10.1371/journal.pbio.3002658</li>
 </ol>
 </li>
 <li>
-<strong>Mammal phylogeny</strong> (<code>mammal_tree_example</code>): a 5,987-tip subset of the VertLife mammal phylogeny from Upham et al. (2019) <em>PLOS Biology</em> 17(12):e3000494 <a href="https://doi.org/10.1371/journal.pbio.3000494" class="external-link">doi:10.1371/journal.pbio.3000494</a>. Bundled as an example object only — for analysis-grade trees, download the full credible set from <a href="http://vertlife.org/phylosubsets" class="external-link">vertlife.org/phylosubsets</a>.</li>
+<strong>Mammal phylogeny</strong> (<code>mammal_tree_example</code>): a 5,987-tip subset of the VertLife mammal phylogeny from Upham et al. (2019) <em>PLOS Biology</em> 17(12):e3000494 DOI 10.1371/journal.pbio.3000494. Bundled as an example object only — for analysis-grade trees, download the full credible set from <a href="https://vertlife.org/phylosubsets/" class="external-link uri">https://vertlife.org/phylosubsets/</a>.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -349,7 +345,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Shinichi Nakagawa <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0002-7765-5182" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Shinichi Nakagawa <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0000-0002-7765-5182" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>Santiago Ortega <br><small class="roles"> Author </small>   </li>
 <li>Ayumi Mizuno <br><small class="roles"> Author </small>   </li>
 <li>Eduardo S.A. Santos <br><small class="roles"> Author </small>   </li>

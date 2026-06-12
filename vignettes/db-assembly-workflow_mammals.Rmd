@@ -125,7 +125,7 @@ database [@Myhrvold2015], PanTHERIA [@Jones2009], and TetrapodTraits
 [@Moura2024]. The bundled tree is a subset of the VertLife mammal
 phylogeny [@Upham2019]; the next code chunk reports its exact tip
 count. For analysis-grade trees download the full credible set from
-<http://vertlife.org/phylosubsets>.
+<https://vertlife.org/phylosubsets/>.
 
 ```{r load-example-objects}
 data(mammal_amniote_example)

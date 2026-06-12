@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-23 12:40:03</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-06-11 21:48:50</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -344,7 +344,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-05-23 12:40:21</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-06-11 21:49:06</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -584,6 +584,11 @@ tree using genus-level placement:</p>
 <span>  seed <span class="op">=</span> <span class="fl">42</span>,                      <span class="co"># for reproducibility</span></span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: Tree returned by <span style="color: #0000BB;">"internal"</span> is not strictly ultrametric.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.</span></span>
+<span><span class="co">#&gt; → To force: `phytools::force.ultrametric(result$tree)` or</span></span>
+<span><span class="co">#&gt;   `ape::chronos(result$tree)`.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> To suppress this check: pass `check_ultrametric = FALSE`.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original tips: %d\nAugmented tips: %d\n"</span>,</span>
 <span>            <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">original</span><span class="op">)</span>, <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -705,20 +710,16 @@ adding a crosswalk.</p></li>
 <ul>
 <li>
 <strong>AVONET</strong>: Tobias et al. (2022) <em>Ecology
-Letters</em> 25:581–597. <a href="https://doi.org/10.1111/ele.13898" class="external-link">doi:10.1111/ele.13898</a>
-</li>
+Letters</em> 25:581–597. DOI 10.1111/ele.13898</li>
 <li>
 <strong>NestTrait v2</strong>: Chia et al. (2023) <em>Scientific
-Data</em> 10:923. <a href="https://doi.org/10.1038/s41597-023-02837-1" class="external-link">doi:10.1038/s41597-023-02837-1</a>
-</li>
+Data</em> 10:923. DOI 10.1038/s41597-023-02837-1</li>
 <li>
 <strong>Plumage lightness</strong>: Delhey et al. (2019) <em>Ecology
-Letters</em> 22:726–736. <a href="https://doi.org/10.1111/ele.13233" class="external-link">doi:10.1111/ele.13233</a>
-</li>
+Letters</em> 22:726–736. DOI 10.1111/ele.13233</li>
 <li>
 <strong>Jetz tree</strong>: Jetz et al. (2012) <em>Nature</em>
-491:444–448. <a href="https://doi.org/10.1038/nature11631" class="external-link">doi:10.1038/nature11631</a>
-</li>
+491:444–448. DOI 10.1038/nature11631</li>
 <li>
 <strong>Clements 2025</strong>: Clements et al. (2025)
 eBird/Clements Checklist.</li>
@@ -733,35 +734,34 @@ al. (2022).</li>
 <ul>
 <li>Hadfield, J.D. (2010) MCMC methods for multi-response generalized
 linear mixed models: the MCMCglmm R package. <em>Journal of Statistical
-Software</em> 33:1–22. <a href="https://doi.org/10.18637/jss.v033.i02" class="external-link">doi:10.18637/jss.v033.i02</a>
-</li>
+Software</em> 33:1–22. DOI 10.18637/jss.v033.i02</li>
 <li>Hadfield, J.D. &amp; Nakagawa, S. (2010) General quantitative
 genetic methods for comparative biology: phylogenies, taxonomies and
 multi-trait models for continuous and categorical characters.
-<em>Journal of Evolutionary Biology</em> 23:494–508. <a href="https://doi.org/10.1111/j.1420-9101.2009.01915.x" class="external-link">doi:10.1111/j.1420-9101.2009.01915.x</a>
-</li>
+<em>Journal of Evolutionary Biology</em> 23:494–508. DOI
+10.1111/j.1420-9101.2009.01915.x</li>
 <li>Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. &amp; Nakagawa,
 S.
 <ol start="2025" style="list-style-type: decimal">
 <li>Promoting the use of phylogenetic multinomial generalised
 mixed-effects model to understand the evolution of discrete traits.
-<em>Journal of Evolutionary Biology</em> 38:1699–1715. <a href="https://doi.org/10.1093/jeb/voaf116" class="external-link">doi:10.1093/jeb/voaf116</a>.
-Tutorial: <a href="https://ayumi-495.github.io/multinomial-GLMM-tutorial/" class="external-link uri">https://ayumi-495.github.io/multinomial-GLMM-tutorial/</a>
+<em>Journal of Evolutionary Biology</em> 38:1699–1715. DOI
+10.1093/jeb/voaf116. Tutorial: <a href="https://ayumi-495.github.io/multinomial-GLMM-tutorial/" class="external-link uri">https://ayumi-495.github.io/multinomial-GLMM-tutorial/</a>
 </li>
 </ol>
 </li>
 <li>Norman, K.E., Chamberlain, S. &amp; Boettiger, C. (2020) taxadb: A
 high-performance local taxonomic database interface. <em>Methods in
-Ecology and Evolution</em> 11:1153–1159. <a href="https://doi.org/10.1111/2041-210X.13440" class="external-link">doi:10.1111/2041-210X.13440</a>
-</li>
+Ecology and Evolution</em> 11:1153–1159. DOI
+10.1111/2041-210X.13440</li>
 <li>Orme, D., Freckleton, R., Thomas, G., Petzoldt, T., Fritz, S.,
 Isaac, N. &amp; Pearse, W. (2025) caper: Comparative Analyses of
-Phylogenetics and Evolution in R. R package version 1.0.4. <a href="https://doi.org/10.32614/CRAN.package.caper" class="external-link">doi:10.32614/CRAN.package.caper</a>
-</li>
+Phylogenetics and Evolution in R. R package version 1.0.4. DOI
+10.32614/CRAN.package.caper</li>
 <li>Paradis, E. &amp; Schliep, K. (2019) ape 5.0: an environment for
 modern phylogenetics and evolutionary analyses in R.
-<em>Bioinformatics</em> 35:526–528. <a href="https://doi.org/10.1093/bioinformatics/bty633" class="external-link">doi:10.1093/bioinformatics/bty633</a>
-</li>
+<em>Bioinformatics</em> 35:526–528. DOI
+10.1093/bioinformatics/bty633</li>
 </ul>
 </div>
 </div>

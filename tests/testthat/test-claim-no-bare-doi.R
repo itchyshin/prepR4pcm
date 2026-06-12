@@ -3,8 +3,9 @@
 # Catches the bug shipped in PR #28 where vignettes used `doi:10.xxx`
 # as plain text. Pandoc renders these as href="doi:10.xxx" which the
 # browser treats as a custom URI scheme -- effectively dead links on
-# the deployed site. The fix is to wrap them in markdown links:
-# `[doi:10.xxx](https://doi.org/10.xxx)`.
+# the deployed site. Use markdown DOI links when the target is stable
+# under automated checks, or plain `DOI 10.xxx` text when CRAN URL
+# checks would hit publisher bot-blocks.
 #
 # This test scans every .Rmd / README.md for bare doi: outside of a
 # completed markdown link and outside fenced code blocks. If any
@@ -70,7 +71,7 @@ test_that("no bare doi: URIs in user-facing files (issue: PR #28 regression)", {
       if (length(bad_lines) > 20)
         sprintf("\n  ... and %d more", length(bad_lines) - 20)
       else "",
-      "\nWrap each in a markdown link: `[doi:10.xxx](https://doi.org/10.xxx)`."
+      "\nUse a markdown DOI link or plain `DOI 10.xxx` text instead."
     )
   )
 })
