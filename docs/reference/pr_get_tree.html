@@ -19,7 +19,7 @@ get back a phylo ready for reconcile_apply()."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -348,7 +348,8 @@ from the chosen backend, pruned to the matched species.</p></dd>
 <dd><p>Character vector of names from the user's
 <strong>original input</strong> (preserving the input format, including any
 underscores) that resolved to a tip in <code>tree</code>. The dispatcher
-enforces <code>matched ⊆ unique(input)</code> — TNRS substitution,
+enforces that matched names are a subset of <code>unique(input)</code> —
+TNRS substitution,
 normalisation, and backend-internal name juggling cannot leak
 intermediate names into this slot.</p></dd>
 
@@ -532,7 +533,7 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="co"># Example 1: birds via clootl (Clements taxonomy). Uses the</span></span></span>
 <span class="r-in"><span>  <span class="co"># bundled AVONET subset (657 species placed in the Clements tree).</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">avonet_subset</span><span class="op">)</span></span></span>
@@ -542,80 +543,6 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 <span class="r-in"><span>    <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>        <span class="co"># species placed in the tree</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">unmatched</span><span class="op">)</span>        <span class="co"># names clootl could not resolve</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Some of your provided species names do not match with names in the requested year's eBird taxonomy:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 65 names did not match. 854 names did match</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> These names did not match:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Calamanthus cautus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Calamanthus pyrrhopygius</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Crateroscelis murina</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Crateroscelis nigrorufa</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Crateroscelis robusta</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sericornis arfakianus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sericornis citreogularis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sericornis papuensis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sericornis perspicillatus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sericornis rufescens</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Sericornis spilodera</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Artamus leucoryn</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Edolisoma parvulum</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Edolisoma pygmaeum</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Lalage minor</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Pericrocotus montanus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Corvus caurinus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Corvus dauuricus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Corvus monedula</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Corvus pectoralis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cyanocorax coeruleus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cyanocorax hafferi</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Cyanolyca quindiuna</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Garrulus bispecularis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Garrulus leucotis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Pica nutalli</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Urocissa xanthomelana</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Entomyzon albipennis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Melidectes fuscus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Melidectes nouhuysi</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Melidectes princeps</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Melithreptus laetior</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis albilineatus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis albonotatus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis analogus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis cinereifrons</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis flavirictus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis fordianus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis gracilis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis imitatrix</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis mimikae</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis montanus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis orientalis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis reticulatus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Microptilotis vicina</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Oreornis chrysogenys</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Metabolus godeffroyi</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Metabolus takatsukasae</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Monarcha megarhynchus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Monarcha ugiensis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Myiagra cervinicolor</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Symposiachrus ateralbus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Terpsiphone unirufa</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Trochocercus bivittatus</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Pachycephala fulvotincta</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Pachycephala griseiceps</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Pachycephala par</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Acridotheres tertius</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Acridotheres tricolor</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Aplonis circumscripta</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Gracula robusta</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Lamprotornis benguelensis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Lamprotornis violacior</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Poeoptera femoralis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Streptocitta torquata</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Argument force=TRUE, returning a tree for the species that match.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> This extracted tree is from version 1.6 and taxonomy year 2025.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Please cite the version, clootl, and the contributing studies using getCitations(tree, version).</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Calamanthus cautus"       "Calamanthus pyrrhopygius"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "Crateroscelis murina"     "Crateroscelis nigrorufa" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "Crateroscelis robusta"    "Sericornis arfakianus"   </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Example 2: fish via fishtree (Rabosky et al. 2018, time-calibrated)</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"fishtree"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -623,13 +550,6 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 <span class="r-in"><span>                       source <span class="op">=</span> <span class="st">"fishtree"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="va">res</span><span class="op">$</span><span class="va">tree</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Phylogenetic tree with 3 tips and 2 internal nodes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tip labels:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Gadus_morhua, Salmo_salar, Esox_lucius</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Rooted; includes branch length(s).</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Example 3: anything via rotl (universal, network)</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"rotl"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -638,16 +558,6 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 <span class="r-in"><span>                       source <span class="op">=</span> <span class="st">"rotl"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="va">res</span><span class="op">$</span><span class="va">tree</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Dropping singleton nodes with labels: mrcaott42ott30082, Glires ott392220, mrcaott42ott29157, Rodentia ott864593, mrcaott42ott10477, mrcaott42ott38834, mrcaott42ott48903, mrcaott42ott254702, Myomorpha ott7067181, Muroidea ott839752, mrcaott42ott45197, mrcaott42ott55942, mrcaott42ott102, mrcaott102ott739, Muridae ott816256, mrcaott102ott283439, mrcaott102ott8118, mrcaott102ott38119, mrcaott102ott125766, mrcaott102ott456651, mrcaott102ott1729, mrcaott102ott23039, mrcaott102ott289304, mrcaott102ott185328, mrcaott102ott542525, mrcaott102ott348560, mrcaott102ott542521, mrcaott102ott321218, Primatomorpha ott6520519, Primates ott913935, mrcaott786ott3428, Haplorrhini ott702152, Simiiformes ott386195, Catarrhini ott842867, mrcaott786ott3607729, mrcaott786ott83926, mrcaott83926ott3607702, mrcaott83926ott96938, mrcaott83926ott6145147, mrcaott83926ott3607728, mrcaott83926ott770295, mrcaott83926ott3607876, mrcaott83926ott3607873, Homininae ott312031, mrcaott83926ott3607687, mrcaott83926ott3607716, mrcaott83926ott3607689, mrcaott83926ott3607732, Homo ott770309, mrcaott83926ott3607678, mrcaott83926ott3607671, mrcaott83926ott3607681, mrcaott83926ott3607676, Pan ott417957</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Phylogenetic tree with 3 tips and 2 internal nodes.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tip labels:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mus_musculus_ott542509, Homo_sapiens_ott770315, Pan_troglodytes_ott417950</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Node labels:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Euarchontoglires ott392222, mrcaott83926ott84217</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Rooted; no branch length.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Example 4: posterior of fish trees (50 trees, for multi-tree PCMs)</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"fishtree"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -655,8 +565,7 @@ tree PCMs — request a posterior sample with <code>n_tree &gt; 1</code>.</p></d
 <span class="r-in"><span>                       source <span class="op">=</span> <span class="st">"fishtree"</span>, n_tree <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>            <span class="co"># "multiPhylo"</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "multiPhylo"</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

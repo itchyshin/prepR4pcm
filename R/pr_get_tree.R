@@ -218,7 +218,8 @@
 #'   \item{`matched`}{Character vector of names from the user's
 #'     **original input** (preserving the input format, including any
 #'     underscores) that resolved to a tip in `tree`. The dispatcher
-#'     enforces `matched ⊆ unique(input)` --- TNRS substitution,
+#'     enforces that matched names are a subset of `unique(input)` ---
+#'     TNRS substitution,
 #'     normalisation, and backend-internal name juggling cannot leak
 #'     intermediate names into this slot.}
 #'   \item{`unmatched`}{Character vector of names from the **original
@@ -372,7 +373,7 @@
 #' (TNRS preflight and `source = "rotl"`.)
 #'
 #' @examples
-#' \donttest{
+#' if (interactive()) {
 #'   # Example 1: birds via clootl (Clements taxonomy). Uses the
 #'   # bundled AVONET subset (657 species placed in the Clements tree).
 #'   data(avonet_subset)
@@ -1537,7 +1538,7 @@ pr_get_tree <- function(
   use_tnrs = FALSE,
   ...
 ) {
-  if (!requireNamespace("datelife", quietly = TRUE)) {
+  if (!pr_namespace_available("datelife")) {
     cli::cli_abort(
       c(
         "The {.val datelife} backend requires the {.pkg datelife} package.",
@@ -1557,7 +1558,10 @@ pr_get_tree <- function(
   # datelife can resolve. use_tnrs = FALSE keeps this offline; users
   # who want TNRS pass use_tnrs = TRUE (or set tnrs = "always" at the
   # dispatcher level, which has already run before we get here).
-  query <- datelife::make_datelife_query(input = species, use_tnrs = use_tnrs)
+  make_datelife_query <- getExportedValue("datelife", "make_datelife_query")
+  datelife_search <- getExportedValue("datelife", "datelife_search")
+
+  query <- make_datelife_query(input = species, use_tnrs = use_tnrs)
   matched_names <- query$cleaned_names
   if (is.null(matched_names)) {
     matched_names <- character()
@@ -1569,7 +1573,7 @@ pr_get_tree <- function(
   norm_keep <- pr_normalize_names(matched_names)
   in_query <- norm_query %in% norm_keep
 
-  res <- datelife::datelife_search(
+  res <- datelife_search(
     input = query,
     summary_format = summary_format,
     use_tnrs = use_tnrs,

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,8 +41,10 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.5.0.9000" id="prepr4pcm-0509000-development-version">prepR4pcm 0.5.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#prepr4pcm-0509000-development-version"></a></h2>
-<ul><li><p><strong>pkgdown workflow fix.</strong> <code>dependencies: '"most"'</code> in <code>.github/workflows/pkgdown.yaml</code> tells pak to skip <code>Enhances</code> (i.e. <code>datelife</code>) during lockfile resolution. The <code>workflow_dispatch</code> rebuild no longer fails on “Can’t find package called datelife”. The day-to-day path is unaffected: GitHub Pages still serves the docs straight from <code>main:/docs/</code>.</p></li>
+<h2 class="pkg-version" data-toc-text="0.5.1" id="prepr4pcm-051">prepR4pcm 0.5.1<a class="anchor" aria-label="anchor" href="#prepr4pcm-051"></a></h2>
+<ul><li><p><strong>CRAN preparation.</strong> Release metadata, README installation guidance, and bundled-data citation links were updated for the first CRAN submission.</p></li>
+<li><p><strong>pkgdown publishing guard.</strong> The pkgdown build wrapper now removes loose agent-instruction pages from the generated site and search index before GitHub Pages deployment.</p></li>
+<li><p><strong>pkgdown workflow fix.</strong> <code>dependencies: '"most"'</code> in <code>.github/workflows/pkgdown.yaml</code> tells pak to skip <code>Enhances</code> (i.e. <code>datelife</code>) during lockfile resolution. The <code>workflow_dispatch</code> rebuild no longer fails on “Can’t find package called datelife”. The day-to-day path is unaffected: GitHub Pages still serves the docs straight from <code>main:/docs/</code>.</p></li>
 <li><p><strong><code>comparing-tree-backends.Rmd</code> gains a “Branch lengths and time-calibration” section</strong> with a per-backend comparison table and a practical decision tree for choosing between <code>fishtree</code> / <code>clootl</code> / <code>rtrees</code> / <code>datelife</code> / Grafen pseudo-time when you need real divergence-time branch lengths. Surfaces the alternative path when <code>datelife</code> isn’t installable on a given system.</p></li>
 </ul></div>
     <div class="section level2">

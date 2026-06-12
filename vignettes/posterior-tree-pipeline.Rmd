@@ -268,7 +268,7 @@ under `tools::R_user_dir()` by default; redirect with
 - Sanchez Reyes et al. (2024). *DateLife: Leveraging databases and
   analytical tools to reveal the dated Tree of Life.* Systematic
   Biology 73(2): 470–485.
-  [doi:10.1093/sysbio/syae015](https://doi.org/10.1093/sysbio/syae015).
+  DOI 10.1093/sysbio/syae015.
 - Rabosky et al. (2018). *An inverse latitudinal gradient in
   speciation rate for marine fishes.* Nature 559: 392–395.
-  [doi:10.1038/s41586-018-0273-1](https://doi.org/10.1038/s41586-018-0273-1).
+  DOI 10.1038/s41586-018-0273-1.

@@ -1,4 +1,4 @@
-## Resubmission / new submission
+## Submission
 
 This is a new CRAN submission for `prepR4pcm`, an R package for
 reconciling species names across datasets and phylogenetic trees to
@@ -6,35 +6,25 @@ prepare inputs for phylogenetic comparative methods (PCM, PGLS, PGLMM).
 
 ## R CMD check results
 
-Local `R CMD check --as-cran`:
+Local `R CMD check --as-cran --run-donttest`, with CRAN incoming and
+remote incoming checks enabled:
 
-    0 errors | 0 warnings | 0 notes
+    0 errors | 0 warnings | 1 note
+
+The single note is expected for a first submission:
+
+* `New submission`
+
+Additional local checks:
+
+* `devtools::test()` — 0 failures, 27 warnings, 5 skips, 2740 passes.
+* `urlchecker::url_check()` — all URLs correct.
+* `pkgdown::check_pkgdown()` — no problems found.
 
 ## Test environments
 
-* local macOS Tahoe 15 (aarch64), R 4.5.2 — clean
-* win-builder (devel and release) — _results pending_
-* R-hub v2 (linux, macos, windows) — _results pending_
-
-(Remote check results will be added before final submission.)
-
-## DOI notes for reviewers
-
-Several DOIs used in help pages, the bird-workflow vignette, and
-README return HTTP 403 to anonymous `curl`/`urlchecker` requests.
-These are Wiley, University of Chicago Press, and Oxford University
-Press rate-limiting anonymous bots; the DOIs are real and resolve in
-a browser. Specifically:
-
-* `10.1111/ele.13898` — Tobias et al. 2022 (AVONET), Wiley (403 bot-blocked)
-* `10.1111/ele.13233` — Delhey et al. 2019 (Ecology Letters), Wiley (403 bot-blocked)
-* `10.1093/bioinformatics/bty633` — Paradis & Schliep 2019 (ape), OUP (403 bot-blocked)
-* `10.1111/2041-210X.13440` — Norman et al. 2020 (taxadb), Wiley (403 bot-blocked)
-
-The following DOIs return 200:
-
-* `10.1038/s41597-023-02837-1` — Chia et al. 2023 (NestTrait v2)
-* `10.1038/nature11631` — Jetz et al. 2012
+* local macOS Tahoe 26.5 (aarch64), R 4.5.2 — clean apart from the
+  expected new-submission note above.
 
 ## Suggests usage
 
@@ -44,23 +34,27 @@ All packages in `Suggests` are used conditionally:
   `R/pr_authority.R` (only required when `authority` is supplied).
 * `phytools` — guarded in `R/reconcile_augment.R`; a pure-`ape`
   fallback is provided when phytools is unavailable.
-* `caper`, `MCMCglmm` — referenced only in `\donttest{}` / commented
-  example code as downstream PCM workflow illustrations. The
-  bird-workflow vignette also illustrates them, with each chunk guarded
-  by `eval = requireNamespace(..., quietly = TRUE)` so the vignette
-  knits cleanly without those packages installed.
-* `clootl`, `rtrees` — GitHub-only packages that back two optional
-  backends of `pr_get_tree()` (issue #42). Each is referenced only via
-  `requireNamespace(..., quietly = TRUE)` in `R/pr_get_tree.R`; the
-  function emits a targeted error pointing at the GitHub install
-  command when either is unavailable. The packages are mirrored on
-  R-universe (https://eliotmiller.r-universe.dev/clootl,
-  https://daijiang.r-universe.dev/rtrees) and listed in the
-  `Additional_repositories:` field of DESCRIPTION so CRAN's check
-  can locate them.
+* `caper`, `MCMCglmm` — referenced only in downstream PCM workflow
+  illustrations. Executable vignette chunks that use these packages are
+  guarded by `eval = requireNamespace(..., quietly = TRUE)` so the
+  vignette knits cleanly without those packages installed.
+* `clootl`, `rtrees` — optional backends of `pr_get_tree()` (issue
+  #42). Each is guarded by runtime availability checks and returns a
+  targeted install message when unavailable.
+* `piggyback` — used indirectly by the optional `rtrees`/`megatrees`
+  backend to download reference-tree data in non-CRAN backend tests.
 * `knitr`, `rmarkdown` — used by the vignette builder.
 * `dplyr`, `pkgdown`, `testthat` — used only by tests, vignettes, and
   site building.
+
+## Optional GitHub-only integrations
+
+`datelife`, `U.PhyloMaker`, `V.PhyloMaker`, and `V.PhyloMaker2` are
+optional runtime-only integrations. They are not declared in
+DESCRIPTION because they are not currently available from CRAN or
+Bioconductor. The relevant functions check availability at runtime
+and emit targeted installation guidance rather than loading these
+packages unconditionally.
 
 ## Downstream dependencies
 

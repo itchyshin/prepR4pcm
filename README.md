@@ -49,6 +49,12 @@ citation information, and a list of bundled example datasets.
 
 ## Installation
 
+Install the CRAN release:
+
+``` r
+install.packages("prepR4pcm")
+```
+
 Install the development version from GitHub:
 
 ``` r
@@ -167,7 +173,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-06-11 19:21:16
+#>   Timestamp: 2026-06-11 20:48:25
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -292,7 +298,7 @@ BibTeX:
             Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and
             Jimuel Jr Celeste and Sergio {Poo Hernandez}},
   year   = {2026},
-  note   = {R package version 0.4.0},
+  note   = {R package version 0.5.1},
   url    = {https://github.com/itchyshin/prepR4pcm},
 }
 ```
@@ -304,9 +310,10 @@ citation("prepR4pcm")
 ```
 
 If `citation("prepR4pcm")` warns *“no package ‘prepR4pcm’ was found”*,
-the installed copy is stale or in a library R isn’t searching.
-Re-install with `pak::pak("itchyshin/prepR4pcm")` and re-load (restart R
-if needed).
+the installed copy is stale or in a library R isn’t searching. Install
+the CRAN release with `install.packages("prepR4pcm")`, or install the
+development version with `pak::pak("itchyshin/prepR4pcm")`, then re-load
+(restart R if needed).
 
 ## Key dependencies
 
@@ -328,44 +335,33 @@ in published work, please cite the original provider.
 **Bird data (used by the bird-workflow vignette):**
 
 - **AVONET** (`avonet_subset`): Tobias et al. (2022) *Ecology Letters*
-  25:581–597. [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)
+  25:581–597. DOI 10.1111/ele.13898
 - **NestTrait v2** (`nesttrait_subset`): Chia et al. (2023) *Scientific
-  Data* 10:923.
-  [doi:10.1038/s41597-023-02837-1](https://doi.org/10.1038/s41597-023-02837-1)
+  Data* 10:923. DOI 10.1038/s41597-023-02837-1
 - **Plumage lightness** (`delhey_subset`): Delhey et al. (2019) *Ecology
-  Letters* 22:726–736.
-  [doi:10.1111/ele.13233](https://doi.org/10.1111/ele.13233)
+  Letters* 22:726–736. DOI 10.1111/ele.13233
 - **Jetz phylogeny** (`tree_jetz`): Jetz et al. (2012) *Nature*
-  491:444–448.
-  [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631)
+  491:444–448. DOI 10.1038/nature11631
 - **Clements checklist** (`tree_clements25`): Clements et al. (2025)
-  eBird/Clements Checklist of Birds of the World, v2025
-  (<https://www.birds.cornell.edu/clementschecklist/>).
+  eBird/Clements Checklist of Birds of the World, v2025.
 - **BirdLife-BirdTree crosswalk** (`crosswalk_birdlife_birdtree`):
-  distributed with AVONET (Tobias et al. 2022,
-  [doi:10.1111/ele.13898](https://doi.org/10.1111/ele.13898)); maps
-  BirdLife taxonomy to the BirdTree (Jetz et al. 2012,
-  [doi:10.1038/nature11631](https://doi.org/10.1038/nature11631))
-  taxonomy.
+  distributed with AVONET (Tobias et al. 2022, DOI 10.1111/ele.13898);
+  maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, DOI
+  10.1038/nature11631) taxonomy.
 
 **Mammal data (used by the mammal database-assembly vignette):**
 
 - **Amniote life-history** (`mammal_amniote_example`): Myhrvold et
-  al. (2015) *Ecology* 96:3109.
-  [doi:10.1890/15-0846R.1](https://doi.org/10.1890/15-0846R.1)
+  al. (2015) *Ecology* 96:3109. DOI 10.1890/15-0846R.1
 - **PanTHERIA** (`mammal_pantheria_example`): Jones et al. (2009)
-  *Ecology* 90:2648.
-  [doi:10.1890/08-1494.1](https://doi.org/10.1890/08-1494.1)
+  *Ecology* 90:2648. DOI 10.1890/08-1494.1
 - **TetrapodTraits** (`mammal_tetrapodtraits_example`): Moura et al.
-  2024) *PLOS Biology* 22:e3002658.
-        [doi:10.1371/journal.pbio.3002658](https://doi.org/10.1371/journal.pbio.3002658)
+  2024) *PLOS Biology* 22:e3002658. DOI 10.1371/journal.pbio.3002658
 - **Mammal phylogeny** (`mammal_tree_example`): a 5,987-tip subset of
   the VertLife mammal phylogeny from Upham et al. (2019) *PLOS Biology*
-  17(12):e3000494
-  [doi:10.1371/journal.pbio.3000494](https://doi.org/10.1371/journal.pbio.3000494).
-  Bundled as an example object only — for analysis-grade trees, download
-  the full credible set from
-  [vertlife.org/phylosubsets](http://vertlife.org/phylosubsets).
+  17(12):e3000494 DOI 10.1371/journal.pbio.3000494. Bundled as an
+  example object only — for analysis-grade trees, download the full
+  credible set from <https://vertlife.org/phylosubsets/>.
 
 ## License
 

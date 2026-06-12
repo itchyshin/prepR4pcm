@@ -318,10 +318,7 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
 #' nrow(aligned$data)
 #' ape::Ntip(aligned$tree)
 #'
-#' # Ready for a PCM, e.g.
-#' # fit <- caper::pgls(log(Mass) ~ log(Wing.Length),
-#' #                    data = caper::comparative.data(
-#' #                             aligned$tree, aligned$data, "Species1"))
+#' # aligned$data and aligned$tree are ready for downstream PCM tools
 #'
 #' @export
 reconcile_apply <- function(reconciliation, data = NULL, tree = NULL,

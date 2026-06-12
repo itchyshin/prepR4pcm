@@ -50,8 +50,7 @@ different reference tree or taxonomy:
   ([github.com/eliotmiller/clootl](https://github.com/eliotmiller/clootl)):
   supplies a phylogeny in the current Clements bird taxonomy.
   Required for `source = "clootl"`.
-- **`datelife`**
-  ([datelife.org](https://www.datelife.org)): synthesis chronograms
+- **`datelife`**: synthesis chronograms
   assembled from many per-clade published trees. Required for
   `source = "datelife"`.
 

@@ -73,10 +73,7 @@ aligned <- reconcile_apply(rec,
 nrow(aligned$data)
 ape::Ntip(aligned$tree)
 
-# Ready for a PCM, e.g.
-# fit <- caper::pgls(log(Mass) ~ log(Wing.Length),
-#                    data = caper::comparative.data(
-#                             aligned$tree, aligned$data, "Species1"))
+# aligned$data and aligned$tree are ready for downstream PCM tools
 
 }
 \seealso{

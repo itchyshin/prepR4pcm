@@ -42,8 +42,7 @@ aligned <- reconcile_apply(rec,
                            species_col = "Species1",
                            drop_unresolved = TRUE)
 
-# 5. Ready for PCM
-# caper::pgls(Mass ~ Wing.Length, data = aligned$data, tree = aligned$tree)
+# 5. aligned$data and aligned$tree are ready for downstream PCM tools
 }\if{html}{\out{</div>}}
 }
 
@@ -155,11 +154,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID})
+\strong{Maintainer}: Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID})
+  \item Shinichi Nakagawa \email{s.nakagawa@unsw.edu.au} (\href{https://orcid.org/0000-0002-7765-5182}{ORCID}) [copyright holder]
   \item Santiago Ortega
   \item Ayumi Mizuno
   \item Eduardo S.A. Santos

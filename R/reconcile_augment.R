@@ -813,9 +813,9 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
   # (the original). Both packages expose `phylo.maker()` with the
   # same calling convention, so the dispatch is just choosing the
   # namespace.
-  pkg <- if (requireNamespace("V.PhyloMaker2", quietly = TRUE)) {
+  pkg <- if (pr_namespace_available("V.PhyloMaker2")) {
     "V.PhyloMaker2"
-  } else if (requireNamespace("V.PhyloMaker", quietly = TRUE)) {
+  } else if (pr_namespace_available("V.PhyloMaker")) {
     "V.PhyloMaker"
   } else {
     cli::cli_abort(
@@ -947,7 +947,7 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
                                       gen.list = NULL,
                                       scenario = "S3",
                                       quiet = FALSE, ...) {
-  if (!requireNamespace("U.PhyloMaker", quietly = TRUE)) {
+  if (!pr_namespace_available("U.PhyloMaker")) {
     cli::cli_abort(
       c("{.code source = \"uphylomaker\"} requires the {.pkg U.PhyloMaker} package.",
         "i" = 'Install with: {.code pak::pak("jinyizju/U.PhyloMaker")} (GitHub-only).',
@@ -986,7 +986,8 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
     cli::cli_alert_info("Calling {.code U.PhyloMaker::phylo.maker()} with scenario = {.val {scenario}}.")
   }
 
-  pm <- U.PhyloMaker::phylo.maker(
+  phylo_maker_fn <- get("phylo.maker", envir = asNamespace("U.PhyloMaker"))
+  pm <- phylo_maker_fn(
     sp.list  = sp_list,
     tree     = tree,
     gen.list = gen.list,

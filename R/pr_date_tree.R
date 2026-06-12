@@ -110,7 +110,7 @@
 #'
 #' @examples
 #' \donttest{
-#'   if (requireNamespace("datelife", quietly = TRUE)) {
+#'   if (rlang::is_installed("datelife")) {
 #'     # Example 1: one chronogram from a topology
 #'     library(ape)
 #'     tr  <- read.tree(text =
@@ -191,7 +191,7 @@ pr_date_tree <- function(
   dating_method = "bladj",
   ...
 ) {
-  if (!requireNamespace("datelife", quietly = TRUE)) {
+  if (!pr_namespace_available("datelife")) {
     cli::cli_abort(
       c(
         "{.fn pr_date_tree} requires the {.pkg datelife} package.",
@@ -202,7 +202,8 @@ pr_date_tree <- function(
   }
 
   each <- n_dated > 1L
-  out <- datelife::datelife_use(
+  datelife_use <- getExportedValue("datelife", "datelife_use")
+  out <- datelife_use(
     input = tree,
     each = each,
     dating_method = dating_method,

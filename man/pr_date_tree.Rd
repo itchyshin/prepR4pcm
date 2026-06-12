@@ -114,7 +114,7 @@ chronograms aren't constrained to share a topology.
 
 \examples{
 \donttest{
-  if (requireNamespace("datelife", quietly = TRUE)) {
+  if (rlang::is_installed("datelife")) {
     # Example 1: one chronogram from a topology
     library(ape)
     tr  <- read.tree(text =

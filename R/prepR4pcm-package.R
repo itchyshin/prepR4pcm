@@ -36,8 +36,7 @@
 #'                            species_col = "Species1",
 #'                            drop_unresolved = TRUE)
 #'
-#' # 5. Ready for PCM
-#' # caper::pgls(Mass ~ Wing.Length, data = aligned$data, tree = aligned$tree)
+#' # 5. aligned$data and aligned$tree are ready for downstream PCM tools
 #' ```
 #'
 #' @section Key concepts:

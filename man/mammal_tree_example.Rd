@@ -13,7 +13,7 @@ Upham, N.S., Esselstyn, J.A. & Jetz, W. (2019) Inferring
 the mammal tree: Species-level sets of phylogenies for questions
 in ecology, evolution, and conservation. \emph{PLOS Biology}
 17(12):e3000494. \doi{10.1371/journal.pbio.3000494}.
-Full credible sets at \url{http://vertlife.org/phylosubsets}.
+Full credible sets at \url{https://vertlife.org/phylosubsets/}.
 }
 \usage{
 mammal_tree_example
@@ -34,7 +34,7 @@ issue #11.
 If you use this tree in published work, please cite Upham et al.
 (2019) directly. The bundled object is a \emph{subset} used for examples
 only --- for analysis-grade trees, download the full credible set
-from \url{http://vertlife.org/phylosubsets}.
+from \url{https://vertlife.org/phylosubsets/}.
 }
 \references{
 Other published mammal phylogenies suitable for comparative

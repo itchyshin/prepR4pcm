@@ -89,8 +89,7 @@
 #'                      resolve_polytomies = TRUE,
 #'                      branch_lengths     = "grafen")
 #'   phy_cor <- pr_phylo_cor(res)
-#'   # Then: metafor::rma.mv(yi, vi, random = list(~1|species),
-#'   #                       R = list(species = phy_cor), data = ...)
+#'   # phy_cor can now be supplied to downstream meta-analysis models.
 #' }
 #'
 #' @export
