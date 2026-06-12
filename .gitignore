@@ -70,7 +70,7 @@ scripts/output/
 .claude/
 README.html
 
-# pkgdown picks up CLAUDE.md as a loose-markdown cover page and writes
-# docs/CLAUDE.html on every build. Keep it out of git so the project's
-# private agent rules never leak to the public pkgdown site.
+# pkgdown picks up CLAUDE.md as loose root Markdown and writes
+# docs/CLAUDE.html. The project build wrapper also removes its search and
+# sitemap entries so private agent rules do not leak to the public site.
 docs/CLAUDE.html

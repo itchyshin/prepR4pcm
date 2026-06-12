@@ -51,7 +51,7 @@ jobs:
           needs: website
 
       - name: Build site (verification only; not deployed)
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: source("scripts/build_pkgdown_site.R"); main()
         shell: Rscript {0}
 
       - name: Upload built site as artifact for inspection

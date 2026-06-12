@@ -66,3 +66,32 @@ test_that("docs/search.json paths all resolve to existing files in docs/", {
     )
   )
 })
+
+test_that("docs site does not publish private agent instructions", {
+  skip_on_cran() # docs/ may be excluded from the build tarball
+
+  root <- .claim_root()
+  if (is.na(root)) {
+    skip("source tree not accessible (running in installed-only mode)")
+  }
+
+  docs <- file.path(root, "docs")
+  if (!dir.exists(docs)) {
+    skip("docs/ not present")
+  }
+
+  expect_false(
+    file.exists(file.path(docs, "CLAUDE.html")),
+    info = "Remove docs/CLAUDE.html; pkgdown must not publish CLAUDE.md."
+  )
+
+  indexed_files <- file.path(docs, c("search.json", "sitemap.xml"))
+  indexed_files <- indexed_files[file.exists(indexed_files)]
+  for (path in indexed_files) {
+    contents <- paste(readLines(path, warn = FALSE), collapse = "\n")
+    expect_false(
+      grepl("CLAUDE\\.html|CLAUDE\\.md", contents),
+      info = sprintf("%s must not index CLAUDE.md/CLAUDE.html.", path)
+    )
+  }
+})
