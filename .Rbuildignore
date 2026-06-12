@@ -18,6 +18,7 @@
 ^README\.html$
 ^Rplots\.pdf$
 ^scripts$
+^prepR4pcm$
 ^cran-comments\.md$
 ^prepR4pcm_.*\.pdf$
 ^CLAUDE\.md$

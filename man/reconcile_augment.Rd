@@ -199,15 +199,15 @@ the gaps.
 
 \examples{
 # --- Example 1: genus-level placement with congener_median branch lengths ---
-data(avonet_subset)
-data(tree_jetz)
-result <- reconcile_tree(avonet_subset, tree_jetz,
-                         x_species = "Species1", authority = NULL)
+x <- data.frame(species = c("A a", "A missing", "B c", "C absent"))
+tree <- ape::read.tree(text = "((A_a:1,A_b:1):1,B_c:2);")
+result <- reconcile_tree(x, tree, x_species = "species",
+                         authority = NULL, quiet = TRUE)
 
-aug <- reconcile_augment(result, tree_jetz, seed = 42)
+aug <- reconcile_augment(result, tree, seed = 42, quiet = TRUE)
 
 # Compare original vs augmented tree
-cat("Original tips:", ape::Ntip(tree_jetz), "\n")
+cat("Original tips:", ape::Ntip(tree), "\n")
 cat("Augmented tips:", ape::Ntip(aug$tree), "\n")
 cat("Added:", nrow(aug$augmented), "| Skipped:", nrow(aug$skipped), "\n")
 
@@ -219,7 +219,7 @@ head(aug$augmented[, c("species", "genus", "placed_near",
 head(aug$skipped)
 
 # --- Example 2: MRCA placement with zero-length branches ---
-aug_near <- reconcile_augment(result, tree_jetz,
+aug_near <- reconcile_augment(result, tree,
                               where = "near",
                               branch_length = "zero",
                               seed = 42, quiet = TRUE)
@@ -233,7 +233,7 @@ head(aug_near$augmented[, c("species", "placed_near", "method")])
   # --- Example 3: delegate grafting to rtrees ---
   # Useful when the genus is missing from your tree but present in
   # the rtrees taxon-specific reference tree.
-  aug_rt <- reconcile_augment(result, tree_jetz,
+  aug_rt <- reconcile_augment(result, tree,
                                source = "rtrees",
                                taxon  = "bird",
                                quiet  = TRUE)

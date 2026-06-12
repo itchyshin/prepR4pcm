@@ -47,20 +47,21 @@
 #'   applying many hand edits.
 #'
 #' @examples
-#' data(avonet_subset)
-#' data(tree_jetz)
-#' # Without crosswalk
-#' r1 <- reconcile_tree(avonet_subset, tree_jetz,
-#'                      x_species = "Species1", authority = NULL)
-#' # With crosswalk overrides
-#' data(crosswalk_birdlife_birdtree)
-#' overrides <- reconcile_crosswalk(crosswalk_birdlife_birdtree,
-#'                                   from_col = "Species1", to_col = "Species3",
-#'                                   match_type_col = "Match.type")
-#' r2 <- reconcile_tree(avonet_subset, tree_jetz,
-#'                      x_species = "Species1", authority = NULL,
-#'                      overrides = overrides)
-#' d <- reconcile_diff(r1, r2)
+#' x <- data.frame(species = c("A a", "A old", "B c"))
+#' tree <- ape::read.tree(text = "((A_a:1,A_new:1):1,B_c:2);")
+#'
+#' # Without manual overrides
+#' r1 <- reconcile_tree(x, tree, x_species = "species",
+#'                      authority = NULL, quiet = TRUE)
+#'
+#' # With one manual override
+#' overrides <- data.frame(name_x = "A old", name_y = "A new",
+#'                         match_type = "manual")
+#' r2 <- reconcile_tree(x, tree, x_species = "species",
+#'                      authority = NULL, overrides = overrides,
+#'                      quiet = TRUE)
+#'
+#' d <- reconcile_diff(r1, r2, quiet = TRUE)
 #' cat("Gained:", nrow(d$gained), "| Lost:", nrow(d$lost), "\n")
 #'
 #' @export

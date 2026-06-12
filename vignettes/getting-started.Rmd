@@ -289,7 +289,7 @@ network access and the \pkg{httr2} package.
   ([catalogueoflife.org](https://www.catalogueoflife.org/)). Broad
   coverage; the most general default for cross-taxon work.
 - **`itis`** — Integrated Taxonomic Information System
-  ([itis.gov](https://www.itis.gov/)). North-American emphasis,
+  ([itis.gov](https://itis.gov/)). North-American emphasis,
   strong on vertebrates and vascular plants.
 - **`gbif`** — Global Biodiversity Information Facility taxonomic
   backbone (dataset `d7dddbf4-2cf0-4f39-9b2a-bb099caae36c`).

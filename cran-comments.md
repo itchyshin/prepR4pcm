@@ -4,6 +4,17 @@ This is a new CRAN submission for `prepR4pcm`, an R package for
 reconciling species names across datasets and phylogenetic trees to
 prepare inputs for phylogenetic comparative methods (PCM, PGLS, PGLMM).
 
+This is a resubmission after CRAN incoming pretest checks for
+`prepR4pcm` 0.5.1. In this resubmission I have:
+
+* Replaced a stale `https://www.itis.gov/` vignette link with
+  `https://itis.gov/`.
+* Changed the `reconcile_report()` Rd figure width from a percentage
+  value to a pixel value.
+* Reduced the `reconcile_diff()` and `reconcile_augment()` examples to
+  small toy data so they remain below CRAN incoming example-time
+  thresholds.
+
 ## R CMD check results
 
 Local `R CMD check --as-cran --run-donttest`, with CRAN incoming and
