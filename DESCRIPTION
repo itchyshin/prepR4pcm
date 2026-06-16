@@ -1,6 +1,6 @@
 Package: prepR4pcm
 Title: Prepare Data and Trees for Phylogenetic Comparative Methods
-Version: 0.5.1
+Version: 1.0.0
 Authors@R: c(
     person("Shinichi", "Nakagawa",
            email = "itchyshin@gmail.com",
@@ -34,7 +34,7 @@ License: MIT + file LICENSE
 URL: https://github.com/itchyshin/prepR4pcm,
     https://itchyshin.github.io/prepR4pcm/
 BugReports: https://github.com/itchyshin/prepR4pcm/issues
-Date: 2026-06-12
+Date: 2026-06-16
 Language: en-GB
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -1,3 +1,7 @@
+# prepR4pcm 1.0.0
+
+* **Stable Software Note release.** Version 1.0.0 declares the package-ready release for Ecography Software Note submission, with release date 2026-06-16; no API-breaking changes were introduced relative to 0.5.1.
+
 # prepR4pcm 0.5.1
 
 * **CRAN preparation.** Release metadata, README installation guidance, and bundled-data citation links were updated for the first CRAN submission.

@@ -176,7 +176,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-06-12 06:03:53
+#>   Timestamp: 2026-06-16 10:00:21
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -289,7 +289,7 @@ For the package itself:
 
 > Nakagawa S, Ortega S, Mizuno A, Santos E, Lagisz M, Jain B, Celeste J,
 > Poo Hernandez S (2026). *prepR4pcm: Prepare Data and Trees for
-> Phylogenetic Comparative Methods.* R package version 0.4.0.
+> Phylogenetic Comparative Methods.* R package version 1.0.0.
 > <https://github.com/itchyshin/prepR4pcm>
 
 BibTeX:
@@ -301,7 +301,7 @@ BibTeX:
             Eduardo S.A. Santos and Malgorzata Lagisz and Bhavya Jain and
             Jimuel Jr Celeste and Sergio {Poo Hernandez}},
   year   = {2026},
-  note   = {R package version 0.5.1},
+  note   = {R package version 1.0.0},
   url    = {https://github.com/itchyshin/prepR4pcm},
 }
 ```

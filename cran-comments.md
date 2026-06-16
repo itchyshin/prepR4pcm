@@ -4,8 +4,8 @@ This is a new CRAN submission for `prepR4pcm`, an R package for
 reconciling species names across datasets and phylogenetic trees to
 prepare inputs for phylogenetic comparative methods (PCM, PGLS, PGLMM).
 
-This is a resubmission after CRAN incoming pretest checks for
-`prepR4pcm` 0.5.1. In this resubmission I have:
+This 1.0.0 release incorporates the CRAN incoming pretest fixes made
+after the 0.5.1 candidate:
 
 * Replaced a stale `https://www.itis.gov/` vignette link with
   `https://itis.gov/`.
