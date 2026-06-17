@@ -18,7 +18,8 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/itchyshin/prepR4pcm/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/itchyshin/prepR4pcm/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://github.com/itchyshin/prepR4pcm/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/itchyshin/prepR4pcm/actions/workflows/pkgdown.yaml)
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+
 [![DOI](https://zenodo.org/badge/1202848765.svg)](https://doi.org/10.5281/zenodo.20618681)
 <!-- badges: end -->
 
