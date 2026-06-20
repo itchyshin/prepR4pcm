@@ -68,6 +68,25 @@ test_that("reconcile_export works with data only", {
   expect_true(file.exists(paths$mapping))
 })
 
+test_that("reconcile_export default output directory is temporary", {
+  df <- data.frame(species = "Homo sapiens", mass = 70)
+  tree <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
+
+  result <- reconcile_tree(df, tree, x_species = "species",
+                            authority = NULL, quiet = TRUE)
+
+  paths <- reconcile_export(result, data = df, species_col = "species")
+  on.exit(unlink(dirname(paths$mapping), recursive = TRUE), add = TRUE)
+
+  temp_root <- normalizePath(tempdir(), mustWork = TRUE)
+  export_dir <- normalizePath(dirname(paths$mapping), mustWork = TRUE)
+
+  expect_true(startsWith(export_dir, temp_root))
+  expect_true(file.exists(paths$data))
+  expect_true(file.exists(paths$mapping))
+  expect_null(paths$tree)
+})
+
 
 # --- M10. reconcile_export format × drop_unresolved grid --------------------
 

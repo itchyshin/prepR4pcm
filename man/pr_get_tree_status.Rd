@@ -40,7 +40,7 @@ for CI sanity checks.
 # Local-only probe (fast, no network)
 pr_get_tree_status()
 
-\dontrun{
+\donttest{
   # Also test reachability of remote backends
   pr_get_tree_status(check_network = TRUE)
 }

@@ -229,16 +229,23 @@ cat("  Added:", nrow(aug_near$augmented), "\n")
 # Compare: MRCA placement shows genus-level context
 head(aug_near$augmented[, c("species", "placed_near", "method")])
 
-\dontrun{
+\donttest{
   # --- Example 3: delegate grafting to rtrees ---
   # Useful when the genus is missing from your tree but present in
   # the rtrees taxon-specific reference tree.
-  aug_rt <- reconcile_augment(result, tree,
-                               source = "rtrees",
-                               taxon  = "bird",
-                               quiet  = TRUE)
-  nrow(aug_rt$augmented)              # how many were placed
-  aug_rt$meta$backend_meta$n_grafted  # how many at higher rank
+  if (requireNamespace("rtrees", quietly = TRUE)) {
+    aug_rt <- try(
+      reconcile_augment(result, tree,
+                        source = "rtrees",
+                        taxon  = "bird",
+                        quiet  = TRUE),
+      silent = TRUE
+    )
+    if (!inherits(aug_rt, "try-error")) {
+      nrow(aug_rt$augmented)              # how many were placed
+      aug_rt$meta$backend_meta$n_grafted  # how many at higher rank
+    }
+  }
 }
 
 }

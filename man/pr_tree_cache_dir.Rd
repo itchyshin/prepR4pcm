@@ -28,18 +28,18 @@ typically \verb{~/.cache/R/prepR4pcm/}, on macOS
 \verb{~/Library/Caches/org.R-project.R/R/prepR4pcm/}, and on Windows
 something under \verb{\%LOCALAPPDATA\%\\R\\cache\\R\\prepR4pcm\\}.
 
-To use a project-local cache (so it's checked in with your
-analysis), set the path to a subdirectory of your project --- e.g.
-\code{pr_tree_cache_dir("./.tree-cache")}.
+To use a cache directory you control, pass its path explicitly with
+\code{pr_tree_cache_dir(path)}.
 }
 \examples{
 # Default location
 pr_tree_cache_dir()
 
-\dontrun{
-  # Project-local cache
-  pr_tree_cache_dir("./.tree-cache")
-}
+old_cache <- getOption("prepR4pcm.cache_dir", NULL)
+tmp_cache <- tempfile("prepR4pcm-cache-")
+pr_tree_cache_dir(tmp_cache)
+options(prepR4pcm.cache_dir = old_cache)
+unlink(tmp_cache, recursive = TRUE)
 
 }
 \seealso{

@@ -5,10 +5,17 @@ reconciling species names across datasets and phylogenetic trees to
 prepare inputs for phylogenetic comparative methods (PCM, PGLS, PGLMM).
 
 This 1.0.0 release incorporates the CRAN incoming pretest fixes made
-after the 0.5.1 candidate:
+after the 0.5.1 candidate and the follow-up CRAN reviewer comments:
 
-* Replaced a stale `https://www.itis.gov/` vignette link with
-  `https://itis.gov/`.
+* Added the EcoEvoRxiv methods reference to `DESCRIPTION` in CRAN's
+  requested format: Nakagawa et al. (2026) <doi:10.32942/X2468Z>.
+* Replaced remaining `\dontrun{}` examples with `\donttest{}` or
+  `if (interactive())` where the example is genuinely interactive.
+* Changed `reconcile_export()` so its default output directory is a
+  unique temporary directory rather than the current working directory.
+  Vignettes and examples now write only to temporary locations.
+* Replaced stale or slow ITIS root links with the canonical
+  `https://www.itis.gov/about_itis.html` page.
 * Changed the `reconcile_report()` Rd figure width from a percentage
   value to a pixel value.
 * Reduced the `reconcile_diff()` and `reconcile_augment()` examples to
@@ -28,9 +35,11 @@ The single note is expected for a first submission:
 
 Additional local checks:
 
-* `devtools::test()` — 0 failures, 27 warnings, 5 skips, 2740 passes.
+* `devtools::test(filter = "reconcile_export")` — 0 failures, 47 passes.
 * `urlchecker::url_check()` — all URLs correct.
 * `pkgdown::check_pkgdown()` — no problems found.
+* Source audit found no remaining `\dontrun{}` in package sources,
+  generated Rd files, vignettes, tests, README, or DESCRIPTION.
 
 ## Test environments
 

@@ -34,9 +34,8 @@
 #' `~/Library/Caches/org.R-project.R/R/prepR4pcm/`, and on Windows
 #' something under `%LOCALAPPDATA%\R\cache\R\prepR4pcm\`.
 #'
-#' To use a project-local cache (so it's checked in with your
-#' analysis), set the path to a subdirectory of your project --- e.g.
-#' `pr_tree_cache_dir("./.tree-cache")`.
+#' To use a cache directory you control, pass its path explicitly with
+#' `pr_tree_cache_dir(path)`.
 #'
 #' @seealso [pr_tree_cache_status()] / [pr_tree_cache_clear()];
 #'   [pr_get_tree()] for the consumer.
@@ -45,10 +44,11 @@
 #' # Default location
 #' pr_tree_cache_dir()
 #'
-#' \dontrun{
-#'   # Project-local cache
-#'   pr_tree_cache_dir("./.tree-cache")
-#' }
+#' old_cache <- getOption("prepR4pcm.cache_dir", NULL)
+#' tmp_cache <- tempfile("prepR4pcm-cache-")
+#' pr_tree_cache_dir(tmp_cache)
+#' options(prepR4pcm.cache_dir = old_cache)
+#' unlink(tmp_cache, recursive = TRUE)
 #'
 #' @export
 pr_tree_cache_dir <- function(path = NULL) {

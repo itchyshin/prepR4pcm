@@ -9,7 +9,7 @@ reconcile_export(
   data = NULL,
   tree = NULL,
   species_col = NULL,
-  dir = ".",
+  dir = tempfile("prepR4pcm-export-"),
   prefix = "reconciled",
   tree_format = c("nexus", "newick"),
   drop_unresolved = TRUE
@@ -31,7 +31,9 @@ containing species names. Auto-detected when \code{NULL}.}
 \item{dir}{A length-1 character vector. Path to the output directory
 that will receive the exported files (e.g. a project's
 \verb{data-output/} folder, or a staging directory before a Zenodo
-deposit). Created if it does not exist. Default \code{"."}.}
+deposit). Created if it does not exist. By default, a unique
+temporary directory is used so the function does not write to the
+current working directory unless you explicitly request it.}
 
 \item{prefix}{A length-1 character vector. File name prefix. Default
 \code{"reconciled"}.}

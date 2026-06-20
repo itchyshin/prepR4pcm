@@ -439,15 +439,17 @@ sensitivity analyses comparing results with and without them.
 Write aligned data, tree, and the full mapping table to disk:
 
 ```{r export, eval = FALSE}
+out_dir <- file.path(tempdir(), "prepr4pcm-export")
 reconcile_export(
   result,
   data = avonet_subset,
   tree = tree_jetz,
   species_col = "Species1",
-  dir = "output",
+  dir = out_dir,
   prefix = "avonet_jetz"
 )
 # Writes: avonet_jetz_data.csv, avonet_jetz_tree.nex, avonet_jetz_mapping.csv
+unlink(out_dir, recursive = TRUE)
 ```
 
 ## HTML reports
@@ -457,7 +459,9 @@ decision. Useful for sharing with collaborators or archiving alongside
 your analysis:
 
 ```{r report, eval = FALSE}
-reconcile_report(result, file = "reconciliation_report.html")
+report_file <- tempfile(fileext = ".html")
+reconcile_report(result, file = report_file)
+unlink(report_file)
 ```
 
 The report opens in any browser. It begins with the run header,

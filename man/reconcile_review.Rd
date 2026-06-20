@@ -56,9 +56,9 @@ with \code{action = "accept"}).}
 }
 }
 \examples{
-\dontrun{
-# Interactive review in RStudio console:
-result <- reconcile_review(result, type = "flagged")
+if (interactive()) {
+  # Interactive review in RStudio console:
+  result <- reconcile_review(result, type = "flagged")
 }
 
 }

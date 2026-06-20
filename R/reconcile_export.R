@@ -18,7 +18,9 @@
 #' @param dir A length-1 character vector. Path to the output directory
 #'   that will receive the exported files (e.g. a project's
 #'   `data-output/` folder, or a staging directory before a Zenodo
-#'   deposit). Created if it does not exist. Default `"."`.
+#'   deposit). Created if it does not exist. By default, a unique
+#'   temporary directory is used so the function does not write to the
+#'   current working directory unless you explicitly request it.
 #' @param prefix A length-1 character vector. File name prefix. Default
 #'   `"reconciled"`.
 #' @param tree_format A length-1 character vector. Tree output format:
@@ -54,7 +56,7 @@
 #' @export
 reconcile_export <- function(reconciliation, data = NULL, tree = NULL,
                               species_col = NULL,
-                              dir = ".",
+                              dir = tempfile("prepR4pcm-export-"),
                               prefix = "reconciled",
                               tree_format = c("nexus", "newick"),
                               drop_unresolved = TRUE) {

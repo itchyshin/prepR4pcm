@@ -59,15 +59,20 @@ phy_cor <- pr_phylo_cor(tr)
 dim(phy_cor)
 all(diag(phy_cor) == 1)
 
-\dontrun{
+\donttest{
   # End-to-end meta-analysis prep
-  res <- pr_get_tree(c("Homo sapiens", "Pan troglodytes",
-                       "Mus musculus", "Rattus norvegicus"),
-                     source             = "rotl",
-                     resolve_polytomies = TRUE,
-                     branch_lengths     = "grafen")
-  phy_cor <- pr_phylo_cor(res)
-  # phy_cor can now be supplied to downstream meta-analysis models.
+  if (requireNamespace("rotl", quietly = TRUE)) {
+    res <- try(pr_get_tree(c("Homo sapiens", "Pan troglodytes",
+                             "Mus musculus", "Rattus norvegicus"),
+                           source             = "rotl",
+                           resolve_polytomies = TRUE,
+                           branch_lengths     = "grafen"),
+               silent = TRUE)
+    if (!inherits(res, "try-error")) {
+      phy_cor <- pr_phylo_cor(res)
+      # phy_cor can now be supplied to downstream meta-analysis models.
+    }
+  }
 }
 
 }

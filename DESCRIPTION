@@ -29,7 +29,9 @@ Description: Reconcile species names across datasets and phylogenetic trees
     reports documenting how each name was resolved, which taxonomic authority
     was used, and what remains unresolved. Supports exact matching, name
     normalisation, synonym resolution via local taxonomic databases, and
-    fuzzy matching for likely typos. Detects taxonomic splits and lumps.
+    fuzzy matching for likely typos. Detects taxonomic splits and lumps. For
+    methodological context, see Nakagawa et al. (2026)
+    <doi:10.32942/X2468Z>.
 License: MIT + file LICENSE
 URL: https://github.com/itchyshin/prepR4pcm,
     https://itchyshin.github.io/prepR4pcm/

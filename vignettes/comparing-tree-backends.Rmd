@@ -356,6 +356,10 @@ Each retrieval is slow. If you're going to compare backends, set
 `cache = TRUE` so re-running the vignette is instant:
 
 ```{r cache}
+old_cache <- getOption("prepR4pcm.cache_dir", NULL)
+tmp_cache <- tempfile("prepR4pcm-cache-")
+pr_tree_cache_dir(tmp_cache)
+
 res_rotl     <- pr_get_tree(species, source = "rotl",
                              cache = TRUE)
 res_fishtree <- pr_get_tree(species, source = "fishtree",
@@ -368,14 +372,21 @@ pr_tree_cache_status()
 
 # Wipe just the rotl entries (e.g. after an OTT version refresh)
 pr_tree_cache_clear(source = "rotl", confirm = FALSE)
+
+options(prepR4pcm.cache_dir = old_cache)
+unlink(tmp_cache, recursive = TRUE)
 ```
 
-By default the cache lives at `tools::R_user_dir()`. Pass a
-project-local directory if you want the cache committed alongside
-the analysis:
+By default the cache lives at `tools::R_user_dir()`. Pass an explicit
+temporary or project cache directory if you want a separate cache for a
+specific analysis:
 
 ```{r project-cache}
-pr_tree_cache_dir("./.tree-cache")
+old_cache <- getOption("prepR4pcm.cache_dir", NULL)
+tmp_cache <- tempfile("prepR4pcm-cache-")
+pr_tree_cache_dir(tmp_cache)
+options(prepR4pcm.cache_dir = old_cache)
+unlink(tmp_cache, recursive = TRUE)
 ```
 
 ## What `pr_tree_compare()` doesn't do (yet)

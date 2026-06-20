@@ -1,5 +1,7 @@
 # prepR4pcm 1.0.0
 
+* **CRAN review response.** `DESCRIPTION` now includes the EcoEvoRxiv method reference, remaining `\dontrun{}` examples were replaced with CRAN-preferred executable structures, and `reconcile_export()` now defaults to a unique temporary directory rather than the current working directory.
+
 * **Stable Software Note release.** Version 1.0.0 declares the package-ready release for Ecography Software Note submission, with release date 2026-06-16; no API-breaking changes were introduced relative to 0.5.1.
 
 # prepR4pcm 0.5.1
