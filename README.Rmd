@@ -97,7 +97,11 @@ pak::pak("itchyshin/prepR4pcm")
   data frame (`name_x`, `name_y`) that forces specific name pairs to
   resolve a particular way, bypassing the cascade.
   `reconcile_crosswalk()` converts a published crosswalk into an
-  override table.
+  override table. For automatic workflows, use
+  `reconcile_crosswalk_supplement()` so one-to-one crosswalk rows
+  supplement a baseline reconciliation only for names that remain
+  unresolved. Keep split/lump rows separate and review them before
+  applying them.
 - **Tree augmentation**: an *unresolved species* is one that appears
   in your data but has no matching tip on the tree (and the cascade
   couldn't find it via formatting, synonymy, or fuzzy matching).
@@ -339,7 +343,10 @@ the original provider.
   DOI 10.1111/ele.13898);
   maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012,
   DOI 10.1038/nature11631)
-  taxonomy.
+  taxonomy. Split/lump rows in this crosswalk represent taxonomic
+  judgement calls and should be reviewed before being used as overrides.
+  Use `reconcile_crosswalk_supplement()` when you want the crosswalk to
+  supplement, rather than preempt, a baseline reconciliation.
 
 **Mammal data (used by the mammal database-assembly vignette):**
 

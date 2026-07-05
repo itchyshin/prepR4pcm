@@ -6,8 +6,7 @@ test_that("reconcile_crosswalk produces overrides table", {
     stringsAsFactors = FALSE
   )
 
-  result <- reconcile_crosswalk(xw, "from", "to",
-                                 match_type_col = "type")
+  result <- reconcile_crosswalk(xw, "from", "to", match_type_col = "type")
 
   expect_true(is.data.frame(result))
   expect_true(all(c("name_x", "name_y", "user_note") %in% names(result)))
@@ -24,12 +23,32 @@ test_that("reconcile_crosswalk one_to_one_only filters correctly", {
     stringsAsFactors = FALSE
   )
 
-  result <- reconcile_crosswalk(xw, "from", "to",
-                                 match_type_col = "type",
-                                 one_to_one_only = TRUE)
+  result <- reconcile_crosswalk(
+    xw,
+    "from",
+    "to",
+    match_type_col = "type",
+    one_to_one_only = TRUE
+  )
 
   expect_equal(nrow(result), 1L)
   expect_equal(result$name_x, "Sp A")
+})
+
+test_that("reconcile_crosswalk warns when complex rows are kept automatically", {
+  xw <- data.frame(
+    from = c("Sp A", "Sp B", "Sp C"),
+    to = c("Sp A2", "Sp B2", "Sp C2"),
+    type = c("1BL to 1BT", "Many BL to 1BT", "1BL to many BT"),
+    stringsAsFactors = FALSE
+  )
+
+  expect_message(
+    result <- reconcile_crosswalk(xw, "from", "to", match_type_col = "type"),
+    "non-one-to-one crosswalk"
+  )
+
+  expect_equal(nrow(result), 3L)
 })
 
 test_that("reconcile_crosswalk reads from CSV path", {
@@ -74,10 +93,11 @@ test_that("reconcile_crosswalk reads a CSV file path", {
   write.csv(
     data.frame(
       from = c("Sp A", "Sp B"),
-      to   = c("Sp A2", "Sp B2"),
+      to = c("Sp A2", "Sp B2"),
       stringsAsFactors = FALSE
     ),
-    path, row.names = FALSE
+    path,
+    row.names = FALSE
   )
   result <- reconcile_crosswalk(path, "from", "to")
   expect_equal(nrow(result), 2L)
@@ -90,10 +110,13 @@ test_that("reconcile_crosswalk reads a TSV file path (issue #8b)", {
   write.table(
     data.frame(
       from = c("Sp A", "Sp B"),
-      to   = c("Sp A2", "Sp B2"),
+      to = c("Sp A2", "Sp B2"),
       stringsAsFactors = FALSE
     ),
-    path, sep = "\t", row.names = FALSE, quote = FALSE
+    path,
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE
   )
   result <- reconcile_crosswalk(path, "from", "to")
   expect_equal(nrow(result), 2L)
@@ -106,10 +129,13 @@ test_that("reconcile_crosswalk reads a TXT (tab-delimited) file path (issue #8b)
   write.table(
     data.frame(
       from = c("Sp A", "Sp B"),
-      to   = c("Sp A2", "Sp B2"),
+      to = c("Sp A2", "Sp B2"),
       stringsAsFactors = FALSE
     ),
-    path, sep = "\t", row.names = FALSE, quote = FALSE
+    path,
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE
   )
   result <- reconcile_crosswalk(path, "from", "to")
   expect_equal(nrow(result), 2L)

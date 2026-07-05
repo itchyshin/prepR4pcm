@@ -26,6 +26,11 @@
 #'
 #' Names that survive all four stages are labelled `unresolved`. Any
 #' entries supplied through `overrides` take precedence over the cascade.
+#' This is intentional for locked manual decisions, but it also means a
+#' crosswalk row can preempt an otherwise exact or normalised match. If you
+#' want a crosswalk to supplement, rather than replace, the baseline cascade,
+#' use [reconcile_crosswalk_supplement()] or run the baseline reconciliation
+#' first and apply reviewed overrides only to still-unresolved names.
 #'
 #' \strong{After the call.} A `reconciliation` object is the input to
 #' most other functions in the package. Common next steps:
@@ -96,9 +101,10 @@
 #'   frame with at least columns `name_x` and `name_y` (plus an
 #'   optional `user_note` column), or a file path to a CSV with the
 #'   same columns. Any name listed here bypasses the cascade and is
-#'   recorded as `match_type = "manual"`. Useful for applying
-#'   published crosswalks (see [reconcile_crosswalk()]) or for locking
-#'   down decisions made in a previous run.
+#'   recorded as `match_type = "manual"`. Use this for locked decisions.
+#'   For published crosswalks (see [reconcile_crosswalk()]), prefer
+#'   [reconcile_crosswalk_supplement()] or `one_to_one_only = TRUE` for
+#'   automatic use and review split/lump cases before applying them.
 #' @param db_version A length-1 character vector. \pkg{taxadb}
 #'   database snapshot to use (e.g. `"22.12"`). `NULL` (default) uses
 #'   the latest available.
@@ -175,21 +181,23 @@
 #' head(merged[, c("species_resolved", "Family1", "Common_name")])
 #'
 #' @export
-reconcile_data <- function(x, y,
-                           x_species = NULL,
-                           y_species = NULL,
-                           authority = "col",
-                           rank = c("species", "subspecies"),
-                           overrides = NULL,
-                           db_version = NULL,
-                           fuzzy = FALSE,
-                           fuzzy_threshold = 0.9,
-                           flag_threshold = 0.95,
-                           resolve = c("flag", "first"),
-                           quiet = FALSE,
-                           x_label = NULL,
-                           y_label = NULL) {
-
+reconcile_data <- function(
+  x,
+  y,
+  x_species = NULL,
+  y_species = NULL,
+  authority = "col",
+  rank = c("species", "subspecies"),
+  overrides = NULL,
+  db_version = NULL,
+  fuzzy = FALSE,
+  fuzzy_threshold = 0.9,
+  flag_threshold = 0.95,
+  resolve = c("flag", "first"),
+  quiet = FALSE,
+  x_label = NULL,
+  y_label = NULL
+) {
   # Capture source labels before any modifications to x/y
   x_source <- x_label %||% deparse(substitute(x))
   y_source <- y_label %||% deparse(substitute(y))
@@ -198,34 +206,54 @@ reconcile_data <- function(x, y,
   resolve <- match.arg(resolve)
 
   # Validate inputs
-  if (!is.data.frame(x)) abort("`x` must be a data frame.", call = caller_env())
-  if (!is.data.frame(y)) abort("`y` must be a data frame.", call = caller_env())
+  if (!is.data.frame(x)) {
+    abort("`x` must be a data frame.", call = caller_env())
+  }
+  if (!is.data.frame(y)) {
+    abort("`y` must be a data frame.", call = caller_env())
+  }
 
   authority <- pr_validate_authority(authority)
 
   # Detect species columns
-  if (is.null(x_species)) x_species <- pr_detect_species_column(x, "x_species")
-  if (is.null(y_species)) y_species <- pr_detect_species_column(y, "y_species")
+  if (is.null(x_species)) {
+    x_species <- pr_detect_species_column(x, "x_species")
+  }
+  if (is.null(y_species)) {
+    y_species <- pr_detect_species_column(y, "y_species")
+  }
 
   if (!x_species %in% names(x)) {
-    abort(paste0("Column '", x_species, "' not found in `x`."),
-          call = caller_env())
+    abort(
+      paste0("Column '", x_species, "' not found in `x`."),
+      call = caller_env()
+    )
   }
   if (!y_species %in% names(y)) {
-    abort(paste0("Column '", y_species, "' not found in `y`."),
-          call = caller_env())
+    abort(
+      paste0("Column '", y_species, "' not found in `y`."),
+      call = caller_env()
+    )
   }
 
   # Input guards: empty data, all-NA species, factor columns
-  if (nrow(x) == 0) abort("`x` has 0 rows.", call = caller_env())
-  if (nrow(y) == 0) abort("`y` has 0 rows.", call = caller_env())
+  if (nrow(x) == 0) {
+    abort("`x` has 0 rows.", call = caller_env())
+  }
+  if (nrow(y) == 0) {
+    abort("`y` has 0 rows.", call = caller_env())
+  }
 
   if (is.factor(x[[x_species]])) {
-    cli_alert_warning("Converting factor column '{x_species}' in `x` to character.")
+    cli_alert_warning(
+      "Converting factor column '{x_species}' in `x` to character."
+    )
     x[[x_species]] <- as.character(x[[x_species]])
   }
   if (is.factor(y[[y_species]])) {
-    cli_alert_warning("Converting factor column '{y_species}' in `y` to character.")
+    cli_alert_warning(
+      "Converting factor column '{y_species}' in `y` to character."
+    )
     y[[y_species]] <- as.character(y[[y_species]])
   }
 
@@ -243,39 +271,41 @@ reconcile_data <- function(x, y,
   overrides_df <- pr_load_overrides(overrides)
 
   if (!quiet) {
-    cli_alert_info("Reconciling {length(unique(names_x))} names (x) vs {length(unique(names_y))} names (y)")
+    cli_alert_info(
+      "Reconciling {length(unique(names_x))} names (x) vs {length(unique(names_y))} names (y)"
+    )
   }
 
   # Run cascade
   mapping <- pr_run_cascade(
-    names_x         = names_x,
-    names_y         = names_y,
-    authority       = authority,
-    db_version      = db_version,
-    rank            = rank,
-    overrides       = overrides_df,
-    fuzzy           = fuzzy,
+    names_x = names_x,
+    names_y = names_y,
+    authority = authority,
+    db_version = db_version,
+    rank = rank,
+    overrides = overrides_df,
+    fuzzy = fuzzy,
     fuzzy_threshold = fuzzy_threshold,
-    flag_threshold  = flag_threshold,
-    resolve         = resolve,
-    quiet           = quiet
+    flag_threshold = flag_threshold,
+    resolve = resolve,
+    quiet = quiet
   )
 
   # Build metadata
   meta <- list(
-    call             = match.call(),
-    type             = "data_data",
-    timestamp        = Sys.time(),
-    authority        = authority %||% "none",
-    db_version       = db_version %||% "latest",
-    fuzzy            = fuzzy,
-    fuzzy_threshold  = if (fuzzy) fuzzy_threshold else NA_real_,
-    fuzzy_method     = if (fuzzy) "component_levenshtein" else NA_character_,
-    resolve          = resolve,
+    call = match.call(),
+    type = "data_data",
+    timestamp = Sys.time(),
+    authority = authority %||% "none",
+    db_version = db_version %||% "latest",
+    fuzzy = fuzzy,
+    fuzzy_threshold = if (fuzzy) fuzzy_threshold else NA_real_,
+    fuzzy_method = if (fuzzy) "component_levenshtein" else NA_character_,
+    resolve = resolve,
     prepR4pcm_version = as.character(utils::packageVersion("prepR4pcm")),
-    x_source         = x_source,
-    y_source         = y_source,
-    rank             = rank
+    x_source = x_source,
+    y_source = y_source,
+    rank = rank
   )
 
   result <- new_reconciliation(mapping = mapping, meta = meta)

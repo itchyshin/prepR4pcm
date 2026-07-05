@@ -85,9 +85,10 @@ your analysis operates at subspecies level.}
 frame with at least columns \code{name_x} and \code{name_y} (plus an
 optional \code{user_note} column), or a file path to a CSV with the
 same columns. Any name listed here bypasses the cascade and is
-recorded as \code{match_type = "manual"}. Useful for applying
-published crosswalks (see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}) or for locking
-down decisions made in a previous run.}
+recorded as \code{match_type = "manual"}. Use this for locked decisions.
+For published crosswalks (see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}), prefer
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}} or \code{one_to_one_only = TRUE} for
+automatic use and review split/lump cases before applying them.}
 
 \item{db_version}{A length-1 character vector. \pkg{taxadb}
 database snapshot to use (e.g. \code{"22.12"}). \code{NULL} (default) uses
@@ -212,6 +213,7 @@ Other reconciliation functions:
 \code{\link[=reconcile_apply]{reconcile_apply()}},
 \code{\link[=reconcile_augment]{reconcile_augment()}},
 \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}},
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}},
 \code{\link[=reconcile_data]{reconcile_data()}},
 \code{\link[=reconcile_diff]{reconcile_diff()}},
 \code{\link[=reconcile_export]{reconcile_export()}},

@@ -9,7 +9,14 @@
 #' Typical workflow: generate a CSV of corrections (by hand, or with
 #' the help of [reconcile_suggest()]), check it into version control,
 #' and apply it on every run so the corrections are reproducible and
-#' reviewable.
+#' reviewable. This is also the safer way to use a taxonomy crosswalk as
+#' a supplement: run a baseline reconciliation first, then apply reviewed
+#' one-to-one crosswalk rows only to names that remain unresolved. Passing
+#' a crosswalk through the `overrides` argument of `reconcile_*()` applies
+#' those rows before the cascade, so they can preempt exact or normalised
+#' matches. For the common crosswalk-supplement workflow, use
+#' [reconcile_crosswalk_supplement()] so duplicate source or target
+#' candidates are skipped instead of being resolved by row order.
 #'
 #' @param reconciliation A [reconciliation] object returned by
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
@@ -56,11 +63,8 @@
 #' }
 #'
 #' @export
-reconcile_override_batch <- function(reconciliation, overrides,
-                                     quiet = FALSE) {
-
+reconcile_override_batch <- function(reconciliation, overrides, quiet = FALSE) {
   validate_reconciliation(reconciliation)
-
 
   # --- Load overrides from CSV if needed ---
   if (is.character(overrides) && length(overrides) == 1) {
@@ -74,8 +78,10 @@ reconcile_override_batch <- function(reconciliation, overrides,
   }
 
   if (!is.data.frame(overrides)) {
-    abort("`overrides` must be a data frame or a file path to a CSV.",
-          call = caller_env())
+    abort(
+      "`overrides` must be a data frame or a file path to a CSV.",
+      call = caller_env()
+    )
   }
 
   # --- Validate columns ---
@@ -83,7 +89,10 @@ reconcile_override_batch <- function(reconciliation, overrides,
     abort(
       c(
         "`overrides` must have a `name_x` column.",
-        "i" = paste0("Columns found: ", paste(names(overrides), collapse = ", "))
+        "i" = paste0(
+          "Columns found: ",
+          paste(names(overrides), collapse = ", ")
+        )
       ),
       call = caller_env()
     )
@@ -131,7 +140,7 @@ reconcile_override_batch <- function(reconciliation, overrides,
       name_x = row$name_x,
       name_y = name_y_val,
       action = row$action,
-      note   = row$note
+      note = row$note
     )
 
     n_applied <- n_applied + 1

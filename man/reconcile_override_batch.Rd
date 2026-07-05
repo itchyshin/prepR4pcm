@@ -37,7 +37,14 @@ batches of manual decisions.
 Typical workflow: generate a CSV of corrections (by hand, or with
 the help of \code{\link[=reconcile_suggest]{reconcile_suggest()}}), check it into version control,
 and apply it on every run so the corrections are reproducible and
-reviewable.
+reviewable. This is also the safer way to use a taxonomy crosswalk as
+a supplement: run a baseline reconciliation first, then apply reviewed
+one-to-one crosswalk rows only to names that remain unresolved. Passing
+a crosswalk through the \code{overrides} argument of \verb{reconcile_*()} applies
+those rows before the cascade, so they can preempt exact or normalised
+matches. For the common crosswalk-supplement workflow, use
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}} so duplicate source or target
+candidates are skipped instead of being resolved by row order.
 }
 \examples{
 data(avonet_subset)
@@ -69,6 +76,7 @@ Other reconciliation functions:
 \code{\link[=reconcile_apply]{reconcile_apply()}},
 \code{\link[=reconcile_augment]{reconcile_augment()}},
 \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}},
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}},
 \code{\link[=reconcile_data]{reconcile_data()}},
 \code{\link[=reconcile_diff]{reconcile_diff()}},
 \code{\link[=reconcile_export]{reconcile_export()}},

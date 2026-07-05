@@ -1077,13 +1077,13 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
 #' @return A modified phylo object.
 #' @keywords internal
 pr_bind_tip <- function(tree, tip_label, where, position = 0,
-                         edge.length = 0) {
+                        edge.length = 0) {
   # Try phytools first
- if (requireNamespace("phytools", quietly = TRUE)) {
+  if (requireNamespace("phytools", quietly = TRUE)) {
     return(phytools::bind.tip(tree, tip_label,
-                               where = where,
-                               position = position,
-                               edge.length = edge.length))
+                              where = where,
+                              position = position,
+                              edge.length = edge.length))
   }
 
   # Pure-ape fallback: create a 1-tip tree and bind it
@@ -1107,11 +1107,23 @@ pr_bind_tip <- function(tree, tip_label, where, position = 0,
   if (is.null(parent_bl)) parent_bl <- 1
 
   if (position > 0 && position < parent_bl) {
-    # Split the edge: shorten the existing edge, then bind
-    tree$edge.length[edge_row] <- parent_bl - position
+    # ape::bind.tree() handles splitting the edge and adjusting the
+    # original branch length; pre-shortening here would shorten it twice.
     tree <- ape::bind.tree(tree, new_tip, where = where, position = position)
   } else {
-    tree <- ape::bind.tree(tree, new_tip, where = where)
+    # Binding a zero-length new tip directly onto a zero-length terminal
+    # edge can replace the existing tip. Attach at the parent node instead,
+    # giving a zero-length polytomy while preserving the sister tip.
+    bind_where <- if (
+      position <= 0 &&
+        where <= length(tree$tip.label) &&
+        length(edge_row) > 0
+    ) {
+      tree$edge[edge_row[1], 1]
+    } else {
+      where
+    }
+    tree <- ape::bind.tree(tree, new_tip, where = bind_where)
   }
 
   tree

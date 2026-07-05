@@ -388,7 +388,12 @@ result5 <- reconcile_tree(
 ```
 
 Overrides are applied before any other matching stage, so they always
-take priority.
+take priority. This is useful for corrections that you have already
+reviewed and locked down. For published taxonomy crosswalks, use
+`reconcile_crosswalk_supplement()` when you want the crosswalk to add
+matches only after the baseline cascade has protected exact and
+normalised matches. Use `one_to_one_only = TRUE` for automatic rows and
+review split/lump cases before applying them.
 
 ## Example 5: Multiple datasets against one tree
 

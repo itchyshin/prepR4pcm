@@ -288,6 +288,7 @@ resulting tree (or \code{multiPhylo}) directly via
 Other reconciliation functions:
 \code{\link[=reconcile_apply]{reconcile_apply()}},
 \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}},
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}},
 \code{\link[=reconcile_data]{reconcile_data()}},
 \code{\link[=reconcile_diff]{reconcile_diff()}},
 \code{\link[=reconcile_export]{reconcile_export()}},

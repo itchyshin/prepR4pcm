@@ -34,7 +34,8 @@ skips stage 3.}
 \item{rank}{A length-1 character vector. \code{"species"} or \code{"subspecies"}.}
 
 \item{overrides}{A data.frame with columns \code{name_x} and \code{name_y} for
-pre-built overrides, or NULL.}
+pre-built overrides, or NULL. Overrides are pre-cascade decisions:
+they can preempt otherwise exact or normalised matches.}
 
 \item{fuzzy}{Logical. Enables the fuzzy-matching stage when \code{TRUE}. Default \code{FALSE}.}
 
@@ -61,8 +62,9 @@ lookup space.}
 A tibble with the full mapping table.
 }
 \description{
-The central engine behind all \verb{reconcile_*} functions. Applies matching
-stages in strict order of decreasing confidence: exact -> normalised ->
-synonym -> fuzzy. Each stage only operates on names not yet matched.
+The central engine behind all \verb{reconcile_*} functions. Manual overrides
+are applied first, then the remaining names pass through matching stages in
+strict order of decreasing confidence: exact -> normalised -> synonym ->
+fuzzy. Each stage only operates on names not yet matched.
 }
 \keyword{internal}

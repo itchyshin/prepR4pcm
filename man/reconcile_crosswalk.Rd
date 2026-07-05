@@ -44,7 +44,8 @@ then kept and notes carry no provenance label.}
 notes.}
 
 \item{one_to_one_only}{Logical. If \code{TRUE}, keeps only one-to-one
-matches (e.g., \code{"1BL to 1BT"}). Default \code{FALSE}.}
+matches (e.g., \code{"1BL to 1BT"}). Default \code{FALSE} for backwards
+compatibility; \code{TRUE} is recommended for automatic workflows.}
 }
 \value{
 A data frame with columns \code{name_x}, \code{name_y}, and
@@ -58,6 +59,17 @@ straight to the \code{overrides} argument of \code{\link[=reconcile_tree]{reconc
 \code{\link[=reconcile_data]{reconcile_data()}} and friends.
 }
 \details{
+The returned table is an override table, not an extra matching stage.
+Overrides are applied before the exact -> normalised -> synonym -> fuzzy
+cascade, so a crosswalk row can preempt a name pair that would otherwise
+match exactly or after normalisation. For unattended workflows, restrict
+automatic crosswalk use to clean one-to-one rows with
+\code{one_to_one_only = TRUE}. Treat split/lump rows such as
+\code{"1BL to many BT"} and \code{"Many BL to 1BT"} as review candidates, because
+they represent competing species concepts rather than formatting fixes. If
+you keep competing rows as overrides, they are tried sequentially and the
+first applicable row wins.
+
 Using a crosswalk is preferable to automated synonym resolution when
 an authoritative mapping exists --- it is reproducible, does not
 depend on \pkg{taxadb} being available, and you can point to the
@@ -69,7 +81,8 @@ overrides <- reconcile_crosswalk(
   crosswalk_birdlife_birdtree,
   from_col = "Species1",
   to_col = "Species3",
-  match_type_col = "Match.type"
+  match_type_col = "Match.type",
+  one_to_one_only = TRUE
 )
 head(overrides)
 
@@ -82,6 +95,7 @@ for the bundled example.
 Other reconciliation functions:
 \code{\link[=reconcile_apply]{reconcile_apply()}},
 \code{\link[=reconcile_augment]{reconcile_augment()}},
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}},
 \code{\link[=reconcile_data]{reconcile_data()}},
 \code{\link[=reconcile_diff]{reconcile_diff()}},
 \code{\link[=reconcile_export]{reconcile_export()}},

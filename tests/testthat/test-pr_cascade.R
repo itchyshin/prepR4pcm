@@ -49,6 +49,35 @@ test_that("manual overrides take priority", {
   expect_equal(manual$name_x, "Custom name")
 })
 
+test_that("manual overrides can preempt exact matches", {
+  overrides <- data.frame(
+    name_x = "Species alpha",
+    name_y = "Species beta",
+    user_note = "Taxonomy crosswalk",
+    stringsAsFactors = FALSE
+  )
+
+  result <- pr_run_cascade(
+    names_x = c("Species alpha", "Species beta"),
+    names_y = c("Species alpha", "Species beta"),
+    authority = NULL,
+    overrides = overrides
+  )
+
+  manual <- result[
+    !is.na(result$name_x) &
+      result$name_x == "Species alpha",
+  ]
+  exact <- result[
+    !is.na(result$name_x) &
+      result$name_x == "Species beta",
+  ]
+
+  expect_equal(manual$match_type, "manual")
+  expect_equal(manual$name_y, "Species beta")
+  expect_equal(exact$match_type, "unresolved")
+})
+
 test_that("cascade does not double-match names", {
   result <- pr_run_cascade(
     names_x = c("Homo sapiens"),

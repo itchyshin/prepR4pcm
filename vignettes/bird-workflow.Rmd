@@ -302,24 +302,25 @@ data(crosswalk_birdlife_birdtree)
 table(crosswalk_birdlife_birdtree$Match.type)
 ```
 
-Convert it to an overrides table and pass it to `reconcile_tree()`:
+Crosswalks become override tables. Overrides are applied before the
+matching cascade, so they can preempt exact or normalised matches. For
+automatic use, start with one-to-one rows only and keep split/lump rows
+for manual review:
 
 ```{r make-overrides}
-overrides <- reconcile_crosswalk(
+result_xw <- reconcile_crosswalk_supplement(
+  result,
   crosswalk_birdlife_birdtree,
   from_col = "Species1",
   to_col = "Species3",
-  match_type_col = "Match.type"
+  match_type_col = "Match.type",
+  one_to_one_only = TRUE,
+  quiet = TRUE
 )
 
-# Re-reconcile with overrides
-result_xw <- reconcile_tree(
-  x = avonet_subset,
-  tree = tree_jetz,
-  x_species = "Species1",
-  authority = NULL,
-  overrides = overrides
-)
+if (result_xw$meta$crosswalk_supplement$n_applied == 0) {
+  cat("No reviewed one-to-one crosswalk rows add matches in this subset.\n")
+}
 
 # Compare: how many more matches with the crosswalk?
 cat(sprintf("Without crosswalk: %d matched\n",
@@ -331,7 +332,8 @@ cat(sprintf("With crosswalk:    %d matched\n",
 **When do you need a crosswalk?** Only when your data and tree follow
 different naming authorities *and* a curated mapping exists. For most
 use cases, the automatic cascade (exact → normalised → synonym) is
-sufficient.
+sufficient. Treat `1BL to many BT` and `Many BL to 1BT` rows as
+review candidates, not automatic matches.
 
 You can also build your own overrides manually --- it is just a data
 frame with `name_x`, `name_y`, and optionally `user_note` columns:

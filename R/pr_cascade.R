@@ -2,9 +2,10 @@
 
 #' Run the matching cascade
 #'
-#' The central engine behind all `reconcile_*` functions. Applies matching
-#' stages in strict order of decreasing confidence: exact -> normalised ->
-#' synonym -> fuzzy. Each stage only operates on names not yet matched.
+#' The central engine behind all `reconcile_*` functions. Manual overrides
+#' are applied first, then the remaining names pass through matching stages in
+#' strict order of decreasing confidence: exact -> normalised -> synonym ->
+#' fuzzy. Each stage only operates on names not yet matched.
 #'
 #' @param names_x Character vector. Names from source x.
 #' @param names_y Character vector. Names from source y.
@@ -15,7 +16,8 @@
 #' @param db_version A length-1 character vector or NULL.
 #' @param rank A length-1 character vector. `"species"` or `"subspecies"`.
 #' @param overrides A data.frame with columns `name_x` and `name_y` for
-#'   pre-built overrides, or NULL.
+#'   pre-built overrides, or NULL. Overrides are pre-cascade decisions:
+#'   they can preempt otherwise exact or normalised matches.
 #' @param fuzzy Logical. Enables the fuzzy-matching stage when `TRUE`. Default `FALSE`.
 #' @param fuzzy_threshold Numeric. Minimum similarity (0--1) for fuzzy
 #'   matches. Default `0.9` (conservative).
@@ -35,18 +37,20 @@
 #'
 #' @return A tibble with the full mapping table.
 #' @keywords internal
-pr_run_cascade <- function(names_x, names_y,
-                           authority = "col",
-                           db_version = NULL,
-                           rank = "species",
-                           overrides = NULL,
-                           fuzzy = FALSE,
-                           fuzzy_threshold = 0.9,
-                           flag_threshold = 0.95,
-                           resolve = "flag",
-                           multi_x = FALSE,
-                           quiet = FALSE) {
-
+pr_run_cascade <- function(
+  names_x,
+  names_y,
+  authority = "col",
+  db_version = NULL,
+  rank = "species",
+  overrides = NULL,
+  fuzzy = FALSE,
+  fuzzy_threshold = 0.9,
+  flag_threshold = 0.95,
+  resolve = "flag",
+  multi_x = FALSE,
+  quiet = FALSE
+) {
   # Deduplicate inputs, warning about NAs
   n_na_x <- sum(is.na(names_x))
   n_na_y <- sum(is.na(names_y))
@@ -68,9 +72,9 @@ pr_run_cascade <- function(names_x, names_y,
   # reality stages 1+2 had already matched them. (Issue #13.)
   use_progress <- !quiet && length(unique_x) > 500
   do_synonym <- !is.null(authority)
-  do_fuzzy   <- isTRUE(fuzzy)
-  n_stages   <- 2L + do_synonym + do_fuzzy
-  stage_no   <- 0L
+  do_fuzzy <- isTRUE(fuzzy)
+  n_stages <- 2L + do_synonym + do_fuzzy
+  stage_no <- 0L
   next_stage_label <- function(name) {
     stage_no <<- stage_no + 1L
     sprintf("Stage %d/%d: %s", stage_no, n_stages, name)
@@ -115,18 +119,22 @@ pr_run_cascade <- function(names_x, names_y,
       ox_missing <- is.na(ox_orig)
       oy_missing <- is.na(oy_orig)
 
-      if (!ox_missing && !oy_missing &&
-          !(ox_orig %in% matched_x) && !(oy_orig %in% matched_y)) {
+      if (
+        !ox_missing &&
+          !oy_missing &&
+          !(ox_orig %in% matched_x) &&
+          !(oy_orig %in% matched_y)
+      ) {
         rows[[length(rows) + 1]] <- tibble(
-          name_x        = unname(ox_orig),
-          name_y        = unname(oy_orig),
+          name_x = unname(ox_orig),
+          name_y = unname(oy_orig),
           name_resolved = NA_character_,
-          match_type    = "manual",
-          match_score   = 1.0,
-          match_source  = "user_override",
-          in_x          = TRUE,
-          in_y          = TRUE,
-          notes         = overrides$user_note[i] %||% "Manual override"
+          match_type = "manual",
+          match_score = 1.0,
+          match_source = "user_override",
+          in_x = TRUE,
+          in_y = TRUE,
+          notes = overrides$user_note[i] %||% "Manual override"
         )
         matched_x <- c(matched_x, unname(ox_orig))
         matched_y <- c(matched_y, unname(oy_orig))
@@ -134,10 +142,15 @@ pr_run_cascade <- function(names_x, names_y,
         # Record why this override could not be applied. Multiple reasons
         # can apply at once (e.g. both names absent); we report the most
         # informative one in priority order.
-        reason <- if (ox_missing && oy_missing) "name_x_not_in_data"
-                  else if (ox_missing) "name_x_not_in_data"
-                  else if (oy_missing) "name_y_not_in_target"
-                  else "already_matched"
+        reason <- if (ox_missing && oy_missing) {
+          "name_x_not_in_data"
+        } else if (ox_missing) {
+          "name_x_not_in_data"
+        } else if (oy_missing) {
+          "name_y_not_in_target"
+        } else {
+          "already_matched"
+        }
         unused_overrides[[length(unused_overrides) + 1]] <- tibble(
           name_x = ox,
           name_y = oy,
@@ -148,7 +161,9 @@ pr_run_cascade <- function(names_x, names_y,
   }
 
   # --- Stage 1: Exact match ---
-  if (use_progress) cli_alert_info(next_stage_label("Exact matching..."))
+  if (use_progress) {
+    cli_alert_info(next_stage_label("Exact matching..."))
+  }
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
@@ -156,15 +171,15 @@ pr_run_cascade <- function(names_x, names_y,
 
   if (length(exact_both) > 0) {
     rows[[length(rows) + 1]] <- tibble(
-      name_x        = exact_both,
-      name_y        = exact_both,
+      name_x = exact_both,
+      name_y = exact_both,
       name_resolved = NA_character_,
-      match_type    = "exact",
-      match_score   = 1.0,
-      match_source  = "exact_string",
-      in_x          = TRUE,
-      in_y          = TRUE,
-      notes         = ""
+      match_type = "exact",
+      match_score = 1.0,
+      match_source = "exact_string",
+      in_x = TRUE,
+      in_y = TRUE,
+      notes = ""
     )
     matched_x <- c(matched_x, exact_both)
     matched_y <- c(matched_y, exact_both)
@@ -173,8 +188,10 @@ pr_run_cascade <- function(names_x, names_y,
   # --- Stage 2: Normalised match ---
   if (use_progress) {
     cli_alert_info(
-      paste0(next_stage_label("Normalised matching"),
-             " ({length(matched_x)} matched so far)...")
+      paste0(
+        next_stage_label("Normalised matching"),
+        " ({length(matched_x)} matched so far)..."
+      )
     )
   }
   remaining_x <- setdiff(unique_x, matched_x)
@@ -202,30 +219,30 @@ pr_run_cascade <- function(names_x, names_y,
     # Vectorised: find all remaining_x whose normalised form hits a normalised y
     hit_mask <- norm_x %in% names(lookup_y)
     if (any(hit_mask)) {
-      x_hits  <- remaining_x[hit_mask]
+      x_hits <- remaining_x[hit_mask]
       nx_hits <- as.character(norm_x[hit_mask])
-      y_hits  <- unname(lookup_y[nx_hits])
+      y_hits <- unname(lookup_y[nx_hits])
 
       # If multiple x names normalise to the same y, keep only the first
       # x in single-source mode. With multi_x = TRUE we keep every x ->
       # y mapping so the per-dataset join works.
       if (!multi_x) {
-        dup_y   <- duplicated(y_hits)
-        x_hits  <- x_hits[!dup_y]
+        dup_y <- duplicated(y_hits)
+        x_hits <- x_hits[!dup_y]
         nx_hits <- nx_hits[!dup_y]
-        y_hits  <- y_hits[!dup_y]
+        y_hits <- y_hits[!dup_y]
       }
 
       rows[[length(rows) + 1]] <- tibble(
-        name_x        = x_hits,
-        name_y        = y_hits,
+        name_x = x_hits,
+        name_y = y_hits,
         name_resolved = NA_character_,
-        match_type    = "normalized",
-        match_score   = 1.0,
-        match_source  = "normalisation",
-        in_x          = TRUE,
-        in_y          = TRUE,
-        notes         = sprintf("'%s' normalised to '%s'", x_hits, nx_hits)
+        match_type = "normalized",
+        match_score = 1.0,
+        match_source = "normalisation",
+        in_x = TRUE,
+        in_y = TRUE,
+        notes = sprintf("'%s' normalised to '%s'", x_hits, nx_hits)
       )
       matched_x <- c(matched_x, x_hits)
       matched_y <- c(matched_y, y_hits)
@@ -239,27 +256,31 @@ pr_run_cascade <- function(names_x, names_y,
   if (do_synonym) {
     if (use_progress) {
       cli_alert_info(
-        paste0(next_stage_label("Synonym resolution"),
-               " ({length(matched_x)} matched so far)...")
+        paste0(
+          next_stage_label("Synonym resolution"),
+          " ({length(matched_x)} matched so far)..."
+        )
       )
     }
   }
 
-  if (do_synonym && length(remaining_x) > 0 &&
-      length(remaining_y) > 0) {
-
+  if (do_synonym && length(remaining_x) > 0 && length(remaining_y) > 0) {
     # Normalise remaining names before synonym lookup
-    norm_remaining_x <- as.character(pr_normalize_names(remaining_x,
-                                                         rank = rank))
-    norm_remaining_y <- as.character(pr_normalize_names(remaining_y,
-                                                         rank = rank))
+    norm_remaining_x <- as.character(pr_normalize_names(
+      remaining_x,
+      rank = rank
+    ))
+    norm_remaining_y <- as.character(pr_normalize_names(
+      remaining_y,
+      rank = rank
+    ))
 
     syn_matches <- pr_resolve_synonyms(
       unmatched_x = norm_remaining_x,
       unmatched_y = norm_remaining_y,
-      authority   = authority,
-      db_version  = db_version,
-      quiet       = quiet
+      authority = authority,
+      db_version = db_version,
+      quiet = quiet
     )
 
     if (nrow(syn_matches) > 0) {
@@ -271,23 +292,31 @@ pr_run_cascade <- function(names_x, names_y,
         orig_x <- lookup_orig_x[syn_matches$name_x[i]]
         orig_y <- lookup_orig_y[syn_matches$name_y[i]]
 
-        if (!is.na(orig_x) && !is.na(orig_y) &&
-            !(orig_x %in% matched_x) && !(orig_y %in% matched_y)) {
+        if (
+          !is.na(orig_x) &&
+            !is.na(orig_y) &&
+            !(orig_x %in% matched_x) &&
+            !(orig_y %in% matched_y)
+        ) {
           # Indirect synonyms (both names required a lookup) are flagged regardless
           # of score: the chain of inference is longer and warrants manual review.
           is_indirect <- grepl("^Both synonyms", syn_matches$notes[i])
-          mtype <- if (resolve == "flag" && is_indirect) "flagged" else "synonym"
+          mtype <- if (resolve == "flag" && is_indirect) {
+            "flagged"
+          } else {
+            "synonym"
+          }
 
           rows[[length(rows) + 1]] <- tibble(
-            name_x        = unname(orig_x),
-            name_y        = unname(orig_y),
+            name_x = unname(orig_x),
+            name_y = unname(orig_y),
             name_resolved = syn_matches$name_resolved[i],
-            match_type    = mtype,
-            match_score   = 0.95,
-            match_source  = syn_matches$match_source[i],
-            in_x          = TRUE,
-            in_y          = TRUE,
-            notes         = syn_matches$notes[i]
+            match_type = mtype,
+            match_score = 0.95,
+            match_source = syn_matches$match_source[i],
+            in_x = TRUE,
+            in_y = TRUE,
+            notes = syn_matches$notes[i]
           )
           matched_x <- c(matched_x, unname(orig_x))
           matched_y <- c(matched_y, unname(orig_y))
@@ -303,19 +332,24 @@ pr_run_cascade <- function(names_x, names_y,
   if (do_fuzzy) {
     if (use_progress) {
       cli_alert_info(
-        paste0(next_stage_label("Fuzzy matching"),
-               " ({length(matched_x)} matched so far)...")
+        paste0(
+          next_stage_label("Fuzzy matching"),
+          " ({length(matched_x)} matched so far)..."
+        )
       )
     }
   }
 
   if (do_fuzzy && length(remaining_x) > 0 && length(remaining_y) > 0) {
     if (!quiet) {
-      cli_alert_info("Running fuzzy matching on {length(remaining_x)} x {length(remaining_y)} remaining names...")
+      cli_alert_info(
+        "Running fuzzy matching on {length(remaining_x)} x {length(remaining_y)} remaining names..."
+      )
     }
 
     fuzzy_matches <- pr_fuzzy_match(
-      remaining_x, remaining_y,
+      remaining_x,
+      remaining_y,
       threshold = fuzzy_threshold,
       rank = rank
     )
@@ -327,18 +361,22 @@ pr_run_cascade <- function(names_x, names_y,
         if (!(fx %in% matched_x) && !(fy %in% matched_y)) {
           # Flag low-confidence fuzzy matches when resolve = "flag"
           fscore <- fuzzy_matches$score[i]
-          mtype <- if (resolve == "flag" && fscore < flag_threshold) "flagged" else "fuzzy"
+          mtype <- if (resolve == "flag" && fscore < flag_threshold) {
+            "flagged"
+          } else {
+            "fuzzy"
+          }
 
           rows[[length(rows) + 1]] <- tibble(
-            name_x        = fx,
-            name_y        = fy,
+            name_x = fx,
+            name_y = fy,
             name_resolved = NA_character_,
-            match_type    = mtype,
-            match_score   = fscore,
-            match_source  = "fuzzy_match",
-            in_x          = TRUE,
-            in_y          = TRUE,
-            notes         = fuzzy_matches$notes[i]
+            match_type = mtype,
+            match_score = fscore,
+            match_source = "fuzzy_match",
+            in_x = TRUE,
+            in_y = TRUE,
+            notes = fuzzy_matches$notes[i]
           )
           matched_x <- c(matched_x, fx)
           matched_y <- c(matched_y, fy)
@@ -353,29 +391,29 @@ pr_run_cascade <- function(names_x, names_y,
 
   if (length(remaining_x) > 0) {
     rows[[length(rows) + 1]] <- tibble(
-      name_x        = remaining_x,
-      name_y        = NA_character_,
+      name_x = remaining_x,
+      name_y = NA_character_,
       name_resolved = NA_character_,
-      match_type    = "unresolved",
-      match_score   = NA_real_,
-      match_source  = NA_character_,
-      in_x          = TRUE,
-      in_y          = FALSE,
-      notes         = "No match found in source y"
+      match_type = "unresolved",
+      match_score = NA_real_,
+      match_source = NA_character_,
+      in_x = TRUE,
+      in_y = FALSE,
+      notes = "No match found in source y"
     )
   }
 
   if (length(remaining_y) > 0) {
     rows[[length(rows) + 1]] <- tibble(
-      name_x        = NA_character_,
-      name_y        = remaining_y,
+      name_x = NA_character_,
+      name_y = remaining_y,
       name_resolved = NA_character_,
-      match_type    = "unresolved",
-      match_score   = NA_real_,
-      match_source  = NA_character_,
-      in_x          = FALSE,
-      in_y          = TRUE,
-      notes         = "No match found in source x"
+      match_type = "unresolved",
+      match_score = NA_real_,
+      match_source = NA_character_,
+      in_x = FALSE,
+      in_y = TRUE,
+      notes = "No match found in source x"
     )
   }
 
@@ -395,10 +433,15 @@ pr_run_cascade <- function(names_x, names_y,
   # Combine all rows
   if (length(rows) == 0) {
     mapping <- tibble(
-      name_x = character(), name_y = character(),
-      name_resolved = character(), match_type = character(),
-      match_score = numeric(), match_source = character(),
-      in_x = logical(), in_y = logical(), notes = character()
+      name_x = character(),
+      name_y = character(),
+      name_resolved = character(),
+      match_type = character(),
+      match_score = numeric(),
+      match_source = character(),
+      in_x = logical(),
+      in_y = logical(),
+      notes = character()
     )
   } else {
     mapping <- do.call(rbind, rows)
@@ -419,7 +462,9 @@ pr_run_cascade <- function(names_x, names_y,
 #' @return Invisibly `NULL`.
 #' @keywords internal
 pr_warn_unused_overrides <- function(unused) {
-  if (is.null(unused) || nrow(unused) == 0) return(invisible(NULL))
+  if (is.null(unused) || nrow(unused) == 0) {
+    return(invisible(NULL))
+  }
 
   reason_counts <- table(unused$reason)
   reason_strs <- vapply(

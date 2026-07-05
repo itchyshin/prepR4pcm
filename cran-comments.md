@@ -1,96 +1,46 @@
 ## Submission
 
-This is a new CRAN submission for `prepR4pcm`, an R package for
-reconciling species names across datasets and phylogenetic trees to
-prepare inputs for phylogenetic comparative methods (PCM, PGLS, PGLMM).
+This is a patch release for `prepR4pcm` 1.0.1, following the accepted
+1.0.0 CRAN release.
 
-This 1.0.0 release incorporates the CRAN incoming pretest fixes made
-after the 0.5.1 candidate and the follow-up CRAN reviewer comments:
+This release clarifies and safeguards taxonomy-crosswalk workflows:
 
-* Added the EcoEvoRxiv methods reference to `DESCRIPTION` in CRAN's
-  requested format: Nakagawa et al. (2026) <doi:10.32942/X2468Z>.
-* Replaced remaining `\dontrun{}` examples with `\donttest{}` or
-  `if (interactive())` where the example is genuinely interactive.
-* Changed `reconcile_export()` so its default output directory is a
-  unique temporary directory rather than the current working directory.
-  Vignettes and examples now write only to temporary locations.
-* Replaced stale or slow ITIS root links with the canonical
-  `https://www.itis.gov/about_itis.html` page.
-* Changed the `reconcile_report()` Rd figure width from a percentage
-  value to a pixel value.
-* Reduced the `reconcile_diff()` and `reconcile_augment()` examples to
-  small toy data so they remain below CRAN incoming example-time
-  thresholds.
+* Documented that crosswalk-derived rows supplied as `overrides` are applied
+  before the exact -> normalised -> synonym -> fuzzy matching cascade.
+* Added a warning when non-one-to-one crosswalk rows, such as taxonomic
+  splits or lumps, are kept as automatic overrides.
+* Updated the bird workflow vignette to recommend baseline matching first,
+  followed by reviewed one-to-one crosswalk rows for unresolved names only.
+* Fixed a pure-`ape` fallback bug in `reconcile_augment()` when adding tips
+  to zero-length or split terminal branches.
 
 ## R CMD check results
 
-Local `R CMD check --as-cran --run-donttest`, with CRAN incoming and
-remote incoming checks enabled:
+Local source-tree CRAN-shaped check:
 
-    0 errors | 0 warnings | 1 note
+    0 errors | 0 warnings | 0 notes
 
-The single note is expected for a first submission:
-
-* `New submission`
+The persistent source tarball
+`/tmp/prepR4pcm-cran-submit-1.0.1-20260702/prepR4pcm_1.0.1.tar.gz`
+also passed local tarball-level `R CMD check --as-cran --run-donttest`
+with `_R_CHECK_FORCE_SUGGESTS_=false` because several optional backend
+packages in `Suggests` are not installed on the local machine.
 
 Additional local checks:
 
-* `devtools::test(filter = "reconcile_export")` — 0 failures, 47 passes.
+* `devtools::test()` — 0 failures.
 * `urlchecker::url_check()` — all URLs correct.
 * `pkgdown::check_pkgdown()` — no problems found.
-* Source audit found no remaining `\dontrun{}` in package sources,
-  generated Rd files, vignettes, tests, README, or DESCRIPTION.
+* Source tarball scan confirmed local agent files such as `CLAUDE.md` are
+  excluded by `.Rbuildignore`.
 
 ## Test environments
 
-* local macOS Tahoe 26.5 (aarch64), R 4.5.2 — clean apart from the
-  expected new-submission note above.
-
-## Suggests usage
-
-All packages in `Suggests` are used conditionally:
-
-* `taxadb` — guarded by `requireNamespace("taxadb", quietly = TRUE)` in
-  `R/pr_authority.R` (only required when `authority` is supplied).
-* `phytools` — guarded in `R/reconcile_augment.R`; a pure-`ape`
-  fallback is provided when phytools is unavailable.
-* `caper`, `MCMCglmm` — referenced only in downstream PCM workflow
-  illustrations. Executable vignette chunks that use these packages are
-  guarded by `eval = requireNamespace(..., quietly = TRUE)` so the
-  vignette knits cleanly without those packages installed.
-* `clootl`, `rtrees` — optional backends of `pr_get_tree()` (issue
-  #42). Each is guarded by runtime availability checks and returns a
-  targeted install message when unavailable.
-* `piggyback` — used indirectly by the optional `rtrees`/`megatrees`
-  backend to download reference-tree data in non-CRAN backend tests.
-* `knitr`, `rmarkdown` — used by the vignette builder.
-* `dplyr`, `pkgdown`, `testthat` — used only by tests, vignettes, and
-  site building.
-
-## Optional GitHub-only integrations
-
-`datelife`, `U.PhyloMaker`, `V.PhyloMaker`, and `V.PhyloMaker2` are
-optional runtime-only integrations. They are not declared in
-DESCRIPTION because they are not currently available from CRAN or
-Bioconductor. The relevant functions check availability at runtime
-and emit targeted installation guidance rather than loading these
-packages unconditionally.
+* local macOS Tahoe 26.5.1 (aarch64), R-devel 4.6.0 — tarball check passed
+  with optional Suggests not forced.
+* local macOS Tahoe 26.5.1 (aarch64), R 4.5.2 — source-tree CRAN-shaped
+  check passed with 0 errors, 0 warnings, and 0 notes.
 
 ## Downstream dependencies
 
-This is a new package with no reverse dependencies on CRAN.
-
-## Notes on the package
-
-* Example datasets are subsets of published trait databases (AVONET,
-  NestTrait, Delhey plumage) and phylogenies (Jetz, Clements), each
-  cited in `R/data.R` with source and DOI.
-* Long-running examples are wrapped in `\donttest{}` where applicable.
-* The package uses `cli` for user-facing messages and `rlang` for
-  error handling. Two error paths in `R/pr_authority.R` were migrated
-  from `rlang::abort()` to `cli::cli_abort()` so that `{.pkg ...}` /
-  `{.code ...}` markup renders correctly (was issue #4 in our GitHub
-  tracker).
-* `authority = "ott"` (Open Tree of Life) was removed from the list
-  of supported taxonomic authorities because the default `taxadb`
-  release does not ship a working OTT schema (was issue #5).
+There are no strong reverse dependencies to check.

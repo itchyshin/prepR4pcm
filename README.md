@@ -83,7 +83,11 @@ pak::pak("itchyshin/prepR4pcm")
   *override table* is a user-supplied two-column data frame (`name_x`,
   `name_y`) that forces specific name pairs to resolve a particular way,
   bypassing the cascade. `reconcile_crosswalk()` converts a published
-  crosswalk into an override table.
+  crosswalk into an override table. For automatic workflows, use
+  `reconcile_crosswalk_supplement()` so one-to-one crosswalk rows
+  supplement a baseline reconciliation only for names that remain
+  unresolved. Keep split/lump rows separate and review them before
+  applying them.
 - **Tree augmentation**: an *unresolved species* is one that appears in
   your data but has no matching tip on the tree (and the cascade
   couldn’t find it via formatting, synonymy, or fuzzy matching).
@@ -176,7 +180,7 @@ rec
 #>   Source x: avonet_subset
 #>   Source y: phylo (657 tips)
 #>   Authority: col
-#>   Timestamp: 2026-06-16 10:00:21
+#>   Timestamp: 2026-07-05 12:16:43
 #> ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)
 #> 
 #> ── Match summary ──
@@ -350,7 +354,11 @@ in published work, please cite the original provider.
 - **BirdLife-BirdTree crosswalk** (`crosswalk_birdlife_birdtree`):
   distributed with AVONET (Tobias et al. 2022, DOI 10.1111/ele.13898);
   maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, DOI
-  10.1038/nature11631) taxonomy.
+  10.1038/nature11631) taxonomy. Split/lump rows in this crosswalk
+  represent taxonomic judgement calls and should be reviewed before
+  being used as overrides. Use `reconcile_crosswalk_supplement()` when
+  you want the crosswalk to supplement, rather than preempt, a baseline
+  reconciliation.
 
 **Mammal data (used by the mammal database-assembly vignette):**
 

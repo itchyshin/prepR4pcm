@@ -84,9 +84,10 @@ your analysis operates at subspecies level.}
 frame with at least columns \code{name_x} and \code{name_y} (plus an
 optional \code{user_note} column), or a file path to a CSV with the
 same columns. Any name listed here bypasses the cascade and is
-recorded as \code{match_type = "manual"}. Useful for applying
-published crosswalks (see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}) or for locking
-down decisions made in a previous run.}
+recorded as \code{match_type = "manual"}. Use this for locked decisions.
+For published crosswalks (see \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}}), prefer
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}} or \code{one_to_one_only = TRUE} for
+automatic use and review split/lump cases before applying them.}
 
 \item{db_version}{A length-1 character vector. \pkg{taxadb}
 database snapshot to use (e.g. \code{"22.12"}). \code{NULL} (default) uses
@@ -167,6 +168,11 @@ only plausibly similar genera are compared.
 
 Names that survive all four stages are labelled \code{unresolved}. Any
 entries supplied through \code{overrides} take precedence over the cascade.
+This is intentional for locked manual decisions, but it also means a
+crosswalk row can preempt an otherwise exact or normalised match. If you
+want a crosswalk to supplement, rather than replace, the baseline cascade,
+use \code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}} or run the baseline reconciliation
+first and apply reviewed overrides only to still-unresolved names.
 
 \strong{After the call.} A \code{reconciliation} object is the input to
 most other functions in the package. Common next steps:
@@ -218,6 +224,7 @@ Other reconciliation functions:
 \code{\link[=reconcile_apply]{reconcile_apply()}},
 \code{\link[=reconcile_augment]{reconcile_augment()}},
 \code{\link[=reconcile_crosswalk]{reconcile_crosswalk()}},
+\code{\link[=reconcile_crosswalk_supplement]{reconcile_crosswalk_supplement()}},
 \code{\link[=reconcile_diff]{reconcile_diff()}},
 \code{\link[=reconcile_export]{reconcile_export()}},
 \code{\link[=reconcile_mapping]{reconcile_mapping()}},
