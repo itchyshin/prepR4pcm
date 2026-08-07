@@ -42,12 +42,11 @@ different reference tree or taxonomy:
   [Fish Tree of Life](https://fishtreeoflife.org) (Rabosky et al.
   2018), a time-calibrated ray-finned fish phylogeny. Required for
   `source = "fishtree"`.
-- **`rtrees`**
-  ([github.com/daijiang/rtrees](https://github.com/daijiang/rtrees)):
+- **`rtrees`** (CRAN; [project site](https://github.com/daijiang/rtrees)):
   grafts species onto taxon-specific mega-trees (mammals, birds,
   fish, amphibians, etc.). Required for `source = "rtrees"`.
-- **`clootl`**
-  ([github.com/eliotmiller/clootl](https://github.com/eliotmiller/clootl)):
+- **`clootl`** (CRAN;
+  [project site](https://github.com/eliotmiller/clootl)):
   supplies a phylogeny in the current Clements bird taxonomy.
   Required for `source = "clootl"`.
 - **`datelife`**: synthesis chronograms
@@ -59,9 +58,7 @@ backends via `pak`:
 
 ```{r setup, eval = TRUE}
 library(prepR4pcm)
-# install.packages(c("rotl", "fishtree"))                 # CRAN
-# pak::pak("daijiang/rtrees")                             # GitHub
-# pak::pak("eliotmiller/clootl")                          # GitHub
+# install.packages(c("rotl", "rtrees", "clootl", "fishtree")) # CRAN
 # pak::pak("phylotastic/datelife")                        # GitHub (heavy)
 ```
 

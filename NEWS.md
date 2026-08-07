@@ -1,4 +1,6 @@
-# prepR4pcm 1.0.1.9000
+# prepR4pcm 1.0.2
+
+* `reconcile_augment(source = "rtrees")` now correctly distinguishes exact placements from genus (`*`) and family (`**`) grafts, and reports the graft rank in its existing augmentation metadata (#112).
 
 * `reconcile_crosswalk_supplement()` adds a safer post-baseline crosswalk workflow: run exact/normalised/synonym/fuzzy matching first, apply one-to-one crosswalk rows only to names that remain unresolved on both sides, and skip duplicate source or target candidates instead of accepting split/lump rows by row order.
 

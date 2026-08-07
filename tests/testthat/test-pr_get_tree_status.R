@@ -41,6 +41,22 @@ test_that("pr_get_tree_status() reports needs_network correctly", {
 })
 
 
+test_that("pr_get_tree_status() gives CRAN guidance for rtrees", {
+  status <- pr_get_tree_status()
+  rtrees_row <- status[status$source == "rtrees", ]
+  expect_equal(rtrees_row$install_hint, 'install.packages("rtrees")')
+  expect_equal(rtrees_row$source_repo, "CRAN")
+})
+
+
+test_that("pr_get_tree_status() gives CRAN guidance for clootl", {
+  status <- pr_get_tree_status()
+  clootl_row <- status[status$source == "clootl", ]
+  expect_equal(clootl_row$install_hint, 'install.packages("clootl")')
+  expect_equal(clootl_row$source_repo, "CRAN")
+})
+
+
 test_that("reachable is NA when check_network = FALSE", {
   status <- pr_get_tree_status(check_network = FALSE)
   expect_true(all(is.na(status$reachable)))

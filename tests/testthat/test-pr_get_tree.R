@@ -1,7 +1,7 @@
 # pr_get_tree() — pluggable tree retrieval (issue #42).
 #
 # We don't want the test suite to depend on three external backends
-# (rotl on CRAN, clootl + rtrees on GitHub) being installed AND the
+# (rotl + rtrees + clootl on CRAN) being installed AND the
 # Open Tree of Life servers being reachable. So we mock each backend's
 # entry-point function. The tests verify:
 #
@@ -237,7 +237,7 @@ test_that("missing rotl package gives a helpful migration error", {
 })
 
 
-test_that("missing rtrees package mentions the GitHub URL", {
+test_that("missing rtrees package gives CRAN installation guidance", {
   testthat::local_mocked_bindings(
     requireNamespace = function(package, ..., quietly = TRUE) {
       if (identical(package, "rtrees")) FALSE else TRUE
@@ -250,11 +250,12 @@ test_that("missing rtrees package mentions the GitHub URL", {
   )
   msg <- conditionMessage(err)
   expect_true(grepl("rtrees", msg, fixed = TRUE))
+  expect_true(grepl("install.packages", msg, fixed = TRUE))
   expect_true(grepl("daijiang", msg, fixed = TRUE))
 })
 
 
-test_that("missing clootl package mentions the GitHub URL", {
+test_that("missing clootl package gives CRAN installation guidance", {
   testthat::local_mocked_bindings(
     requireNamespace = function(package, ..., quietly = TRUE) {
       if (identical(package, "clootl")) FALSE else TRUE
@@ -264,6 +265,7 @@ test_that("missing clootl package mentions the GitHub URL", {
   err <- tryCatch(.pr_get_tree_clootl("foo"), error = function(e) e)
   msg <- conditionMessage(err)
   expect_true(grepl("clootl", msg, fixed = TRUE))
+  expect_true(grepl("install.packages", msg, fixed = TRUE))
   expect_true(grepl("eliotmiller", msg, fixed = TRUE))
 })
 

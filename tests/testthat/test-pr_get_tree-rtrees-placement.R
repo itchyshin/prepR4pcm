@@ -17,6 +17,55 @@ rtrees_result_quiet <- function(...) {
   suppressWarnings(suppressMessages(pr_get_tree(...)))
 }
 
+rtrees_skip_unless_live <- function() {
+  skip_on_cran()
+  testthat::skip_if_not_installed("rtrees")
+  skip_if_offline("api.github.com")
+}
+
+
+test_that("rtrees tip parser strips all markers and prioritises family grafts", {
+  parsed <- prepR4pcm:::.pr_parse_rtrees_tip_labels(
+    c("Exact_species", "Genus_species*", "Family_species**", "Odd_species***")
+  )
+
+  expect_equal(
+    parsed$markerless_label,
+    c("Exact_species", "Genus_species", "Family_species", "Odd_species")
+  )
+  expect_equal(
+    parsed$placement_status,
+    c("exact", "genus_added", "family_added", "family_added")
+  )
+})
+
+
+test_that("rtrees placement parser retains marked tips and maps all graft ranks", {
+  marked_tree <- ape::read.tree(
+    text = "(Exact_species:1,Genus_species*:1,Family_species**:1);"
+  )
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) TRUE,
+    .package = "base"
+  )
+  testthat::local_mocked_bindings(
+    .pr_rtrees_get_tree = function(...) marked_tree,
+    .package = "prepR4pcm"
+  )
+
+  res <- prepR4pcm:::.pr_get_tree_rtrees(
+    c("Exact species", "Genus species", "Family species", "Skipped species"),
+    taxon = "bird"
+  )
+
+  expect_identical(res$tree$tip.label, marked_tree$tip.label)
+  expect_equal(
+    res$backend_meta$placement$placement_status,
+    c("exact", "genus_added", "family_added", "skipped")
+  )
+  expect_equal(res$backend_meta$n_grafted, 2L)
+})
+
 
 test_that("rtrees placement preserves original input names", {
   testthat::local_mocked_bindings(
@@ -59,8 +108,7 @@ test_that("rtrees placement preserves original input names", {
 
 
 test_that("rtrees backend: placement table exists with the documented columns", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   species <- c("Corvus corax", "Pica pica", "Turdus merula")
   r <- rtrees_result_quiet(
     species,
@@ -80,8 +128,7 @@ test_that("rtrees backend: placement table exists with the documented columns", 
 
 
 test_that("rtrees backend: every unique input has exactly one placement row", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   species <- c("Corvus corax", "Pica pica", "Turdus merula", "Corvus corax") # 1 dup
   r <- rtrees_result_quiet(
     species,
@@ -100,8 +147,7 @@ test_that("rtrees backend: every unique input has exactly one placement row", {
 
 
 test_that("rtrees backend: placement_status uses the documented enum", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   species <- c("Corvus corax", "Pica pica", "Turdus merula")
   r <- rtrees_result_quiet(
     species,
@@ -118,8 +164,7 @@ test_that("rtrees backend: placement_status uses the documented enum", {
 
 
 test_that("rtrees backend: exact-match species are flagged as 'exact', not 'genus_added'", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   # All three species are real and should be in the bird mega-tree exactly.
   species <- c("Corvus corax", "Pica pica", "Turdus merula")
   r <- rtrees_result_quiet(
@@ -138,8 +183,7 @@ test_that("rtrees backend: exact-match species are flagged as 'exact', not 'genu
 
 
 test_that("rtrees backend: a made-up species in a real genus is flagged 'genus_added'", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   # Corvus is a real bird genus; 'Corvus madeupensis' isn't a real
   # species but rtrees will graft it at the genus level. Include
   # additional real species so the resulting tree has >= 2 tips
@@ -163,8 +207,7 @@ test_that("rtrees backend: a made-up species in a real genus is flagged 'genus_a
 
 
 test_that("rtrees backend: a species in no recognised family is flagged 'skipped'", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   # "Madeupgenus" doesn't match any real family -> rtrees skips it.
   # Include >= 2 real species so the tree has >= 2 tips.
   species <- c("Corvus corax", "Pica pica", "Madeupgenus madeupspecies")
@@ -186,8 +229,7 @@ test_that("rtrees backend: a species in no recognised family is flagged 'skipped
 
 
 test_that("rtrees backend: skipped species appear in result$unmatched, not result$matched", {
-  skip_on_cran()
-  testthat::skip_if_not_installed("rtrees")
+  rtrees_skip_unless_live()
   species <- c("Corvus corax", "Pica pica", "Madeupgenus madeupspecies")
   r <- rtrees_result_quiet(
     species,
