@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="favicon.ico">
 <link rel="manifest" href="site.webmanifest">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="prepR4pcm: reconcile species names for phylogenetic comparative methods">
 <meta name="description" content="Reconcile species names across datasets and phylogenetic trees for ecologists and evolutionary biologists running PGLS, phylogenetic mixed models, and other PCMs. Sister package [pigauto](https://itchyshin.github.io/pigauto/) consumes the posterior of trees that prepR4pcm produces and propagates both tree- and imputation-uncertainty into pooled estimates.
@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +114,7 @@
 <li>
 <strong>Multi-tree support</strong>: <code><a href="reference/reconcile_to_trees.html">reconcile_to_trees()</a></code> matches a dataset against several trees at once; <code><a href="reference/reconcile_diff.html">reconcile_diff()</a></code> compares results.</li>
 <li>
-<strong>Crosswalks and overrides</strong>: a <em>taxonomic crosswalk</em> is a published table mapping species names from one taxonomy to another (e.g. mapping BirdLife species names to the BirdTree / Jetz phylogeny names). An <em>override table</em> is a user-supplied two-column data frame (<code>name_x</code>, <code>name_y</code>) that forces specific name pairs to resolve a particular way, bypassing the cascade. <code><a href="reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> converts a published crosswalk into an override table.</li>
+<strong>Crosswalks and overrides</strong>: a <em>taxonomic crosswalk</em> is a published table mapping species names from one taxonomy to another (e.g. mapping BirdLife species names to the BirdTree / Jetz phylogeny names). An <em>override table</em> is a user-supplied two-column data frame (<code>name_x</code>, <code>name_y</code>) that forces specific name pairs to resolve a particular way, bypassing the cascade. <code><a href="reference/reconcile_crosswalk.html">reconcile_crosswalk()</a></code> converts a published crosswalk into an override table. For automatic workflows, use <code><a href="reference/reconcile_crosswalk_supplement.html">reconcile_crosswalk_supplement()</a></code> so one-to-one crosswalk rows supplement a baseline reconciliation only for names that remain unresolved. Keep split/lump rows separate and review them before applying them.</li>
 <li>
 <strong>Tree augmentation</strong>: an <em>unresolved species</em> is one that appears in your data but has no matching tip on the tree (and the cascade couldn’t find it via formatting, synonymy, or fuzzy matching). <code><a href="reference/reconcile_augment.html">reconcile_augment()</a></code> grafts unresolved species onto the tree as sister to a congener (a species in the same genus). Because this placement is an assumption rather than a result, you should always run <em>sensitivity analyses</em> — fit your downstream model both with and without the grafted tips and report whether the conclusions change.</li>
 <li>
@@ -175,7 +175,7 @@
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: col</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-06-16 10:00:21</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-07-05 12:16:43</span></span>
 <span><span class="co">#&gt; ℹ Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── Match summary ──</span></span>
@@ -293,7 +293,7 @@
 <li>
 <strong>Clements checklist</strong> (<code>tree_clements25</code>): Clements et al. (2025) eBird/Clements Checklist of Birds of the World, v2025.</li>
 <li>
-<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): distributed with AVONET (Tobias et al. 2022, DOI 10.1111/ele.13898); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, DOI 10.1038/nature11631) taxonomy.</li>
+<strong>BirdLife-BirdTree crosswalk</strong> (<code>crosswalk_birdlife_birdtree</code>): distributed with AVONET (Tobias et al. 2022, DOI 10.1111/ele.13898); maps BirdLife taxonomy to the BirdTree (Jetz et al. 2012, DOI 10.1038/nature11631) taxonomy. Split/lump rows in this crosswalk represent taxonomic judgement calls and should be reviewed before being used as overrides. Use <code><a href="reference/reconcile_crosswalk_supplement.html">reconcile_crosswalk_supplement()</a></code> when you want the crosswalk to supplement, rather than preempt, a baseline reconciliation.</li>
 </ul>
 <p><strong>Mammal data (used by the mammal database-assembly vignette):</strong></p>
 <ul>
@@ -321,6 +321,7 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=prepR4pcm" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/itchyshin/prepR4pcm/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/itchyshin/prepR4pcm/issues" class="external-link">Report a bug</a></li>
 </ul>
@@ -375,7 +376,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

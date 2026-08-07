@@ -1,4 +1,5 @@
 url: https://itchyshin.github.io/prepR4pcm/
+llm-docs: false
 
 template:
   bootstrap: 5

@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting Started with prepR4pcm">
 </head>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,7 +159,7 @@ different naming conventions.</p>
 <span><span class="co">#&gt; [1] "Homo_sapiens"    "Pan_troglodytes" "Gorilla_gorilla" "Pongo_pygmaeus" </span></span>
 <span><span class="co">#&gt; [5] "Macaca_mulatta"  "Papio_anubis"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tree</span><span class="op">)</span>       <span class="co"># quick visual; underscores in tip labels render as spaces</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/example-data-1.png" alt="" width="700"></p>
+<p><img src="getting-started_files/figure-html/example-data-1.png" class="r-plt" alt="" width="700"></p>
 <p>(<code><a href="https://rdrr.io/pkg/ape/man/plot.phylo.html" class="external-link">ape::plot.phylo()</a></code> displays underscores as spaces by
 default — the underlying <code>tree$tip.label</code> strings still
 contain underscores, which is why <code>tree$tip.label</code> shows
@@ -196,7 +196,7 @@ tree.</li>
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-06-16 10:10:52</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-08-07 16:31:31</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -320,7 +320,7 @@ actions you can pass to <code>action = ...</code> are:</p>
 <span><span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 5</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span>   <span class="co"># the pruned tree</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/apply-1.png" alt="" width="700"></p>
+<p><img src="getting-started_files/figure-html/apply-1.png" class="r-plt" alt="" width="700"></p>
 <p>The <code>$data</code> and <code>$tree</code> components now have
 matching species, ready for comparative analysis.</p>
 </div>
@@ -367,7 +367,7 @@ Here is a toy example:</p>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-06-16 10:10:52</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-08-07 16:31:31</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -482,7 +482,7 @@ access and the package.</p>
 coverage; the most general default for cross-taxon work.</li>
 <li>
 <strong><code>itis</code></strong> — Integrated Taxonomic
-Information System (<a href="https://itis.gov/" class="external-link">itis.gov</a>).
+Information System (<a href="https://www.itis.gov/about_itis.html" class="external-link">itis.gov</a>).
 North-American emphasis, strong on vertebrates and vascular plants.</li>
 <li>
 <strong><code>gbif</code></strong> — Global Biodiversity Information
@@ -581,7 +581,12 @@ those objects to exist.</p>
 <span>  overrides <span class="op">=</span> <span class="st">"lab_corrections.csv"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Overrides are applied before any other matching stage, so they always
-take priority.</p>
+take priority. This is useful for corrections that you have already
+reviewed and locked down. For published taxonomy crosswalks, use
+<code><a href="../reference/reconcile_crosswalk_supplement.html">reconcile_crosswalk_supplement()</a></code> when you want the
+crosswalk to add matches only after the baseline cascade has protected
+exact and normalised matches. Use <code>one_to_one_only = TRUE</code>
+for automatic rows and review split/lump cases before applying them.</p>
 </div>
 <div class="section level2">
 <h2 id="example-5-multiple-datasets-against-one-tree">Example 5: Multiple datasets against one tree<a class="anchor" aria-label="anchor" href="#example-5-multiple-datasets-against-one-tree"></a>
@@ -688,7 +693,7 @@ phylogenetic comparative methods (and other things). <em>PeerJ</em>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
