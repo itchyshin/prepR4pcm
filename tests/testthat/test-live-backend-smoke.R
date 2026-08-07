@@ -9,13 +9,14 @@
 # claim is verifiable.
 #
 # Skip strategies:
-#   - skip_on_cran()              -- CRAN doesn't get GitHub-only deps
+#   - skip_on_cran()              -- CRAN skips live/network backend tests
 #   - skip_if_not_installed("X")  -- skip when the backend isn't there
 #   - skip_if_offline()           -- some backends touch the network
 
 test_that("LIVE: rtrees + bird returns multiPhylo (n_tree informational)", {
   skip_on_cran()
   skip_if_not_installed("rtrees")
+  skip_if_offline("api.github.com")
   # Three real bird species that are guaranteed to be in the rtrees
   # bird mega-tree (Jetz et al. 2012).
   res <- pr_get_tree(

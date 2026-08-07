@@ -40,10 +40,11 @@ CRAN package \code{rotl}. Universal taxonomic coverage; calls
 then \code{tol_induced_subtree()}.}
 \item{\code{"rtrees"}}{Taxon-specific mega-trees (bird, mammal,
 fish, amphibian, reptile, plant, shark/ray, bee, butterfly)
-via the GitHub package \code{rtrees}
+via the CRAN package \code{rtrees}
 (\url{https://daijiang.github.io/rtrees/}). Requires
 \code{taxon = "<group>"}. Calls \code{get_tree()}. Install
-with \code{pak::pak("daijiang/rtrees")} (GitHub-only).
+with \code{install.packages("rtrees")}. The project website
+links to upstream documentation.
 \strong{Grafting behaviour:} when an input species is not in
 the chosen mega-tree, \code{rtrees::get_tree()} grafts it at
 the genus level (tip suffix \verb{*}) or family level
@@ -61,10 +62,10 @@ and prune the tree to those tip labels. See
 \code{?rtrees::get_tree} for upstream control (\code{scenario}
 \emph{where} a graft is placed, but not \emph{whether}).}
 \item{\code{"clootl"}}{Bird-only phylogenies in current
-Clements taxonomy, via the GitHub package \code{clootl}
+Clements taxonomy, via the CRAN package \code{clootl}
 (\url{https://github.com/eliotmiller/clootl}). Calls
 \code{extractTree()}. Install with
-\code{pak::pak("eliotmiller/clootl")}.}
+\code{install.packages("clootl")}.}
 \item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
 (Rabosky et al. 2018), via the CRAN package \code{fishtree}.
 Calls \code{fishtree_phylogeny()} (single tree) or

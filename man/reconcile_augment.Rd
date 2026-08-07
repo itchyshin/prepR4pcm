@@ -164,8 +164,9 @@ new tip diverged in roughly the same way as its congeners.}
 \code{rtrees::get_tree(tree_by_user = TRUE)}. Uses your tree
 as the backbone and lets \code{rtrees} place each missing
 species using genus / family information from a taxon-specific
-reference tree. Requires \code{taxon} and the GitHub-only
-\code{rtrees} package
+reference tree. Requires \code{taxon} and the CRAN
+\code{rtrees} package (install with
+\code{install.packages("rtrees")})
 (\url{https://daijiang.github.io/rtrees/}). Helpful when the
 genus is absent from your tree but present in \code{rtrees}'
 reference --- which the internal mode would skip.}

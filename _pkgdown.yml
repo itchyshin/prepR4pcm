@@ -128,8 +128,8 @@ reference:
     Retrieve a candidate phylogeny for a reconciled species list,
     time-calibrate an existing topology, or format the citations for
     a tree result. Five `pr_get_tree()` backends ship: rotl (CRAN,
-    Open Tree of Life synthesis), rtrees (GitHub, taxon-specific
-    mega-trees), clootl (GitHub, bird Clements taxonomy), fishtree
+    Open Tree of Life synthesis), rtrees (CRAN, taxon-specific
+    mega-trees), clootl (CRAN, bird Clements taxonomy), fishtree
     (CRAN, Rabosky et al. 2018 fish chronogram), and datelife
     (GitHub, Sanchez Reyes et al. 2024 chronogram database).
     Multi-tree support is backend-specific: fishtree and datelife

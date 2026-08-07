@@ -326,6 +326,79 @@ test_that("M4: zero-branch trees still produce augmented tree", {
 #   8. Missing rtrees package errors helpfully (via the real helper)
 
 
+test_that("rtrees augmentation parses exact, genus, family, and skipped placements", {
+  backbone <- ape::read.tree(text = "(Backbone_species:1,Other_species:1);")
+  marked_tree <- ape::read.tree(
+    text = "(Backbone_species:1,Exact_species:1,Genus_species*:1,Family_species**:1);"
+  )
+  requested <- c(
+    "Exact species", "Genus species", "Family species", "Skipped species"
+  )
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) TRUE,
+    .package = "base"
+  )
+  testthat::local_mocked_bindings(
+    .pr_rtrees_get_tree = function(...) marked_tree,
+    .package = "prepR4pcm"
+  )
+
+  res <- prepR4pcm:::.pr_augment_rtrees(requested, backbone, taxon = "bird")
+
+  expect_identical(res$tree$tip.label, marked_tree$tip.label)
+  expect_identical(
+    names(res$augmented),
+    c("species", "genus", "placed_near", "branch_length", "method", "n_congeners")
+  )
+  expect_type(res$augmented$species, "character")
+  expect_type(res$augmented$genus, "character")
+  expect_type(res$augmented$placed_near, "character")
+  expect_type(res$augmented$branch_length, "double")
+  expect_type(res$augmented$method, "character")
+  expect_type(res$augmented$n_congeners, "integer")
+  expect_equal(
+    res$augmented$placed_near,
+    c(
+      "rtrees: placed at species level",
+      "rtrees: grafted at genus-level node",
+      "rtrees: grafted at family-level node"
+    )
+  )
+  expect_equal(
+    res$augmented$method,
+    c("rtrees/bird/placed", "rtrees/bird/grafted", "rtrees/bird/grafted")
+  )
+  expect_equal(res$skipped$species, "Skipped species")
+  expect_equal(res$backend_meta$n_exact, 1L)
+  expect_equal(res$backend_meta$n_genus_added, 1L)
+  expect_equal(res$backend_meta$n_family_added, 1L)
+  expect_equal(res$backend_meta$n_skipped, 1L)
+  expect_equal(res$backend_meta$n_grafted, 2L)
+})
+
+
+test_that("rtrees augmentation uses the first multiPhylo tree for placement", {
+  backbone <- ape::read.tree(text = "(Backbone_species:1,Other_species:1);")
+  first <- ape::read.tree(text = "(Backbone_species:1,Genus_species*:1);")
+  second <- ape::read.tree(text = "(Backbone_species:1,Genus_species:1);")
+  marked_trees <- structure(list(first, second), class = "multiPhylo")
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) TRUE,
+    .package = "base"
+  )
+  testthat::local_mocked_bindings(
+    .pr_rtrees_get_tree = function(...) marked_trees,
+    .package = "prepR4pcm"
+  )
+
+  res <- prepR4pcm:::.pr_augment_rtrees("Genus species", backbone, taxon = "bird")
+
+  expect_s3_class(res$tree, "multiPhylo")
+  expect_equal(res$augmented$placed_near, "rtrees: grafted at genus-level node")
+  expect_equal(res$backend_meta$n_returned, 2L)
+})
+
+
 test_that("source = 'rtrees' dispatches to the rtrees helper", {
   setup <- make_test_setup()
   seen_taxon <- NA

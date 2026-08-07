@@ -45,10 +45,11 @@
 #'       then \code{tol_induced_subtree()}.}
 #'     \item{\code{"rtrees"}}{Taxon-specific mega-trees (bird, mammal,
 #'       fish, amphibian, reptile, plant, shark/ray, bee, butterfly)
-#'       via the GitHub package \code{rtrees}
+#'       via the CRAN package \code{rtrees}
 #'       (\url{https://daijiang.github.io/rtrees/}). Requires
 #'       \code{taxon = "<group>"}. Calls \code{get_tree()}. Install
-#'       with \code{pak::pak("daijiang/rtrees")} (GitHub-only).
+#'       with \code{install.packages("rtrees")}. The project website
+#'       links to upstream documentation.
 #'       \strong{Grafting behaviour:} when an input species is not in
 #'       the chosen mega-tree, \code{rtrees::get_tree()} grafts it at
 #'       the genus level (tip suffix \verb{*}) or family level
@@ -66,10 +67,10 @@
 #'       \code{?rtrees::get_tree} for upstream control (\code{scenario}
 #'       \emph{where} a graft is placed, but not \emph{whether}).}
 #'     \item{\code{"clootl"}}{Bird-only phylogenies in current
-#'       Clements taxonomy, via the GitHub package \code{clootl}
+#'       Clements taxonomy, via the CRAN package \code{clootl}
 #'       (\url{https://github.com/eliotmiller/clootl}). Calls
 #'       \code{extractTree()}. Install with
-#'       \code{pak::pak("eliotmiller/clootl")}.}
+#'       \code{install.packages("clootl")}.}
 #'     \item{\code{"fishtree"}}{Fish-only time-calibrated phylogeny
 #'       (Rabosky et al. 2018), via the CRAN package \code{fishtree}.
 #'       Calls \code{fishtree_phylogeny()} (single tree) or
@@ -1244,7 +1245,7 @@ pr_get_tree <- function(
     cli::cli_abort(
       c(
         "The {.val clootl} backend requires the {.pkg clootl} package.",
-        "i" = 'Install with: {.code pak::pak("eliotmiller/clootl")} (GitHub-only).',
+        "i" = 'Install with: {.code install.packages("clootl")}.',
         ">" = "See {.url https://github.com/eliotmiller/clootl} for details."
       )
     )
@@ -1349,7 +1350,7 @@ pr_get_tree <- function(
     cli::cli_abort(
       c(
         "The {.val rtrees} backend requires the {.pkg rtrees} package.",
-        "i" = 'Install with: {.code pak::pak("daijiang/rtrees")} (GitHub-only).',
+        "i" = 'Install with: {.code install.packages("rtrees")}.',
         ">" = "See {.url https://daijiang.github.io/rtrees/} for details."
       )
     )
@@ -1377,7 +1378,7 @@ pr_get_tree <- function(
   call_args$taxon <- taxon
   call_args$show_grafted <- TRUE
 
-  tree <- do.call(rtrees::get_tree, call_args)
+  tree <- do.call(.pr_rtrees_get_tree, call_args)
 
   # rtrees returns a phylo when only one source tree was used, and a
   # multiPhylo when many were sampled (e.g. 100 trees from the bird /
@@ -1390,15 +1391,11 @@ pr_get_tree <- function(
     tree$tip.label
   }
 
-  # Determine in_query. rtrees flags grafted tips with suffixes:
-  #   `**` -> grafted at family rank (`family_added`)
-  #   `*`  -> grafted at genus rank (`genus_added`)
-  #   (no suffix) -> exact match
-  # Strip both suffixes for normalised intersection. Order of stripping
-  # matters: `**` first, then `*`, so we never leave a stray `*` behind.
-  ref_tips_clean <- sub("\\*+$", "", ref_tips)
+  # rtrees flags higher-rank grafts with trailing stars. Parse these
+  # markers without changing the labels preserved in the returned tree.
+  tip_info <- .pr_parse_rtrees_tip_labels(ref_tips)
   norm_query <- pr_normalize_names(species)
-  norm_tip <- pr_normalize_names(ref_tips_clean)
+  norm_tip <- pr_normalize_names(tip_info$markerless_label)
   in_query <- norm_query %in% norm_tip
 
   # Per-input placement table (Ayumi #74) ---------------------------
@@ -1408,18 +1405,10 @@ pr_get_tree <- function(
   #   placement_status  one of "exact", "genus_added", "family_added",
   #                     "skipped" (rtrees decided not to graft it),
   #                     "unmatched" (didn't reach rtrees at all)
-  classify_one <- function(tip) {
-    if (grepl("\\*\\*$", tip)) {
-      "family_added"
-    } else if (grepl("\\*$", tip)) {
-      "genus_added"
-    } else {
-      "exact"
-    }
-  }
   # Map each normalised input to the tip (with its marker) it landed on.
   # Use a vector lookup keyed by the *cleaned* (markerless) tip label.
   tip_by_clean <- stats::setNames(ref_tips, norm_tip)
+  status_by_clean <- stats::setNames(tip_info$placement_status, norm_tip)
   placement <- data.frame(
     input_name = species,
     tree_name = unname(tip_by_clean[norm_query]),
@@ -1431,7 +1420,7 @@ pr_get_tree <- function(
           "skipped"
         } else {
           # didn't put it in the tree
-          classify_one(tip_by_clean[[nq]])
+          status_by_clean[[nq]]
         }
       },
       character(1L)
@@ -1448,7 +1437,7 @@ pr_get_tree <- function(
   # If show_grafted = TRUE rtrees flags grafted tips with `*` / `**`.
   # Surface the grafted set so users can see which species were placed
   # on higher-rank stand-ins.
-  grafted_tips <- ref_tips[grepl("\\*+$", ref_tips)]
+  grafted_tips <- ref_tips[tip_info$placement_status != "exact"]
 
   list(
     tree = tree,

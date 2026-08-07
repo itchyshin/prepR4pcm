@@ -4,6 +4,24 @@ pr_namespace_available <- function(package) {
   requireNamespace(package, quietly = TRUE)
 }
 
+.pr_rtrees_get_tree <- function(...) {
+  rtrees::get_tree(...)
+}
+
+.pr_parse_rtrees_tip_labels <- function(tip_labels) {
+  placement_status <- ifelse(
+    grepl("\\*\\*+$", tip_labels),
+    "family_added",
+    ifelse(grepl("\\*+$", tip_labels), "genus_added", "exact")
+  )
+
+  tibble::tibble(
+    tip_label = tip_labels,
+    markerless_label = sub("\\*+$", "", tip_labels),
+    placement_status = placement_status
+  )
+}
+
 
 #' Extract tip labels from a phylogenetic tree
 #'

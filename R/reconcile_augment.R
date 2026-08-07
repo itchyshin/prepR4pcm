@@ -36,8 +36,9 @@
 #'     \code{rtrees::get_tree(tree_by_user = TRUE)}. Uses your tree
 #'     as the backbone and lets \code{rtrees} place each missing
 #'     species using genus / family information from a taxon-specific
-#'     reference tree. Requires \code{taxon} and the GitHub-only
-#'     \code{rtrees} package
+#'     reference tree. Requires \code{taxon} and the CRAN
+#'     \code{rtrees} package (install with
+#'     \code{install.packages("rtrees")})
 #'     (\url{https://daijiang.github.io/rtrees/}). Helpful when the
 #'     genus is absent from your tree but present in \code{rtrees}'
 #'     reference --- which the internal mode would skip.}
@@ -693,7 +694,7 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
   if (!requireNamespace("rtrees", quietly = TRUE)) {
     cli::cli_abort(
       c("{.code source = \"rtrees\"} requires the {.pkg rtrees} package.",
-        "i" = 'Install with: {.code pak::pak("daijiang/rtrees")} (GitHub-only).',
+        "i" = 'Install with: {.code install.packages("rtrees")}.',
         ">" = "See {.url https://daijiang.github.io/rtrees/} for details.")
     )
   }
@@ -708,7 +709,7 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
   # rtrees::get_tree expects sp_list as either character or a data.frame
   # with cols `species`, `genus`, `family`. We pass character; rtrees
   # parses the genus from the binomial.
-  augmented_tree <- rtrees::get_tree(
+  augmented_tree <- .pr_rtrees_get_tree(
     sp_list      = species_to_add,
     tree         = tree,
     taxon        = taxon,
@@ -727,28 +728,38 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
     augmented_tree$tip.label
   }
 
-  # rtrees flags grafted tips with a trailing `*`. Strip it for matching.
-  ref_tips_clean <- sub("\\*$", "", ref_tips)
+  # rtrees flags genus and family grafts with one and two trailing stars.
+  # Keep those labels in the returned tree; use markerless labels only for
+  # matching requested species.
+  tip_info <- .pr_parse_rtrees_tip_labels(ref_tips)
   norm_req <- pr_normalize_names(species_to_add)
-  norm_tip <- pr_normalize_names(ref_tips_clean)
+  norm_tip <- pr_normalize_names(tip_info$markerless_label)
   in_tree  <- norm_req %in% norm_tip
   added_species   <- species_to_add[in_tree]
   skipped_species <- species_to_add[!in_tree]
 
-  # Identify which of our added species were grafted at higher rank.
-  grafted_set   <- grep("\\*$", ref_tips, value = TRUE)
-  grafted_clean <- pr_normalize_names(sub("\\*$", "", grafted_set))
+  # Identify placement rank for every requested species retained in the tree.
+  status_by_clean <- stats::setNames(tip_info$placement_status, norm_tip)
   added_norm    <- pr_normalize_names(added_species)
-  was_grafted   <- added_norm %in% grafted_clean
+  placement_status <- unname(status_by_clean[added_norm])
+  was_grafted <- placement_status != "exact"
+  n_exact <- sum(placement_status == "exact")
+  n_genus_added <- sum(placement_status == "genus_added")
+  n_family_added <- sum(placement_status == "family_added")
+  n_skipped <- length(skipped_species)
 
   augmented <- if (length(added_species) > 0) {
     tibble(
       species       = added_species,
       genus         = pr_extract_genus(added_species),
       placed_near   = ifelse(
-        was_grafted,
-        "rtrees: grafted at higher-rank node",
-        "rtrees: placed at species level"
+        placement_status == "family_added",
+        "rtrees: grafted at family-level node",
+        ifelse(
+          placement_status == "genus_added",
+          "rtrees: grafted at genus-level node",
+          "rtrees: placed at species level"
+        )
       ),
       branch_length = NA_real_,        # rtrees decides
       method        = paste0(
@@ -781,7 +792,11 @@ pr_bind_species <- function(tree, sp_label, congener_tips, where, bl) {
     backend_meta = list(
       backend   = "rtrees",
       taxon     = taxon,
-      n_grafted = length(grafted_set),
+      n_exact = n_exact,
+      n_genus_added = n_genus_added,
+      n_family_added = n_family_added,
+      n_skipped = n_skipped,
+      n_grafted = n_genus_added + n_family_added,
       n_returned = if (is_multi) length(augmented_tree) else 1L
     )
   )
