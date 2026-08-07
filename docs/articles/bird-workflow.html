@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="From Raw Data to PCM: A Complete Bird Trait Workflow">
 </head>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">prepR4pcm</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-06-16 10:10:09</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-08-07 16:30:54</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -344,7 +344,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-06-16 10:10:28</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-08-07 16:31:12</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -460,34 +460,25 @@ example:</p>
 <span><span class="co">#&gt;                    8960                     225                     143 </span></span>
 <span><span class="co">#&gt;          Many BL to 1BT Newly described species </span></span>
 <span><span class="co">#&gt;                    1933                      24</span></span></code></pre></div>
-<p>Convert it to an overrides table and pass it to
-<code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>:</p>
+<p>Crosswalks become override tables. Overrides are applied before the
+matching cascade, so they can preempt exact or normalised matches. For
+automatic use, start with one-to-one rows only and keep split/lump rows
+for manual review:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">overrides</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_crosswalk.html">reconcile_crosswalk</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">result_xw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_crosswalk_supplement.html">reconcile_crosswalk_supplement</a></span><span class="op">(</span></span>
+<span>  <span class="va">result</span>,</span>
 <span>  <span class="va">crosswalk_birdlife_birdtree</span>,</span>
 <span>  from_col <span class="op">=</span> <span class="st">"Species1"</span>,</span>
 <span>  to_col <span class="op">=</span> <span class="st">"Species3"</span>,</span>
-<span>  match_type_col <span class="op">=</span> <span class="st">"Match.type"</span></span>
+<span>  match_type_col <span class="op">=</span> <span class="st">"Match.type"</span>,</span>
+<span>  one_to_one_only <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 1933 many-to-one entries (lumps) included</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> 225 one-to-many entries (splits) included</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Crosswalk: 3039 overrides (8079 identical pairs skipped)</span></span>
 <span></span>
-<span><span class="co"># Re-reconcile with overrides</span></span>
-<span><span class="va">result_xw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
-<span>  x <span class="op">=</span> <span class="va">avonet_subset</span>,</span>
-<span>  tree <span class="op">=</span> <span class="va">tree_jetz</span>,</span>
-<span>  x_species <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>  authority <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  overrides <span class="op">=</span> <span class="va">overrides</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reconciling 919 data names vs 657 tree tips</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Matching 919 x 657 names through 2 stages...</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Stage 1/2: Exact matching...</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Stage 2/2: Normalised matching (68 matched so far)...</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> 2971 overrides could not be applied: 23 already_matched; 2767 name_x_not_in_data; 181 name_y_not_in_target.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> See `result$unused_overrides` for details.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Matched 657/919 data names to tree tips</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="va">result_xw</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">crosswalk_supplement</span><span class="op">$</span><span class="va">n_applied</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"No reviewed one-to-one crosswalk rows add matches in this subset.\n"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; No reviewed one-to-one crosswalk rows add matches in this subset.</span></span>
 <span></span>
 <span><span class="co"># Compare: how many more matches with the crosswalk?</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Without crosswalk: %d matched\n"</span>,</span>
@@ -499,7 +490,9 @@ example:</p>
 <p><strong>When do you need a crosswalk?</strong> Only when your data
 and tree follow different naming authorities <em>and</em> a curated
 mapping exists. For most use cases, the automatic cascade (exact →
-normalised → synonym) is sufficient.</p>
+normalised → synonym) is sufficient. Treat <code>1BL to many BT</code>
+and <code>Many BL to 1BT</code> rows as review candidates, not automatic
+matches.</p>
 <p>You can also build your own overrides manually — it is just a data
 frame with <code>name_x</code>, <code>name_y</code>, and optionally
 <code>user_note</code> columns:</p>
@@ -584,11 +577,6 @@ tree using genus-level placement:</p>
 <span>  seed <span class="op">=</span> <span class="fl">42</span>,                      <span class="co"># for reproducibility</span></span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Tree returned by <span style="color: #0000BB;">"internal"</span> is not strictly ultrametric.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Most PCM methods (PGLS, BM, OU, etc.) assume ultrametric trees.</span></span>
-<span><span class="co">#&gt; → To force: `phytools::force.ultrametric(result$tree)` or</span></span>
-<span><span class="co">#&gt;   `ape::chronos(result$tree)`.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> To suppress this check: pass `check_ultrametric = FALSE`.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Original tips: %d\nAugmented tips: %d\n"</span>,</span>
 <span>            <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">original</span><span class="op">)</span>, <span class="fu">ape</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ape/man/summary.phylo.html" class="external-link">Ntip</a></span><span class="op">(</span><span class="va">aug</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -633,15 +621,17 @@ them.</p>
 </h3>
 <p>Write aligned data, tree, and the full mapping table to disk:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/reconcile_export.html">reconcile_export</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">out_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"prepr4pcm-export"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/reconcile_export.html">reconcile_export</a></span><span class="op">(</span></span>
 <span>  <span class="va">result</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">avonet_subset</span>,</span>
 <span>  tree <span class="op">=</span> <span class="va">tree_jetz</span>,</span>
 <span>  species_col <span class="op">=</span> <span class="st">"Species1"</span>,</span>
-<span>  dir <span class="op">=</span> <span class="st">"output"</span>,</span>
+<span>  dir <span class="op">=</span> <span class="va">out_dir</span>,</span>
 <span>  prefix <span class="op">=</span> <span class="st">"avonet_jetz"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># Writes: avonet_jetz_data.csv, avonet_jetz_tree.nex, avonet_jetz_mapping.csv</span></span></code></pre></div>
+<span><span class="co"># Writes: avonet_jetz_data.csv, avonet_jetz_tree.nex, avonet_jetz_mapping.csv</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">out_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="html-reports">HTML reports<a class="anchor" aria-label="anchor" href="#html-reports"></a>
@@ -650,7 +640,9 @@ them.</p>
 decision. Useful for sharing with collaborators or archiving alongside
 your analysis:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/reconcile_report.html">reconcile_report</a></span><span class="op">(</span><span class="va">result</span>, file <span class="op">=</span> <span class="st">"reconciliation_report.html"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">report_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".html"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/reconcile_report.html">reconcile_report</a></span><span class="op">(</span><span class="va">result</span>, file <span class="op">=</span> <span class="va">report_file</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">report_file</span><span class="op">)</span></span></code></pre></div>
 <p>The report opens in any browser. It begins with the run header,
 match-coverage summary, and a small bar chart of match composition
 (Figure 1). Further down, per-match-type detail tables and the
@@ -776,7 +768,7 @@ modern phylogenetics and evolutionary analyses in R.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
