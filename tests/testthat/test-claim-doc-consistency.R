@@ -66,6 +66,56 @@ test_that("every pr_get_tree(source = ...) value is documented in the Rd help pa
 })
 
 
+test_that("reconcile_augment backend arguments stay complete and version-neutral", {
+  skip_on_cran()
+  root <- skip_if_not_root_accessible()
+  rd_path <- file.path(root, "man", "reconcile_augment.Rd")
+  tree_rd_path <- file.path(root, "man", "pr_get_tree.Rd")
+  if (!all(file.exists(c(rd_path, tree_rd_path)))) {
+    skip("Rd files not found")
+  }
+
+  rd_txt <- paste(readLines(rd_path, warn = FALSE), collapse = "\n")
+  tree_rd_txt <- paste(readLines(tree_rd_path, warn = FALSE), collapse = "\n")
+  sources <- eval(formals(reconcile_augment)$source)
+
+  source_item <- sub(
+    ".*\\\\item\\{source\\}\\{(.*?)\\n\\n\\\\item\\{taxon\\}.*",
+    "\\1",
+    rd_txt,
+    perl = TRUE
+  )
+  taxon_item <- sub(
+    ".*\\\\item\\{taxon\\}\\{(.*?)\\n\\n\\\\item\\{check_ultrametric\\}.*",
+    "\\1",
+    rd_txt,
+    perl = TRUE
+  )
+
+  for (src in sources) {
+    expect_true(
+      grepl(sprintf('"%s"', src), source_item, fixed = TRUE),
+      info = sprintf("source = '%s' missing from reconcile_augment source docs", src)
+    )
+  }
+  for (src in setdiff(sources, "rtrees")) {
+    expect_true(
+      grepl(sprintf('"%s"', src), taxon_item, fixed = TRUE),
+      info = sprintf("taxon docs do not say source = '%s' ignores taxon", src)
+    )
+  }
+
+  expect_false(
+    grepl("rtrees 1.0.4", tree_rd_txt, fixed = TRUE),
+    info = "pr_get_tree docs must not pin grafting semantics to old rtrees 1.0.4"
+  )
+  expect_true(
+    grepl("no exact-only switch", tree_rd_txt, fixed = TRUE),
+    info = "pr_get_tree docs should state the version-neutral exact-only limitation"
+  )
+})
+
+
 test_that("every pr_get_tree(source = ...) backend is in the pkgdown reference index", {
   skip_on_cran()
   root <- skip_if_not_root_accessible()

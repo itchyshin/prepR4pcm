@@ -125,12 +125,13 @@
 #'   argument.)
 #' @param quiet Logical. Suppress progress messages? Default `FALSE`.
 #' @param source A length-1 character vector. Which grafting backend
-#'   to use. One of `"internal"` (default), `"rtrees"`, or
-#'   `"vphylomaker"`. See \dQuote{Choosing a source}.
+#'   to use. One of `"internal"` (default), `"rtrees"`,
+#'   `"vphylomaker"`, or `"uphylomaker"`. See \dQuote{Choosing a source}.
 #' @param taxon A length-1 character vector. Required when
 #'   `source = "rtrees"`. One of `"bird"`, `"mammal"`, `"fish"`,
 #'   `"amphibian"`, `"reptile"`, `"plant"`, `"shark_ray"`, `"bee"`,
-#'   `"butterfly"`. Ignored for `"internal"` and `"vphylomaker"`.
+#'   `"butterfly"`. Ignored for `"internal"`, `"vphylomaker"`, and
+#'   `"uphylomaker"`.
 #' @param check_ultrametric Logical. After grafting, check that the
 #'   result is ultrametric and warn if not. Default `TRUE`. The
 #'   `"rtrees"`, `"vphylomaker"`, and `"uphylomaker"` backends produce

@@ -80,13 +80,14 @@ argument.)}
 \item{quiet}{Logical. Suppress progress messages? Default \code{FALSE}.}
 
 \item{source}{A length-1 character vector. Which grafting backend
-to use. One of \code{"internal"} (default), \code{"rtrees"}, or
-\code{"vphylomaker"}. See \dQuote{Choosing a source}.}
+to use. One of \code{"internal"} (default), \code{"rtrees"},
+\code{"vphylomaker"}, or \code{"uphylomaker"}. See \dQuote{Choosing a source}.}
 
 \item{taxon}{A length-1 character vector. Required when
 \code{source = "rtrees"}. One of \code{"bird"}, \code{"mammal"}, \code{"fish"},
 \code{"amphibian"}, \code{"reptile"}, \code{"plant"}, \code{"shark_ray"}, \code{"bee"},
-\code{"butterfly"}. Ignored for \code{"internal"} and \code{"vphylomaker"}.}
+\code{"butterfly"}. Ignored for \code{"internal"}, \code{"vphylomaker"}, and
+\code{"uphylomaker"}.}
 
 \item{check_ultrametric}{Logical. After grafting, check that the
 result is ultrametric and warn if not. Default \code{TRUE}. The

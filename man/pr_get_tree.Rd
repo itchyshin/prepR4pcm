@@ -55,8 +55,9 @@ tibble with columns \code{input_name}, \code{tree_name},
 \code{placement_status} where \code{placement_status} is one
 of \code{"exact"}, \code{"genus_added"}, \code{"family_added"},
 \code{"skipped"}, or \code{"unmatched"}). The grafting itself
-cannot be disabled at the wrapper level (rtrees 1.0.4 has no
-switch); to exclude grafted tips from a downstream analysis,
+cannot be disabled at the wrapper level:
+\code{rtrees::get_tree()} has no exact-only switch. To exclude
+grafted tips from a downstream analysis,
 filter the placement table on \code{placement_status == "exact"}
 and prune the tree to those tip labels. See
 \code{?rtrees::get_tree} for upstream control (\code{scenario}
