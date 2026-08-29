@@ -39,10 +39,10 @@ review), \code{"unresolved"}, or --- when
 \code{include_unused_overrides = TRUE} --- \code{"override_unused"}
 (override row not applied because of missing names or prior
 matches).}
-\item{\code{match_score}}{Numeric in [0, 1]. \code{1} for
-exact/normalized/synonym/manual matches; a genus-weighted
-Levenshtein score for fuzzy matches; \code{NA} for unresolved and
-for unused-override rows.}
+\item{\code{match_score}}{Numeric in [0, 1]. \code{1} for exact,
+normalized, and manual matches; \code{0.95} for synonym matches; a
+genus-weighted Levenshtein score for fuzzy matches; \code{NA} for
+unresolved and unused-override rows.}
 \item{\code{match_source}}{Where the match came from: \code{"exact"},
 \code{"normalisation"}, the taxadb authority code (e.g. \code{"col"}),
 \code{"fuzzy"}, or \code{"user_override"}.}

@@ -249,8 +249,9 @@ synonym stage.</li>
 name (see <em>Understanding match types</em> below).</li>
 <li>
 <code>match_score</code> — confidence on <code>[0, 1]</code>
-(<code>1</code> for exact / normalised / synonym / manual;
-<code>&lt; 1</code> for fuzzy / flagged).</li>
+(<code>1</code> for exact, normalised, and manual matches;
+<code>0.95</code> for synonym matches; a genus-weighted Levenshtein
+score for fuzzy matches).</li>
 <li>
 <code>in_x</code>, <code>in_y</code> — logical: was this name in the
 data, in the tree, or both?</li>

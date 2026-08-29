@@ -107,10 +107,10 @@ review), <code>"unresolved"</code>, or — when
 matches).</p></dd>
 
 <dt><code>match_score</code></dt>
-<dd><p>Numeric in [0, 1]. <code>1</code> for
-exact/normalized/synonym/manual matches; a genus-weighted
-Levenshtein score for fuzzy matches; <code>NA</code> for unresolved and
-for unused-override rows.</p></dd>
+<dd><p>Numeric in [0, 1]. <code>1</code> for exact,
+normalized, and manual matches; <code>0.95</code> for synonym matches; a
+genus-weighted Levenshtein score for fuzzy matches; <code>NA</code> for
+unresolved and unused-override rows.</p></dd>
 
 <dt><code>match_source</code></dt>
 <dd><p>Where the match came from: <code>"exact"</code>,
