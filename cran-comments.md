@@ -1,39 +1,25 @@
 ## Submission
 
-This is a patch update from the CRAN release `prepR4pcm` 1.0.0. A 1.0.1
-upload made in July 2026 was not published; version 1.0.2 supersedes that
-upload.
+This is a documentation-only patch update from the CRAN release
+`prepR4pcm` 1.0.2.
 
 This update:
 
-* fixes `reconcile_augment(source = "rtrees")` so family-level grafts marked
-  with `**` are counted as augmented rather than skipped;
-* retains exact, genus-level, and family-level placement information while
-  preserving the existing result columns;
-* adds regression tests for exact, `*`, `**`, skipped, and multi-tree cases;
-* adds a safer post-baseline taxonomy-crosswalk workflow and clearer
-  split/lump safeguards; and
-* updates installation guidance now that `rtrees` and `clootl` are available
-  from CRAN.
+* corrects the documented synonym-stage `match_score` from `1` to `0.95`,
+  matching the existing implementation; and
+* adds a regression assertion for the documented score.
 
-## R CMD check results
+There are no changes to matching behaviour or the public API.
 
-The exact source tarball was checked with all declared Suggests available:
+## Pre-release checks
 
-    0 errors | 0 warnings | 0 notes
+Source checks run on 2026-08-29:
 
-Additional checks:
+* full `testthat` suite — 0 failures; and
+* `pkgdown::check_pkgdown()` — no problems found.
 
-* full `testthat` suite — 0 failures;
-* `urlchecker::url_check()` — all 45 URLs correct;
-* `pkgdown::check_pkgdown()` — no problems found;
-* clean temporary-library install and load — passed; and
-* tarball inventory and forbidden-path scan — passed.
-
-## Test environments
-
-* local macOS Tahoe 26.6 (aarch64), R-devel 4.6.0 —
-  `R CMD check --as-cran --run-donttest` with Suggested packages forced.
+The exact frozen tarball and platform matrix will be checked again immediately
+before submission, and this section will be replaced with those results.
 
 ## Downstream dependencies
 
