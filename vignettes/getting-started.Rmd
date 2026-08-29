@@ -143,8 +143,9 @@ What the columns mean:
   `NA` for matches that didn't go through the synonym stage.
 - `match_type` — which stage of the cascade matched the name
   (see *Understanding match types* below).
-- `match_score` — confidence on `[0, 1]` (`1` for exact /
-  normalised / synonym / manual; `< 1` for fuzzy / flagged).
+- `match_score` — confidence on `[0, 1]` (`1` for exact, normalised,
+  and manual matches; `0.95` for synonym matches; a genus-weighted
+  Levenshtein score for fuzzy matches).
 - `in_x`, `in_y` — logical: was this name in the data, in the tree,
   or both?
 - `notes` — human-readable note (e.g. "normalised: lowercased",
