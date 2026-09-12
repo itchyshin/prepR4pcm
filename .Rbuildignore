@@ -23,3 +23,7 @@
 ^prepR4pcm_.*\.pdf$
 ^CLAUDE\.md$
 ^CRAN-SUBMISSION$
+^\.cursor$
+^\.mcp\.json$
+^\.ignore$
+^graft$

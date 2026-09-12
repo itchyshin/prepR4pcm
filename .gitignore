@@ -74,3 +74,6 @@ README.html
 # docs/CLAUDE.html. The project build wrapper also removes its search and
 # sitemap entries so private agent rules do not leak to the public site.
 docs/CLAUDE.html
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
