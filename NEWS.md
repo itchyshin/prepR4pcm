@@ -1,3 +1,7 @@
+# prepR4pcm 1.0.3
+
+* Documentation now reports the synonym-stage match score as `0.95`, matching the existing implementation. No matching behaviour or API changed.
+
 # prepR4pcm 1.0.2
 
 * `reconcile_augment(source = "rtrees")` now correctly distinguishes exact placements from genus (`*`) and family (`**`) grafts, and reports the graft rank in its existing augmentation metadata (#112).

@@ -37,10 +37,10 @@
 #'       `include_unused_overrides = TRUE` --- `"override_unused"`
 #'       (override row not applied because of missing names or prior
 #'       matches).}
-#'     \item{`match_score`}{Numeric in \[0, 1\]. `1` for
-#'       exact/normalized/synonym/manual matches; a genus-weighted
-#'       Levenshtein score for fuzzy matches; `NA` for unresolved and
-#'       for unused-override rows.}
+#'     \item{`match_score`}{Numeric in \[0, 1\]. `1` for exact,
+#'       normalized, and manual matches; `0.95` for synonym matches; a
+#'       genus-weighted Levenshtein score for fuzzy matches; `NA` for
+#'       unresolved and unused-override rows.}
 #'     \item{`match_source`}{Where the match came from: `"exact"`,
 #'       `"normalisation"`, the taxadb authority code (e.g. `"col"`),
 #'       `"fuzzy"`, or `"user_override"`.}

@@ -49,6 +49,7 @@ test_that("M11: both names are synonyms of the same accepted name", {
   expect_equal(nrow(matched), 1L)
   expect_equal(matched$name_x, "Parus caeruleus")
   expect_equal(matched$name_y, "Cyanistes caeruleus")
+  expect_equal(matched$match_score, 0.95)
   expect_equal(matched$match_source, "col_synonym")
 })
 
