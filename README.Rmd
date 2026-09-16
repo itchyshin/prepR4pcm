@@ -182,6 +182,8 @@ rec <- reconcile_tree(
   fuzzy     = TRUE,
   resolve   = "flag"
 )
+# Keep the rendered README stable across rebuilds.
+rec$meta$timestamp <- as.POSIXct("2026-07-05 12:16:43", tz = "UTC")
 rec
 
 # Apply the reconciliation: aligned data + pruned tree
