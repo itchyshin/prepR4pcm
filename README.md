@@ -174,6 +174,8 @@ rec <- reconcile_tree(
 #> ℹ Stage 3/4: Synonym resolution (657 matched so far)...
 #> ℹ Stage 4/4: Fuzzy matching (657 matched so far)...
 #> ✔ Matched 657/919 data names to tree tips
+# Keep the rendered README stable across rebuilds.
+rec$meta$timestamp <- as.POSIXct("2026-07-05 12:16:43", tz = "UTC")
 rec
 #> 
 #> ── Reconciliation: data vs tree ────────────────────────────────────────────────
