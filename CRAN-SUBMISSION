@@ -1,3 +1,9 @@
-Version: 1.0.1
-Date: 2026-07-02 13:50:58 UTC
-SHA: 333d0fbfd758f0fb61c23ef64961431bfaa7a054
+Version: 1.0.3
+Date: 2026-09-17
+Source commit: 17067494a1f343fa4f15a3ca2ddd0386a8948fe7
+SHA-256: b1cc640fe6947e1f4c053f5f38d19a3238157dd254c59912c640fed13d4475e5
+Size: 3564543 bytes
+Inventory: 250 entries; no agent instructions or repository metadata shipped.
+Local CRAN-shaped check: R CMD check --as-cran --run-donttest, Status: OK.
+Platform evidence: GitHub Actions R-CMD-check run 35046084596 passed on the
+identical source tree.
