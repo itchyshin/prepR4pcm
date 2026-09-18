@@ -14,9 +14,9 @@ There are no changes to matching behaviour or the public API.
 ## Pre-release checks
 
 Frozen candidate: `prepR4pcm_1.0.3.tar.gz`, generated from source commit
-`17067494a1f343fa4f15a3ca2ddd0386a8948fe7`.
+`276eca71c94f0681f72a49df27cfe81f29e56ad7`.
 
-* SHA-256: `b1cc640fe6947e1f4c053f5f38d19a3238157dd254c59912c640fed13d4475e5`;
+* SHA-256: `eb41ec2f8aa2eda015f7330ff91beb307b5c73228c3a5a0643a06c2f8f851687`;
 * `R CMD check --as-cran --run-donttest`: 0 errors, 0 warnings, 0 notes;
 * full `testthat` suite: passed within the CRAN-shaped check;
 * package vignettes rebuilt: passed; and
