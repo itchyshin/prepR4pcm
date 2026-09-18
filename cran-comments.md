@@ -13,13 +13,15 @@ There are no changes to matching behaviour or the public API.
 
 ## Pre-release checks
 
-Source checks run on 2026-08-29:
+Frozen candidate: `prepR4pcm_1.0.3.tar.gz`, generated from source commit
+`17067494a1f343fa4f15a3ca2ddd0386a8948fe7`.
 
-* full `testthat` suite — 0 failures; and
-* `pkgdown::check_pkgdown()` — no problems found.
-
-The exact frozen tarball and platform matrix will be checked again immediately
-before submission, and this section will be replaced with those results.
+* SHA-256: `b1cc640fe6947e1f4c053f5f38d19a3238157dd254c59912c640fed13d4475e5`;
+* `R CMD check --as-cran --run-donttest`: 0 errors, 0 warnings, 0 notes;
+* full `testthat` suite: passed within the CRAN-shaped check;
+* package vignettes rebuilt: passed; and
+* tarball inventory: 250 entries; agent instructions and repository metadata
+  excluded.
 
 ## Downstream dependencies
 
