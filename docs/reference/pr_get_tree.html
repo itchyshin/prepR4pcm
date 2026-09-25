@@ -120,7 +120,7 @@ via the CRAN package <code>rtrees</code>
 with <code>install.packages("rtrees")</code>. The project website
 links to upstream documentation.
 <strong>Grafting behaviour:</strong> when an input species is not in
-the chosen mega-tree, <code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> grafts it at
+the chosen mega-tree, <code>rtrees::get_tree()</code> grafts it at
 the genus level (tip suffix <code>*</code>) or family level
 (<code>**</code>); if no co-family species is in the mega-tree, the
 species is dropped. The placement of every input species is
@@ -130,11 +130,11 @@ tibble with columns <code>input_name</code>, <code>tree_name</code>,
 of <code>"exact"</code>, <code>"genus_added"</code>, <code>"family_added"</code>,
 <code>"skipped"</code>, or <code>"unmatched"</code>). The grafting itself
 cannot be disabled at the wrapper level:
-<code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> has no exact-only switch. To exclude
+<code>rtrees::get_tree()</code> has no exact-only switch. To exclude
 grafted tips from a downstream analysis,
 filter the placement table on <code>placement_status == "exact"</code>
 and prune the tree to those tip labels. See
-<code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">?rtrees::get_tree</a></code> for upstream control (<code>scenario</code>
+<code>?rtrees::get_tree</code> for upstream control (<code>scenario</code>
 <em>where</em> a graft is placed, but not <em>whether</em>).</p></dd>
 
 <dt><code>"clootl"</code></dt>
@@ -201,7 +201,7 @@ one-shot warning is emitted if <code>n_tree &gt; 1</code>.</p></dd>
 
 <dt><code>"rtrees"</code></dt>
 <dd><p><strong><code>n_tree</code> is informational only here.</strong>
-<code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> does not have an <code>n_tree</code> argument;
+<code>rtrees::get_tree()</code> does not have an <code>n_tree</code> argument;
 the multi-tree count is fixed by which mega-tree was
 selected. Reference trees rtrees uses internally:
 birds = Jetz et al. 2012
@@ -216,7 +216,7 @@ for 100 bee trees instead of the single ML tree).
 Requires <code>taxon</code>.</p></dd>
 
 <dt><code>"clootl"</code></dt>
-<dd><p><code>n_tree = 1</code> calls <code><a href="https://rdrr.io/pkg/clootl/man/extractTree.html" class="external-link">clootl::extractTree()</a></code>
+<dd><p><code>n_tree = 1</code> calls <code>clootl::extractTree()</code>
 and works out of the box with the v1.6 / 2025 taxonomy
 bundled in the <code>clootl</code> package. <code>n_tree &gt; 1</code> calls
 <code>clootl::sampleTrees(count = n_tree)</code> (capped at 100

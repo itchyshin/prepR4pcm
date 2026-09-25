@@ -124,9 +124,9 @@ backends via <code>pak</code>:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pr_get_tree_status.html">pr_get_tree_status</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     source installed version needs_network reachable</span></span>
 <span><span class="co">#&gt; 1     rotl      TRUE   3.1.1          TRUE        NA</span></span>
-<span><span class="co">#&gt; 2   rtrees      TRUE   2.0.2         FALSE        NA</span></span>
-<span><span class="co">#&gt; 3   clootl      TRUE   0.1.4         FALSE        NA</span></span>
-<span><span class="co">#&gt; 4 fishtree      TRUE   0.3.4          TRUE        NA</span></span>
+<span><span class="co">#&gt; 2   rtrees     FALSE    &lt;NA&gt;         FALSE        NA</span></span>
+<span><span class="co">#&gt; 3   clootl     FALSE    &lt;NA&gt;         FALSE        NA</span></span>
+<span><span class="co">#&gt; 4 fishtree     FALSE    &lt;NA&gt;          TRUE        NA</span></span>
 <span><span class="co">#&gt; 5 datelife     FALSE    &lt;NA&gt;         FALSE        NA</span></span>
 <span><span class="co">#&gt;                       install_hint                  source_repo</span></span>
 <span><span class="co">#&gt; 1         install.packages("rotl")                         CRAN</span></span>
@@ -249,7 +249,7 @@ returns 1 tree for taxa with a single mega-tree
 (e.g. <code>taxon = "fish"</code>).</td>
 <td>
 <code>n_tree</code> is <strong>informational only</strong> —
-<code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> has no <code>n_tree</code> argument, so
+<code>rtrees::get_tree()</code> has no <code>n_tree</code> argument, so
 the count is fixed by the chosen mega-tree.</td>
 </tr>
 <tr class="odd">
@@ -257,7 +257,7 @@ the count is fixed by the chosen mega-tree.</td>
 <td>✅</td>
 <td>❌ unless the AvesData repo is installed (run
 <code>clootl::get_avesdata_repo(".")</code> once).
-<code>n_tree = 1</code> calls <code><a href="https://rdrr.io/pkg/clootl/man/extractTree.html" class="external-link">clootl::extractTree()</a></code> and
+<code>n_tree = 1</code> calls <code>clootl::extractTree()</code> and
 works out of the box; <code>n_tree &gt; 1</code> calls
 <code>clootl::sampleTrees(count = …)</code> and needs AvesData.</td>
 <td>The single-tree path uses the v1.6 / 2025 taxonomy bundled with
@@ -267,7 +267,7 @@ works out of the box; <code>n_tree &gt; 1</code> calls
 <td><code>fishtree</code></td>
 <td>✅</td>
 <td>✅ — <code>n_tree &gt; 1</code> switches to
-<code><a href="https://rdrr.io/pkg/fishtree/man/fishtree_complete_phylogeny.html" class="external-link">fishtree::fishtree_complete_phylogeny()</a></code> and returns the
+<code>fishtree::fishtree_complete_phylogeny()</code> and returns the
 requested count.</td>
 <td>Time-calibrated.</td>
 </tr>

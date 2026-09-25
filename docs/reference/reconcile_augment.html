@@ -187,7 +187,7 @@ that break ultrametricity by construction).</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments forwarded to the chosen backend:
-<code><a href="https://daijiang.github.io/rtrees/reference/get_tree.html" class="external-link">rtrees::get_tree()</a></code> for <code>source = "rtrees"</code> (e.g. <code>scenario</code>,
+<code>rtrees::get_tree()</code> for <code>source = "rtrees"</code> (e.g. <code>scenario</code>,
 <code>n_tree</code>); <code>V.PhyloMaker2::phylo.maker()</code> for
 <code>source = "vphylomaker"</code> (e.g. <code>scenarios = "S3"</code>,
 <code>nodes.type</code>); <code>U.PhyloMaker::phylo.maker()</code> for
@@ -422,14 +422,6 @@ resulting tree (or <code>multiPhylo</code>) directly via
 <span class="r-in"><span>      <span class="va">aug_rt</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">backend_meta</span><span class="op">$</span><span class="va">n_grafted</span>  <span class="co"># how many at higher rank</span></span></span>
 <span class="r-in"><span>    <span class="op">}</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>The following genus are not in our classification database: A, C</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Are you sure that you specified the right taxon group?</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Not all genus can be found in the phylogeny.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>For user provided phylogeny, without a classification for all genus of species in the phylogeny,</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>               it is unlikely to find the most recent ancestor for genus and family; here we proceed the phylogeny</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>               by adding root information for genus and family that can be found in the phylogeny or species list but</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>               we recommend to prepare the phylogeny using `add_root_info()` with a classification</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>               data frame with all tips first.</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

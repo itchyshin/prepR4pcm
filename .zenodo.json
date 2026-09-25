@@ -1,0 +1,49 @@
+{
+  "creators": [
+    {
+      "name": "Nakagawa, Shinichi",
+      "orcid": "0000-0002-7765-5182"
+    },
+    {
+      "name": "Ortega, Santiago"
+    },
+    {
+      "name": "Mizuno, Ayumi"
+    },
+    {
+      "name": "Santos, Eduardo S.A."
+    },
+    {
+      "name": "Lagisz, Malgorzata",
+      "orcid": "0000-0002-3993-6127"
+    },
+    {
+      "name": "Jain, Bhavya"
+    },
+    {
+      "name": "Celeste, Jimuel Jr"
+    },
+    {
+      "name": "Poo Hernandez, Sergio"
+    }
+  ],
+  "title": "prepR4pcm 1.0.3: An R Package for Preparing Data and Trees for Phylogenetic Comparative Methods",
+  "version": "1.0.3",
+  "upload_type": "software",
+  "description": "Version 1.0.3 of prepR4pcm, the R package for reconciling species names across datasets and phylogenetic trees and retrieving trees for comparative biology workflows. This source archive accompanies Nakagawa et al. (2026), https://doi.org/10.32942/X2468Z.",
+  "license": "mit",
+  "related_identifiers": [
+    {
+      "identifier": "https://doi.org/10.32942/X2468Z",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-article"
+    }
+  ],
+  "keywords": [
+    "phylogenetic comparative methods",
+    "R package",
+    "species name reconciliation",
+    "phylogenetic trees"
+  ],
+  "language": "eng"
+}

@@ -57,7 +57,7 @@ local database.'><meta property="og:image" content="https://itchyshin.github.io/
     <p>Returns the set of authority codes that the package accepts when
 resolving species-name synonyms. Most are served by <span class="pkg">taxadb</span>
 (a local database mirroring the providers documented in
-<code><a href="https://rdrr.io/pkg/taxadb/man/td_create.html" class="external-link">?taxadb::td_create</a></code>); <code>"gnverifier"</code> is the one HTTP-backed
+<code>?taxadb::td_create</code>); <code>"gnverifier"</code> is the one HTTP-backed
 authority, calling the Global Names Architecture
 <a href="https://verifier.globalnames.org/" class="external-link">verifier service</a> instead of a
 local database.</p>
@@ -91,7 +91,7 @@ sequence data.</p></dd>
 <dd><p>Open Tree of Life synthetic taxonomy. Useful when
 your downstream phylogeny is from the Open Tree synthesis. We
 restrict the schema to <code>"dwc"</code> (Darwin Core) when calling
-<code><a href="https://rdrr.io/pkg/taxadb/man/td_create.html" class="external-link">taxadb::td_create()</a></code> because the <code>"common"</code> schema does not
+<code>taxadb::td_create()</code> because the <code>"common"</code> schema does not
 ship for OTT under <span class="pkg">taxadb</span> v22.12.</p></dd>
 
 <dt><code>"itis_test"</code></dt>
