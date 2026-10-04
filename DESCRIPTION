@@ -50,6 +50,7 @@ Imports:
 Suggests:
     caper,
     clootl,
+    dbplyr,
     digest,
     dplyr,
     fishtree,

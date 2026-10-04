@@ -128,6 +128,11 @@ pr_ensure_db <- function(authority, db_version = NULL) {
     )
   }
 
+  # dbplyr may be installed but fail to load (e.g. dbplyr 2.6.0 with
+  # dplyr 1.1.4). Check the namespace before taxadb's interactive installer
+  # mistakes that failure for a missing package and repeatedly prompts.
+  .pr_check_dbplyr()
+
   # We restrict to the Darwin Core ("dwc") schema rather than letting
   # taxadb default to schema = c("dwc", "common"). The cascade only
   # consumes scientific names (dwc); the `common` schema (vernacular
@@ -158,6 +163,24 @@ pr_ensure_db <- function(authority, db_version = NULL) {
   )
 
   invisible(authority)
+}
+
+.pr_check_dbplyr <- function(load = loadNamespace) {
+  tryCatch(
+    load("dbplyr"),
+    error = function(e) {
+      cli::cli_abort(
+        c(
+          "Synonym resolution could not load {.pkg dbplyr}.",
+          "x" = conditionMessage(e),
+          "i" = 'Install or update both packages with {.code install.packages(c("dplyr", "dbplyr"))}.',
+          "i" = "Restart R, then retry synonym resolution."
+        ),
+        call = caller_env()
+      )
+    }
+  )
+  invisible(NULL)
 }
 
 
