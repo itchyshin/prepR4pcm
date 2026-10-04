@@ -33,6 +33,11 @@ allowlisted <- c("knitr", "rmarkdown", "testthat", "pkgdown", "spelling")
 # for another Suggests' own dependency chain.
 transitive_suggests <- "piggyback"
 
+# dbplyr uses a tryCatch(loadNamespace()) guard so the original loading
+# error is preserved. test-dbplyr-load.R exercises missing/unloadable
+# namespaces and verifies the check runs before taxadb database setup.
+namespace_guarded_suggests <- "dbplyr"
+
 
 .find_root_with_dirs <- function(dirs) {
   cands <- c(
@@ -85,7 +90,8 @@ test_that("every Suggests package is conditionally guarded", {
   vig_blob <- read_all(vig_files)
 
   for (pkg in pkgs) {
-    if (pkg %in% allowlisted || pkg %in% transitive_suggests) next
+    if (pkg %in% allowlisted || pkg %in% transitive_suggests ||
+        pkg %in% namespace_guarded_suggests) next
 
     in_r        <- grepl(paste0("\\b", pkg, "::"), r_blob, perl = TRUE) ||
                    grepl(paste0("requireNamespace\\(\\s*[\"']", pkg, "[\"']"),
