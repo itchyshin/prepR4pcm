@@ -39,7 +39,9 @@ recommended --- future you will want to know why this decision was
 made.}
 }
 \value{
-An updated \link{reconciliation} object. The existing row for
+An updated \link{reconciliation} object. Unknown or ambiguous source
+names, absent target names, and targets assigned to another source raise
+an error before the mapping or override log is changed. The existing row for
 \code{name_x} is replaced with one whose \code{match_type} is \code{"manual"} and
 \code{match_source} is \code{"user_override"}.
 }
@@ -66,16 +68,15 @@ data(tree_jetz)
 rec <- reconcile_tree(avonet_subset, tree_jetz,
                       x_species = "Species1", authority = NULL)
 
-# Pick an unresolved species and hand-assign it for illustration
-unresolved <- reconcile_mapping(rec)
-unresolved <- unresolved[unresolved$match_type == "unresolved" &
-                           unresolved$in_x, ]
-if (nrow(unresolved) > 0) {
+# Record acceptance of an existing match after reviewing it
+matched <- reconcile_mapping(rec)
+matched <- matched[matched$in_x & matched$in_y, ]
+if (nrow(matched) > 0) {
   rec <- reconcile_override(
     rec,
-    name_x = unresolved$name_x[1],
-    name_y = tree_jetz$tip.label[1],
-    note   = "Demo: manual assignment"
+    name_x = matched$name_x[1],
+    name_y = matched$name_y[1],
+    note   = "Reviewed existing match"
   )
 }
 

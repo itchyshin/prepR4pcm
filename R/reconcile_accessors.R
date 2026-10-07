@@ -143,7 +143,9 @@ reconcile_mapping <- function(reconciliation, include_unused_overrides = FALSE) 
 #'   recommended --- future you will want to know why this decision was
 #'   made.
 #'
-#' @return An updated [reconciliation] object. The existing row for
+#' @return An updated [reconciliation] object. Unknown or ambiguous source
+#'   names, absent target names, and targets assigned to another source raise
+#'   an error before the mapping or override log is changed. The existing row for
 #'   `name_x` is replaced with one whose `match_type` is `"manual"` and
 #'   `match_source` is `"user_override"`.
 #'
@@ -158,16 +160,15 @@ reconcile_mapping <- function(reconciliation, include_unused_overrides = FALSE) 
 #' rec <- reconcile_tree(avonet_subset, tree_jetz,
 #'                       x_species = "Species1", authority = NULL)
 #'
-#' # Pick an unresolved species and hand-assign it for illustration
-#' unresolved <- reconcile_mapping(rec)
-#' unresolved <- unresolved[unresolved$match_type == "unresolved" &
-#'                            unresolved$in_x, ]
-#' if (nrow(unresolved) > 0) {
+#' # Record acceptance of an existing match after reviewing it
+#' matched <- reconcile_mapping(rec)
+#' matched <- matched[matched$in_x & matched$in_y, ]
+#' if (nrow(matched) > 0) {
 #'   rec <- reconcile_override(
 #'     rec,
-#'     name_x = unresolved$name_x[1],
-#'     name_y = tree_jetz$tip.label[1],
-#'     note   = "Demo: manual assignment"
+#'     name_x = matched$name_x[1],
+#'     name_y = matched$name_y[1],
+#'     note   = "Reviewed existing match"
 #'   )
 #' }
 #'
@@ -179,6 +180,63 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
   validate_reconciliation(reconciliation)
   action <- match.arg(action)
 
+  validate_scalar_name <- function(value, arg, optional = FALSE) {
+    if (optional && is.null(value)) return(NULL)
+    if (!is.character(value) || length(value) != 1L || is.na(value) ||
+        !nzchar(trimws(value))) {
+      abort(paste0("`", arg, "` must be a single, non-empty name."),
+            call = caller_env())
+    }
+    trimws(value)
+  }
+
+  name_x <- validate_scalar_name(name_x, "name_x")
+  # Rejection has no target; accept the documented NA placeholder as NULL.
+  if (action == "reject" && length(name_y) == 1L &&
+      is.atomic(name_y) && is.na(name_y)) name_y <- NULL
+  name_y <- validate_scalar_name(name_y, "name_y", optional = TRUE)
+  if (!is.character(note) || length(note) != 1L || is.na(note)) {
+    abort("`note` must be a single character value.", call = caller_env())
+  }
+
+  mapping <- reconciliation$mapping
+  rank <- reconciliation$meta$rank %||% "species"
+  if (!rank %in% c("species", "subspecies")) rank <- "species"
+  normalize <- function(x) as.character(pr_normalize_names(x, rank = rank))
+
+  # Resolve names against the actual source inventories. Normalization here
+  # follows the matching cascade, so spaces and underscores identify the same
+  # taxon while the mapping retains the spelling used by each input.
+  x_inventory <- unique(mapping$name_x[mapping$in_x & !is.na(mapping$name_x)])
+  x_idx <- which(normalize(x_inventory) == normalize(name_x))
+  if (length(x_idx) != 1L) {
+    abort(paste0("`name_x` was not found uniquely in source `x`: ", name_x),
+          call = caller_env())
+  }
+  name_x <- x_inventory[[x_idx]]
+
+  if (action %in% c("accept", "replace")) {
+    if (is.null(name_y)) {
+      abort("Must provide `name_y` for 'accept' or 'replace' actions.",
+            call = caller_env())
+    }
+    y_inventory <- unique(mapping$name_y[mapping$in_y & !is.na(mapping$name_y)])
+    y_idx <- which(normalize(y_inventory) == normalize(name_y))
+    if (length(y_idx) != 1L) {
+      abort(paste0("`name_y` was not found uniquely in target `y`: ", name_y),
+            call = caller_env())
+    }
+    name_y <- y_inventory[[y_idx]]
+
+    used_by <- which(mapping$in_x & mapping$in_y &
+                       !is.na(mapping$name_y) & mapping$name_y == name_y &
+                       mapping$name_x != name_x)
+    if (length(used_by) > 0L) {
+      abort(paste0("Target `name_y` is already matched to another source name: ",
+                   name_y), call = caller_env())
+    }
+  }
+
   # Record the override
   new_override <- tibble(
     name_x    = name_x,
@@ -189,17 +247,21 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
   )
   reconciliation$overrides <- rbind(reconciliation$overrides, new_override)
 
-  # Apply the override to the mapping
-  mapping <- reconciliation$mapping
-
   if (action == "accept" || action == "replace") {
-    if (is.null(name_y)) {
-      abort("Must provide `name_y` for 'accept' or 'replace' actions.",
-            call = caller_env())
-    }
+    # Keep the old target in the inventory when a matched source is replaced.
+    old_idx <- which(mapping$name_x == name_x & !is.na(mapping$name_x))
+    old_y <- mapping$name_y[old_idx]
+    mapping <- mapping[!(mapping$name_x == name_x & !is.na(mapping$name_x)), ]
 
-    # Remove any existing row for name_x
-    mapping <- mapping[!(mapping$name_x %in% name_x & !is.na(mapping$name_x)), ]
+    if (length(old_y) > 0L && !is.na(old_y[[1]]) &&
+        !any(mapping$in_y & mapping$name_y == old_y[[1]], na.rm = TRUE)) {
+      mapping <- rbind(mapping, tibble(
+        name_x = NA_character_, name_y = old_y[[1]],
+        name_resolved = NA_character_, match_type = "unresolved",
+        match_score = NA_real_, match_source = NA_character_,
+        in_x = FALSE, in_y = TRUE, notes = "Re-added after replacement"
+      ))
+    }
 
     # Also remove name_y from unresolved y-only rows
     mapping <- mapping[!(mapping$name_y %in% name_y &
@@ -222,7 +284,7 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
   } else if (action == "reject") {
     # Mark the match as unresolved
     idx <- which(mapping$name_x == name_x & !is.na(mapping$name_x))
-    if (length(idx) > 0) {
+    if (length(idx) > 0L) {
       old_y <- mapping$name_y[idx[1]]
       mapping$match_type[idx[1]] <- "unresolved"
       mapping$match_score[idx[1]] <- NA_real_
@@ -232,7 +294,8 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
       mapping$notes[idx[1]] <- paste("Rejected:", note)
 
       # Re-add the y name as unresolved if it was matched
-      if (!is.na(old_y) && !old_y %in% mapping$name_y) {
+      if (!is.na(old_y) &&
+          !any(mapping$in_y & mapping$name_y == old_y, na.rm = TRUE)) {
         mapping <- rbind(mapping, tibble(
           name_x        = NA_character_,
           name_y        = old_y,
@@ -290,6 +353,11 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
 #'   Defaults to `FALSE` (keep everything and just warn). Set to `TRUE`
 #'   when preparing data for an analysis that cannot tolerate mismatches.
 #'
+#' @param include_flagged Logical. Apply low-confidence flagged pairs only
+#'   when `TRUE`, after reviewing them. Defaults to `FALSE`. A warning lists
+#'   the flagged pairs excluded or included. Excluded pairs are treated as
+#'   unresolved: they are pruned only when `drop_unresolved = TRUE`.
+#'
 #' @return A list with two elements:
 #'   \describe{
 #'     \item{`data`}{The aligned data frame (or `NULL` if `data` was
@@ -323,10 +391,29 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
 #' @export
 reconcile_apply <- function(reconciliation, data = NULL, tree = NULL,
                             species_col = NULL,
-                            drop_unresolved = FALSE) {
+                            drop_unresolved = FALSE, include_flagged = FALSE) {
 
   validate_reconciliation(reconciliation)
+  if (!is.logical(include_flagged) || length(include_flagged) != 1L ||
+      is.na(include_flagged)) {
+    abort("`include_flagged` must be TRUE or FALSE.", call = caller_env())
+  }
   mapping <- reconciliation$mapping
+  flagged <- which(mapping$match_type == "flagged" &
+                     mapping$in_x & mapping$in_y)
+  if (length(flagged) > 0L) {
+    pairs <- paste0(mapping$name_x[flagged], " -> ", mapping$name_y[flagged])
+    disposition <- if (include_flagged) "Including" else "Excluding"
+    warn(paste0(disposition, " flagged matches: ", paste(pairs, collapse = "; "),
+                if (!include_flagged) {
+                  ". Review these pairs before using `include_flagged = TRUE`."
+                } else "."))
+    if (!include_flagged) {
+      # Local y-only unresolved rows keep tree pruning and data filtering in sync.
+      mapping$match_type[flagged] <- "unresolved"
+      mapping$in_x[flagged] <- FALSE
+    }
+  }
 
   # Get matched names (in both x and y)
   matched <- mapping[mapping$in_x & mapping$in_y, ]

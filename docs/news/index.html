@@ -42,7 +42,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.3" id="prepr4pcm-103">prepR4pcm 1.0.3<a class="anchor" aria-label="anchor" href="#prepr4pcm-103"></a></h2><p class="text-muted">CRAN release: 2026-09-18</p>
-<ul><li>Documentation now reports the synonym-stage match score as <code>0.95</code>, matching the existing implementation. No matching behaviour or API changed.</li>
+<ul><li><p><code><a href="../reference/reconcile_augment.html">reconcile_augment()</a></code> corrects each new tip to the common root-to-tip depth before adding the next species, preventing negative edges from chained grafts on ultrametric inputs (<a href="https://github.com/itchyshin/prepR4pcm/issues/125" class="external-link">#125</a>).</p></li>
+<li><p><code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> and <code><a href="../reference/reconcile_export.html">reconcile_export()</a></code> exclude flagged matches by default and warn with the affected pairs. Reviewed pairs can be included explicitly with <code>include_flagged = TRUE</code> (<a href="https://github.com/itchyshin/prepR4pcm/issues/126" class="external-link">#126</a>).</p></li>
+<li><p><code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> validates names and rejects absent targets or many-to-one conflicts before changing the mapping; replacement and rejection preserve unmatched target names (<a href="https://github.com/itchyshin/prepR4pcm/issues/127" class="external-link">#127</a>).</p></li>
+<li><p>Documentation now reports the synonym-stage match score as <code>0.95</code>, matching the existing implementation. No matching behaviour or API changed.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.2" id="prepr4pcm-102">prepR4pcm 1.0.2<a class="anchor" aria-label="anchor" href="#prepr4pcm-102"></a></h2><p class="text-muted">CRAN release: 2026-08-25</p>

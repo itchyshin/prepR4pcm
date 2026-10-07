@@ -196,7 +196,7 @@ tree.</li>
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-09-25 06:42:47</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-10-07 10:18:37</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -368,7 +368,7 @@ Here is a toy example:</p>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-09-25 06:42:48</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-10-07 10:18:38</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -455,6 +455,14 @@ Life) to the same accepted name</td>
 </tr>
 </tbody>
 </table>
+<p><code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> and <code><a href="../reference/reconcile_export.html">reconcile_export()</a></code>
+exclude flagged pairs by default and warn with the pairs that need
+review. With <code>drop_unresolved = TRUE</code>, the corresponding data
+rows and tree tips are dropped. Otherwise, they remain under their
+original names. Accept individual pairs with
+<code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> after checking them, or set
+<code>include_flagged = TRUE</code> to include all flagged pairs after
+reviewing the whole list.</p>
 <p>Use
 <code>reconcile_summary(result, detail = "mismatches_only")</code> to
 see only the rows that need attention.</p>

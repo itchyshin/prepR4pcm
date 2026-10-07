@@ -263,6 +263,13 @@ requires:
 | `manual`      | Set by `reconcile_override()` or the `overrides` argument | None — you decided this |
 | `unresolved`  | No match found after all stages | Investigate; use `reconcile_suggest()` for candidates or `reconcile_override()` to document a decision |
 
+`reconcile_apply()` and `reconcile_export()` exclude flagged pairs by default
+and warn with the pairs that need review. With `drop_unresolved = TRUE`,
+the corresponding data rows and tree tips are dropped. Otherwise, they remain
+under their original names. Accept individual pairs with `reconcile_override()`
+after checking them, or set `include_flagged = TRUE` to include all flagged pairs
+after reviewing the whole list.
+
 Use `reconcile_summary(result, detail = "mismatches_only")` to see only
 the rows that need attention.
 

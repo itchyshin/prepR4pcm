@@ -116,7 +116,9 @@ easy comparison.}
 \item{augmented}{A tibble documenting each added species:
 \code{species}, \code{genus}, \code{placed_near} (sister tip / MRCA node /
 \code{rtrees} placement note), \code{branch_length}, \code{method},
-\code{n_congeners}. For \code{source = "rtrees"}, \code{branch_length} and
+\code{n_congeners}. For \code{source = "internal"}, \code{branch_length} is the
+final terminal edge length in the returned tree. For
+\code{source = "rtrees"}, \code{branch_length} and
 \code{n_congeners} are \code{NA} because the backend chooses them.}
 \item{skipped}{A tibble of species that could not be placed,
 with the reason (e.g. "No congener in tree", "rtrees did

@@ -12,7 +12,8 @@ reconcile_export(
   dir = tempfile("prepR4pcm-export-"),
   prefix = "reconciled",
   tree_format = c("nexus", "newick"),
-  drop_unresolved = TRUE
+  drop_unresolved = TRUE,
+  include_flagged = FALSE
 )
 }
 \arguments{
@@ -43,6 +44,9 @@ current working directory unless you explicitly request it.}
 
 \item{drop_unresolved}{Logical. Drops unresolved species when \code{TRUE}.
 Default \code{TRUE}.}
+
+\item{include_flagged}{Logical. Passed to \code{\link[=reconcile_apply]{reconcile_apply()}}. Defaults
+to \code{FALSE}; flagged pairs require review before explicit inclusion.}
 }
 \value{
 A named list of file paths (invisibly):

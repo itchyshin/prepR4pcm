@@ -28,6 +28,9 @@
 #' @param drop_unresolved Logical. Drops unresolved species when `TRUE`.
 #'   Default `TRUE`.
 #'
+#' @param include_flagged Logical. Passed to [reconcile_apply()]. Defaults
+#'   to `FALSE`; flagged pairs require review before explicit inclusion.
+#'
 #' @return A named list of file paths (invisibly):
 #'   `$data` (CSV), `$tree` (Nexus or Newick), `$mapping` (CSV), and
 #'   `$unused_overrides` (CSV; `NULL` when there are no rejected
@@ -59,7 +62,7 @@ reconcile_export <- function(reconciliation, data = NULL, tree = NULL,
                               dir = tempfile("prepR4pcm-export-"),
                               prefix = "reconciled",
                               tree_format = c("nexus", "newick"),
-                              drop_unresolved = TRUE) {
+                              drop_unresolved = TRUE, include_flagged = FALSE) {
 
   validate_reconciliation(reconciliation)
   tree_format <- match.arg(tree_format)
@@ -75,7 +78,8 @@ reconcile_export <- function(reconciliation, data = NULL, tree = NULL,
     data = data,
     tree = tree,
     species_col = species_col,
-    drop_unresolved = drop_unresolved
+    drop_unresolved = drop_unresolved,
+    include_flagged = include_flagged
   )
 
   paths <- list(data = NULL, tree = NULL, mapping = NULL)
