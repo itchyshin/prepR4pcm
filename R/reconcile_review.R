@@ -83,7 +83,8 @@ reconcile_review <- function(reconciliation,
     )
   }
 
-  n_total <- length(review_idx)
+  review_names <- mapping$name_x[review_idx]
+  n_total <- length(review_names)
   if (n_total == 0) {
     cli_alert_info("No matches to review for type = '{type}'.")
     return(reconciliation)
@@ -95,10 +96,12 @@ reconcile_review <- function(reconciliation,
   n_rejected <- 0L
   n_skipped  <- 0L
 
- for (i in seq_len(n_total)) {
+  for (i in seq_len(n_total)) {
     # Re-read mapping each iteration because overrides may mutate it
     mapping <- reconciliation$mapping
-    row <- mapping[review_idx[i], ]
+    idx <- which(!is.na(mapping$name_x) & mapping$in_x &
+                   mapping$name_x == review_names[i])
+    row <- mapping[idx[1], ]
 
     name_x     <- row$name_x
     name_y     <- row$name_y

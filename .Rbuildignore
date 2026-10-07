@@ -28,3 +28,4 @@
 ^\.mcp\.json$
 ^\.ignore$
 ^graft$
+^\.unlazy$

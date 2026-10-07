@@ -1,5 +1,9 @@
 # prepR4pcm 1.0.3
 
+* `reconcile_augment()` corrects each new tip to the common root-to-tip depth before adding the next species, preventing negative edges from chained grafts on ultrametric inputs (#125).
+* `reconcile_apply()` and `reconcile_export()` exclude flagged matches by default and warn with the affected pairs. Reviewed pairs can be included explicitly with `include_flagged = TRUE` (#126).
+* `reconcile_override()` validates names and rejects absent targets or many-to-one conflicts before changing the mapping; replacement and rejection preserve unmatched target names (#127).
+
 * Documentation now reports the synonym-stage match score as `0.95`, matching the existing implementation. No matching behaviour or API changed.
 
 # prepR4pcm 1.0.2

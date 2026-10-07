@@ -9,7 +9,8 @@ reconcile_apply(
   data = NULL,
   tree = NULL,
   species_col = NULL,
-  drop_unresolved = FALSE
+  drop_unresolved = FALSE,
+  include_flagged = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,11 @@ column name explicitly if your data uses a non-standard label.}
 \item{drop_unresolved}{Logical. Drops unmatched rows and tips when \code{TRUE}.
 Defaults to \code{FALSE} (keep everything and just warn). Set to \code{TRUE}
 when preparing data for an analysis that cannot tolerate mismatches.}
+
+\item{include_flagged}{Logical. Apply low-confidence flagged pairs only
+when \code{TRUE}, after reviewing them. Defaults to \code{FALSE}. A warning lists
+the flagged pairs excluded or included. Excluded pairs are treated as
+unresolved: they are pruned only when \code{drop_unresolved = TRUE}.}
 }
 \value{
 A list with two elements:

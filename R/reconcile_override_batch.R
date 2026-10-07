@@ -47,17 +47,16 @@
 #' data(tree_jetz)
 #' result <- reconcile_tree(avonet_subset, tree_jetz,
 #'                          x_species = "Species1", authority = NULL)
-#' # Create a batch of overrides
+#' # Record acceptance of existing matches after reviewing them
+#' matched <- reconcile_mapping(result)
+#' matched <- utils::head(matched[matched$in_x & matched$in_y, ], 2)
 #' batch <- data.frame(
-#'   name_x = reconcile_mapping(result)$name_x[
-#'     reconcile_mapping(result)$match_type == "unresolved" &
-#'     reconcile_mapping(result)$in_x][1:2],
-#'   name_y = tree_jetz$tip.label[1:2],
+#'   name_x = matched$name_x,
+#'   name_y = matched$name_y,
 #'   action = "accept",
-#'   note = "Batch demo",
+#'   note = "Reviewed existing matches",
 #'   stringsAsFactors = FALSE
 #' )
-#' batch <- batch[!is.na(batch$name_x), ]
 #' if (nrow(batch) > 0) {
 #'   result2 <- reconcile_override_batch(result, batch)
 #' }

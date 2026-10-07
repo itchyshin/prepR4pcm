@@ -157,7 +157,9 @@
 #'     \item{augmented}{A tibble documenting each added species:
 #'       `species`, `genus`, `placed_near` (sister tip / MRCA node /
 #'       \code{rtrees} placement note), `branch_length`, `method`,
-#'       `n_congeners`. For `source = "rtrees"`, `branch_length` and
+#'       `n_congeners`. For `source = "internal"`, `branch_length` is the
+#'       final terminal edge length in the returned tree. For
+#'       `source = "rtrees"`, `branch_length` and
 #'       `n_congeners` are `NA` because the backend chooses them.}
 #'     \item{skipped}{A tibble of species that could not be placed,
 #'       with the reason (e.g. "No congener in tree", "rtrees did
@@ -430,6 +432,10 @@ reconcile_augment <- function(reconciliation,
 
   augmented_rows <- list()
   skipped_rows <- list()
+  preserve_ultrametric <- branch_length != "zero" &&
+    !is.null(original_tree$edge.length) &&
+    isTRUE(tryCatch(ape::is.ultrametric(original_tree, tol = 1e-6),
+                    error = function(e) FALSE))
 
   for (i in seq_along(species_to_add)) {
     sp <- species_to_add[i]
@@ -468,6 +474,18 @@ reconcile_augment <- function(reconciliation,
     result <- pr_bind_species(tree, sp_label, congener_tips, where, bl)
     tree <- result$tree
 
+    # Bring this tip to the present before another species can attach to it.
+    # Delaying this adjustment until all grafts are complete lets a later
+    # graft split an overlong provisional edge beyond the present; shortening
+    # the final terminal edges then produces negative branch lengths.
+    if (preserve_ultrametric) {
+      depths <- ape::node.depth.edgelength(tree)
+      target <- max(depths[match(original_tree$tip.label, tree$tip.label)])
+      tip_idx <- match(sp_label, tree$tip.label)
+      edge_idx <- match(tip_idx, tree$edge[, 2])
+      tree$edge.length[edge_idx] <- target - depths[tree$edge[edge_idx, 1]]
+    }
+
     # Incrementally update the genus lookup so subsequent iterations see this tip
     tip_genera[[sp_label]] <- genus
 
@@ -490,6 +508,13 @@ reconcile_augment <- function(reconciliation,
            method = character(), n_congeners = integer())
   }
 
+  # Later grafts can split an earlier graft's terminal edge. Report the
+  # lengths in the returned tree, including those later adjustments.
+  if (nrow(augmented) > 0L && !is.null(tree$edge.length)) {
+    tip_idx <- match(gsub(" ", "_", augmented$species), tree$tip.label)
+    augmented$branch_length <- tree$edge.length[match(tip_idx, tree$edge[, 2])]
+  }
+
   skipped <- if (length(skipped_rows) > 0) {
     do.call(rbind, skipped_rows)
   } else {
@@ -505,33 +530,6 @@ reconcile_augment <- function(reconciliation,
       cli_alert_warning(
         "Skipped species had no congener in the tree. See $skipped for details."
       )
-    }
-  }
-
-  # Preserve ultrametricity. Each new tip's terminal edge is set from
-  # `branch_length` independently of where it attached, so a grafted
-  # tip generally does not land at the present and the tree stops
-  # being ultrametric -- which comparative methods (PGLS, phylogenetic
-  # meta-analysis) require. When the input tree was ultrametric, and
-  # the user did not ask for zero-length (polytomy) grafts, adjust each
-  # grafted tip's terminal edge so it reaches the common root-to-tip
-  # depth. Adjusting one terminal edge moves only that tip, so a single
-  # depth snapshot suffices even for several (or chained) grafts.
-  if (branch_length != "zero" &&
-      nrow(augmented) > 0L &&
-      !is.null(original_tree$edge.length) &&
-      isTRUE(tryCatch(ape::is.ultrametric(original_tree, tol = 1e-6),
-                      error = function(e) FALSE))) {
-    grafted_tips <- setdiff(tree$tip.label, original_tree$tip.label)
-    depths <- ape::node.depth.edgelength(tree)
-    target <- max(depths[match(original_tree$tip.label, tree$tip.label)])
-    for (gt in grafted_tips) {
-      tip_idx  <- match(gt, tree$tip.label)
-      edge_idx <- match(tip_idx, tree$edge[, 2])
-      if (!is.na(edge_idx)) {
-        tree$edge.length[edge_idx] <-
-          tree$edge.length[edge_idx] + (target - depths[tip_idx])
-      }
     }
   }
 
