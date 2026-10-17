@@ -39,8 +39,8 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
   }
 
   # Look up both sets
-  lookup_x <- pr_lookup_authority(unmatched_x, authority, db_version)
-  lookup_y <- pr_lookup_authority(unmatched_y, authority, db_version)
+  lookup_x <- pr_lookup_authority(unmatched_x, authority, db_version, quiet = quiet)
+  lookup_y <- pr_lookup_authority(unmatched_y, authority, db_version, quiet = quiet)
 
   results <- list()
 

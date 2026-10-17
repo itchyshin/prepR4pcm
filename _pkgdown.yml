@@ -122,6 +122,7 @@ reference:
     labels off trees. Useful outside a full reconciliation workflow.
   contents:
   - pr_normalize_names
+  - pr_suggest_gender
   - pr_extract_tips
 
 - title: "Tree retrieval, dating, and citation"

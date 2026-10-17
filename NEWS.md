@@ -1,5 +1,10 @@
 # prepR4pcm 1.0.3
 
+The changes below are GitHub development changes and are not yet on CRAN.
+
+* Authority lookups now query at most 1000 uncached names per batch, show a progress bar and batch counts for large inputs, and cache completed batches. `quiet = TRUE` suppresses progress on both sides of synonym resolution (#135).
+* `pr_suggest_gender()` lists same-genus reference candidates for common `-us/-a/-um` and `-is/-e` epithet endings. Candidates require review; ambiguous alternatives are retained and normalisation does not rewrite taxonomic spellings (#135).
+
 * `reconcile_augment()` corrects each new tip to the common root-to-tip depth before adding the next species, preventing negative edges from chained grafts on ultrametric inputs (#125).
 * `reconcile_apply()` and `reconcile_export()` exclude flagged matches by default and warn with the affected pairs. Reviewed pairs can be included explicitly with `include_flagged = TRUE` (#126).
 * `reconcile_override()` validates names and rejects absent targets or many-to-one conflicts before changing the mapping; replacement and rejection preserve unmatched target names (#127).

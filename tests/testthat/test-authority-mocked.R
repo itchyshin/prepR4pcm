@@ -10,7 +10,7 @@ mock_lookup <- function(table) {
   # `table` is a named character vector: names are inputs, values are
   # accepted names. Inputs not in `table` fall back to `not_found`.
   force(table)
-  function(names, authority = "col", db_version = NULL) {
+  function(names, authority = "col", db_version = NULL, quiet = FALSE) {
     tibble::tibble(
       input         = names,
       accepted_name = unname(table[names]),
@@ -169,7 +169,7 @@ test_that("M11: multiple different authorities are reflected in match_source", {
 
 test_that("M11: authority lookup returning NULL (network error) does not crash", {
   # Simulate upstream taxadb error by having the mock return NULL-like empty
-  null_lookup <- function(names, authority = "col", db_version = NULL) {
+  null_lookup <- function(names, authority = "col", db_version = NULL, quiet = FALSE) {
     tibble::tibble(
       input         = names,
       accepted_name = rep(NA_character_, length(names)),

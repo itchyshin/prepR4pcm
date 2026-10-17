@@ -282,6 +282,44 @@ prepR4pcm can use such an authority to recognise that two
 syntactically different names refer to the same species — the
 "synonym" stage of the matching cascade.
 
+Large authority lookups show an interactive progress bar and batch counts
+for more than 500 uncached names. Each query contains at most 1000 names;
+completed batches are cached for the R session. The count measures names
+processed, including names not found, rather than successful matches.
+`quiet = TRUE` suppresses this progress. An individual database query or
+HTTP request can still take time between updates; database preparation
+and download are separate from name-lookup progress.
+
+### Reviewing grammatical endings
+
+`pr_normalize_names()` cleans formatting but preserves epithet spellings.
+For large plant lists, use `pr_suggest_gender()` to find common ending
+variants already present in your reference:
+
+```{r gender-suggestions}
+pr_suggest_gender("Plant albus", c("Plant alba", "Plant album"))
+```
+
+The helper compares `-us/-a/-um` and `-is/-e` endings within the same genus,
+without a pairwise distance matrix. It retains ambiguous alternatives.
+An ending does not establish grammatical gender or taxonomic identity:
+[nouns and adjectives follow different rules](https://www.iapt-taxon.org/nomen/pages/main/art_23.html).
+Check the candidates against a taxonomic authority before accepting pairs
+with `reconcile_override()` or `reconcile_override_batch()`. No suggestion
+is applied automatically. For example, after creating a reconciliation:
+
+```{r gender-review-workflow, eval=FALSE}
+unresolved <- rec$mapping$name_x[rec$mapping$match_type == "unresolved" &
+                                 rec$mapping$in_x & !rec$mapping$in_y]
+reference <- rec$mapping$name_y[rec$mapping$in_y]
+candidates <- pr_suggest_gender(unresolved, reference)
+# After checking a candidate against an authority, accept it explicitly:
+# rec <- reconcile_override(rec, name_x = "Plant albus",
+#                           name_y = "Plant alba", action = "accept")
+```
+
+### Available authorities
+
 Most authorities below are **databases served by the
 [taxadb](https://docs.ropensci.org/taxadb/) package** (Norman et al.
 2020) — `authority = "col"` tells `prepR4pcm` to look up synonyms

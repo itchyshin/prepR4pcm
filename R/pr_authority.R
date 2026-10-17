@@ -199,10 +199,14 @@ pr_ensure_db <- function(authority, db_version = NULL) {
 #'   `authority = "gnverifier"` (the GNverifier service does not expose
 #'   per-snapshot versions); a non-NULL value emits a single warning.
 #'
+#' @param quiet Logical. Suppress lookup progress when `TRUE`. More than 500
+#'   uncached names show batch counts and an interactive progress bar. Queries
+#'   run in batches of at most 1000 names; completed batches enter the cache.
 #' @return A tibble with columns: `input`, `accepted_name`, `status`,
 #'   `taxon_id`, `authority`.
 #' @keywords internal
-pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
+pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
+                                quiet = FALSE) {
   if (authority != "gnverifier") {
     pr_ensure_db(authority, db_version)
   }
@@ -238,17 +242,38 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL) {
   }
 
   if (length(to_lookup) > 0) {
-    if (authority == "gnverifier") {
-      new_results_df <- .pr_lookup_gnverifier(to_lookup, db_version)
-    } else {
-      new_results_df <- .pr_lookup_taxadb(to_lookup, authority, db_version)
+    # Bounded queries also bound taxadb's per-name result scans and HTTP payloads.
+    # Cache each completed batch so an interruption does not discard all work.
+    n_lookup <- length(to_lookup)
+    show_progress <- !quiet && n_lookup > 500L
+    if (show_progress) {
+      progress <- cli::cli_progress_bar(
+        name = paste(toupper(authority), "lookup"), total = n_lookup,
+        .auto_close = FALSE
+      )
+      completed <- FALSE
+      on.exit(cli::cli_progress_done(id = progress,
+                                    result = if (completed) "done" else "failed"),
+              add = TRUE)
     }
-
-    # Update cache
-    if (!is.null(cached)) {
-      assign(cache_key, rbind(cached, new_results_df), envir = .pr_cache)
-    } else {
-      assign(cache_key, new_results_df, envir = .pr_cache)
+    for (start in seq.int(1L, n_lookup, by = 1000L)) {
+      end <- min(start + 999L, n_lookup)
+      batch <- to_lookup[start:end]
+      if (show_progress) {
+        cli_alert_info("{toupper(authority)} lookup: querying names {start}-{end} of {n_lookup} ({start - 1L} completed; {length(already_done)} cached).")
+      }
+      new_results_df <- if (authority == "gnverifier") {
+        .pr_lookup_gnverifier(batch, if (start == 1L) db_version else NULL)
+      } else {
+        .pr_lookup_taxadb(batch, authority, db_version)
+      }
+      cached <- if (is.null(cached)) new_results_df else rbind(cached, new_results_df)
+      assign(cache_key, cached, envir = .pr_cache)
+      if (show_progress) cli::cli_progress_update(id = progress, set = end)
+    }
+    if (show_progress) {
+      completed <- TRUE
+      cli_alert_info("{toupper(authority)} lookup: {n_lookup} names completed.")
     }
   }
 
