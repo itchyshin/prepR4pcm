@@ -27,7 +27,8 @@ matching stage. Names already present after normalisation are omitted.
 \details{
 Common ending groups \code{-us/-a/-um} and \code{-is/-e} are compared only within
 the same genus. At subspecies rank, the third epithet must also agree
-exactly; only the specific epithet is varied. All candidate reference
+exactly; optional \code{subsp.} / \code{ssp.} markers are accepted and only the
+specific epithet is varied. All candidate reference
 spellings are retained, including ambiguous alternatives.
 
 Endings alone cannot distinguish an adjective from a noun, establish genus

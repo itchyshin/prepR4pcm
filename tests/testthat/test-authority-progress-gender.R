@@ -96,3 +96,14 @@ test_that("taxadb lookups also batch and forward the database version", {
                                     "progress_taxadb_test", quiet = TRUE), NA)
   expect_identical(sizes, c(1000L, 1000L, 1L))
 })
+
+test_that("gender suggestions recognise optional subspecies rank markers", {
+  expect_equal(nrow(pr_suggest_gender("Plant albus subsp. minor",
+                                     "Plant alba subsp. minor", rank = "subspecies")), 1)
+  expect_equal(nrow(pr_suggest_gender("Plant albus ssp. minor",
+                                     "Plant alba minor", rank = "subspecies")), 1)
+  expect_equal(nrow(pr_suggest_gender("Plant albus minor",
+                                     "Plant alba subsp. minor", rank = "subspecies")), 1)
+  expect_equal(nrow(pr_suggest_gender("Plant albus subsp. minor",
+                                     "Plant alba subsp. major", rank = "subspecies")), 0)
+})

@@ -7,7 +7,8 @@
 #' @details
 #' Common ending groups `-us/-a/-um` and `-is/-e` are compared only within
 #' the same genus. At subspecies rank, the third epithet must also agree
-#' exactly; only the specific epithet is varied. All candidate reference
+#' exactly; optional `subsp.` / `ssp.` markers are accepted and only the
+#' specific epithet is varied. All candidate reference
 #' spellings are retained, including ambiguous alternatives.
 #'
 #' Endings alone cannot distinguish an adjective from a noun, establish genus
@@ -47,6 +48,13 @@ pr_suggest_gender <- function(names, reference, rank = c("species", "subspecies"
   if (!length(names) || !length(reference)) return(empty)
   nx <- as.character(pr_normalize_names(names, rank = rank))
   ny <- as.character(pr_normalize_names(reference, rank = rank))
+  if (rank == "subspecies") {
+    # Normalisation canonicalises ssp. to subsp.; marked and unmarked
+    # trinomials describe the same comparison shape. Keep the final epithet.
+    marker <- "^([^ ]+ [^ ]+) subsp\\. ([^ ]+)$"
+    nx <- sub(marker, "\\1 \\2", nx)
+    ny <- sub(marker, "\\1 \\2", ny)
+  }
   parts <- strsplit(nx, " ", fixed = TRUE)
   valid <- lengths(parts) %in% c(2L, 3L) & !nx %in% ny
   idx <- which(valid)
