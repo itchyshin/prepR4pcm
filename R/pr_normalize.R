@@ -68,6 +68,10 @@
 #'   in the form most R users expect. The two spellings are
 #'   equivalent and intentional.
 #'
+#' @details Grammatical endings are not rewritten: text alone cannot determine
+#'   whether an epithet is an adjective or a noun. Use [pr_suggest_gender()]
+#'   with reference names to obtain possible variants for manual review.
+#'
 #' @family name utilities
 #' @seealso [reconcile_data()] and [reconcile_tree()] for the full
 #'   four-stage matching cascade; [pr_extract_tips()] for pulling tip

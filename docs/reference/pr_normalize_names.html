@@ -137,7 +137,10 @@ the Open Tree of Life homonym / rank flags that <code>rotl</code> returns
 <li><p>Standardise case: genus capitalised, epithet lowercase.</p></li>
 <li><p>Strip infraspecific epithets if <code>rank = "species"</code>.</p></li>
 <li><p>Trim whitespace and collapse leftover empty tokens.</p></li>
-</ol></div>
+</ol><p>Grammatical endings are not rewritten: text alone cannot determine
+whether an epithet is an adjective or a noun. Use <code><a href="pr_suggest_gender.html">pr_suggest_gender()</a></code>
+with reference names to obtain possible variants for manual review.</p>
+    </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
     <p>On the spelling: the title and prose use British English
@@ -154,7 +157,8 @@ equivalent and intentional.</p>
 four-stage matching cascade; <code><a href="pr_extract_tips.html">pr_extract_tips()</a></code> for pulling tip
 labels out of a tree prior to normalising them.</p>
 <p>Other name utilities:
-<code><a href="pr_extract_tips.html">pr_extract_tips()</a></code></p></div>
+<code><a href="pr_extract_tips.html">pr_extract_tips()</a></code>,
+<code><a href="pr_suggest_gender.html">pr_suggest_gender()</a></code></p></div>
     </div>
 
     <div class="section level2">

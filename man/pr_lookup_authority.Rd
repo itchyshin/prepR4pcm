@@ -4,7 +4,7 @@
 \alias{pr_lookup_authority}
 \title{Look up names in a taxonomic authority}
 \usage{
-pr_lookup_authority(names, authority = "col", db_version = NULL)
+pr_lookup_authority(names, authority = "col", db_version = NULL, quiet = FALSE)
 }
 \arguments{
 \item{names}{Character vector of scientific names.}
@@ -16,6 +16,10 @@ pr_lookup_authority(names, authority = "col", db_version = NULL)
 \item{db_version}{A length-1 character vector or NULL. Ignored when
 \code{authority = "gnverifier"} (the GNverifier service does not expose
 per-snapshot versions); a non-NULL value emits a single warning.}
+
+\item{quiet}{Logical. Suppress lookup progress when \code{TRUE}. More than 500
+uncached names show batch counts and an interactive progress bar. Queries
+run in batches of at most 1000 names; completed batches enter the cache.}
 }
 \value{
 A tibble with columns: \code{input}, \code{accepted_name}, \code{status},

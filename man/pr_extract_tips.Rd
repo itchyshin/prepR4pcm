@@ -31,6 +31,7 @@ head(pr_extract_tips(tree_jetz))
 joining against a data frame.
 
 Other name utilities:
-\code{\link[=pr_normalize_names]{pr_normalize_names()}}
+\code{\link[=pr_normalize_names]{pr_normalize_names()}},
+\code{\link[=pr_suggest_gender]{pr_suggest_gender()}}
 }
 \concept{name utilities}

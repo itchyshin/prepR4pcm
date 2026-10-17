@@ -72,6 +72,10 @@ the Open Tree of Life homonym / rank flags that \code{rotl} returns
 \item Strip infraspecific epithets if \code{rank = "species"}.
 \item Trim whitespace and collapse leftover empty tokens.
 }
+
+Grammatical endings are not rewritten: text alone cannot determine
+whether an epithet is an adjective or a noun. Use \code{\link[=pr_suggest_gender]{pr_suggest_gender()}}
+with reference names to obtain possible variants for manual review.
 }
 \note{
 On the spelling: the title and prose use British English
@@ -98,6 +102,7 @@ four-stage matching cascade; \code{\link[=pr_extract_tips]{pr_extract_tips()}} f
 labels out of a tree prior to normalising them.
 
 Other name utilities:
-\code{\link[=pr_extract_tips]{pr_extract_tips()}}
+\code{\link[=pr_extract_tips]{pr_extract_tips()}},
+\code{\link[=pr_suggest_gender]{pr_suggest_gender()}}
 }
 \concept{name utilities}
