@@ -4,7 +4,13 @@
 \alias{pr_fuzzy_match}
 \title{Fuzzy-match two sets of species names}
 \usage{
-pr_fuzzy_match(names_x, names_y, threshold = 0.9, rank = "species")
+pr_fuzzy_match(
+  names_x,
+  names_y,
+  threshold = 0.9,
+  rank = "species",
+  quiet = FALSE
+)
 }
 \arguments{
 \item{names_x}{Character vector.}
@@ -14,6 +20,8 @@ pr_fuzzy_match(names_x, names_y, threshold = 0.9, rank = "species")
 \item{threshold}{Numeric (0--1). Minimum similarity score. Default 0.9.}
 
 \item{rank}{Character. \code{"species"} or \code{"subspecies"}.}
+
+\item{quiet}{Logical. Suppress progress messages.}
 }
 \value{
 A tibble with columns: \code{name_x}, \code{name_y}, \code{score}, \code{notes}.

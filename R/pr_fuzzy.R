@@ -16,10 +16,15 @@
 #' @param threshold Numeric (0--1). Minimum similarity score. Default 0.9.
 #' @param rank Character. `"species"` or `"subspecies"`.
 #'
+#' @param quiet Logical. Suppress progress messages.
 #' @return A tibble with columns: `name_x`, `name_y`, `score`, `notes`.
 #' @keywords internal
 pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
-                            rank = "species") {
+                            rank = "species", quiet = FALSE) {
+
+  if (!quiet && length(names_x) >= 1000L) {
+    cli::cli_inform("Preparing fuzzy matching for {length(names_x)} names against {length(names_y)} reference names.")
+  }
 
   # Normalise for comparison
   norm_x <- as.character(pr_normalize_names(names_x, rank = rank))
@@ -66,64 +71,76 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   # Build genus-level index: for each genus in y, store indices
   genus_y_groups <- split(idx_y, py$genus[idx_y])
 
-  # Compute genus edit-distance matrix (unique genera only)
+  # Work one query genus at a time: never allocate the Cartesian genus matrix.
+  # agrep is a conservative substring prefilter; adist below validates the
+  # whole-string edit distance, preserving the original <= 2 rule.
   unique_genus_x <- unique(px$genus[idx_x])
   unique_genus_y <- names(genus_y_groups)
+  groups_x <- split(idx_x, factor(px$genus[idx_x], levels = unique_genus_x))
+  results <- vector("list", length(idx_x))
+  result_count <- 0L
+  completed <- 0L
+  started <- proc.time()[["elapsed"]]
+  last_progress <- started
+  show_progress <- !quiet && length(idx_x) >= 1000L
+  if (show_progress) {
+    cli::cli_inform("Fuzzy matching {length(idx_x)} names against {length(idx_y)} names ({length(unique_genus_x)} query genera).")
+    progress_id <- cli::cli_progress_bar(
+      name = "Fuzzy matching", total = length(idx_x),
+      format = "{cli::pb_name} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} ETA {cli::pb_eta}",
+      clear = FALSE)
+    on.exit(cli::cli_progress_done(id = progress_id), add = TRUE)
+  }
 
-  # Vectorised genus distance: adist can take vectors
-  genus_dist_mat <- utils::adist(unique_genus_x, unique_genus_y)
-
-  # For each x genus, find y genera within 2 edits (allows fuzzy genus match)
-  max_genus_edits <- 2L
-  genus_x_lookup <- stats::setNames(seq_along(unique_genus_x), unique_genus_x)
-
-  results <- list()
-
-  for (ii in seq_along(idx_x)) {
-    i <- idx_x[ii]
-    gx <- px$genus[i]
-    ex <- px$epithet[i]
-    gx_idx <- genus_x_lookup[gx]
-
-    # Find candidate y genera (within max_genus_edits)
-    close_genus_mask <- genus_dist_mat[gx_idx, ] <= max_genus_edits
-    candidate_genera <- unique_genus_y[close_genus_mask]
-
-    if (length(candidate_genera) == 0) next
-
-    # Collect all y indices from candidate genera
+  for (gx in unique_genus_x) {
+    possible <- which(abs(nchar(unique_genus_y) - nchar(gx)) <= 2L)
+    close <- agrep(gx, unique_genus_y[possible], fixed = TRUE,
+                   max.distance = list(all = 2L, insertions = 2L,
+                                       deletions = 2L, substitutions = 2L))
+    possible <- possible[close]
+    gd <- as.numeric(utils::adist(gx, unique_genus_y[possible]))
+    possible <- possible[gd <= 2L]
+    gd <- gd[gd <= 2L]
+    candidate_genera <- unique_genus_y[possible]
     cand_y <- unlist(genus_y_groups[candidate_genera], use.names = FALSE)
-    if (length(cand_y) == 0) next
-
-    # Vectorised epithet distance
+    # Keep genus-alphabetical / original-within-genus ordering for score ties.
+    g_dist <- rep(gd, lengths(genus_y_groups[candidate_genera]))
+    g_maxlen <- pmax(nchar(gx), nchar(py$genus[cand_y]))
+    g_sim <- ifelse(g_maxlen == 0, 1, 1 - g_dist / g_maxlen)
     epithets_y <- py$epithet[cand_y]
-    ep_dists <- utils::adist(ex, epithets_y)[1, ]
-    ep_maxlen <- pmax(nchar(ex), nchar(epithets_y))
-    ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
-
-    # Genus similarity for candidates
-    genera_y <- py$genus[cand_y]
-    g_dists <- utils::adist(gx, genera_y)[1, ]
-    g_maxlen <- pmax(nchar(gx), nchar(genera_y))
-    g_sim <- ifelse(g_maxlen == 0, 1, 1 - g_dists / g_maxlen)
-
-    # Weighted score
-    scores <- 0.6 * g_sim + 0.4 * ep_sim
-
-    best_k <- which.max(scores)
-    best_score <- scores[best_k]
-
-    if (best_score >= threshold) {
-      best_j <- cand_y[best_k]
-      results[[length(results) + 1]] <- tibble(
-        name_x = names_x[i],
-        name_y = names_y[best_j],
-        score  = round(best_score, 4),
-        notes  = sprintf("Fuzzy match (score %.3f): '%s' ~ '%s'",
-                          best_score, norm_x[i], norm_y[best_j])
-      )
+    cache <- new.env(hash = TRUE, parent = emptyenv())
+    for (i in groups_x[[gx]]) {
+      ex <- px$epithet[i]
+      cache_key <- paste0("epithet:", ex)
+      if (length(cand_y)) {
+        if (exists(cache_key, cache, inherits = FALSE)) {
+          best <- get(cache_key, cache, inherits = FALSE)
+        } else {
+          ep_dists <- as.numeric(utils::adist(ex, epithets_y))
+          ep_maxlen <- pmax(nchar(ex), nchar(epithets_y))
+          ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
+          scores <- 0.6 * g_sim + 0.4 * ep_sim
+          best_k <- which.max(scores)
+          best <- c(index = cand_y[best_k], score = scores[best_k])
+          assign(cache_key, best, cache)
+        }
+        if (best[["score"]] >= threshold) {
+          j <- as.integer(best[["index"]])
+          result_count <- result_count + 1L
+          results[[result_count]] <- list(i = i, j = j, score = best[["score"]])
+        }
+      }
+      completed <- completed + 1L
+      now <- proc.time()[["elapsed"]]
+      if (show_progress && (now - last_progress >= 5 || completed == length(idx_x))) {
+        cli::cli_progress_update(id = progress_id, set = completed, force = TRUE)
+        eta <- (now - started) / completed * (length(idx_x) - completed)
+        cli::cli_inform("Fuzzy matching: {completed}/{length(idx_x)} names; ETA {round(eta)} s.")
+        last_progress <- now
+      }
     }
   }
+  results <- results[seq_len(result_count)]
 
   if (length(results) == 0) {
     return(tibble(
@@ -134,5 +151,11 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
     ))
   }
 
-  do.call(rbind, results)
+  i <- vapply(results, `[[`, integer(1), "i")
+  j <- vapply(results, `[[`, integer(1), "j")
+  raw_score <- vapply(results, `[[`, numeric(1), "score")
+  order_x <- order(i)
+  tibble(name_x = names_x[i], name_y = names_y[j], score = round(raw_score, 4),
+         notes = sprintf("Fuzzy match (score %.3f): '%s' ~ '%s'",
+                         raw_score, norm_x[i], norm_y[j]))[order_x, ]
 }

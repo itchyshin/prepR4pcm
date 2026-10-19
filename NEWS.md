@@ -2,6 +2,8 @@
 
 The changes below are GitHub development changes and are not yet on CRAN.
 
+* Reconciliation after authority lookup uses indexed synonym matching and applies match candidates in batches. Fuzzy matching processes one query genus at a time instead of allocating a dense genus distance matrix, while retaining the existing scoring and tie order. Large fuzzy stages show a progress bar and estimated time remaining; `quiet = TRUE` suppresses these updates (#137).
+
 * Authority lookups now query at most 1000 uncached names per batch, show a progress bar and batch counts for large inputs, and cache completed batches. `quiet = TRUE` suppresses progress on both sides of synonym resolution (#135).
 * `pr_suggest_gender()` lists same-genus reference candidates for common `-us/-a/-um` and `-is/-e` epithet endings. Candidates require review; ambiguous alternatives are retained and normalisation does not rewrite taxonomic spellings (#135).
 

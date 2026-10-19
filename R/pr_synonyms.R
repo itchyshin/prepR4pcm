@@ -42,106 +42,85 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
   lookup_x <- pr_lookup_authority(unmatched_x, authority, db_version, quiet = quiet)
   lookup_y <- pr_lookup_authority(unmatched_y, authority, db_version, quiet = quiet)
 
-  results <- list()
-
-  # Strategy 1: x's accepted name matches a name in y directly
-  for (i in seq_len(nrow(lookup_x))) {
-    acc_x <- lookup_x$accepted_name[i]
-    if (is.na(acc_x)) next
-
-    # Does the accepted name of x appear in unmatched_y?
-    match_idx <- which(unmatched_y == acc_x)
-    if (length(match_idx) > 0) {
-      results[[length(results) + 1]] <- tibble(
-        name_x        = lookup_x$input[i],
-        name_y        = unmatched_y[match_idx[1]],
-        name_resolved = acc_x,
-        match_source  = paste0(authority, "_synonym"),
-        notes         = sprintf(
-          "Synonym per %s: '%s' -> accepted '%s'",
-          toupper(authority), lookup_x$input[i], acc_x
-        )
-      )
-    }
-  }
-
-  # Strategy 2: y's accepted name matches a name in x directly
-  for (j in seq_len(nrow(lookup_y))) {
-    acc_y <- lookup_y$accepted_name[j]
-    if (is.na(acc_y)) next
-
-    # Already matched via strategy 1?
-    already_matched_y <- vapply(results, function(r) r$name_y, character(1))
-    if (lookup_y$input[j] %in% already_matched_y) next
-
-    match_idx <- which(unmatched_x == acc_y)
-    if (length(match_idx) > 0) {
-      # Also check this x name wasn't already matched
-      already_matched_x <- vapply(results, function(r) r$name_x, character(1))
-      if (unmatched_x[match_idx[1]] %in% already_matched_x) next
-
-      results[[length(results) + 1]] <- tibble(
-        name_x        = unmatched_x[match_idx[1]],
-        name_y        = lookup_y$input[j],
-        name_resolved = acc_y,
-        match_source  = paste0(authority, "_synonym"),
-        notes         = sprintf(
-          "Synonym per %s: '%s' -> accepted '%s'",
-          toupper(authority), lookup_y$input[j], acc_y
-        )
-      )
-    }
-  }
-
-  # Strategy 3: both resolve to the same accepted name
-  for (i in seq_len(nrow(lookup_x))) {
-    acc_x <- lookup_x$accepted_name[i]
-    if (is.na(acc_x)) next
-
-    # Already matched?
-    already_matched_x <- if (length(results) > 0) {
-      vapply(results, function(r) r$name_x, character(1))
-    } else {
-      character()
-    }
-    if (lookup_x$input[i] %in% already_matched_x) next
-
-    for (j in seq_len(nrow(lookup_y))) {
-      acc_y <- lookup_y$accepted_name[j]
-      if (is.na(acc_y)) next
-
-      already_matched_y <- if (length(results) > 0) {
-        vapply(results, function(r) r$name_y, character(1))
+  if (!quiet) cli_alert_info("Authority lookup complete; matching accepted names...")
+  empty <- tibble(name_x = character(), name_y = character(),
+                  name_resolved = character(), match_source = character(),
+                  notes = character())
+  rows <- list()
+  make_rows <- function(x, y, accepted, indirect = FALSE) {
+    tibble(
+      name_x = x, name_y = y, name_resolved = accepted,
+      match_source = paste0(authority, "_synonym"),
+      notes = if (indirect) {
+        sprintf("Both synonyms per %s: '%s' and '%s' -> accepted '%s'",
+                toupper(authority), x, y, accepted)
       } else {
-        character()
+        sprintf("Synonym per %s: '%s' -> accepted '%s'",
+                toupper(authority), x,
+                accepted)
       }
-      if (lookup_y$input[j] %in% already_matched_y) next
+    )
+  }
 
-      if (acc_x == acc_y) {
-        results[[length(results) + 1]] <- tibble(
-          name_x        = lookup_x$input[i],
-          name_y        = lookup_y$input[j],
-          name_resolved = acc_x,
-          match_source  = paste0(authority, "_synonym"),
-          notes         = sprintf(
-            "Both synonyms per %s: '%s' and '%s' -> accepted '%s'",
-            toupper(authority), lookup_x$input[i], lookup_y$input[j], acc_x
-          )
+  # Keep predecessor priority and order: x->y, then y->x, then shared
+  # accepted names. match() preserves its first-target rule without scans.
+  target_y <- match(lookup_x$accepted_name, unmatched_y)
+  i <- which(!is.na(lookup_x$accepted_name) & !is.na(target_y))
+  used_x <- lookup_x$input[i]
+  used_y <- unmatched_y[target_y[i]]
+  if (length(i)) {
+    rows[[1L]] <- make_rows(used_x, used_y, lookup_x$accepted_name[i])
+  }
+
+  target_x <- match(lookup_y$accepted_name, unmatched_x)
+  j <- which(!is.na(lookup_y$accepted_name) & !is.na(target_x) &
+               !lookup_y$input %in% used_y &
+               !unmatched_x[target_x] %in% used_x)
+  # The reverse strategy consumes each source at its first eligible y.
+  j <- j[!duplicated(unmatched_x[target_x[j]])]
+  if (length(j)) {
+    rx <- unmatched_x[target_x[j]]
+    ry <- lookup_y$input[j]
+    rows[[length(rows) + 1L]] <- tibble(
+      name_x = rx, name_y = ry,
+      name_resolved = lookup_y$accepted_name[j],
+      match_source = paste0(authority, "_synonym"),
+      notes = sprintf("Synonym per %s: '%s' -> accepted '%s'",
+                      toupper(authority), ry, lookup_y$accepted_name[j])
+    )
+    used_x <- c(used_x, rx)
+    used_y <- c(used_y, ry)
+  }
+
+  # Each lookup has one row per unique input. Within each accepted-name
+  # group, pair unused x and y in lookup order, without a Cartesian join.
+  ix <- which(!is.na(lookup_x$accepted_name) & !lookup_x$input %in% used_x)
+  iy <- which(!is.na(lookup_y$accepted_name) & !lookup_y$input %in% used_y)
+  if (length(ix) && length(iy)) {
+    groups <- unique(lookup_y$accepted_name[iy])
+    gy <- match(lookup_y$accepted_name[iy], groups)
+    gx <- match(lookup_x$accepted_name[ix], groups)
+    valid <- which(!is.na(gx))
+    if (length(valid)) {
+      gid <- gx[valid]
+      ordinal <- stats::ave(seq_along(gid), gid, FUN = seq_along)
+      counts <- tabulate(gy, nbins = length(groups))
+      keep <- ordinal <= counts[gid]
+      valid <- valid[keep]
+      gid <- gid[keep]
+      ordinal <- ordinal[keep]
+      starts <- c(1L, utils::head(cumsum(counts), -1L) + 1L)
+      chosen_y <- iy[order(gy, method = "radix")[starts[gid] + ordinal - 1L]]
+      chosen_x <- ix[valid]
+      if (length(chosen_x)) {
+        rows[[length(rows) + 1L]] <- make_rows(
+          lookup_x$input[chosen_x], lookup_y$input[chosen_y],
+          lookup_x$accepted_name[chosen_x], indirect = TRUE
         )
-        break
       }
     }
   }
-
-  if (length(results) == 0) {
-    return(tibble(
-      name_x        = character(),
-      name_y        = character(),
-      name_resolved = character(),
-      match_source  = character(),
-      notes         = character()
-    ))
-  }
-
-  do.call(rbind, results)
+  out <- if (length(rows)) do.call(rbind, rows) else empty
+  if (!quiet) cli_alert_info("Synonym matching complete: {nrow(out)} candidate pairs.")
+  out
 }

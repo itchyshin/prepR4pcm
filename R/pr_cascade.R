@@ -284,44 +284,26 @@ pr_run_cascade <- function(
     )
 
     if (nrow(syn_matches) > 0) {
-      # Map normalised names back to originals
-      lookup_orig_x <- stats::setNames(remaining_x, norm_remaining_x)
-      lookup_orig_y <- stats::setNames(remaining_y, norm_remaining_y)
-
-      for (i in seq_len(nrow(syn_matches))) {
-        orig_x <- lookup_orig_x[syn_matches$name_x[i]]
-        orig_y <- lookup_orig_y[syn_matches$name_y[i]]
-
-        if (
-          !is.na(orig_x) &&
-            !is.na(orig_y) &&
-            !(orig_x %in% matched_x) &&
-            !(orig_y %in% matched_y)
-        ) {
-          # Indirect synonyms (both names required a lookup) are flagged regardless
-          # of score: the chain of inference is longer and warrants manual review.
-          is_indirect <- grepl("^Both synonyms", syn_matches$notes[i])
-          mtype <- if (resolve == "flag" && is_indirect) {
-            "flagged"
-          } else {
-            "synonym"
-          }
-
-          rows[[length(rows) + 1]] <- tibble(
-            name_x = unname(orig_x),
-            name_y = unname(orig_y),
-            name_resolved = syn_matches$name_resolved[i],
-            match_type = mtype,
-            match_score = 0.95,
-            match_source = syn_matches$match_source[i],
-            in_x = TRUE,
-            in_y = TRUE,
-            notes = syn_matches$notes[i]
-          )
-          matched_x <- c(matched_x, unname(orig_x))
-          matched_y <- c(matched_y, unname(orig_y))
-        }
+      # Vectorised first-name lookup preserves the predecessor's handling
+      # of duplicate normalised forms. Empty lookup keys previously missed.
+      orig_x <- remaining_x[match(syn_matches$name_x, norm_remaining_x)]
+      orig_y <- remaining_y[match(syn_matches$name_y, norm_remaining_y)]
+      orig_x[!nzchar(syn_matches$name_x)] <- NA_character_
+      orig_y[!nzchar(syn_matches$name_y)] <- NA_character_
+      take <- .pr_greedy_candidate_rows(orig_x, orig_y, matched_x, matched_y)
+      if (length(take)) {
+        indirect <- grepl("^Both synonyms", syn_matches$notes[take])
+        rows[[length(rows) + 1L]] <- tibble(
+          name_x = orig_x[take], name_y = orig_y[take],
+          name_resolved = syn_matches$name_resolved[take],
+          match_type = ifelse(resolve == "flag" & indirect, "flagged", "synonym"),
+          match_score = 0.95, match_source = syn_matches$match_source[take],
+          in_x = TRUE, in_y = TRUE, notes = syn_matches$notes[take]
+        )
+        matched_x <- c(matched_x, orig_x[take])
+        matched_y <- c(matched_y, orig_y[take])
       }
+
     }
   }
 
@@ -351,37 +333,28 @@ pr_run_cascade <- function(
       remaining_x,
       remaining_y,
       threshold = fuzzy_threshold,
-      rank = rank
+      rank = rank,
+      quiet = quiet
     )
 
     if (nrow(fuzzy_matches) > 0) {
-      for (i in seq_len(nrow(fuzzy_matches))) {
-        fx <- fuzzy_matches$name_x[i]
-        fy <- fuzzy_matches$name_y[i]
-        if (!(fx %in% matched_x) && !(fy %in% matched_y)) {
-          # Flag low-confidence fuzzy matches when resolve = "flag"
-          fscore <- fuzzy_matches$score[i]
-          mtype <- if (resolve == "flag" && fscore < flag_threshold) {
-            "flagged"
-          } else {
-            "fuzzy"
-          }
-
-          rows[[length(rows) + 1]] <- tibble(
-            name_x = fx,
-            name_y = fy,
-            name_resolved = NA_character_,
-            match_type = mtype,
-            match_score = fscore,
-            match_source = "fuzzy_match",
-            in_x = TRUE,
-            in_y = TRUE,
-            notes = fuzzy_matches$notes[i]
-          )
-          matched_x <- c(matched_x, fx)
-          matched_y <- c(matched_y, fy)
-        }
+      take <- .pr_greedy_candidate_rows(fuzzy_matches$name_x,
+                                         fuzzy_matches$name_y,
+                                         matched_x, matched_y)
+      if (length(take)) {
+        fscore <- fuzzy_matches$score[take]
+        rows[[length(rows) + 1L]] <- tibble(
+          name_x = fuzzy_matches$name_x[take],
+          name_y = fuzzy_matches$name_y[take], name_resolved = NA_character_,
+          match_type = ifelse(resolve == "flag" & fscore < flag_threshold,
+                             "flagged", "fuzzy"),
+          match_score = fscore, match_source = "fuzzy_match",
+          in_x = TRUE, in_y = TRUE, notes = fuzzy_matches$notes[take]
+        )
+        matched_x <- c(matched_x, fuzzy_matches$name_x[take])
+        matched_y <- c(matched_y, fuzzy_matches$name_y[take])
       }
+
     }
   }
 
@@ -479,4 +452,25 @@ pr_warn_unused_overrides <- function(unused) {
   )
   cli_alert_info("See {.code result$unused_overrides} for details.")
   invisible(NULL)
+}
+
+# Preserve greedy row-order assignment using integer claims rather than
+# repeatedly scanning growing character vectors and building one-row tibbles.
+.pr_greedy_candidate_rows <- function(x, y, matched_x, matched_y) {
+  eligible <- which(!is.na(x) & !is.na(y) &
+                      !x %in% matched_x & !y %in% matched_y)
+  if (!length(eligible)) return(integer())
+  gx <- match(x[eligible], unique(x[eligible]))
+  gy <- match(y[eligible], unique(y[eligible]))
+  used_x <- rep(FALSE, max(gx))
+  used_y <- rep(FALSE, max(gy))
+  keep <- logical(length(eligible))
+  for (i in seq_along(eligible)) {
+    if (!used_x[gx[i]] && !used_y[gy[i]]) {
+      used_x[gx[i]] <- TRUE
+      used_y[gy[i]] <- TRUE
+      keep[i] <- TRUE
+    }
+  }
+  eligible[keep]
 }
