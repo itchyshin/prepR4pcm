@@ -20,7 +20,8 @@
 #' @return A tibble with columns: `name_x`, `name_y`, `score`, `notes`.
 #' @keywords internal
 pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
-                            rank = "species", quiet = FALSE) {
+                            rank = "species", quiet = FALSE,
+                            identity_x = NULL, identity_y = NULL) {
 
   if (!quiet && length(names_x) >= 1000L) {
     cli::cli_inform("Preparing fuzzy matching for {length(names_x)} names against {length(names_y)} reference names.")
@@ -59,6 +60,13 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   idx_x <- which(valid_x)
   idx_y <- which(valid_y)
 
+  identity_guard <- !is.null(identity_x) || !is.null(identity_y)
+  if (identity_guard && (is.null(identity_x) || is.null(identity_y) ||
+                         nrow(identity_x) != length(names_x) ||
+                         nrow(identity_y) != length(names_y))) {
+    cli::cli_abort("Fuzzy identity evidence must contain one aligned row for every input name.")
+  }
+
   if (length(idx_x) == 0 || length(idx_y) == 0) {
     return(tibble(
       name_x = character(),
@@ -79,6 +87,8 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   groups_x <- split(idx_x, factor(px$genus[idx_x], levels = unique_genus_x))
   results <- vector("list", length(idx_x))
   result_count <- 0L
+  blocked <- list()
+  blocked_count <- 0L
   completed <- 0L
   started <- proc.time()[["elapsed"]]
   last_progress <- started
@@ -113,7 +123,53 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
       ex <- px$epithet[i]
       cache_key <- paste0("epithet:", ex)
       if (length(cand_y)) {
-        if (exists(cache_key, cache, inherits = FALSE)) {
+        if (identity_guard) {
+          ep_dists <- as.numeric(utils::adist(ex, epithets_y))
+          ep_maxlen <- pmax(nchar(ex), nchar(epithets_y))
+          ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
+          scores <- 0.6 * g_sim + 0.4 * ep_sim
+          known_x <- identity_x$identity_status[i] == "known"
+          known_y <- identity_y$identity_status[cand_y] == "known"
+          same_source <- identity_x$provider[i] == identity_y$provider[cand_y] &
+            identity_x$version[i] == identity_y$version[cand_y] &
+            identity_x$rank[i] == identity_y$rank[cand_y]
+          same_id <- !is.na(identity_x$accepted_id[i]) &
+            !is.na(identity_y$accepted_id[cand_y]) &
+            identity_x$accepted_id[i] == identity_y$accepted_id[cand_y]
+          eligible <- known_x & known_y & same_source & same_id
+          above_threshold <- which(scores >= threshold)
+          blocked_idx <- above_threshold[!eligible[above_threshold]]
+          if (length(blocked_idx)) {
+            blocked_count <- blocked_count + 1L
+            blocked[[blocked_count]] <- tibble(
+              name_x = names_x[i], name_y = names_y[cand_y[blocked_idx]],
+              score = round(scores[blocked_idx], 4),
+              identity_state = ifelse(
+                known_x & known_y[blocked_idx] & same_source[blocked_idx],
+                "conflict", "unknown"
+              ),
+              eligible = FALSE,
+              reason = ifelse(
+                known_x & known_y[blocked_idx] & same_source[blocked_idx],
+                "distinct_accepted_ids", "identity_not_established"
+              ),
+              x_id = if (known_x) rep(identity_x$accepted_id[i], length(blocked_idx)) else NA_character_,
+              y_id = ifelse(known_y[blocked_idx],
+                            identity_y$accepted_id[cand_y[blocked_idx]], NA_character_),
+              provider = ifelse(same_source[blocked_idx],
+                                identity_x$provider[i], NA_character_),
+              version = ifelse(same_source[blocked_idx],
+                               identity_x$version[i], NA_character_)
+            )
+          }
+          eligible_idx <- which(eligible & scores >= threshold)
+          if (length(eligible_idx)) {
+            best_k <- eligible_idx[which.max(scores[eligible_idx])]
+            best <- c(index = cand_y[best_k], score = scores[best_k])
+          } else {
+            best <- c(index = NA_real_, score = -Inf)
+          }
+        } else if (exists(cache_key, cache, inherits = FALSE)) {
           best <- get(cache_key, cache, inherits = FALSE)
         } else {
           ep_dists <- as.numeric(utils::adist(ex, epithets_y))
@@ -124,7 +180,7 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           best <- c(index = cand_y[best_k], score = scores[best_k])
           assign(cache_key, best, cache)
         }
-        if (best[["score"]] >= threshold) {
+        if (is.finite(best[["score"]]) && best[["score"]] >= threshold) {
           j <- as.integer(best[["index"]])
           result_count <- result_count + 1L
           results[[result_count]] <- list(i = i, j = j, score = best[["score"]])
@@ -143,19 +199,23 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   results <- results[seq_len(result_count)]
 
   if (length(results) == 0) {
-    return(tibble(
+    out <- tibble(
       name_x = character(),
       name_y = character(),
       score  = numeric(),
       notes  = character()
-    ))
+    )
+    attr(out, "identity_candidates") <- if (length(blocked)) dplyr::bind_rows(blocked) else NULL
+    return(out)
   }
 
   i <- vapply(results, `[[`, integer(1), "i")
   j <- vapply(results, `[[`, integer(1), "j")
   raw_score <- vapply(results, `[[`, numeric(1), "score")
   order_x <- order(i)
-  tibble(name_x = names_x[i], name_y = names_y[j], score = round(raw_score, 4),
-         notes = sprintf("Fuzzy match (score %.3f): '%s' ~ '%s'",
-                         raw_score, norm_x[i], norm_y[j]))[order_x, ]
+  out <- tibble(name_x = names_x[i], name_y = names_y[j], score = round(raw_score, 4),
+                notes = sprintf("Fuzzy match (score %.3f): '%s' ~ '%s'",
+                                raw_score, norm_x[i], norm_y[j]))[order_x, ]
+  attr(out, "identity_candidates") <- if (length(blocked)) dplyr::bind_rows(blocked) else NULL
+  out
 }

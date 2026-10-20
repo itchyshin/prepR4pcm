@@ -34,7 +34,8 @@
 #' @return A named list of file paths (invisibly):
 #'   `$data` (CSV), `$tree` (Nexus or Newick), `$mapping` (CSV), and
 #'   `$unused_overrides` (CSV; `NULL` when there are no rejected
-#'   overrides on the reconciliation).
+#'   overrides on the reconciliation), and `$candidates` (CSV; `NULL` when
+#'   no identity-guard candidates were withheld).
 #'
 #' @family reconciliation functions
 #' @seealso [reconcile_apply()] for in-memory alignment without writing
@@ -132,6 +133,15 @@ reconcile_export <- function(reconciliation, data = NULL, tree = NULL,
     cli_alert_success(
       "Unused overrides written to {.path {path_unused}}"
     )
+  }
+
+  paths$candidates <- NULL
+  candidates <- reconciliation$candidates
+  if (!is.null(candidates) && nrow(candidates) > 0) {
+    path_candidates <- file.path(dir, paste0(prefix, "_candidates.csv"))
+    utils::write.csv(as.data.frame(candidates), path_candidates, row.names = FALSE)
+    paths$candidates <- path_candidates
+    cli_alert_success("Identity candidates written to {.path {path_candidates}}")
   }
 
   invisible(paths)

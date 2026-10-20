@@ -93,6 +93,20 @@ reconcile_summary <- function(reconciliation,
     lines <- c(lines, sprintf("Package: prepR4pcm %s", meta$prepR4pcm_version))
     lines <- c(lines, sprintf("Authority: %s (version: %s)",
                                toupper(meta$authority), meta$db_version))
+    identity_source <- reconciliation$identity_source
+    lines <- c(lines, sprintf("Identity evidence: %s@%s (%s; rank: %s)",
+                               identity_source$provider, identity_source$version,
+                               identity_source$mode %||% "unspecified",
+                               identity_source$rank %||% meta$rank))
+    if (!is.null(identity_source$coverage) && length(identity_source$coverage)) {
+      lines <- c(lines, sprintf("  Covered stages: %s",
+                                 paste(identity_source$coverage, collapse = ", ")))
+    }
+    if (!is.null(identity_source$backbone_fingerprint) &&
+        !is.na(identity_source$backbone_fingerprint)) {
+      lines <- c(lines, sprintf("  Backbone fingerprint: %s",
+                                 identity_source$backbone_fingerprint))
+    }
     lines <- c(lines, sprintf("Rank: %s", meta$rank %||% "species"))
     lines <- c(lines, "")
 
@@ -108,6 +122,14 @@ reconcile_summary <- function(reconciliation,
                      nrow(reconciliation$unused_overrides) else 0L
     if (n_unused_ov > 0) {
       lines <- c(lines, sprintf("  Overrides unused: %d", n_unused_ov))
+    }
+    n_candidates <- if (!is.null(reconciliation$candidates)) {
+      nrow(reconciliation$candidates)
+    } else 0L
+    if (n_candidates > 0) {
+      lines <- c(lines, sprintf("  Identity candidates withheld: %d", n_candidates))
+      reasons <- sort(table(reconciliation$candidates$reason), decreasing = TRUE)
+      lines <- c(lines, paste0("    ", names(reasons), ": ", as.integer(reasons)))
     }
     lines <- c(lines, "")
 
@@ -185,6 +207,22 @@ reconcile_summary <- function(reconciliation,
         }
         if (nrow(unused_ov) > 20) {
           lines <- c(lines, sprintf("  ... and %d more", nrow(unused_ov) - 20))
+        }
+        lines <- c(lines, "")
+      }
+
+      candidates <- reconciliation$candidates
+      if (!is.null(candidates) && nrow(candidates) > 0) {
+        lines <- c(lines, sprintf("--- Identity Candidates Withheld (%d) ---",
+                                  nrow(candidates)))
+        for (i in seq_len(min(nrow(candidates), 20))) {
+          lines <- c(lines, sprintf('  "%s" -> "%s"  [%s; %s@%s]',
+                                     candidates$name_x[i], candidates$name_y[i],
+                                     candidates$reason[i], candidates$provider[i],
+                                     candidates$version[i]))
+        }
+        if (nrow(candidates) > 20) {
+          lines <- c(lines, sprintf("  ... and %d more", nrow(candidates) - 20))
         }
         lines <- c(lines, "")
       }

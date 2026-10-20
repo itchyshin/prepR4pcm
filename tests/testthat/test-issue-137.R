@@ -46,7 +46,13 @@ test_that("applying many synonym candidates does not build one tibble per pair",
   y<-paste('Genusb',paste0('name',seq_len(n)))
   accepted<-setNames(c(y,y),c(x,y))
   testthat::local_mocked_bindings(pr_lookup_authority=function(names,authority,db_version,quiet=FALSE) {
-    tibble::tibble(input=names,accepted_name=unname(accepted[names]))
+    accepted_name <- unname(accepted[names])
+    status <- ifelse(is.na(accepted_name) | !nzchar(accepted_name), "not_found",
+                     ifelse(accepted_name == names, "accepted", "synonym"))
+    taxon_id <- ifelse(status %in% c("accepted", "synonym"),
+                       paste0("COL:", accepted_name), NA_character_)
+    tibble::tibble(input=names,accepted_name=accepted_name,status=status,
+                   taxon_id=taxon_id)
   }, .package='prepR4pcm')
   setTimeLimit(elapsed=5,transient=TRUE)
   on.exit(setTimeLimit(cpu=Inf,elapsed=Inf,transient=FALSE),add=TRUE)
@@ -56,21 +62,23 @@ test_that("applying many synonym candidates does not build one tibble per pair",
   expect_true(all(out$match_type=='synonym'))
 })
 
-test_that("cascade preserves predecessor greedy assignment and audit fields", {
-  legacy<-eval(parse(test_path('fixtures','issue137-legacy-cascade.R')))
-  legacy_fuzzy<-eval(parse(test_path('fixtures','issue137-legacy-fuzzy.R')))
-  environment(legacy_fuzzy)<-asNamespace('prepR4pcm')
-  environment(legacy)<-list2env(list(pr_fuzzy_match=legacy_fuzzy),parent=asNamespace('prepR4pcm'))
-  accepted<-NULL
+test_that("cascade retains supported shared-synonym pairs with identity evidence", {
+  x <- c("Genusa name1", "Genusa name2")
+  y <- c("Genusb name1", "Genusb name2")
+  accepted <- setNames(c("Accepted one", "Accepted two",
+                         "Accepted one", "Accepted two"), c(x, y))
   testthat::local_mocked_bindings(pr_lookup_authority=function(names,authority,db_version,quiet=FALSE) {
-    tibble::tibble(input=names,accepted_name=unname(accepted[names]))
+    accepted_name <- unname(accepted[names])
+    status <- ifelse(accepted_name == names, "accepted", "synonym")
+    tibble::tibble(input=names,accepted_name=accepted_name,status=status,
+                   taxon_id=paste0("COL:",accepted_name))
   },.package='prepR4pcm')
-  set.seed(137)
-  for(i in seq_len(10)) {
-    x<-paste('Genusa',paste0('name',1:20)); y<-paste('Genusb',paste0('name',1:15))
-    pool<-c(x,y,paste('Accepted',1:10),NA_character_)
-    accepted<-setNames(sample(pool,length(c(x,y)),replace=TRUE),c(x,y))
-    expect_identical(pr_run_cascade(x,y,fuzzy=TRUE,quiet=TRUE),
-                     legacy(x,y,fuzzy=TRUE,quiet=TRUE))
-  }
+
+  out <- pr_run_cascade(x, y, fuzzy=TRUE, quiet=TRUE)
+  matched <- out[out$in_x & out$in_y, , drop=FALSE]
+  expect_equal(nrow(matched), 2L)
+  expect_true(all(matched$match_type == "flagged"))
+  expect_setequal(paste(matched$name_x, matched$name_y),
+                  c("Genusa name1 Genusb name1", "Genusa name2 Genusb name2"))
+  expect_equal(nrow(attr(out, "identity_candidates")), 0L)
 })

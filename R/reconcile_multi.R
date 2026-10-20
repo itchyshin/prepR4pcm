@@ -46,7 +46,8 @@ reconcile_multi <- function(datasets, tree,
                             fuzzy = FALSE,
                             fuzzy_threshold = 0.9,
                             resolve = c("flag", "first"),
-                            quiet = FALSE) {
+                            quiet = FALSE,
+                            backbone = NULL) {
 
   rank <- match.arg(rank)
   resolve <- match.arg(resolve)
@@ -136,7 +137,8 @@ reconcile_multi <- function(datasets, tree,
     fuzzy_threshold = fuzzy_threshold,
     resolve         = resolve,
     multi_x         = TRUE,
-    quiet           = quiet
+    quiet           = quiet,
+    backbone        = backbone
   )
 
   # Add one logical `in_<dataset>` column per input dataset, indicating

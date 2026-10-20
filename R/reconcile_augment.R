@@ -164,7 +164,11 @@
 #'     \item{skipped}{A tibble of species that could not be placed,
 #'       with the reason (e.g. "No congener in tree", "rtrees did
 #'       not place this species").}
-#'     \item{meta}{Provenance metadata: source, placement strategy,
+#'     \item{candidates}{Identity candidates withheld during
+#'       reconciliation, retained so augmentation does not discard the
+#'       reason a name remained unresolved.}
+#'     \item{meta}{Provenance metadata: source, identity authority,
+#'       placement strategy,
 #'       branch length rule, counts; for `source = "rtrees"` includes
 #'       a `backend_meta` sub-list with the taxon and the number of
 #'       grafted tips.}
@@ -281,6 +285,8 @@ reconcile_augment <- function(reconciliation,
 
   # Find unresolved species (in data, not in tree)
   mapping <- reconciliation$mapping
+  candidate_evidence <- reconciliation$candidates %||% tibble()
+  identity_source <- reconciliation$meta$identity_source
   unresolved <- mapping[mapping$match_type == "unresolved" &
                           mapping$in_x & !mapping$in_y, ]
   species_to_add <- unresolved$name_x
@@ -296,9 +302,10 @@ reconcile_augment <- function(reconciliation,
                          method = character(), n_congeners = integer()),
       skipped   = tibble(species = character(), genus = character(),
                          reason = character()),
+      candidates = candidate_evidence,
       meta      = list(n_augmented = 0L, n_skipped = 0L,
                         where = where, branch_length_method = branch_length,
-                        source = source)
+                        source = source, identity_source = identity_source)
     ))
   }
 
@@ -339,6 +346,7 @@ reconcile_augment <- function(reconciliation,
       original  = original_tree,
       augmented = res$augmented,
       skipped   = res$skipped,
+      candidates = candidate_evidence,
       meta      = list(
         n_augmented          = nrow(res$augmented),
         n_skipped            = nrow(res$skipped),
@@ -346,6 +354,7 @@ reconcile_augment <- function(reconciliation,
         branch_length_method = NA_character_,
         seed                 = seed,
         source               = "rtrees",
+        identity_source      = identity_source,
         backend_meta         = res$backend_meta,
         original_n_tips      = ape::Ntip(original_tree),
         augmented_n_tips     = new_n_tips
@@ -385,6 +394,7 @@ reconcile_augment <- function(reconciliation,
       original  = original_tree,
       augmented = res$augmented,
       skipped   = res$skipped,
+      candidates = candidate_evidence,
       meta      = list(
         n_augmented          = nrow(res$augmented),
         n_skipped            = nrow(res$skipped),
@@ -392,6 +402,7 @@ reconcile_augment <- function(reconciliation,
         branch_length_method = NA_character_,
         seed                 = seed,
         source               = source,
+        identity_source      = identity_source,
         backend_meta         = res$backend_meta,
         original_n_tips      = ape::Ntip(original_tree),
         augmented_n_tips     = new_n_tips
@@ -546,6 +557,7 @@ reconcile_augment <- function(reconciliation,
     original  = original_tree,
     augmented = augmented,
     skipped   = skipped,
+    candidates = candidate_evidence,
     meta      = list(
       n_augmented          = nrow(augmented),
       n_skipped            = nrow(skipped),
@@ -553,6 +565,7 @@ reconcile_augment <- function(reconciliation,
       branch_length_method = branch_length,
       seed                 = seed,
       source               = "internal",
+      identity_source      = identity_source,
       original_n_tips      = ape::Ntip(original_tree),
       augmented_n_tips     = ape::Ntip(tree)
     )

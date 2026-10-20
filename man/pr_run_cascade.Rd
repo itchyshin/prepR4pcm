@@ -16,7 +16,8 @@ pr_run_cascade(
   flag_threshold = 0.95,
   resolve = "flag",
   multi_x = FALSE,
-  quiet = FALSE
+  quiet = FALSE,
+  backbone = NULL
 )
 }
 \arguments{

@@ -123,7 +123,11 @@ final terminal edge length in the returned tree. For
 \item{skipped}{A tibble of species that could not be placed,
 with the reason (e.g. "No congener in tree", "rtrees did
 not place this species").}
-\item{meta}{Provenance metadata: source, placement strategy,
+\item{candidates}{Identity candidates withheld during
+reconciliation, retained so augmentation does not discard the
+reason a name remained unresolved.}
+\item{meta}{Provenance metadata: source, identity authority,
+placement strategy,
 branch length rule, counts; for \code{source = "rtrees"} includes
 a \code{backend_meta} sub-list with the taxon and the number of
 grafted tips.}

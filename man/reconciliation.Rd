@@ -10,7 +10,9 @@ new_reconciliation(
   meta,
   counts = NULL,
   overrides = NULL,
-  unused_overrides = NULL
+  unused_overrides = NULL,
+  candidates = NULL,
+  identity_source = NULL
 )
 }
 \arguments{
@@ -27,6 +29,11 @@ new_reconciliation(
 applied, with columns \code{name_x}, \code{name_y}, \code{reason}. If \code{NULL},
 pulled from \code{attr(mapping, "unused_overrides")} when present,
 else initialised empty.}
+
+\item{candidates}{A tibble of identity candidates withheld by the cascade.}
+
+\item{identity_source}{Identity source provenance stored in \code{meta} and the
+reconciliation object.}
 }
 \value{
 An object of class \code{reconciliation}.
@@ -42,7 +49,7 @@ debugging or writing custom helpers.
 }
 \section{Structure}{
 
-A \code{reconciliation} is an S3 list with five components:
+A \code{reconciliation} is an S3 list with named components:
 \describe{
 \item{\code{mapping}}{A tibble with one row per unique name seen in
 either source. Columns are documented in \code{\link[=reconcile_mapping]{reconcile_mapping()}}:
@@ -67,6 +74,11 @@ when every override applied successfully. Surfaced in
 \code{reconcile_summary()}, \code{reconcile_report()} (HTML),
 \code{reconcile_export()} (as \verb{<prefix>_unused_overrides.csv}), and
 \code{reconcile_mapping(include_unused_overrides = TRUE)}.}
+\item{\code{candidates}}{Candidate pairs withheld from automatic matching
+because supplied identity evidence was conflicting, ambiguous, or
+insufficient. Retrieve these with \code{\link[=reconcile_candidates]{reconcile_candidates()}}.}
+\item{\code{identity_source}}{Identity evidence provenance, including provider,
+snapshot/version, comparison rank, and the supplied-backbone fingerprint.}
 }
 }
 
@@ -80,6 +92,8 @@ dispatches to \code{\link[=reconcile_summary]{reconcile_summary()}}), and \code{
 
 \itemize{
 \item \code{\link[=reconcile_mapping]{reconcile_mapping()}} --- extract the per-name tibble.
+\item \code{\link[=reconcile_candidates]{reconcile_candidates()}} --- extract identity candidates withheld
+from automatic matching.
 \item \code{\link[=reconcile_summary]{reconcile_summary()}} --- human-readable breakdown.
 \item \code{\link[=reconcile_apply]{reconcile_apply()}} --- align data and tree.
 \item \code{\link[=reconcile_merge]{reconcile_merge()}} --- join two datasets.

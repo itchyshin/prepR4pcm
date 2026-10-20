@@ -19,7 +19,8 @@ reconcile_data(
   resolve = c("flag", "first"),
   quiet = FALSE,
   x_label = NULL,
-  y_label = NULL
+  y_label = NULL,
+  backbone = NULL
 )
 }
 \arguments{
@@ -134,6 +135,17 @@ so the label reflects the real data source rather than the local argument
 name.}
 
 \item{y_label}{A length-1 character vector or \code{NULL}. Same as \code{x_label}, for source \code{y}.}
+
+\item{backbone}{An optional frozen identity source. Supply a list with
+\code{records} (a data frame with \code{input}, \code{accepted_name}, \code{accepted_id}, and
+\code{status} columns), plus single values \code{provider}, \code{version}, and \code{rank}.
+An optional \code{side} column can be \code{"x"}, \code{"y"}, or \code{"both"} (default).
+When supplied, this source governs synonym and fuzzy matching and guards
+exact/normalised pairs where it has records. It replaces authority lookup
+for this call; conflicting accepted IDs are withheld from automatic
+matching and available through \code{\link[=reconcile_candidates]{reconcile_candidates()}}. The declared
+rank must equal \code{rank}. Names without sufficient evidence remain
+unresolved for review; spelling alone does not establish taxon identity.}
 }
 \value{
 A \link{reconciliation} object. The accompanying mapping tibble,
@@ -158,8 +170,9 @@ stage that returns a match is recorded in \code{match_type}:
 strings (\emph{"Corvus corax Linnaeus, 1758"}), diacritics, and
 case/whitespace differences.
 \item \strong{synonym} --- lookup in a local taxonomic database via
-\pkg{taxadb} (Catalogue of Life, GBIF, ITIS, NCBI, ...). Skipped if
-\code{authority = NULL}.
+\pkg{taxadb} (Catalogue of Life, GBIF, ITIS, NCBI, ...), or a supplied
+frozen \code{backbone}. Skipped if both \code{authority = NULL} and
+\code{backbone = NULL}.
 \item \strong{fuzzy} --- character-level similarity (opt-in via
 \code{fuzzy = TRUE}). Uses a genus-weighted Levenshtein score
 (60\% genus, 40\% specific epithet) with a genus pre-filter so that

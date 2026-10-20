@@ -47,7 +47,8 @@ reconcile_to_trees <- function(x, trees,
                                 fuzzy_threshold = 0.9,
                                 resolve = c("flag", "first"),
                                 quiet = FALSE,
-                                x_label = NULL) {
+                                x_label = NULL,
+                                backbone = NULL) {
 
   # Capture source label before any modifications to x
   x_source <- x_label %||% deparse(substitute(x))
@@ -129,7 +130,8 @@ reconcile_to_trees <- function(x, trees,
       fuzzy           = fuzzy,
       fuzzy_threshold = fuzzy_threshold,
       resolve         = resolve,
-      quiet           = quiet
+      quiet           = quiet,
+      backbone        = backbone
     )
 
     meta <- list(

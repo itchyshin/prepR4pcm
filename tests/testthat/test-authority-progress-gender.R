@@ -65,7 +65,9 @@ test_that("gender suggestions handle empty, invalid and infraspecific names", {
 })
 
 test_that("completed authority batches survive an interrupted lookup", {
-  key <- "lookup_gnverifier_interrupted_test"
+  # GNverifier has no snapshot version; db_version is ignored and all calls
+  # share the explicit unresolved-version cache bucket.
+  key <- "lookup_gnverifier_latest_unresolved"
   calls <- 0L
   testthat::local_mocked_bindings(
     .pr_cache = new.env(parent = emptyenv()),

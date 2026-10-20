@@ -49,7 +49,8 @@ pr_run_cascade <- function(
   flag_threshold = 0.95,
   resolve = "flag",
   multi_x = FALSE,
-  quiet = FALSE
+  quiet = FALSE,
+  backbone = NULL
 ) {
   # Deduplicate inputs, warning about NAs
   n_na_x <- sum(is.na(names_x))
@@ -61,6 +62,45 @@ pr_run_cascade <- function(
   }
   unique_x <- unique(names_x[!is.na(names_x)])
   unique_y <- unique(names_y[!is.na(names_y)])
+  identity_backbone <- if (is.null(backbone)) NULL else {
+    .pr_validate_identity_backbone(backbone, rank = rank)
+  }
+  if (!is.null(identity_backbone)) {
+    if (!is.null(db_version) && !identical(as.character(db_version),
+                                           identity_backbone$version)) {
+      cli::cli_abort("`db_version` ({db_version}) conflicts with the supplied backbone version ({identity_backbone$version}).")
+    }
+    if (!is.null(authority) && !identical(tolower(as.character(authority)),
+                                          tolower(identity_backbone$provider)) &&
+        !quiet) {
+      cli::cli_inform(c(
+        "A supplied identity backbone takes precedence over `authority`.",
+        "i" = "Requested authority: {authority}; effective identity source: {identity_backbone$provider}@{identity_backbone$version}. No authority lookup will be made."
+      ))
+    }
+  }
+  identity_x <- if (is.null(identity_backbone)) NULL else {
+    .pr_identity_lookup(unique_x, identity_backbone, side = "x", rank = rank)
+  }
+  identity_y <- if (is.null(identity_backbone)) NULL else {
+    .pr_identity_lookup(unique_y, identity_backbone, side = "y", rank = rank)
+  }
+  identity_candidates <- list()
+  authority_identity_version <- NA_character_
+  authority_identity_queried <- FALSE
+  capture_authority_version <- function(x) {
+    if (!is.null(x) && nrow(x) && "version" %in% names(x)) {
+      authority_identity_queried <<- TRUE
+      versions <- unique(x$version[!is.na(x$version) & nzchar(x$version)])
+      if (length(versions) == 1L) authority_identity_version <<- versions[[1L]]
+    }
+  }
+  record_identity_candidates <- function(x, stage) {
+    if (!is.null(x) && nrow(x) > 0L) {
+      x$stage <- stage
+      identity_candidates[[length(identity_candidates) + 1L]] <<- x
+    }
+  }
 
   # Show progress for large datasets. We renumber Stage labels so they
   # reflect only the active stages -- Stage 1/N is always exact,
@@ -71,7 +111,7 @@ pr_run_cascade <- function(
   # suggested matches were being made at the synonym stage when in
   # reality stages 1+2 had already matched them. (Issue #13.)
   use_progress <- !quiet && length(unique_x) > 500
-  do_synonym <- !is.null(authority)
+  do_synonym <- !is.null(authority) || !is.null(identity_backbone)
   do_fuzzy <- isTRUE(fuzzy)
   n_stages <- 2L + do_synonym + do_fuzzy
   stage_no <- 0L
@@ -169,6 +209,14 @@ pr_run_cascade <- function(
 
   exact_both <- intersect(remaining_x, remaining_y)
 
+  if (length(exact_both) && !is.null(identity_backbone)) {
+    checked <- .pr_check_identity_candidates(
+      tibble(name_x = exact_both, name_y = exact_both), identity_x, identity_y
+    )
+    record_identity_candidates(checked[!checked$eligible, , drop = FALSE], "exact")
+    exact_both <- exact_both[checked$eligible]
+  }
+
   if (length(exact_both) > 0) {
     rows[[length(rows) + 1]] <- tibble(
       name_x = exact_both,
@@ -223,6 +271,17 @@ pr_run_cascade <- function(
       nx_hits <- as.character(norm_x[hit_mask])
       y_hits <- unname(lookup_y[nx_hits])
 
+      if (!is.null(identity_backbone)) {
+        checked <- .pr_check_identity_candidates(
+          tibble(name_x = x_hits, name_y = y_hits), identity_x, identity_y
+        )
+        record_identity_candidates(checked[!checked$eligible, , drop = FALSE],
+                                   "normalized")
+        x_hits <- x_hits[checked$eligible]
+        nx_hits <- nx_hits[checked$eligible]
+        y_hits <- y_hits[checked$eligible]
+      }
+
       # If multiple x names normalise to the same y, keep only the first
       # x in single-source mode. With multi_x = TRUE we keep every x ->
       # y mapping so the per-dataset join works.
@@ -275,14 +334,63 @@ pr_run_cascade <- function(
       rank = rank
     ))
 
+    lookup_x <- if (!is.null(identity_backbone)) {
+      .pr_identity_lookup(norm_remaining_x, identity_backbone, side = "x", rank = rank)
+    } else if (!is.null(authority)) {
+      .pr_authority_identity_lookup(norm_remaining_x, authority, db_version, rank,
+                                    quiet = quiet)
+    } else NULL
+    lookup_y <- if (!is.null(identity_backbone)) {
+      .pr_identity_lookup(norm_remaining_y, identity_backbone, side = "y", rank = rank)
+    } else if (!is.null(authority)) {
+      .pr_authority_identity_lookup(norm_remaining_y, authority, db_version, rank,
+                                    quiet = quiet)
+    } else NULL
+    capture_authority_version(lookup_x)
     syn_matches <- pr_resolve_synonyms(
       unmatched_x = norm_remaining_x,
       unmatched_y = norm_remaining_y,
-      authority = authority,
+      authority = if (is.null(identity_backbone)) authority else identity_backbone$provider,
       db_version = db_version,
-      quiet = quiet
+      quiet = quiet,
+      lookup_x = lookup_x,
+      lookup_y = lookup_y
     )
 
+    withheld_direct <- attr(syn_matches, "identity_candidates")
+    if (!is.null(withheld_direct) && nrow(withheld_direct) > 0L &&
+        !is.null(lookup_x) && !is.null(lookup_y)) {
+      checked_direct <- .pr_check_identity_candidates(
+        withheld_direct, lookup_x, lookup_y
+      )
+      withheld_direct <- checked_direct[!checked_direct$eligible, , drop = FALSE]
+      if (nrow(withheld_direct)) {
+        withheld_direct$name_x <- remaining_x[
+          match(withheld_direct$name_x, norm_remaining_x)
+        ]
+        withheld_direct$name_y <- remaining_y[
+          match(withheld_direct$name_y, norm_remaining_y)
+        ]
+        record_identity_candidates(withheld_direct, "synonym")
+      }
+    }
+
+    if (nrow(syn_matches) > 0) {
+      if (!is.null(lookup_x) && !is.null(lookup_y)) {
+        checked <- .pr_check_identity_candidates(syn_matches, lookup_x, lookup_y)
+        blocked_synonyms <- checked[!checked$eligible, , drop = FALSE]
+        if (nrow(blocked_synonyms)) {
+          blocked_synonyms$name_x <- remaining_x[
+            match(blocked_synonyms$name_x, norm_remaining_x)
+          ]
+          blocked_synonyms$name_y <- remaining_y[
+            match(blocked_synonyms$name_y, norm_remaining_y)
+          ]
+          record_identity_candidates(blocked_synonyms, "synonym")
+        }
+        syn_matches <- syn_matches[checked$eligible, , drop = FALSE]
+      }
+    }
     if (nrow(syn_matches) > 0) {
       # Vectorised first-name lookup preserves the predecessor's handling
       # of duplicate normalised forms. Empty lookup keys previously missed.
@@ -329,13 +437,34 @@ pr_run_cascade <- function(
       )
     }
 
+    fuzzy_identity_x <- if (!is.null(identity_backbone)) {
+      .pr_identity_lookup(remaining_x, identity_backbone, side = "x", rank = rank)
+    } else if (!is.null(authority)) {
+      .pr_authority_identity_lookup(
+        as.character(pr_normalize_names(remaining_x, rank = rank)), authority,
+        db_version, rank, quiet = quiet
+      )
+    } else NULL
+    fuzzy_identity_y <- if (!is.null(identity_backbone)) {
+      .pr_identity_lookup(remaining_y, identity_backbone, side = "y", rank = rank)
+    } else if (!is.null(authority)) {
+      .pr_authority_identity_lookup(
+        as.character(pr_normalize_names(remaining_y, rank = rank)), authority,
+        db_version, rank, quiet = quiet
+      )
+    } else NULL
+    capture_authority_version(fuzzy_identity_x)
     fuzzy_matches <- pr_fuzzy_match(
       remaining_x,
       remaining_y,
       threshold = fuzzy_threshold,
       rank = rank,
-      quiet = quiet
+      quiet = quiet,
+      identity_x = if (is.null(identity_backbone) && is.null(authority)) NULL else fuzzy_identity_x,
+      identity_y = if (is.null(identity_backbone) && is.null(authority)) NULL else fuzzy_identity_y
     )
+
+    record_identity_candidates(attr(fuzzy_matches, "identity_candidates"), "fuzzy")
 
     if (nrow(fuzzy_matches) > 0) {
       take <- .pr_greedy_candidate_rows(fuzzy_matches$name_x,
@@ -421,6 +550,61 @@ pr_run_cascade <- function(
   }
 
   attr(mapping, "unused_overrides") <- unused_tbl
+  candidate_tbl <- if (length(identity_candidates)) {
+    dplyr::bind_rows(identity_candidates)
+  } else {
+    tibble(
+      name_x = character(), name_y = character(), identity_state = character(),
+      eligible = logical(), reason = character(), x_id = character(), y_id = character(),
+      provider = character(), version = character(), stage = character(),
+      review_status = character(), review_note = character()
+    )
+  }
+  if (nrow(candidate_tbl)) {
+    pair_key <- interaction(candidate_tbl$name_x, candidate_tbl$name_y,
+                            candidate_tbl$reason, drop = TRUE, lex.order = TRUE)
+    candidate_tbl <- dplyr::bind_rows(lapply(split(candidate_tbl, pair_key), function(g) {
+      row <- g[1L, , drop = FALSE]
+      row$stage <- paste(unique(g$stage), collapse = ",")
+      if ("score" %in% names(g) && any(!is.na(g$score))) {
+        row$score <- max(g$score, na.rm = TRUE)
+      }
+      row
+    }))
+    candidate_tbl$review_status <- "pending"
+    candidate_tbl$review_note <- NA_character_
+  }
+  attr(mapping, "identity_candidates") <- candidate_tbl
+  attr(mapping, "identity_source") <- if (is.null(identity_backbone)) {
+    source_version <- if (!is.na(authority_identity_version)) {
+      authority_identity_version
+    } else if (authority_identity_queried) {
+      "snapshot_unresolved"
+    } else if (identical(authority, "gnverifier")) {
+      "unversioned_service"
+    } else {
+      "not_queried"
+    }
+    list(provider = authority %||% "none", version = source_version,
+         rank = rank, backbone_fingerprint = NA_character_,
+         mode = if (is.null(authority)) "taxonomy_unchecked_spelling" else if (
+           identical(authority, "gnverifier")
+         ) "provider_result_without_canonical_ID" else if (authority_identity_queried &&
+           is.na(authority_identity_version)) "authority_snapshot_unresolved" else
+           "authority_accepted_IDs",
+         unchecked = is.null(authority) || identical(authority, "gnverifier") ||
+           (authority_identity_queried && is.na(authority_identity_version)),
+         coverage = if (!authority_identity_queried || is.null(authority)) {
+           character()
+         } else c("synonym", "fuzzy"),
+         requested_authority = authority %||% "none")
+  } else {
+    list(provider = identity_backbone$provider, version = identity_backbone$version,
+         rank = identity_backbone$rank,
+         backbone_fingerprint = identity_backbone$fingerprint, unchecked = FALSE,
+         mode = "frozen_backbone", coverage = c("exact", "normalized", "synonym", "fuzzy"),
+         requested_authority = authority %||% "none")
+  }
   mapping
 }
 

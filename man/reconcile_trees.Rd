@@ -14,7 +14,8 @@ reconcile_trees(
   fuzzy = FALSE,
   fuzzy_threshold = 0.9,
   resolve = c("flag", "first"),
-  quiet = FALSE
+  quiet = FALSE,
+  backbone = NULL
 )
 }
 \arguments{
@@ -107,6 +108,17 @@ already reviewed the ambiguities.}
 
 \item{quiet}{Logical. Suppresses progress messages when \code{TRUE}.
 Default \code{FALSE}.}
+
+\item{backbone}{An optional frozen identity source. Supply a list with
+\code{records} (a data frame with \code{input}, \code{accepted_name}, \code{accepted_id}, and
+\code{status} columns), plus single values \code{provider}, \code{version}, and \code{rank}.
+An optional \code{side} column can be \code{"x"}, \code{"y"}, or \code{"both"} (default).
+When supplied, this source governs synonym and fuzzy matching and guards
+exact/normalised pairs where it has records. It replaces authority lookup
+for this call; conflicting accepted IDs are withheld from automatic
+matching and available through \code{\link[=reconcile_candidates]{reconcile_candidates()}}. The declared
+rank must equal \code{rank}. Names without sufficient evidence remain
+unresolved for review; spelling alone does not establish taxon identity.}
 }
 \value{
 A \link{reconciliation} object with \code{meta$type == "tree_tree"}.

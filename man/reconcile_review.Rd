@@ -6,7 +6,7 @@
 \usage{
 reconcile_review(
   reconciliation,
-  type = c("flagged", "fuzzy", "all_unresolved"),
+  type = c("flagged", "fuzzy", "all_unresolved", "identity_candidates"),
   suggest = TRUE,
   quiet = FALSE
 )
@@ -20,6 +20,7 @@ reconcile_review(
 \item{\code{"flagged"}}{Only flagged matches (default).}
 \item{\code{"fuzzy"}}{Fuzzy and flagged matches.}
 \item{\code{"all_unresolved"}}{All unresolved species.}
+\item{\code{"identity_candidates"}}{Pairs withheld by the identity guard.}
 }}
 
 \item{suggest}{Logical. If \code{TRUE} and \code{type = "all_unresolved"}, show

@@ -9,7 +9,9 @@ pr_fuzzy_match(
   names_y,
   threshold = 0.9,
   rank = "species",
-  quiet = FALSE
+  quiet = FALSE,
+  identity_x = NULL,
+  identity_y = NULL
 )
 }
 \arguments{

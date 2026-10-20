@@ -247,6 +247,29 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
   )
   reconciliation$overrides <- rbind(reconciliation$overrides, new_override)
 
+  if (!is.null(reconciliation$candidates) && nrow(reconciliation$candidates) > 0L) {
+    candidate_x <- normalize(reconciliation$candidates$name_x)
+    if (action %in% c("accept", "replace")) {
+      candidate_y <- normalize(reconciliation$candidates$name_y)
+      hit <- !is.na(candidate_x) & !is.na(candidate_y) &
+        candidate_x == normalize(name_x) & candidate_y == normalize(name_y)
+      if (any(hit)) {
+        reconciliation$candidates$review_status[hit] <- "accepted_manual"
+        reconciliation$candidates$review_note[hit] <- note
+      }
+    } else {
+      hit <- !is.na(candidate_x) & candidate_x == normalize(name_x)
+      if (!is.null(name_y)) {
+        candidate_y <- normalize(reconciliation$candidates$name_y)
+        hit <- hit & !is.na(candidate_y) & candidate_y == normalize(name_y)
+      }
+      if (any(hit)) {
+        reconciliation$candidates$review_status[hit] <- "rejected_manual"
+        reconciliation$candidates$review_note[hit] <- note
+      }
+    }
+  }
+
   if (action == "accept" || action == "replace") {
     # Keep the old target in the inventory when a matched source is replaced.
     old_idx <- which(mapping$name_x == name_x & !is.na(mapping$name_x))
@@ -284,6 +307,9 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
   } else if (action == "reject") {
     # Mark the match as unresolved
     idx <- which(mapping$name_x == name_x & !is.na(mapping$name_x))
+    if (!is.null(name_y)) {
+      idx <- idx[!is.na(mapping$name_y[idx]) & mapping$name_y[idx] == name_y]
+    }
     if (length(idx) > 0L) {
       old_y <- mapping$name_y[idx[1]]
       mapping$match_type[idx[1]] <- "unresolved"

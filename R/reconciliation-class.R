@@ -11,7 +11,7 @@
 #' debugging or writing custom helpers.
 #'
 #' @section Structure:
-#' A `reconciliation` is an S3 list with five components:
+#' A `reconciliation` is an S3 list with named components:
 #' \describe{
 #'   \item{`mapping`}{A tibble with one row per unique name seen in
 #'     either source. Columns are documented in [reconcile_mapping()]:
@@ -36,6 +36,11 @@
 #'     `reconcile_summary()`, `reconcile_report()` (HTML),
 #'     `reconcile_export()` (as `<prefix>_unused_overrides.csv`), and
 #'     `reconcile_mapping(include_unused_overrides = TRUE)`.}
+#'   \item{`candidates`}{Candidate pairs withheld from automatic matching
+#'     because supplied identity evidence was conflicting, ambiguous, or
+#'     insufficient. Retrieve these with [reconcile_candidates()].}
+#'   \item{`identity_source`}{Identity evidence provenance, including provider,
+#'     snapshot/version, comparison rank, and the supplied-backbone fingerprint.}
 #' }
 #'
 #' @section Methods:
@@ -45,6 +50,8 @@
 #' @section Accessing the object:
 #' \itemize{
 #'   \item [reconcile_mapping()] --- extract the per-name tibble.
+#'   \item [reconcile_candidates()] --- extract identity candidates withheld
+#'     from automatic matching.
 #'   \item [reconcile_summary()] --- human-readable breakdown.
 #'   \item [reconcile_apply()] --- align data and tree.
 #'   \item [reconcile_merge()] --- join two datasets.
@@ -61,6 +68,9 @@
 #'   applied, with columns `name_x`, `name_y`, `reason`. If `NULL`,
 #'   pulled from `attr(mapping, "unused_overrides")` when present,
 #'   else initialised empty.
+#' @param candidates A tibble of identity candidates withheld by the cascade.
+#' @param identity_source Identity source provenance stored in `meta` and the
+#'   reconciliation object.
 #'
 #' @return An object of class `reconciliation`.
 #'
@@ -68,7 +78,8 @@
 #' @name reconciliation
 #' @keywords internal
 new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL,
-                               unused_overrides = NULL) {
+                               unused_overrides = NULL, candidates = NULL,
+                               identity_source = NULL) {
 
   if (is.null(overrides)) {
     overrides <- tibble(
@@ -93,6 +104,25 @@ new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL,
   # Strip the attribute from `mapping` so it's not duplicated.
   attr(mapping, "unused_overrides") <- NULL
 
+  if (is.null(candidates)) candidates <- attr(mapping, "identity_candidates")
+  if (is.null(candidates)) {
+    candidates <- tibble(
+      name_x = character(), name_y = character(), identity_state = character(),
+      eligible = logical(), reason = character(), x_id = character(), y_id = character(),
+      provider = character(), version = character(), stage = character(),
+      review_status = character(), review_note = character()
+    )
+  }
+  if (is.null(identity_source)) identity_source <- attr(mapping, "identity_source")
+  attr(mapping, "identity_candidates") <- NULL
+  attr(mapping, "identity_source") <- NULL
+  if (is.null(identity_source)) {
+    identity_source <- list(provider = "none", version = "unresolved",
+                            rank = meta$rank %||% NA_character_,
+                            backbone_fingerprint = NA_character_, unchecked = TRUE)
+  }
+  meta$identity_source <- identity_source
+
   if (is.null(counts)) {
     counts <- pr_compute_counts(mapping)
   }
@@ -103,7 +133,9 @@ new_reconciliation <- function(mapping, meta, counts = NULL, overrides = NULL,
       meta             = meta,
       counts           = counts,
       overrides        = overrides,
-      unused_overrides = unused_overrides
+      unused_overrides = unused_overrides,
+      candidates       = tibble::as_tibble(candidates),
+      identity_source  = identity_source
     ),
     class = "reconciliation"
   )
