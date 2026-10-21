@@ -1,0 +1,83 @@
+---
+title: "Latin-aware Botanical Name Matching"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Latin-aware Botanical Name Matching}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(prepR4pcm)
+```
+
+## What “Latin-aware” means here
+
+Botanical species names can differ because an adjectival epithet changes its
+ending to agree with the gender of a genus. For example, the Code gives
+*Bromus mollis* and *Geranium molle* as adjectival forms in different genera.
+That pattern can help a matcher find a candidate. It does not prove that the
+two names refer to the same taxon.
+
+prepR4pcm's Latin-aware fuzzy matching is deliberately narrow. It reuses
+`pr_suggest_gender()` to identify pairs in two common ending groups:
+`-us/-a/-um` and `-is/-e`. Those pairs receive an ending-aware spelling score,
+but the matcher allows them through only when the supplied taxonomic evidence
+has the same accepted identifier, provider, snapshot, and rank. If that
+evidence is absent, ambiguous, or conflicting, the pair remains available for
+review and is not returned as an automatic fuzzy match.
+
+The helper can show the possible endings in a reference list:
+
+```{r ending-suggestions}
+pr_suggest_gender("Plant albus", c("Plant alba", "Plant album"))
+```
+
+These constructed names demonstrate string handling; they are not claims about
+published taxa. `pr_suggest_gender()` keeps every matching alternative and
+marks every row as requiring review. It does not alter a reconciliation.
+
+## Genus guides candidate search
+
+Fuzzy candidate generation starts with names whose genus spellings are close.
+This follows Erick Lundgren's suggestion to work with genus evidence before
+species epithets. A strict genus cutoff would miss names transferred between
+genera, so a broader fallback is available when the same comparable authority
+identifies both spellings with the same accepted ID. The name score still
+reports spelling similarity; authority identity is kept separate from that
+score. A tree's branch placement is not used as independent identity evidence.
+
+## The grammatical limit
+
+The International Code of Nomenclature says adjectival specific epithets
+agree with the generic name's gender. Nouns in apposition, genitive nouns,
+nouns with accompanying adjectives in the genitive, and adverbs keep their
+own endings. The Code also recognizes epithets whose
+grammatical category is ambiguous; resolving that ambiguity can depend on a
+published nomenclatural choice. These distinctions mean that a string ending
+alone cannot tell software whether an epithet is an adjective or whether it
+should change. This package does not parse Latin, infer adjective classes, or
+determine genus gender.
+
+The ending groups implemented here are candidate patterns, not a complete
+account of botanical Latin. Greek-derived forms, other Latin declensions,
+irregular forms, historical orthography, and ambiguous published usages are
+outside this helper's coverage. The rules above are grounded in the current
+[Madrid Code online](https://www.iaptglobal.org/madrid-code-online), especially
+Articles 23.1, 23.5, and 23.6.
+
+## What to do with a review candidate
+
+Inspect the candidate and its authority evidence with
+`reconcile_candidates()` or `reconcile_review(type = "identity_candidates")`.
+If the authority does not establish a matching identity, check an appropriate
+taxonomic source yourself. Record a deliberate decision with
+`reconcile_override()` or `reconcile_override_batch()`; do not treat a
+grammatical-looking ending as a taxonomic crosswalk.
+
+For the related spelling-only review helper, see the “Reviewing grammatical
+endings” section in the [getting-started article](getting-started.html).

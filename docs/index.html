@@ -44,6 +44,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="articles/latin-aware-matching.html">Latin-aware botanical name matching</a></li>
     <li><a class="dropdown-item" href="articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
@@ -126,24 +127,24 @@
 </h2>
 <p><em>Starting point</em>: trait data + a phylogenetic tree. <em>If you don’t yet have a tree</em>, fetch one with <code><a href="reference/pr_get_tree.html">pr_get_tree()</a></code> (and optionally date it with <code><a href="reference/pr_date_tree.html">pr_date_tree()</a></code>) and continue from “Trait data + Phylogenetic tree” below; see the <a href="https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html">posterior-tree pipeline</a> vignette for the full pattern.</p>
 <p>The diagram below shows the steps. <strong>R objects and data files</strong> are in rounded boxes; <strong><code>prepR4pcm</code> functions</strong> that act on them are on the arrows.</p>
-<pre class="mermaid"><code>flowchart TD
-  A(["&lt;i&gt;Trait data&lt;/i&gt;&lt;br&gt;+&lt;br&gt;&lt;i&gt;Phylogenetic tree&lt;/i&gt;"])
-  B(["&lt;i&gt;reconciliation&lt;/i&gt;"])
-  R["&lt;b&gt;Review&lt;/b&gt;&lt;br&gt;reconcile_summary()&lt;br&gt;reconcile_plot()&lt;br&gt;reconcile_report()&lt;br&gt;&lt;br&gt;&lt;b&gt;Fix (if needed)&lt;/b&gt;&lt;br&gt;reconcile_override()&lt;br&gt;reconcile_suggest()"]
-  C(["&lt;i&gt;Aligned data&lt;/i&gt;&lt;br&gt;+&lt;br&gt;&lt;i&gt;Pruned tree&lt;/i&gt;"])
-  D[/PGLS, PGLMM, or any PCM/]
-
-  A -- "reconcile_tree()" --&gt; B
-  B --&gt; R
-  R -- "reconcile_apply()" --&gt; C
-  C --&gt; D
-
-  classDef obj fill:#e8f4f8,stroke:#2c5e4f,stroke-width:2px
-  classDef inspect fill:#fffbe6,stroke:#a67c00,stroke-width:1.5px
-  classDef out fill:#fff4e8,stroke:#888,stroke-width:1.5px
-  class A,B,C obj
-  class R inspect
-  class D out</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode mermaid"><code class="sourceCode mermaid"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="kw">flowchart</span> <span class="cn">TD</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="dt">A</span>([<span class="st">"</span><span class="sc">&lt;i&gt;</span><span class="st">Trait data</span><span class="sc">&lt;/i&gt;&lt;br&gt;</span><span class="st">+</span><span class="sc">&lt;br&gt;&lt;i&gt;</span><span class="st">Phylogenetic tree</span><span class="sc">&lt;/i&gt;</span><span class="st">"</span>])</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="dt">B</span>([<span class="st">"</span><span class="sc">&lt;i&gt;</span><span class="st">reconciliation</span><span class="sc">&lt;/i&gt;</span><span class="st">"</span>])</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="dt">R</span>[<span class="st">"</span><span class="sc">&lt;b&gt;</span><span class="st">Review</span><span class="sc">&lt;/b&gt;&lt;br&gt;</span><span class="st">reconcile_summary()</span><span class="sc">&lt;br&gt;</span><span class="st">reconcile_plot()</span><span class="sc">&lt;br&gt;</span><span class="st">reconcile_report()</span><span class="sc">&lt;br&gt;&lt;br&gt;&lt;b&gt;</span><span class="st">Fix (if needed)</span><span class="sc">&lt;/b&gt;&lt;br&gt;</span><span class="st">reconcile_override()</span><span class="sc">&lt;br&gt;</span><span class="st">reconcile_suggest()"</span>]</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="dt">C</span>([<span class="st">"</span><span class="sc">&lt;i&gt;</span><span class="st">Aligned data</span><span class="sc">&lt;/i&gt;&lt;br&gt;</span><span class="st">+</span><span class="sc">&lt;br&gt;&lt;i&gt;</span><span class="st">Pruned tree</span><span class="sc">&lt;/i&gt;</span><span class="st">"</span>])</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="dt">D</span>[/<span class="vs">PGLS, PGLMM, or any PCM</span>/]</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="dt">A</span> <span class="pp">--</span> <span class="st">"reconcile_tree()"</span> <span class="pp">--&gt;</span> <span class="dt">B</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="dt">B</span> <span class="pp">--&gt;</span> <span class="dt">R</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="dt">R</span> <span class="pp">--</span> <span class="st">"reconcile_apply()"</span> <span class="pp">--&gt;</span> <span class="dt">C</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="dt">C</span> <span class="pp">--&gt;</span> <span class="dt">D</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="kw">classDef</span> <span class="fu">obj</span> <span class="at">fill:</span><span class="im">#e8f4f8</span>,<span class="at">stroke:</span><span class="im">#2c5e4f</span>,<span class="at">stroke-width:</span><span class="dv">2</span><span class="dt">px</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>  <span class="kw">classDef</span> <span class="fu">inspect</span> <span class="at">fill:</span><span class="im">#fffbe6</span>,<span class="at">stroke:</span><span class="im">#a67c00</span>,<span class="at">stroke-width:</span><span class="dv">1.5</span><span class="dt">px</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="kw">classDef</span> <span class="fu">out</span> <span class="at">fill:</span><span class="im">#fff4e8</span>,<span class="at">stroke:</span><span class="im">#888</span>,<span class="at">stroke-width:</span><span class="dv">1.5</span><span class="dt">px</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>  <span class="kw">class</span> <span class="dt">A</span>,<span class="dt">B</span>,<span class="dt">C</span> <span class="fu">obj</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="kw">class</span> <span class="dt">R</span> <span class="fu">inspect</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="kw">class</span> <span class="dt">D</span> <span class="fu">out</span></span></code></pre></div>
 <p>The first reconciliation pass produces a <em>reconciliation</em> object (an audit of every name match). You then review and fix; once you’re happy, <code><a href="reference/reconcile_apply.html">reconcile_apply()</a></code> produces the aligned dataset and pruned tree that have matching species lists — the precondition for any phylogenetic comparative method.</p>
 </div>
 <div class="section level2">
@@ -305,11 +306,7 @@
 <strong>PanTHERIA</strong> (<code>mammal_pantheria_example</code>): Jones et al. (2009) <em>Ecology</em> 90:2648. DOI 10.1890/08-1494.1</li>
 <li>
 <strong>TetrapodTraits</strong> (<code>mammal_tetrapodtraits_example</code>): Moura et al.
-<ol start="2024" style="list-style-type: decimal">
-<li>
-<em>PLOS Biology</em> 22:e3002658. DOI 10.1371/journal.pbio.3002658</li>
-</ol>
-</li>
+2024) <em>PLOS Biology</em> 22:e3002658. DOI 10.1371/journal.pbio.3002658</li>
 <li>
 <strong>Mammal phylogeny</strong> (<code>mammal_tree_example</code>): a 5,987-tip subset of the VertLife mammal phylogeny from Upham et al. (2019) <em>PLOS Biology</em> 17(12):e3000494 DOI 10.1371/journal.pbio.3000494. Bundled as an example object only — for analysis-grade trees, download the full credible set from <a href="https://vertlife.org/phylosubsets/" class="external-link uri">https://vertlife.org/phylosubsets/</a>.</li>
 </ul>
