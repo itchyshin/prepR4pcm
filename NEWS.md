@@ -2,6 +2,9 @@
 
 The changes below are GitHub development changes and are not yet on CRAN.
 
+* `reconcile_data()`, `reconcile_tree()`, `reconcile_trees()`, `reconcile_multi()`, and `reconcile_to_trees()` accept a frozen identity `backbone`. Comparable distinct accepted IDs now block automatic synonym and fuzzy matches and guard exact/normalised pairs covered by that backbone. Withheld pairs are available through `reconcile_candidates()`, interactive identity review, summaries, HTML reports, and a separate CSV export; deliberate pair-specific overrides retain the evidence (#139).
+* Taxadb lookup no longer chooses the first conflicting accepted or synonym target. Ambiguous records remain unresolved, lookup errors are distinguished from genuine not-found results, and GNverifier record IDs are not treated as canonical accepted-taxon IDs for the guard (#139).
+
 * Reconciliation after authority lookup uses indexed synonym matching and applies match candidates in batches. Fuzzy matching processes one query genus at a time instead of allocating a dense genus distance matrix, while retaining the existing scoring and tie order. Large fuzzy stages show a progress bar and estimated time remaining; `quiet = TRUE` suppresses these updates (#137).
 
 * Authority lookups now query at most 1000 uncached names per batch, show a progress bar and batch counts for large inputs, and cache completed batches. `quiet = TRUE` suppresses progress on both sides of synonym resolution (#135).

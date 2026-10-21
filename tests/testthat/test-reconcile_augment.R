@@ -460,7 +460,7 @@ test_that("source = 'rtrees' returns the documented shape", {
   )
   res <- reconcile_augment(setup$rec, setup$tree,
                            source = "rtrees", taxon = "bird", quiet = TRUE)
-  expect_named(res, c("tree", "original", "augmented", "skipped", "meta"))
+  expect_named(res, c("tree", "original", "augmented", "skipped", "candidates", "meta"))
   expect_equal(res$meta$source, "rtrees")
   expect_true(is.na(res$meta$where))
   expect_true(is.na(res$meta$branch_length_method))

@@ -99,7 +99,8 @@ reconcile_tree <- function(x, tree,
                            flag_threshold = 0.95,
                            resolve = c("flag", "first"),
                            quiet = FALSE,
-                           x_label = NULL) {
+                           x_label = NULL,
+                           backbone = NULL) {
 
   # Capture source label before any modifications to x
   x_source <- x_label %||% deparse(substitute(x))
@@ -165,7 +166,8 @@ reconcile_tree <- function(x, tree,
     fuzzy_threshold = fuzzy_threshold,
     flag_threshold  = flag_threshold,
     resolve         = resolve,
-    quiet           = quiet
+    quiet           = quiet,
+    backbone        = backbone
   )
 
   # Build metadata

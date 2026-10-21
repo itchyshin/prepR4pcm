@@ -1,11 +1,8 @@
-# Regression tests for #83: with the default db_version = NULL,
-# pr_lookup_authority used to forward version = NULL to taxadb::filter_name.
-# taxadb 0.2.1's parse_schema() then ran `if (version == "latest")` and
-# errored with logical(0), producing
-#   "no match found for schema: dwc provider: col version:"
-# Fix: only include the `version` argument when the caller supplied one.
+# Regression tests for pinned snapshot identity: when db_version is NULL,
+# resolve taxadb's current snapshot once and pass that exact version to the
+# lookup so every cached row and identity comparison has stable provenance.
 
-test_that("filter_name receives no version arg when db_version = NULL (#83)", {
+test_that("filter_name receives the resolved latest version when db_version = NULL", {
   skip_if_not_installed("taxadb")
 
   captured <- NULL
@@ -24,8 +21,16 @@ test_that("filter_name receives no version arg when db_version = NULL (#83)", {
     .package    = "taxadb"
   )
   testthat::local_mocked_bindings(
+    latest_version = function(...) "2025",
+    .package       = "taxadb"
+  )
+  testthat::local_mocked_bindings(
     pr_ensure_db = function(authority, db_version = NULL) invisible(authority),
     .package     = "prepR4pcm"
+  )
+  testthat::local_mocked_bindings(
+    .pr_cache = new.env(parent = emptyenv()),
+    .package  = "prepR4pcm"
   )
 
   res <- pr_lookup_authority(
@@ -35,14 +40,7 @@ test_that("filter_name receives no version arg when db_version = NULL (#83)", {
   )
 
   expect_s3_class(res, "data.frame")
-  expect_false(
-    "version" %in% names(captured),
-    info = paste0(
-      "When db_version is NULL, pr_lookup_authority must NOT forward ",
-      "version = NULL to taxadb::filter_name (taxadb 0.2.1 crashes ",
-      "inside parse_schema)."
-    )
-  )
+  expect_identical(captured$version, "2025")
 })
 
 test_that("filter_name receives the explicit version when db_version is set", {

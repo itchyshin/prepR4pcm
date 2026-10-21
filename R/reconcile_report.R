@@ -106,6 +106,11 @@ reconcile_report <- function(reconciliation,
   add("<tr><td>Source x</td><td>", pr_html_escape(meta$x_source), "</td></tr>")
   add("<tr><td>Source y</td><td>", pr_html_escape(meta$y_source), "</td></tr>")
   add("<tr><td>Authority</td><td>", meta$authority %||% "none", "</td></tr>")
+  identity_source <- reconciliation$identity_source
+  add("<tr><td>Identity evidence</td><td>",
+      pr_html_escape(paste0(identity_source$provider, "@", identity_source$version,
+                            " (", identity_source$mode %||% "unspecified", "; rank ",
+                            identity_source$rank %||% meta$rank, ")")), "</td></tr>")
   add("<tr><td>Reconciliation date</td><td>",
       format(meta$timestamp, "%Y-%m-%d %H:%M:%S"), "</td></tr>")
   add("</table></div>")
@@ -129,6 +134,13 @@ reconcile_report <- function(reconciliation,
     n <- as.integer(r[2])
     cls <- if (n > 0) "" else " class='zero'"
     add("<tr", cls, "><td>", r[1], "</td><td>", n, "</td><td>", pct(n), "</td></tr>")
+  }
+  n_identity_candidates <- if (!is.null(reconciliation$candidates)) {
+    nrow(reconciliation$candidates)
+  } else 0L
+  if (n_identity_candidates > 0L) {
+    add("<tr><td>Identity candidates withheld</td><td>",
+        n_identity_candidates, "</td><td></td></tr>")
   }
   add("<tr class='unresolved'><td>Unresolved (x only)</td><td>",
       counts$n_unresolved_x, "</td><td>", pct(counts$n_unresolved_x), "</td></tr>")
@@ -167,6 +179,24 @@ reconcile_report <- function(reconciliation,
   if (nrow(manual_m) > 0) {
     add("<h2>Manual overrides (", nrow(manual_m), ")</h2>")
     add(pr_mapping_table(manual_m, max_rows = 50))
+  }
+
+  candidates <- reconciliation$candidates
+  if (!is.null(candidates) && nrow(candidates) > 0) {
+    add("<h2>Identity candidates withheld (", nrow(candidates), ")</h2>")
+    add("<p>These pairs were excluded from automatic matching because the supplied identity evidence was conflicting or insufficient. Review them before applying a pair-specific override.</p>")
+    add("<table><thead><tr><th>name_x</th><th>name_y</th><th>reason</th><th>IDs</th><th>source</th></tr></thead><tbody>")
+    show_candidates <- min(nrow(candidates), 50)
+    for (i in seq_len(show_candidates)) {
+      add("<tr><td>", pr_html_escape(candidates$name_x[i]),
+          "</td><td>", pr_html_escape(candidates$name_y[i]),
+          "</td><td><code>", pr_html_escape(candidates$reason[i]),
+          "</code></td><td>", pr_html_escape(candidates$x_id[i]), " / ",
+          pr_html_escape(candidates$y_id[i]), "</td><td>",
+          pr_html_escape(paste(candidates$provider[i], candidates$version[i], sep = "@")),
+          "</td></tr>")
+    }
+    add("</tbody></table>")
   }
 
   unused_ov <- reconciliation$unused_overrides

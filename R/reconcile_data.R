@@ -16,8 +16,9 @@
 #'     strings (*"Corvus corax Linnaeus, 1758"*), diacritics, and
 #'     case/whitespace differences.
 #'   \item \strong{synonym} --- lookup in a local taxonomic database via
-#'     \pkg{taxadb} (Catalogue of Life, GBIF, ITIS, NCBI, ...). Skipped if
-#'     `authority = NULL`.
+#'     \pkg{taxadb} (Catalogue of Life, GBIF, ITIS, NCBI, ...), or a supplied
+#'     frozen `backbone`. Skipped if both `authority = NULL` and
+#'     `backbone = NULL`.
 #'   \item \strong{fuzzy} --- character-level similarity (opt-in via
 #'     `fuzzy = TRUE`). Uses a genus-weighted Levenshtein score
 #'     (60% genus, 40% specific epithet) with a genus pre-filter so that
@@ -143,6 +144,16 @@
 #'   so the label reflects the real data source rather than the local argument
 #'   name.
 #' @param y_label A length-1 character vector or `NULL`. Same as `x_label`, for source `y`.
+#' @param backbone An optional frozen identity source. Supply a list with
+#'   `records` (a data frame with `input`, `accepted_name`, `accepted_id`, and
+#'   `status` columns), plus single values `provider`, `version`, and `rank`.
+#'   An optional `side` column can be `"x"`, `"y"`, or `"both"` (default).
+#'   When supplied, this source governs synonym and fuzzy matching and guards
+#'   exact/normalised pairs where it has records. It replaces authority lookup
+#'   for this call; conflicting accepted IDs are withheld from automatic
+#'   matching and available through [reconcile_candidates()]. The declared
+#'   rank must equal `rank`. Names without sufficient evidence remain
+#'   unresolved for review; spelling alone does not establish taxon identity.
 #'
 #' @return A [reconciliation] object. The accompanying mapping tibble,
 #'   match-type counts, provenance metadata, and applied / unused
@@ -196,7 +207,8 @@ reconcile_data <- function(
   resolve = c("flag", "first"),
   quiet = FALSE,
   x_label = NULL,
-  y_label = NULL
+  y_label = NULL,
+  backbone = NULL
 ) {
   # Capture source labels before any modifications to x/y
   x_source <- x_label %||% deparse(substitute(x))
@@ -288,7 +300,8 @@ reconcile_data <- function(
     fuzzy_threshold = fuzzy_threshold,
     flag_threshold = flag_threshold,
     resolve = resolve,
-    quiet = quiet
+    quiet = quiet,
+    backbone = backbone
   )
 
   # Build metadata

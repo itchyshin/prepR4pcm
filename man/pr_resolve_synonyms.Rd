@@ -9,7 +9,9 @@ pr_resolve_synonyms(
   unmatched_y,
   authority = "col",
   db_version = NULL,
-  quiet = FALSE
+  quiet = FALSE,
+  lookup_x = NULL,
+  lookup_y = NULL
 )
 }
 \arguments{

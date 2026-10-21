@@ -20,7 +20,8 @@
 #' @keywords internal
 pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
                                 authority = "col", db_version = NULL,
-                                quiet = FALSE) {
+                                quiet = FALSE, lookup_x = NULL,
+                                lookup_y = NULL) {
 
   if (length(unmatched_x) == 0 || length(unmatched_y) == 0) {
     return(tibble(
@@ -39,14 +40,19 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
   }
 
   # Look up both sets
-  lookup_x <- pr_lookup_authority(unmatched_x, authority, db_version, quiet = quiet)
-  lookup_y <- pr_lookup_authority(unmatched_y, authority, db_version, quiet = quiet)
+  if (is.null(lookup_x)) {
+    lookup_x <- pr_lookup_authority(unmatched_x, authority, db_version, quiet = quiet)
+  }
+  if (is.null(lookup_y)) {
+    lookup_y <- pr_lookup_authority(unmatched_y, authority, db_version, quiet = quiet)
+  }
 
   if (!quiet) cli_alert_info("Authority lookup complete; matching accepted names...")
   empty <- tibble(name_x = character(), name_y = character(),
                   name_resolved = character(), match_source = character(),
                   notes = character())
   rows <- list()
+  identity_blocked <- tibble(name_x = character(), name_y = character())
   make_rows <- function(x, y, accepted, indirect = FALSE) {
     tibble(
       name_x = x, name_y = y, name_resolved = accepted,
@@ -64,8 +70,38 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
 
   # Keep predecessor priority and order: x->y, then y->x, then shared
   # accepted names. match() preserves its first-target rule without scans.
+  identity_context <- all(c("identity_status", "accepted_id", "provider", "version", "rank") %in%
+                            names(lookup_x)) &&
+    all(c("identity_status", "accepted_id", "provider", "version", "rank") %in%
+          names(lookup_y))
+  if (identity_context) {
+    context_x <- unique(lookup_x[c("provider", "version", "rank")])
+    context_y <- unique(lookup_y[c("provider", "version", "rank")])
+    identity_context <- nrow(context_x) == 1L && nrow(context_y) == 1L &&
+      identical(as.character(context_x[1, ]), as.character(context_y[1, ]))
+  }
+  pair_eligible <- function(ix, iy) {
+    if (!identity_context) return(rep(TRUE, length(ix)))
+    eligible <- lookup_x$identity_status[ix] == "known" &
+      lookup_y$identity_status[iy] == "known" &
+      !is.na(lookup_x$accepted_id[ix]) & !is.na(lookup_y$accepted_id[iy]) &
+      lookup_x$accepted_id[ix] == lookup_y$accepted_id[iy]
+    eligible[is.na(eligible)] <- FALSE
+    eligible
+  }
   target_y <- match(lookup_x$accepted_name, unmatched_y)
   i <- which(!is.na(lookup_x$accepted_name) & !is.na(target_y))
+  if (length(i)) {
+    eligible <- pair_eligible(i, target_y[i])
+    if (any(!eligible)) {
+      blocked_i <- i[!eligible]
+      identity_blocked <- rbind(identity_blocked, tibble(
+        name_x = lookup_x$input[blocked_i],
+        name_y = unmatched_y[target_y[blocked_i]]
+      ))
+    }
+    i <- i[eligible]
+  }
   used_x <- lookup_x$input[i]
   used_y <- unmatched_y[target_y[i]]
   if (length(i)) {
@@ -76,6 +112,17 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
   j <- which(!is.na(lookup_y$accepted_name) & !is.na(target_x) &
                !lookup_y$input %in% used_y &
                !unmatched_x[target_x] %in% used_x)
+  if (length(j)) {
+    eligible <- pair_eligible(target_x[j], j)
+    if (any(!eligible)) {
+      blocked_j <- j[!eligible]
+      identity_blocked <- rbind(identity_blocked, tibble(
+        name_x = unmatched_x[target_x[blocked_j]],
+        name_y = lookup_y$input[blocked_j]
+      ))
+    }
+    j <- j[eligible]
+  }
   # The reverse strategy consumes each source at its first eligible y.
   j <- j[!duplicated(unmatched_x[target_x[j]])]
   if (length(j)) {
@@ -92,35 +139,104 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
     used_y <- c(used_y, ry)
   }
 
-  # Each lookup has one row per unique input. Within each accepted-name
-  # group, pair unused x and y in lookup order, without a Cartesian join.
+  # Each lookup has one row per unique input. When both lookups carry
+  # comparable identity evidence, pair shared accepted-name groups by the
+  # canonical ID first. Pairing by row order and checking identity afterward
+  # can consume names in crossed-ID groups and hide valid matches.
   ix <- which(!is.na(lookup_x$accepted_name) & !lookup_x$input %in% used_x)
   iy <- which(!is.na(lookup_y$accepted_name) & !lookup_y$input %in% used_y)
   if (length(ix) && length(iy)) {
     groups <- unique(lookup_y$accepted_name[iy])
-    gy <- match(lookup_y$accepted_name[iy], groups)
-    gx <- match(lookup_x$accepted_name[ix], groups)
-    valid <- which(!is.na(gx))
-    if (length(valid)) {
-      gid <- gx[valid]
-      ordinal <- stats::ave(seq_along(gid), gid, FUN = seq_along)
-      counts <- tabulate(gy, nbins = length(groups))
-      keep <- ordinal <= counts[gid]
-      valid <- valid[keep]
-      gid <- gid[keep]
-      ordinal <- ordinal[keep]
-      starts <- c(1L, utils::head(cumsum(counts), -1L) + 1L)
-      chosen_y <- iy[order(gy, method = "radix")[starts[gid] + ordinal - 1L]]
-      chosen_x <- ix[valid]
-      if (length(chosen_x)) {
-        rows[[length(rows) + 1L]] <- make_rows(
-          lookup_x$input[chosen_x], lookup_y$input[chosen_y],
-          lookup_x$accepted_name[chosen_x], indirect = TRUE
-        )
+    if (!identity_context) {
+      # Preserve the exact predecessor ordering when there is no comparable
+      # identity evidence. This lexical route has no IDs to reorder by.
+      gy <- match(lookup_y$accepted_name[iy], groups)
+      gx <- match(lookup_x$accepted_name[ix], groups)
+      valid <- which(!is.na(gx))
+      if (length(valid)) {
+        gid <- gx[valid]
+        ordinal <- stats::ave(seq_along(gid), gid, FUN = seq_along)
+        counts <- tabulate(gy, nbins = length(groups))
+        keep <- ordinal <= counts[gid]
+        valid <- valid[keep]
+        gid <- gid[keep]
+        ordinal <- ordinal[keep]
+        starts <- c(1L, utils::head(cumsum(counts), -1L) + 1L)
+        chosen_y <- iy[order(gy, method = "radix")[starts[gid] + ordinal - 1L]]
+        chosen_x <- ix[valid]
+      } else {
+        chosen_x <- chosen_y <- integer()
       }
+    } else {
+      x_group_id <- match(lookup_x$accepted_name[ix], groups)
+      y_group_id <- match(lookup_y$accepted_name[iy], groups)
+      known_x <- ix[lookup_x$identity_status[ix] == "known" &
+                      !is.na(lookup_x$accepted_id[ix]) &
+                      nzchar(lookup_x$accepted_id[ix])]
+      known_y <- iy[lookup_y$identity_status[iy] == "known" &
+                      !is.na(lookup_y$accepted_id[iy]) &
+                      nzchar(lookup_y$accepted_id[iy])]
+
+      group_occurrence <- function(group, order_key) {
+        occurrence <- integer(length(group))
+        valid <- !is.na(group)
+        if (!any(valid)) return(occurrence)
+        ord <- order(group[valid], order_key[valid], method = "radix")
+        positions <- which(valid)[ord]
+        occurrence[positions] <- sequence(rle(group[positions])$lengths)
+        occurrence
+      }
+
+      # Match repeated IDs by their occurrence within each accepted-name
+      # group. This preserves first-in/first-out pairing without scanning
+      # every name group against the full unmatched vectors.
+      known_x_group <- match(lookup_x$accepted_name[known_x], groups)
+      known_y_group <- match(lookup_y$accepted_name[known_y], groups)
+      known_x_key <- paste(known_x_group, lookup_x$accepted_id[known_x],
+                           sep = "\034")
+      known_y_key <- paste(known_y_group, lookup_y$accepted_id[known_y],
+                           sep = "\034")
+      known_x_occurrence <- group_occurrence(known_x_key, known_x)
+      known_y_occurrence <- group_occurrence(known_y_key, known_y)
+      known_y_match <- match(
+        paste(known_x_key, known_x_occurrence, sep = "\034"),
+        paste(known_y_key, known_y_occurrence, sep = "\034")
+      )
+      paired_x <- known_x[!is.na(known_y_match)]
+      paired_y <- known_y[known_y_match[!is.na(known_y_match)]]
+
+      # Pair any remaining candidates by accepted-name group and original
+      # order, retaining the review route for unknown or unmatched IDs.
+      remaining_x <- ix[!ix %in% paired_x]
+      remaining_y <- iy[!iy %in% paired_y]
+      remaining_x_group <- match(lookup_x$accepted_name[remaining_x], groups)
+      remaining_y_group <- match(lookup_y$accepted_name[remaining_y], groups)
+      remaining_x_occurrence <- group_occurrence(remaining_x_group, remaining_x)
+      remaining_y_occurrence <- group_occurrence(remaining_y_group, remaining_y)
+      remaining_y_match <- match(
+        paste(remaining_x_group, remaining_x_occurrence, sep = ":"),
+        paste(remaining_y_group, remaining_y_occurrence, sep = ":")
+      )
+      paired_remaining <- which(!is.na(remaining_y_match) &
+                                  !is.na(remaining_x_group))
+      chosen_x <- c(paired_x, remaining_x[paired_remaining])
+      chosen_y <- c(paired_y, remaining_y[remaining_y_match[paired_remaining]])
+    }
+
+    if (length(chosen_x)) {
+      order_x <- order(chosen_x)
+      chosen_x <- chosen_x[order_x]
+      chosen_y <- chosen_y[order_x]
+      rows[[length(rows) + 1L]] <- make_rows(
+        lookup_x$input[chosen_x], lookup_y$input[chosen_y],
+        lookup_x$accepted_name[chosen_x], indirect = TRUE
+      )
     }
   }
   out <- if (length(rows)) do.call(rbind, rows) else empty
+  if (nrow(identity_blocked)) {
+    attr(out, "identity_candidates") <- identity_blocked
+  }
   if (!quiet) cli_alert_info("Synonym matching complete: {nrow(out)} candidate pairs.")
   out
 }

@@ -207,8 +207,18 @@ pr_ensure_db <- function(authority, db_version = NULL) {
 #' @keywords internal
 pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
                                 quiet = FALSE) {
+  resolved_version <- if (authority == "gnverifier") NA_character_ else {
+    .pr_resolved_taxadb_version(authority, db_version)
+  }
+  effective_version <- if (!is.null(db_version)) {
+    as.character(db_version)
+  } else if (length(resolved_version) == 1L && !is.na(resolved_version)) {
+    resolved_version
+  } else {
+    NULL
+  }
   if (authority != "gnverifier") {
-    pr_ensure_db(authority, db_version)
+    pr_ensure_db(authority, effective_version)
   }
 
   unique_names <- unique(names[!is.na(names)])
@@ -224,8 +234,13 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
   }
 
   # Check session cache
-  cache_key <- paste0("lookup_", authority, "_",
-                       db_version %||% "latest")
+  cache_version <- if (length(resolved_version) == 1L &&
+                       !is.na(resolved_version) && nzchar(resolved_version)) {
+    resolved_version
+  } else {
+    "latest_unresolved"
+  }
+  cache_key <- paste0("lookup_", authority, "_", cache_version)
   cached <- if (exists(cache_key, envir = .pr_cache)) {
     get(cache_key, envir = .pr_cache)
   } else {
@@ -265,7 +280,7 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
       new_results_df <- if (authority == "gnverifier") {
         .pr_lookup_gnverifier(batch, if (start == 1L) db_version else NULL)
       } else {
-        .pr_lookup_taxadb(batch, authority, db_version)
+        .pr_lookup_taxadb(batch, authority, effective_version)
       }
       cached <- if (is.null(cached)) new_results_df else rbind(cached, new_results_df)
       assign(cache_key, cached, envir = .pr_cache)
@@ -279,7 +294,55 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
 
   # Return results for all requested names
   full_cache <- get(cache_key, envir = .pr_cache)
-  full_cache[full_cache$input %in% unique_names, ]
+  out <- full_cache[full_cache$input %in% unique_names, ]
+  attr(out, "resolved_version") <- resolved_version
+  out
+}
+
+.pr_resolved_taxadb_version <- function(authority, db_version = NULL) {
+  if (!is.null(db_version)) return(as.character(db_version))
+  if (!requireNamespace("taxadb", quietly = TRUE)) return(NA_character_)
+  cache_key <- paste0("resolved_taxadb_version_", authority)
+  if (exists(cache_key, envir = .pr_cache, inherits = FALSE)) {
+    return(get(cache_key, envir = .pr_cache, inherits = FALSE))
+  }
+  version <- tryCatch({
+    if (!"latest_version" %in% getNamespaceExports("taxadb")) return(NA_character_)
+    taxadb::latest_version()
+  }, error = function(e) NA_character_)
+  if (length(version) != 1L || is.na(version) || !nzchar(version)) {
+    version <- NA_character_
+  }
+  assign(cache_key, as.character(version), envir = .pr_cache)
+  as.character(version)
+}
+
+.pr_taxadb_accepted_target <- function(accepted_hit, accepted_id) {
+  if (is.null(accepted_hit) || nrow(accepted_hit) == 0L ||
+      !all(c("taxonomicStatus", "taxonID", "scientificName") %in%
+           names(accepted_hit))) {
+    return(NULL)
+  }
+  status <- tolower(as.character(accepted_hit$taxonomicStatus))
+  if (anyNA(status) || any(status != "accepted")) return(NULL)
+
+  target_ids <- unique(as.character(accepted_hit$taxonID))
+  target_ids <- target_ids[!is.na(target_ids) & nzchar(target_ids)]
+  target_names <- unique(as.character(accepted_hit$scientificName))
+  target_names <- target_names[!is.na(target_names) & nzchar(target_names)]
+  if (length(target_ids) != 1L || length(target_names) != 1L ||
+      !identical(target_ids[[1L]], as.character(accepted_id))) {
+    return(NULL)
+  }
+
+  list(accepted_name = target_names[[1L]], accepted_id = target_ids[[1L]])
+}
+
+.pr_taxadb_status_class <- function(status) {
+  status <- tolower(as.character(status))
+  ifelse(is.na(status), "unknown",
+         ifelse(status == "accepted", "accepted",
+                ifelse(status == "synonym", "synonym", "unknown")))
 }
 
 
@@ -295,6 +358,7 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
 #' @return A tibble with the same 5 columns as `pr_lookup_authority()`.
 #' @keywords internal
 .pr_lookup_taxadb <- function(to_lookup, authority, db_version = NULL) {
+    lookup_failed <- FALSE
     # Batch query: taxadb::filter_name accepts a character vector.
     # Only forward `version` when the caller supplied one — taxadb 0.2.1
     # errors on `version = NULL` because parse_schema() runs
@@ -305,8 +369,9 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
     all_hits <- tryCatch(
       do.call(taxadb::filter_name, filter_args),
       error = function(e) {
+        lookup_failed <<- TRUE
         cli_alert_warning(
-          "taxadb lookup failed for {.val {authority}}: {conditionMessage(e)}. Names will be recorded as not found."
+          "taxadb lookup failed for {.val {authority}}: {conditionMessage(e)}. Names will be recorded as lookup errors."
         )
         NULL
       }
@@ -314,13 +379,19 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
 
     # Process results per name
     new_results <- lapply(to_lookup, function(name) {
-      if (is.null(all_hits) || nrow(all_hits) == 0) {
+      if (lookup_failed) {
         return(tibble(
           input         = name,
           accepted_name = NA_character_,
-          status        = "not_found",
+          status        = "lookup_error",
           taxon_id      = NA_character_,
           authority     = authority
+        ))
+      }
+      if (is.null(all_hits) || nrow(all_hits) == 0) {
+        return(tibble(
+          input = name, accepted_name = NA_character_, status = "not_found",
+          taxon_id = NA_character_, authority = authority
         ))
       }
 
@@ -329,9 +400,9 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
       # so unconditionally referencing all_hits$input returns NULL and
       # `NULL == name` yields logical(0), which then collides with the
       # length-N scientificName mask under tibble's strict subscripting.
-      match_mask <- all_hits$scientificName == name
+      match_mask <- !is.na(all_hits$scientificName) & all_hits$scientificName == name
       if ("input" %in% names(all_hits)) {
-        match_mask <- match_mask | all_hits$input == name
+        match_mask <- match_mask | (!is.na(all_hits$input) & all_hits$input == name)
       }
       hits <- all_hits[match_mask, , drop = FALSE]
 
@@ -345,46 +416,121 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
         ))
       }
 
-      # Prefer accepted name
-      accepted <- hits[hits$taxonomicStatus == "accepted", ]
+      # A record is identity-safe only when every matching accepted/synonym
+      # row resolves to one canonical accepted taxon. Never choose the first
+      # hit when the source supplies conflicting IDs.
+      status_class <- .pr_taxadb_status_class(hits$taxonomicStatus)
+      accepted <- hits[status_class == "accepted", , drop = FALSE]
+      synonym <- hits[status_class == "synonym", , drop = FALSE]
+      unsupported <- hits[status_class == "unknown", , drop = FALSE]
+      if (nrow(unsupported) > 0L) {
+        # COL's "ambiguous synonym" records can still point to a single
+        # accepted-name target. Preserve that text only as a review hint:
+        # the status remains unknown and no canonical ID is exposed, so the
+        # identity guard cannot use it for an automatic match.
+        candidate_name <- NA_character_
+        unsupported_status <- tolower(trimws(as.character(
+          hits$taxonomicStatus[status_class == "unknown"]
+        )))
+        if (all(status_class == "unknown") &&
+            length(unsupported_status) > 0L &&
+            !anyNA(unsupported_status) &&
+            all(unsupported_status == "ambiguous synonym") &&
+            "acceptedNameUsageID" %in% names(hits)) {
+          target_ids <- unique(as.character(
+            hits$acceptedNameUsageID[status_class == "unknown"]
+          ))
+          target_ids <- target_ids[!is.na(target_ids) & nzchar(target_ids)]
+          if (length(target_ids) == 1L) {
+            target <- tryCatch({
+              id_args <- list(target_ids[[1L]], provider = authority)
+              if (!is.null(db_version)) id_args$version <- db_version
+              .pr_taxadb_accepted_target(
+                do.call(taxadb::filter_id, id_args), target_ids[[1L]]
+              )
+            }, error = function(e) NULL)
+            if (!is.null(target)) candidate_name <- target$accepted_name
+          }
+        }
+        return(tibble(input = name, accepted_name = candidate_name,
+                      status = "unknown", taxon_id = NA_character_,
+                      authority = authority))
+      }
 
-      if (nrow(accepted) > 0) {
+      has_complete_ids <- function(records, column) {
+        if (nrow(records) == 0L) return(TRUE)
+        if (!column %in% names(records)) return(FALSE)
+        ids <- as.character(records[[column]])
+        length(ids) == nrow(records) && !anyNA(ids) && all(nzchar(ids))
+      }
+      if (!has_complete_ids(accepted, "taxonID") ||
+          !has_complete_ids(synonym, "acceptedNameUsageID")) {
+        return(tibble(input = name, accepted_name = NA_character_,
+                      status = "unknown", taxon_id = NA_character_,
+                      authority = authority))
+      }
+
+      accepted_ids <- unique(as.character(accepted$taxonID))
+      accepted_ids <- accepted_ids[!is.na(accepted_ids) & nzchar(accepted_ids)]
+      synonym_ids <- unique(as.character(synonym$acceptedNameUsageID))
+      synonym_ids <- synonym_ids[!is.na(synonym_ids) & nzchar(synonym_ids)]
+      canonical_ids <- unique(c(accepted_ids, synonym_ids))
+      if (length(canonical_ids) > 1L) {
+        return(tibble(input = name, accepted_name = NA_character_,
+                      status = "ambiguous", taxon_id = NA_character_,
+                      authority = authority))
+      }
+
+      if (length(accepted_ids) == 1L) {
+        accepted_names <- unique(as.character(accepted$scientificName))
+        accepted_names <- accepted_names[!is.na(accepted_names) & nzchar(accepted_names)]
+        if (length(accepted_names) != 1L) {
+          return(tibble(input = name, accepted_name = NA_character_,
+                        status = "ambiguous", taxon_id = NA_character_,
+                        authority = authority))
+        }
         return(tibble(
           input         = name,
-          accepted_name = accepted$scientificName[1],
+          accepted_name = accepted_names[[1L]],
           status        = "accepted",
-          taxon_id      = accepted$taxonID[1],
+          taxon_id      = accepted_ids[[1L]],
           authority     = authority
         ))
       }
 
       # Name is a synonym — follow acceptedNameUsageID
-      syn <- hits[1, ]
-      accepted_id <- syn$acceptedNameUsageID
+      if (length(synonym_ids) != 1L) {
+        return(tibble(input = name, accepted_name = NA_character_,
+                      status = if (nrow(synonym)) "unresolved_synonym" else "unknown",
+                      taxon_id = NA_character_, authority = authority))
+      }
+      accepted_id <- synonym_ids[[1L]]
 
-      if (!is.na(accepted_id) && nchar(accepted_id) > 0) {
+      accepted_target <- if (!is.na(accepted_id) && nzchar(accepted_id)) {
         tryCatch({
           id_args <- list(accepted_id, provider = authority)
           if (!is.null(db_version)) id_args$version <- db_version
-          accepted_hit <- do.call(taxadb::filter_id, id_args)
-          if (!is.null(accepted_hit) && nrow(accepted_hit) > 0) {
-            return(tibble(
-              input         = name,
-              accepted_name = accepted_hit$scientificName[1],
-              status        = syn$taxonomicStatus[1] %||% "synonym",
-              taxon_id      = accepted_id,
-              authority     = authority
-            ))
-          }
+          .pr_taxadb_accepted_target(
+            do.call(taxadb::filter_id, id_args), accepted_id
+          )
         }, error = function(e) NULL)
+      } else NULL
+      if (!is.null(accepted_target)) {
+        return(tibble(
+          input         = name,
+          accepted_name = accepted_target$accepted_name,
+          status        = "synonym",
+          taxon_id      = accepted_target$accepted_id,
+          authority     = authority
+        ))
       }
 
       # Could not resolve
       tibble(
         input         = name,
         accepted_name = NA_character_,
-        status        = syn$taxonomicStatus[1] %||% "unknown",
-        taxon_id      = syn$taxonID[1],
+        status        = "unresolved_synonym",
+        taxon_id      = NA_character_,
         authority     = authority
       )
     })

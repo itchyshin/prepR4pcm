@@ -15,6 +15,7 @@
 #'     \item{`"flagged"`}{Only flagged matches (default).}
 #'     \item{`"fuzzy"`}{Fuzzy and flagged matches.}
 #'     \item{`"all_unresolved"`}{All unresolved species.}
+#'     \item{`"identity_candidates"`}{Pairs withheld by the identity guard.}
 #'   }
 #' @param suggest Logical. If `TRUE` and `type = "all_unresolved"`, show
 #'   the closest fuzzy candidate (if any) alongside unresolved names.
@@ -53,7 +54,8 @@
 #'
 #' @export
 reconcile_review <- function(reconciliation,
-                             type = c("flagged", "fuzzy", "all_unresolved"),
+                             type = c("flagged", "fuzzy", "all_unresolved",
+                                      "identity_candidates"),
                              suggest = TRUE, quiet = FALSE) {
 
   validate_reconciliation(reconciliation)
@@ -66,6 +68,56 @@ reconcile_review <- function(reconciliation,
         "Returning `reconciliation` unchanged."
       )
     )
+    return(reconciliation)
+  }
+
+  if (type == "identity_candidates") {
+    candidates <- reconciliation$candidates
+    review_idx <- which(candidates$review_status == "pending")
+    if (!length(review_idx)) {
+      cli_alert_info("No pending identity candidates to review.")
+      return(reconciliation)
+    }
+    cli_h1("Interactive identity review: {length(review_idx)} candidate pairs")
+    accepted <- rejected <- skipped <- 0L
+    for (i in review_idx) {
+      candidate <- candidates[i, , drop = FALSE]
+      cat(sprintf(
+        "\n[%d/%d] %s -> %s [%s; %s / %s; %s@%s]\n",
+        match(i, review_idx), length(review_idx), candidate$name_x,
+        candidate$name_y, candidate$reason, candidate$x_id, candidate$y_id,
+        candidate$provider, candidate$version
+      ))
+      response <- ""
+      while (!response %in% c("a", "r", "s", "q")) {
+        response <- tolower(trimws(readline(
+          "  Accept pair [a], Reject pair [r], Skip [s], Quit [q]: "
+        )))
+      }
+      if (response == "q") break
+      if (response == "a") {
+        note <- paste0("Accepted after identity review; evidence: ", candidate$reason,
+                       " (", candidate$x_id, " vs ", candidate$y_id, ")")
+        reconciliation <- reconcile_override(
+          reconciliation, candidate$name_x, candidate$name_y,
+          action = "accept", note = note
+        )
+        accepted <- accepted + 1L
+      } else if (response == "r") {
+        note <- paste0("Rejected identity candidate: ", candidate$reason)
+        reconciliation <- reconcile_override(
+          reconciliation, candidate$name_x, candidate$name_y,
+          action = "reject", note = note
+        )
+        rejected <- rejected + 1L
+      } else {
+        skipped <- skipped + 1L
+      }
+      candidates <- reconciliation$candidates
+    }
+    if (!quiet) {
+      cli_alert_success("Identity review: {accepted} accepted, {rejected} rejected, {skipped} skipped")
+    }
     return(reconciliation)
   }
 

@@ -36,7 +36,8 @@ reconcile_trees <- function(tree1, tree2,
                             fuzzy = FALSE,
                             fuzzy_threshold = 0.9,
                             resolve = c("flag", "first"),
-                            quiet = FALSE) {
+                            quiet = FALSE,
+                            backbone = NULL) {
 
   rank <- match.arg(rank)
   resolve <- match.arg(resolve)
@@ -82,7 +83,8 @@ reconcile_trees <- function(tree1, tree2,
     fuzzy           = fuzzy,
     fuzzy_threshold = fuzzy_threshold,
     resolve         = resolve,
-    quiet           = quiet
+    quiet           = quiet,
+    backbone        = backbone
   )
 
   # Build metadata

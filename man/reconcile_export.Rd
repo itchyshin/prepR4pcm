@@ -52,7 +52,8 @@ to \code{FALSE}; flagged pairs require review before explicit inclusion.}
 A named list of file paths (invisibly):
 \verb{$data} (CSV), \verb{$tree} (Nexus or Newick), \verb{$mapping} (CSV), and
 \verb{$unused_overrides} (CSV; \code{NULL} when there are no rejected
-overrides on the reconciliation).
+overrides on the reconciliation), and \verb{$candidates} (CSV; \code{NULL} when
+no identity-guard candidates were withheld).
 }
 \description{
 Apply a reconciliation and save three files: the aligned CSV, the

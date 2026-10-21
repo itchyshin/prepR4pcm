@@ -15,8 +15,10 @@ mock_lookup <- function(table) {
       input         = names,
       accepted_name = unname(table[names]),
       status        = ifelse(is.na(table[names]), "not_found", "synonym"),
+      # A synonym lookup returns the canonical accepted ID, so distinct
+      # spelling aliases of one accepted name share an ID in the mock.
       taxon_id      = ifelse(is.na(table[names]), NA_character_,
-                             paste0("id_", match(names, names(table)))),
+                             paste0("id_", unname(table[names]))),
       authority     = authority
     )
   }
@@ -255,9 +257,15 @@ test_that("each authority on the valid list integrates cleanly with the cascade"
 
     if (!inherits(res, "error")) {
       expect_s3_class(res, "reconciliation")
-      # Sanity: the synonym row was matched.
-      expect_equal(res$counts$n_synonym, 1L,
-                   label = sprintf("synonym match count for authority `%s`", auth))
+      # GNverifier's record ID is not a proven canonical accepted-taxon ID,
+      # so its shared accepted-name text remains a review candidate.
+      if (auth == "gnverifier") {
+        expect_equal(res$counts$n_synonym, 0L)
+        expect_true(any(res$candidates$reason == "identity_not_established"))
+      } else {
+        expect_equal(res$counts$n_synonym, 1L,
+                     label = sprintf("synonym match count for authority `%s`", auth))
+      }
       # Provenance: meta records the authority we asked for.
       expect_equal(res$meta$authority, auth)
     }
