@@ -19,12 +19,19 @@
 #' establish grammar or identity.
 #' Other fuzzy matches retain their spelling-based behavior.
 #'
+#' The `identity_x` and `identity_y` arguments are internal evidence inputs
+#' supplied by the reconciliation cascade. They are not part of the exported
+#' user interface.
+#'
 #' @param names_x Character vector.
 #' @param names_y Character vector.
 #' @param threshold Numeric (0--1). Minimum similarity score. Default 0.9.
 #' @param rank Character. `"species"` or `"subspecies"`.
-#'
 #' @param quiet Logical. Suppress progress messages.
+#' @param identity_x Internal authority identity evidence aligned to `names_x`.
+#'   Used only by the reconciliation cascade.
+#' @param identity_y Internal authority identity evidence aligned to `names_y`.
+#'   Used only by the reconciliation cascade.
 #' @return A tibble with columns: `name_x`, `name_y`, `score`, `notes`.
 #' @keywords internal
 pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,

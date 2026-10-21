@@ -24,6 +24,12 @@ pr_fuzzy_match(
 \item{rank}{Character. \code{"species"} or \code{"subspecies"}.}
 
 \item{quiet}{Logical. Suppress progress messages.}
+
+\item{identity_x}{Internal authority identity evidence aligned to \code{names_x}.
+Used only by the reconciliation cascade.}
+
+\item{identity_y}{Internal authority identity evidence aligned to \code{names_y}.
+Used only by the reconciliation cascade.}
 }
 \value{
 A tibble with columns: \code{name_x}, \code{name_y}, \code{score}, \code{notes}.
@@ -32,7 +38,8 @@ A tibble with columns: \code{name_x}, \code{name_y}, \code{score}, \code{notes}.
 Uses component-based similarity: genus and epithet are matched separately,
 then combined with weights (genus 0.6, species epithet 0.4; at subspecies
 rank, genus 0.55, species epithet 0.30, and infraspecific epithet 0.15).
-Uses base R \code{utils::adist()} for Levenshtein distance — no extra dependencies.
+Uses base R \code{utils::adist()} for Levenshtein distance, with no extra
+dependencies.
 }
 \details{
 Candidate generation starts with names whose genus is within 2 edits.
@@ -45,5 +52,9 @@ supported species-epithet ending as equivalent; at subspecies rank, the
 infraspecific epithet must also be sufficiently similar. This does not
 establish grammar or identity.
 Other fuzzy matches retain their spelling-based behavior.
+
+The \code{identity_x} and \code{identity_y} arguments are internal evidence inputs
+supplied by the reconciliation cascade. They are not part of the exported
+user interface.
 }
 \keyword{internal}
