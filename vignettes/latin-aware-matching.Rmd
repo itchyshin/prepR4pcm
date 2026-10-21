@@ -72,8 +72,21 @@ Articles 23.1, 23.5, and 23.6.
 
 ## What to do with a review candidate
 
-Inspect the candidate and its authority evidence with
-`reconcile_candidates()` or `reconcile_review(type = "identity_candidates")`.
+Unresolved names can still have useful suggestions. The ordinary review command
+`reconcile_review(result, type = "flagged")` includes pending candidate pairs
+as well as flagged matches. `reconcile_summary(result)` reports these pairs;
+`reconcile_summary(result, format = "data.frame")$tables$review_candidates`
+returns the pending review table. Inspect the full evidence record with
+`reconcile_candidates(result)`. The dedicated
+`reconcile_review(result, type = "identity_candidates")` mode remains available.
+
+Some suggested tree names may already be assigned to another input name. These
+pairs remain visible with a warning. Review the competing names and resolve the
+existing assignment before accepting the new pair. A suggestion never reserves
+a tree tip or changes the mapping. `include_flagged = TRUE` applies existing
+flagged mappings; it does not accept pending candidate pairs. Accepting a pair
+during review records a deliberate override.
+
 If the authority does not establish a matching identity, check an appropriate
 taxonomic source yourself. Record a deliberate decision with
 `reconcile_override()` or `reconcile_override_batch()`; do not treat a

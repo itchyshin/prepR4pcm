@@ -11,7 +11,8 @@ pr_fuzzy_match(
   rank = "species",
   quiet = FALSE,
   identity_x = NULL,
-  identity_y = NULL
+  identity_y = NULL,
+  review_only = FALSE
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ Used only by the reconciliation cascade.}
 
 \item{identity_y}{Internal authority identity evidence aligned to \code{names_y}.
 Used only by the reconciliation cascade.}
+
+\item{review_only}{Internal flag to retain plausible pairs without assigning
+targets, including targets already used elsewhere in the cascade.}
 }
 \value{
 A tibble with columns: \code{name_x}, \code{name_y}, \code{score}, \code{notes}.

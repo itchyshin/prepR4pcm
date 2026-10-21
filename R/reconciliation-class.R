@@ -267,6 +267,10 @@ print.reconciliation <- function(x, ...) {
                  "!" = "Overrides unused:   {.val {n_unused_ov}}")
   }
   cli_bullets(bullets)
+  pending_candidates <- .pr_pending_review_candidates(x)
+  if (nrow(pending_candidates)) {
+    cli_alert_info("{nrow(pending_candidates)} pending candidate pairs for review ({length(unique(pending_candidates$name_x))} input names). Use {.code reconcile_review(result, type = 'flagged')}; these suggestions are not applied automatically.")
+  }
 
   cli_alert_info(
     "Use {.fn reconcile_summary} for details, {.fn reconcile_mapping} for the full table."

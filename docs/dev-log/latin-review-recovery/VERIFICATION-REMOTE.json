@@ -1,0 +1,235 @@
+{
+  "producer": {
+    "schema_version": 1,
+    "mode": "full",
+    "elapsed_seconds": 281.63,
+    "source_archive_sha256": "74ada79de8fb95b1abb96006ed7ce20317f776316c22a52abda41df81e114c84",
+    "loaded_package_path": "/home/snakagaw/prepr137/review-recovery-20261021/lib-verified/prepR4pcm",
+    "input_sha256": "407b0c75ee1e0e37f62f05937a05bfafce8f735289a03a6a35cfb00fe76c959e",
+    "tree_sha256": "bd32213488711351cad96f3f199fba2c86ec11b9629295bc1d61fe0dd75fe098",
+    "provider": "col",
+    "snapshot": "2026",
+    "input_rows": 190263,
+    "unique_input_names": 190263,
+    "tree_tips": 117934,
+    "mapping_rows": 303163,
+    "match_types": {
+      "flagged": 96,
+      "normalized": 2897,
+      "synonym": 2041,
+      "unresolved": 298129
+    },
+    "candidate_pairs": 7508,
+    "pending_pairs": 7502,
+    "pending_inputs": 6846,
+    "mapping_identical_to_b055018": true,
+    "candidate_added": 1117,
+    "candidate_removed": 0,
+    "candidate_shared": 6391,
+    "baseline_kind": "saved_authority_enabled_surrogate_for_reported_count",
+    "baseline_result_sha256": "2dd9e9e47863b6e0f476746d9c8f8889a4dc260d501ac0d9309c73d14887a556",
+    "current_main_result_sha256": "63439b9673d304e5c90ccb2b7e73e7f0b30e12ee005f50708af55dbf9e248ee8",
+    "result_sha256": "0b903ec9bf58059dd1dcd03e3e7aff50a7adb55a9b61326f408ea73b7c7801e0",
+    "baseline_count_limitation": "Saved baseline has 4006 flagged rows, not reporter 3944; it establishes a matched-data mechanism comparison only."
+  },
+  "diagnosis": {
+    "schema_version": 1,
+    "phase": "diagnosis",
+    "generated_at": "2026-10-21 23:12:47 UTC",
+    "loaded_package_path": "/home/snakagaw/prepr137/review-recovery-20261021/lib-verified/prepR4pcm",
+    "base_revision": "b05501806751518506638167a59218903669cfa6",
+    "hashes": {
+      "result": "0b903ec9bf58059dd1dcd03e3e7aff50a7adb55a9b61326f408ea73b7c7801e0",
+      "main": "63439b9673d304e5c90ccb2b7e73e7f0b30e12ee005f50708af55dbf9e248ee8",
+      "baseline": "2dd9e9e47863b6e0f476746d9c8f8889a4dc260d501ac0d9309c73d14887a556",
+      "authority": "3eab44b22411e2ed0be8050fc8565875601c8ca80746de1e35ddeca8392877b2",
+      "review": "7a9680ce03566fd9911cc64b60b4785510afdfcd57e0bf68e348846427d5dd35",
+      "archive": "74ada79de8fb95b1abb96006ed7ce20317f776316c22a52abda41df81e114c84",
+      "input": "407b0c75ee1e0e37f62f05937a05bfafce8f735289a03a6a35cfb00fe76c959e",
+      "tree": "bd32213488711351cad96f3f199fba2c86ec11b9629295bc1d61fe0dd75fe098"
+    },
+    "input_tree_verification": "source files rehashed in place and matched independently audited digests",
+    "derived": {
+      "named_case_candidate_rows": [
+        1,
+        1,
+        1,
+        3,
+        2,
+        1,
+        1
+      ],
+      "trema_pending": 2,
+      "review_transcript_trema": true,
+      "named_case_stages": [
+        {
+          "input": "Coelogyne candoonensis",
+          "baseline_mapping": {
+            "flagged": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 1,
+          "repaired_candidate_rows": 1
+        },
+        {
+          "input": "Coussarea petiolaris",
+          "baseline_mapping": {
+            "flagged": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 1,
+          "repaired_candidate_rows": 1
+        },
+        {
+          "input": "Croton heterocarpus",
+          "baseline_mapping": {
+            "flagged": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 1,
+          "repaired_candidate_rows": 1
+        },
+        {
+          "input": "Croton leiophyllus",
+          "baseline_mapping": {
+            "flagged": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 3,
+          "repaired_candidate_rows": 3
+        },
+        {
+          "input": "Croton stenopetalus",
+          "baseline_mapping": {
+            "flagged": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 2,
+          "repaired_candidate_rows": 2
+        },
+        {
+          "input": "Trema orientalis",
+          "baseline_mapping": {
+            "flagged": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 1,
+          "repaired_candidate_rows": 1
+        },
+        {
+          "input": "Trema tomentosa",
+          "baseline_mapping": {
+            "unresolved": 1
+          },
+          "main_mapping": {
+            "unresolved": 1
+          },
+          "repaired_mapping": {
+            "unresolved": 1
+          },
+          "main_candidate_rows": 0,
+          "repaired_candidate_rows": 1
+        }
+      ],
+      "baseline_main_flagged_delta": -3910,
+      "baseline_candidate_pairs": 0,
+      "main_candidate_pairs": 6391,
+      "documented_surrogate_limit": "Saved baseline has 4006 flagged rows, not reporter 3944; it establishes a matched-data mechanism comparison only."
+    }
+  },
+  "identity": {
+    "schema_version": 1,
+    "phase": "identity",
+    "generated_at": "2026-10-21 23:12:58 UTC",
+    "loaded_package_path": "/home/snakagaw/prepr137/review-recovery-20261021/lib-verified/prepR4pcm",
+    "base_revision": "b05501806751518506638167a59218903669cfa6",
+    "hashes": {
+      "result": "0b903ec9bf58059dd1dcd03e3e7aff50a7adb55a9b61326f408ea73b7c7801e0",
+      "main": "63439b9673d304e5c90ccb2b7e73e7f0b30e12ee005f50708af55dbf9e248ee8",
+      "baseline": "2dd9e9e47863b6e0f476746d9c8f8889a4dc260d501ac0d9309c73d14887a556",
+      "authority": "3eab44b22411e2ed0be8050fc8565875601c8ca80746de1e35ddeca8392877b2",
+      "review": "7a9680ce03566fd9911cc64b60b4785510afdfcd57e0bf68e348846427d5dd35",
+      "archive": "74ada79de8fb95b1abb96006ed7ce20317f776316c22a52abda41df81e114c84",
+      "input": "407b0c75ee1e0e37f62f05937a05bfafce8f735289a03a6a35cfb00fe76c959e",
+      "tree": "bd32213488711351cad96f3f199fba2c86ec11b9629295bc1d61fe0dd75fe098"
+    },
+    "input_tree_verification": "source files rehashed in place and matched independently audited digests",
+    "derived": {
+      "distinct_id_pairs_excluded": 5,
+      "bignonia_records": 3,
+      "bignonia_status": [
+        "synonym",
+        "accepted",
+        "synonym"
+      ],
+      "bignonia_accepted_ids": "COL:64QQC",
+      "bignonia_identity_conclusion": "recorded source fields only; no taxonomic certainty inferred"
+    }
+  },
+  "replay": {
+    "schema_version": 1,
+    "phase": "replay",
+    "generated_at": "2026-10-21 23:13:00 UTC",
+    "loaded_package_path": "/home/snakagaw/prepr137/review-recovery-20261021/lib-verified/prepR4pcm",
+    "base_revision": "b05501806751518506638167a59218903669cfa6",
+    "hashes": {
+      "result": "0b903ec9bf58059dd1dcd03e3e7aff50a7adb55a9b61326f408ea73b7c7801e0",
+      "main": "63439b9673d304e5c90ccb2b7e73e7f0b30e12ee005f50708af55dbf9e248ee8",
+      "baseline": "2dd9e9e47863b6e0f476746d9c8f8889a4dc260d501ac0d9309c73d14887a556",
+      "authority": "3eab44b22411e2ed0be8050fc8565875601c8ca80746de1e35ddeca8392877b2",
+      "review": "7a9680ce03566fd9911cc64b60b4785510afdfcd57e0bf68e348846427d5dd35",
+      "archive": "74ada79de8fb95b1abb96006ed7ce20317f776316c22a52abda41df81e114c84",
+      "input": "407b0c75ee1e0e37f62f05937a05bfafce8f735289a03a6a35cfb00fe76c959e",
+      "tree": "bd32213488711351cad96f3f199fba2c86ec11b9629295bc1d61fe0dd75fe098"
+    },
+    "input_tree_verification": "source files rehashed in place and matched independently audited digests",
+    "derived": {
+      "added": 1117,
+      "removed": 0,
+      "shared": 6391,
+      "added_by_target_occupation": {
+        "TRUE": 1117
+      },
+      "added_by_source_unresolved": {
+        "TRUE": 1117
+      },
+      "mapping_identical": true,
+      "automatic_outputs_identical": true,
+      "added_by_identity_state": {
+        "conflict": 232,
+        "same": 760,
+        "unknown": 125
+      }
+    }
+  }
+}

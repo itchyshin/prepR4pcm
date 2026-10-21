@@ -80,6 +80,7 @@ reconcile_summary <- function(reconciliation,
   normalized <- mapping[mapping$match_type == "normalized", ]
   fuzzy_m    <- mapping[mapping$match_type == "fuzzy", ]
   manual_m   <- mapping[mapping$match_type == "manual", ]
+  review_candidates <- .pr_pending_review_candidates(reconciliation)
 
   # Console output
   if (format == "console") {
@@ -130,6 +131,12 @@ reconcile_summary <- function(reconciliation,
       lines <- c(lines, sprintf("  Identity candidates withheld: %d", n_candidates))
       reasons <- sort(table(reconciliation$candidates$reason), decreasing = TRUE)
       lines <- c(lines, paste0("    ", names(reasons), ": ", as.integer(reasons)))
+    }
+    if (nrow(review_candidates)) {
+      lines <- c(lines, sprintf("  Pending candidate pairs for review: %d (%d input names)",
+        nrow(review_candidates), length(unique(review_candidates$name_x))),
+        '  To review these suggestions: reconcile_review(result, type = "flagged").',
+        "  Suggestions remain unresolved until explicitly accepted.")
     }
     lines <- c(lines, "")
 
@@ -279,6 +286,7 @@ reconcile_summary <- function(reconciliation,
         by_type    = by_type,
         unresolved = unresolved,
         flagged    = flagged,
+        review_candidates = review_candidates,
         synonyms   = synonyms,
         normalized = normalized
       ),

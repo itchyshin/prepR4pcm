@@ -1,0 +1,35 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "acbb56e6c0309093c21dde61a4e3ef3aed0fe3d5b4d9c6325062bb40cdda268c",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate post-draft reading against final source, core and regression receipts, in-place raw validators and returned independent reviews",
+  "genre": "technical after-task report",
+  "coverage": "whole saved draft",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Specific names and measured results keep the prose concrete. Protocol headings and checklist tables create some formal repetition appropriate to this record.",
+  "confidence": "medium",
+  "confidence_reason": "Editorial self-assessment, not an independent human rating.",
+  "examples": [
+    {
+      "location": "line 99",
+      "cue": "General taxonomic correctness of the 1,117 additions is unknown.",
+      "impact": "States the important evidence limit directly.",
+      "repair": "no change needed",
+      "line": 99,
+      "quote": "The verified local repair remains unpublished. CRAN preparation remains on hold. The branch and isolated worktree are retained for review. General taxonomic correctness of the 1,117 additions is unknown. Even comparable provider IDs do not prove the biological identification of a record or agreement with another tree taxonomy. The 760 same-ID occupied pairs remain review-only because the target is already assigned."
+    }
+  ],
+  "science_gate": "pass",
+  "science_gate_reason": "Separates review access, mapping identity, resolution coverage and biological correctness; states unadjudicated cases and provider limits.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Numbers and statuses compared with final aggregate receipts, test outputs, source/archive binding and independent review messages. Proposed/deferred work is labelled.",
+  "references_gate": "pass",
+  "references_gate_reason": "Local source and evidence links checked in the task directory; source identities and exact hashes are recorded. The paper-specific evidence is in separately assessed TNRS-DESIGN.md.",
+  "date": "2026-10-21",
+  "calibration_status": "Protocol examples already seen; no held-out calibration or authorship inference.",
+  "interpretation": "perceived_style_not_authorship"
+}

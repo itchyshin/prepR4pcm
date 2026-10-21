@@ -1,0 +1,35 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "9af34a350df4137a04bfff1f95d2d29467561a58d247390478c9903f84c52311",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate post-draft reading against final source, core and regression receipts, in-place raw validators and returned independent reviews",
+  "genre": "independent-review record",
+  "coverage": "whole saved draft",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Specific names and measured results keep the prose concrete. Protocol headings and checklist tables create some formal repetition appropriate to this record.",
+  "confidence": "medium",
+  "confidence_reason": "Editorial self-assessment, not an independent human rating.",
+  "examples": [
+    {
+      "location": "line 8",
+      "cue": "False positive, regression assertion retained.",
+      "impact": "Records contrary evidence without preserving an unsupported bug claim.",
+      "repair": "no change needed",
+      "line": 8,
+      "quote": "| Suspected missing authority-free prompt | Added a direct prompt assertion. It passed before code changes; R's indexed assignment expands the NULL ID vector to NA values. The reviewer retracted the finding. | False positive, regression assertion retained. |"
+    }
+  ],
+  "science_gate": "pass",
+  "science_gate_reason": "Separates review access, mapping identity, resolution coverage and biological correctness; states unadjudicated cases and provider limits.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Numbers and statuses compared with final aggregate receipts, test outputs, source/archive binding and independent review messages. Proposed/deferred work is labelled.",
+  "references_gate": "pass",
+  "references_gate_reason": "Local source and evidence links checked in the task directory; source identities and exact hashes are recorded. The paper-specific evidence is in separately assessed TNRS-DESIGN.md.",
+  "date": "2026-10-21",
+  "calibration_status": "Protocol examples already seen; no held-out calibration or authorship inference.",
+  "interpretation": "perceived_style_not_authorship"
+}

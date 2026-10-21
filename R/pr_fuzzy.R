@@ -1,5 +1,16 @@
 # Fuzzy matching -----------------------------------------------------------
 
+# Conservative genus pool, shared with occupied-target review discovery.
+.pr_close_genus_indices <- function(genus, pool) {
+  possible <- which(abs(nchar(pool) - nchar(genus)) <= 2L)
+  close <- agrep(genus, pool[possible], fixed = TRUE,
+    max.distance = list(all = 2L, insertions = 2L, deletions = 2L,
+                        substitutions = 2L))
+  possible <- possible[close]
+  distance <- as.numeric(utils::adist(genus, pool[possible]))
+  possible[distance <= 2L]
+}
+
 #' Fuzzy-match two sets of species names
 #'
 #' Uses component-based similarity: genus and epithet are matched separately,
@@ -32,11 +43,14 @@
 #'   Used only by the reconciliation cascade.
 #' @param identity_y Internal authority identity evidence aligned to `names_y`.
 #'   Used only by the reconciliation cascade.
+#' @param review_only Internal flag to retain plausible pairs without assigning
+#'   targets, including targets already used elsewhere in the cascade.
 #' @return A tibble with columns: `name_x`, `name_y`, `score`, `notes`.
 #' @keywords internal
 pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
                             rank = "species", quiet = FALSE,
-                            identity_x = NULL, identity_y = NULL) {
+                            identity_x = NULL, identity_y = NULL,
+                            review_only = FALSE) {
 
   if (!quiet && length(names_x) >= 1000L) {
     cli::cli_inform("Preparing fuzzy matching for {length(names_x)} names against {length(names_y)} reference names.")
@@ -155,13 +169,7 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   }
 
   for (gx in unique_genus_x) {
-    possible <- which(abs(nchar(unique_genus_y) - nchar(gx)) <= 2L)
-    close <- agrep(gx, unique_genus_y[possible], fixed = TRUE,
-                   max.distance = list(all = 2L, insertions = 2L,
-                                       deletions = 2L, substitutions = 2L))
-    possible <- possible[close]
-    gd <- as.numeric(utils::adist(gx, unique_genus_y[possible]))
-    possible <- possible[gd <= 2L]
+    possible <- .pr_close_genus_indices(gx, unique_genus_y)
     candidate_genera <- unique_genus_y[possible]
     cand_y <- unlist(genus_y_groups[candidate_genera], use.names = FALSE)
     # Keep genus-alphabetical / original-within-genus ordering for score ties.
@@ -290,18 +298,20 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           same_id[is.na(same_id)] <- FALSE
           eligible <- known_x & known_y & same_source & same_id
           blocked_idx <- which(
-            !eligible & (scores >= threshold | gender_variant)
+            (!eligible | review_only) &
+              (scores >= threshold | gender_variant | candidate_y %in% cross_fallback_y)
           )
         } else {
           known_y <- rep(FALSE, length(candidate_y))
           same_source <- rep(FALSE, length(candidate_y))
           eligible <- rep(TRUE, length(candidate_y))
-          blocked_idx <- which(gender_variant)
+          blocked_idx <- which(gender_variant | (review_only & scores >= threshold))
         }
 
         if (length(blocked_idx)) {
           conflict <- if (identity_guard) {
-            known_x & known_y[blocked_idx] & same_source[blocked_idx]
+            known_x & known_y[blocked_idx] & same_source[blocked_idx] &
+              !same_id[blocked_idx]
           } else {
             rep(FALSE, length(blocked_idx))
           }
@@ -312,20 +322,30 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           }
           y_id <- identity_y$accepted_id[candidate_y[blocked_idx]]
           y_id[!known_y[blocked_idx]] <- NA_character_
+          same_identity <- if (identity_guard) eligible[blocked_idx] else {
+            rep(FALSE, length(blocked_idx))
+          }
           blocked_count <- blocked_count + 1L
           blocked[[blocked_count]] <- tibble(
             name_x = names_x[i], name_y = names_y[candidate_y[blocked_idx]],
             score = round(scores[blocked_idx], 4),
-            identity_state = ifelse(conflict, "conflict", "unknown"),
+            identity_state = ifelse(conflict, "conflict",
+              ifelse(same_identity, "same", "unknown")),
             eligible = FALSE,
             reason = ifelse(conflict, "distinct_accepted_ids",
-                            "identity_not_established"),
+              ifelse(same_identity,
+                "target_already_assigned", "identity_not_established")),
             x_id = x_id,
             y_id = y_id,
             provider = ifelse(same_source[blocked_idx],
                               identity_x$provider[i], NA_character_),
             version = ifelse(same_source[blocked_idx],
-                             identity_x$version[i], NA_character_)
+                              identity_x$version[i], NA_character_),
+            evidence_detail = if (identity_guard) {
+              .pr_identity_evidence_detail(
+                identity_x[rep(i, length(blocked_idx)), , drop = FALSE],
+                identity_y[candidate_y[blocked_idx], , drop = FALSE])
+            } else rep("Identity evidence not supplied", length(blocked_idx))
           )
         }
 
@@ -341,6 +361,7 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           eligible_idx <- which(scores >= threshold & !gender_variant &
                                   rank_compatible)
         }
+        if (review_only) eligible_idx <- integer()
         if (length(eligible_idx)) {
           best_k <- eligible_idx[which.max(scores[eligible_idx])]
           j <- candidate_y[best_k]

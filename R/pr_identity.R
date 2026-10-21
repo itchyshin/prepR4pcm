@@ -227,6 +227,17 @@ utils::globalVariables(".data", package = "prepR4pcm")
   rows
 }
 
+.pr_identity_evidence_detail <- function(x, y) {
+  comparable <- !is.na(x$provider) & !is.na(y$provider) &
+    !is.na(x$version) & !is.na(y$version) &
+    !is.na(x$rank) & !is.na(y$rank) &
+    x$provider == y$provider & x$version == y$version & x$rank == y$rank
+  comparable[is.na(comparable)] <- FALSE
+  paste0("x: ", ifelse(is.na(x$identity_status), "unknown", x$identity_status),
+    "; y: ", ifelse(is.na(y$identity_status), "unknown", y$identity_status),
+    ifelse(comparable, "", "; incomparable provider/snapshot/rank"))
+}
+
 .pr_check_identity_candidates <- function(candidates, evidence_x, evidence_y) {
   if (!nrow(candidates)) {
     candidates$identity_state <- character()

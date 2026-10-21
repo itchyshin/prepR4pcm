@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "core_skips_allowed": 0,
+  "regression_includes_all_core": true,
+  "scenarios": [
+    {"id":"LR-R01","group":"recovery","requirement":"Trema tomentosa/tomentosum with missing identity is visible in ordinary flagged review, summary and reconcile_candidates."},
+    {"id":"LR-R02","group":"recovery","requirement":"Trema orientalis/orientale with missing identity is visible in ordinary flagged review, summary and reconcile_candidates."},
+    {"id":"LR-R03","group":"recovery","requirement":"An ordinary plausible non-ending spelling candidate with unknown identity stays reviewable without a Latin-ending label."},
+    {"id":"LR-R04","group":"recovery","requirement":"Unknown, ambiguous, incomparable and distinct-ID states remain distinguishable, with original names and alternatives preserved."},
+    {"id":"LR-R05","group":"recovery","requirement":"A missing tree target does not become an automatic nearby-species match; pending alternatives do not reserve or consume tree tips."},
+    {"id":"LR-A01","group":"apply","requirement":"Default apply excludes all pending review-only candidates and leaves the intended data/tree identities unchanged."},
+    {"id":"LR-A02","group":"apply","requirement":"Newly exposed candidates cannot be applied unintentionally through include_flagged; existing documented behavior is regression-tested."},
+    {"id":"LR-A03","group":"apply","requirement":"Explicit accept/reject/skip actions are traceable and affect only the selected pair; alternatives remain consistent."},
+    {"id":"LR-A04","group":"apply","requirement":"Legacy saved reconciliation objects and existing flagged/fuzzy/identity_candidates modes retain defined compatible behavior."},
+    {"id":"LR-A05","group":"apply","requirement":"All five original #139 distinct-ID pairs remain excluded from automatic application."},
+    {"id":"LR-A06","group":"apply","requirement":"A valid same-identity cross-genus synonym remains distinguishable from ambiguous, unplaced or conflicting-source records, with no relaxed automatic policy."}
+  ]
+}

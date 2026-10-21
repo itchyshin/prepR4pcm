@@ -1,0 +1,35 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "8cf30e085209d4ae20ad6dfa913caff29ef65f204094edbff4ea67504d08baeb",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate post-draft reading against final source, core and regression receipts, in-place raw validators and returned independent reviews",
+  "genre": "technical diagnosis",
+  "coverage": "whole saved draft",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Specific names and measured results keep the prose concrete. Protocol headings and checklist tables create some formal repetition appropriate to this record.",
+  "confidence": "medium",
+  "confidence_reason": "Editorial self-assessment, not an independent human rating.",
+  "examples": [
+    {
+      "location": "line 16",
+      "cue": "The first row is an explicitly limited surrogate.",
+      "impact": "Distinguishes the saved comparison from exact reporter reproduction.",
+      "repair": "no change needed",
+      "line": 16,
+      "quote": "The first row is an explicitly limited surrogate. It is not the reporter's exact 3,944-row result, and its exact producing source revision has not been recovered. The difference in flagged rows is not by itself a count of lost useful suggestions. The raw pair-stage audit and final candidate-difference receipt distinguish stored candidates from accepted mapping rows. Tests establish the intended review and application behaviour; they do not establish taxonomic correctness for every suggested pair."
+    }
+  ],
+  "science_gate": "pass",
+  "science_gate_reason": "Separates review access, mapping identity, resolution coverage and biological correctness; states unadjudicated cases and provider limits.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Numbers and statuses compared with final aggregate receipts, test outputs, source/archive binding and independent review messages. Proposed/deferred work is labelled.",
+  "references_gate": "pass",
+  "references_gate_reason": "Local source and evidence links checked in the task directory; source identities and exact hashes are recorded. The paper-specific evidence is in separately assessed TNRS-DESIGN.md.",
+  "date": "2026-10-21",
+  "calibration_status": "Protocol examples already seen; no held-out calibration or authorship inference.",
+  "interpretation": "perceived_style_not_authorship"
+}

@@ -491,6 +491,47 @@ pr_run_cascade <- function(
   remaining_x <- setdiff(unique_x, matched_x)
   remaining_y <- setdiff(unique_y, matched_y)
 
+  # A target used by an earlier match can still explain an unresolved spelling.
+  # Retain it for review without stealing it or creating a many-to-one mapping.
+  if (do_fuzzy && length(remaining_x) && length(matched_y)) {
+    # Find plausible genera before querying identity. Exact matches can be
+    # numerous and have never needed an authority lookup. This extra review
+    # pass must not query every such target merely because one name is unresolved.
+    norm_review_x <- as.character(pr_normalize_names(remaining_x, rank = rank))
+    norm_review_y <- as.character(pr_normalize_names(matched_y, rank = rank))
+    genus_x <- sub("\\s+.*", "", norm_review_x)
+    genus_y <- sub("\\s+.*", "", norm_review_y)
+    valid_x <- grepl("\\S+\\s+\\S+", norm_review_x)
+    valid_y <- grepl("\\S+\\s+\\S+", norm_review_y)
+    target_genera <- unique(genus_y[valid_y])
+    query_genera <- unique(genus_x[valid_x])
+    close_genera <- lapply(query_genera, .pr_close_genus_indices, pool = target_genera)
+    review_x <- remaining_x[valid_x & genus_x %in% query_genera[lengths(close_genera) > 0L]]
+    review_y <- matched_y[valid_y & genus_y %in% target_genera[unique(unlist(close_genera))]]
+    review_identity <- function(names, side) {
+      evidence <- if (!is.null(identity_backbone)) {
+        .pr_identity_lookup(names, identity_backbone, side = side, rank = rank)
+      } else if (!is.null(authority)) {
+        .pr_authority_identity_lookup(
+          as.character(pr_normalize_names(names, rank = rank)), authority,
+          db_version, rank, quiet = quiet)
+      } else NULL
+      capture_authority_version(evidence)
+      evidence
+    }
+    if (length(review_x) && length(review_y)) {
+      used_candidates <- pr_fuzzy_match(review_x, review_y,
+        threshold = fuzzy_threshold, rank = rank, quiet = quiet,
+        identity_x = review_identity(review_x, "x"),
+        identity_y = review_identity(review_y, "y"), review_only = TRUE)
+      used_candidates <- attr(used_candidates, "identity_candidates")
+      if (!is.null(used_candidates) && nrow(used_candidates)) {
+        used_candidates$target_in_use <- TRUE
+        record_identity_candidates(used_candidates, "fuzzy")
+      }
+    }
+  }
+
   if (length(remaining_x) > 0) {
     rows[[length(rows) + 1]] <- tibble(
       name_x = remaining_x,

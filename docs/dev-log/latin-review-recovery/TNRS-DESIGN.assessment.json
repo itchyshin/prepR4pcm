@@ -1,0 +1,62 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "d9549c1b65eb8b93afea6e3d4e603301758bf8b55ecc4f26f4aad04ce9cf0132",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex",
+  "method": "Separate post-draft comparison with supplied PDF Methods, Table 1, Discussion and recorded user choice",
+  "genre": "design note and acceptance checklist",
+  "coverage": "whole draft",
+  "score": 2,
+  "style_status": "known",
+  "score_reason": "Concrete scope, named data and explicit operational outcomes; the long parallel checklist is appropriate for acceptance criteria.",
+  "confidence": "medium",
+  "confidence_reason": "Self-assessment, not an independent human judgment.",
+  "examples": [
+    {
+      "location": "line 7",
+      "cue": "A result from the service is not itself permission",
+      "impact": "Separates evidence from the action it could otherwise imply.",
+      "repair": "no change needed",
+      "line": 7,
+      "quote": "Use the botanical Taxonomic Name Resolution Service to suggest resolutions for unresolved plant names. Keep the existing local workflow usable without the service or its optional R client. Request one explicit plant reference database per run, retain alternative results and warnings, and return suggestions for review. A result from the service is not itself permission to rename a record or assign a tree tip."
+    },
+    {
+      "location": "line 31",
+      "cue": "Resolution rate is not labelled accuracy.",
+      "impact": "Makes the intended evaluation distinction directly testable.",
+      "repair": "no change needed",
+      "line": 31,
+      "quote": "- [ ] A labelled evaluation reports useful suggestions, incorrect suggestions, unresolved names and actual tree-tip matches separately. Resolution rate is not labelled accuracy."
+    }
+  ],
+  "science_gate": "pass",
+  "science_gate_reason": "Distinguishes resolution coverage from error rate and name resolution from tree-tip availability; the paper explicitly states the absence of per-match validation.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Seven tools, 6117 names, 6106 TNRS WCVP matches, 99.82 percent, title and bibliographic fields checked against attached PDF; other paragraphs are explicitly proposed requirements.",
+  "references_gate": "pass",
+  "references_gate_reason": "DOI and title checked in supplied article; official TNRS client and service links inspected in prior research for this task. Publisher HTTP403 disclosed.",
+  "date": "2026-10-21",
+  "calibration_status": "Protocol examples already seen; no held-out calibration used.",
+  "interpretation": "perceived_style_not_authorship",
+  "chat_reply_review": {
+    "draft": "Yes. TNRS/WCVP resolved **99.82% of 6,117 plant names** in its test, but the authors did not establish individual-match accuracy. [Paper](https://doi.org/10.1016/j.ecoinf.2025.103543)\n\nI\u2019ve incorporated its implications into the [TNRS design note and checklist](/private/tmp/prepr4pcm-latin-review-recovery/docs/dev-log/latin-review-recovery/TNRS-DESIGN.md).\n\nThe review-recovery repair is also verified locally: **3,195 assertions passed**, with unchanged full-workload mapping. TNRS integration and CRAN remain deferred.",
+    "draft_sha256": "59d77edbe05b0ae7e1b1a747655e63ee2759896637ef8118fb92167e82cbe76d",
+    "assessor_type": "self",
+    "date": "2026-10-21",
+    "genre_coverage": "whole concise chat reply",
+    "score": 2,
+    "confidence": "medium",
+    "reason": "Direct evidence and one concrete artifact link, with the coverage-versus-accuracy limit stated beside the result.",
+    "located_evidence": {
+      "quote": "did not establish individual-match accuracy",
+      "impact": "Prevents the reported coverage from being treated as accuracy",
+      "repair": "no change needed"
+    },
+    "science_gate": "pass: coverage separated from correctness; botanical scope stated",
+    "facts_gate": "pass: counts checked against Table 1, limitations against Discussion, final regression and replay receipts checked",
+    "references_gate": "pass: DOI identity and local design-note path verified",
+    "calibration_status": "Protocol examples seen; no independent human calibration"
+  }
+}

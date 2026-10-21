@@ -17,8 +17,9 @@ reconcile_review(
 
 \item{type}{A length-1 character vector. Which matches to review:
 \describe{
-\item{\code{"flagged"}}{Only flagged matches (default).}
-\item{\code{"fuzzy"}}{Fuzzy and flagged matches.}
+\item{\code{"flagged"}}{Flagged matches and pending candidate pairs for
+unresolved names (default).}
+\item{\code{"fuzzy"}}{Fuzzy and flagged matches, then pending candidates.}
 \item{\code{"all_unresolved"}}{All unresolved species.}
 \item{\code{"identity_candidates"}}{Pairs withheld by the identity guard.}
 }}

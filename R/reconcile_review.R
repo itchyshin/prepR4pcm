@@ -12,8 +12,9 @@
 #'   [reconcile_tree()], [reconcile_data()], or a related matcher.
 #' @param type A length-1 character vector. Which matches to review:
 #'   \describe{
-#'     \item{`"flagged"`}{Only flagged matches (default).}
-#'     \item{`"fuzzy"`}{Fuzzy and flagged matches.}
+#'     \item{`"flagged"`}{Flagged matches and pending candidate pairs for
+#'       unresolved names (default).}
+#'     \item{`"fuzzy"`}{Fuzzy and flagged matches, then pending candidates.}
 #'     \item{`"all_unresolved"`}{All unresolved species.}
 #'     \item{`"identity_candidates"`}{Pairs withheld by the identity guard.}
 #'   }
@@ -71,8 +72,24 @@ reconcile_review <- function(reconciliation,
     return(reconciliation)
   }
 
-  if (type == "identity_candidates") {
-    candidates <- reconciliation$candidates
+  review_candidates <- function(reconciliation, available_only = TRUE) {
+    # Initialise the stored table before an override updates one row. Otherwise
+    # partial column creation would leave untouched legacy alternatives as NA.
+    if (!is.null(reconciliation$candidates) && nrow(reconciliation$candidates)) {
+      if (!"review_status" %in% names(reconciliation$candidates)) {
+        reconciliation$candidates$review_status <- "pending"
+      }
+      if (!"review_note" %in% names(reconciliation$candidates)) {
+        reconciliation$candidates$review_note <- NA_character_
+      }
+    }
+    candidates <- if (available_only) {
+      .pr_pending_review_candidates(reconciliation)
+    } else reconciliation$candidates
+    if (is.null(candidates) || !nrow(candidates)) return(reconciliation)
+    if (!"review_status" %in% names(candidates)) {
+      candidates$review_status <- "pending"
+    }
     review_idx <- which(candidates$review_status == "pending")
     if (!length(review_idx)) {
       cli_alert_info("No pending identity candidates to review.")
@@ -80,14 +97,30 @@ reconcile_review <- function(reconciliation,
     }
     cli_h1("Interactive identity review: {length(review_idx)} candidate pairs")
     accepted <- rejected <- skipped <- 0L
+    current <- candidates
     for (i in review_idx) {
       candidate <- candidates[i, , drop = FALSE]
+      if (available_only) {
+        if (!any(current$name_x == candidate$name_x &
+                 current$name_y == candidate$name_y)) next
+      }
       cat(sprintf(
         "\n[%d/%d] %s -> %s [%s; %s / %s; %s@%s]\n",
         match(i, review_idx), length(review_idx), candidate$name_x,
         candidate$name_y, candidate$reason, candidate$x_id, candidate$y_id,
         candidate$provider, candidate$version
       ))
+      if ("evidence_detail" %in% names(candidate) &&
+          !is.na(candidate$evidence_detail)) {
+        cat("  Evidence: ", candidate$evidence_detail, "\n", sep = "")
+      }
+      target_taken <- any(reconciliation$mapping$in_x &
+        reconciliation$mapping$in_y &
+        reconciliation$mapping$name_y == candidate$name_y &
+        reconciliation$mapping$name_x != candidate$name_x, na.rm = TRUE)
+      if (target_taken) {
+        cat("  Target already assigned to another input name; resolve that assignment before accepting this pair.\n")
+      }
       response <- ""
       while (!response %in% c("a", "r", "s", "q")) {
         response <- tolower(trimws(readline(
@@ -96,6 +129,11 @@ reconcile_review <- function(reconciliation,
       }
       if (response == "q") break
       if (response == "a") {
+        if (target_taken) {
+          cat("  Cannot accept: target already assigned. Skipping this pair.\n")
+          skipped <- skipped + 1L
+          next
+        }
         note <- paste0("Accepted after identity review; evidence: ", candidate$reason,
                        " (", candidate$x_id, " vs ", candidate$y_id, ")")
         reconciliation <- reconcile_override(
@@ -113,12 +151,18 @@ reconcile_review <- function(reconciliation,
       } else {
         skipped <- skipped + 1L
       }
-      candidates <- reconciliation$candidates
+      if (available_only && response %in% c("a", "r")) {
+        current <- .pr_pending_review_candidates(reconciliation)
+      }
     }
     if (!quiet) {
       cli_alert_success("Identity review: {accepted} accepted, {rejected} rejected, {skipped} skipped")
     }
     return(reconciliation)
+  }
+
+  if (type == "identity_candidates") {
+    return(review_candidates(reconciliation, available_only = FALSE))
   }
 
   mapping <- reconciliation$mapping
@@ -138,8 +182,11 @@ reconcile_review <- function(reconciliation,
   review_names <- mapping$name_x[review_idx]
   n_total <- length(review_names)
   if (n_total == 0) {
-    cli_alert_info("No matches to review for type = '{type}'.")
-    return(reconciliation)
+    if (!nrow(.pr_pending_review_candidates(reconciliation))) {
+      cli_alert_info("No matches to review for type = '{type}'.")
+      return(reconciliation)
+    }
+    return(review_candidates(reconciliation))
   }
 
   cli_h1("Interactive review ({type}): {n_total} items")
@@ -181,7 +228,7 @@ reconcile_review <- function(reconciliation,
 
     if (response == "q") {
       cli_alert_info("Quit early at item {i}/{n_total}.")
-      break
+      return(reconciliation)
     } else if (response == "a") {
       if (!is.na(name_y) && nchar(name_y) > 0) {
         reconciliation <- reconcile_override(
@@ -212,5 +259,5 @@ reconcile_review <- function(reconciliation,
     )
   }
 
-  reconciliation
+  review_candidates(reconciliation)
 }
