@@ -23,6 +23,7 @@ to skip the prompt (useful in scripts)."><meta property="og:image" content="http
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/latin-aware-matching.html">Latin-aware botanical name matching</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
@@ -96,8 +97,8 @@ wipe only datelife cache after a database refresh). If <code>NULL</code>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="pr_tree_cache_status.html">pr_tree_cache_status</a></span><span class="op">(</span><span class="op">)</span>                <span class="co"># 2 entries</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     source hash size_kb            modified</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     rotl  def       0 2026-09-25 06:41:53</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 fishtree  abc       0 2026-09-25 06:41:53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     rotl  def       0 2026-10-20 23:44:51</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 fishtree  abc       0 2026-10-20 23:44:51</span>
 <span class="r-in"><span><span class="fu">pr_tree_cache_clear</span><span class="op">(</span>confirm <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>  <span class="co"># removes both</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Removed <span style="color: #0000BB;">2</span> cache files.</span>
 <span class="r-in"><span><span class="fu"><a href="pr_tree_cache_status.html">pr_tree_cache_status</a></span><span class="op">(</span><span class="op">)</span>                <span class="co"># empty</span></span></span>

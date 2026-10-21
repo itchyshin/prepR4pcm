@@ -31,6 +31,7 @@ debugging or writing custom helpers."><meta property="og:image" content="https:/
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/latin-aware-matching.html">Latin-aware botanical name matching</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
@@ -70,7 +71,9 @@ debugging or writing custom helpers.</p>
 <span>  <span class="va">meta</span>,</span>
 <span>  counts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  overrides <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  unused_overrides <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  unused_overrides <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  candidates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  identity_source <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -101,6 +104,15 @@ applied, with columns <code>name_x</code>, <code>name_y</code>, <code>reason</co
 pulled from <code>attr(mapping, "unused_overrides")</code> when present,
 else initialised empty.</p></dd>
 
+
+<dt id="arg-candidates">candidates<a class="anchor" aria-label="anchor" href="#arg-candidates"></a></dt>
+<dd><p>A tibble of identity candidates withheld by the cascade.</p></dd>
+
+
+<dt id="arg-identity-source">identity_source<a class="anchor" aria-label="anchor" href="#arg-identity-source"></a></dt>
+<dd><p>Identity source provenance stored in <code>meta</code> and the
+reconciliation object.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -110,7 +122,7 @@ else initialised empty.</p></dd>
     <h2 id="structure">Structure<a class="anchor" aria-label="anchor" href="#structure"></a></h2>
 
 
-<p>A <code>reconciliation</code> is an S3 list with five components:</p><dl><dt><code>mapping</code></dt>
+<p>A <code>reconciliation</code> is an S3 list with named components:</p><dl><dt><code>mapping</code></dt>
 <dd><p>A tibble with one row per unique name seen in
 either source. Columns are documented in <code><a href="reconcile_mapping.html">reconcile_mapping()</a></code>:
 <code>name_x</code>, <code>name_y</code>, <code>name_resolved</code>, <code>match_type</code> (one of
@@ -143,6 +155,15 @@ when every override applied successfully. Surfaced in
 <code><a href="reconcile_export.html">reconcile_export()</a></code> (as <code>&lt;prefix&gt;_unused_overrides.csv</code>), and
 <code>reconcile_mapping(include_unused_overrides = TRUE)</code>.</p></dd>
 
+<dt><code>candidates</code></dt>
+<dd><p>Candidate pairs withheld from automatic matching
+because supplied identity evidence was conflicting, ambiguous, or
+insufficient. Retrieve these with <code><a href="reconcile_candidates.html">reconcile_candidates()</a></code>.</p></dd>
+
+<dt><code>identity_source</code></dt>
+<dd><p>Identity evidence provenance, including provider,
+snapshot/version, comparison rank, and the supplied-backbone fingerprint.</p></dd>
+
 
 </dl></div>
     <div class="section level2">
@@ -157,6 +178,8 @@ dispatches to <code><a href="reconcile_summary.html">reconcile_summary()</a></co
 
 
 <ul><li><p><code><a href="reconcile_mapping.html">reconcile_mapping()</a></code> — extract the per-name tibble.</p></li>
+<li><p><code><a href="reconcile_candidates.html">reconcile_candidates()</a></code> — extract identity candidates withheld
+from automatic matching.</p></li>
 <li><p><code><a href="reconcile_summary.html">reconcile_summary()</a></code> — human-readable breakdown.</p></li>
 <li><p><code><a href="reconcile_apply.html">reconcile_apply()</a></code> — align data and tree.</p></li>
 <li><p><code><a href="reconcile_merge.html">reconcile_merge()</a></code> — join two datasets.</p></li>

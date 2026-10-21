@@ -2,14 +2,22 @@
 
 #' Fuzzy-match two sets of species names
 #'
-#' Uses component-based similarity: the genus and epithet are matched
-#' separately, then combined with weights (genus 0.6, epithet 0.4) to
-#' reflect that genus-level errors are more informative. Uses base R
-#' `utils::adist()` for Levenshtein distance — no extra dependencies.
+#' Uses component-based similarity: genus and epithet are matched separately,
+#' then combined with weights (genus 0.6, species epithet 0.4; at subspecies
+#' rank, genus 0.55, species epithet 0.30, and infraspecific epithet 0.15).
+#' Uses base R `utils::adist()` for Levenshtein distance, with no extra
+#' dependencies.
 #'
-#' Genus pre-filtering is applied: only names whose genus is within 2
-#' edits of each other are compared. This reduces the number of pairwise
-#' comparisons dramatically for large datasets.
+#' Candidate generation starts with names whose genus is within 2 edits.
+#' When comparable authority identity is available, same-ID names in other
+#' genera can also be considered. The existing [pr_suggest_gender()] helper
+#' identifies its limited `-us/-a/-um` and `-is/-e` ending pairs. These pairs
+#' are withheld without identity evidence and can match only when provider,
+#' snapshot, rank, and accepted ID agree. The adjusted score treats the
+#' supported species-epithet ending as equivalent; at subspecies rank, the
+#' infraspecific epithet must also be sufficiently similar. This does not
+#' establish grammar or identity.
+#' Other fuzzy matches retain their spelling-based behavior.
 #'
 #' @param names_x Character vector.
 #' @param names_y Character vector.
@@ -31,12 +39,21 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   norm_x <- as.character(pr_normalize_names(names_x, rank = rank))
   norm_y <- as.character(pr_normalize_names(names_y, rank = rank))
 
-  # Parse into genus + epithet
+  # Parse genus, specific epithet, and (at subspecies rank) the
+  # infraspecific epithet.
   parse_binomial <- function(nms) {
     parts <- strsplit(nms, "\\s+")
     genus   <- vapply(parts, function(p) if (length(p) >= 1) p[1] else NA_character_, character(1))
     epithet <- vapply(parts, function(p) if (length(p) >= 2) p[2] else NA_character_, character(1))
-    list(genus = genus, epithet = epithet)
+    infraspecific <- rep(NA_character_, length(parts))
+    if (rank == "subspecies") {
+      infraspecific <- vapply(parts, function(p) {
+        if (length(p) < 3L) return(NA_character_)
+        pos <- if (p[3L] %in% c("subsp.", "var.", "f.")) 4L else 3L
+        if (length(p) >= pos) p[pos] else NA_character_
+      }, character(1))
+    }
+    list(genus = genus, epithet = epithet, infraspecific = infraspecific)
   }
 
   px <- parse_binomial(norm_x)
@@ -89,6 +106,34 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   result_count <- 0L
   blocked <- list()
   blocked_count <- 0L
+  gender_suggestions <- pr_suggest_gender(names_x, names_y, rank = rank)
+  gender_targets_by_input <- new.env(hash = TRUE, parent = emptyenv())
+  if (nrow(gender_suggestions)) {
+    gender_target_groups <- split(gender_suggestions$suggestion,
+                                  gender_suggestions$input)
+    for (j in seq_along(gender_target_groups)) {
+      assign(names(gender_target_groups)[[j]], gender_target_groups[[j]],
+             gender_targets_by_input)
+    }
+  }
+  identity_y_groups <- new.env(hash = TRUE, parent = emptyenv())
+  if (identity_guard) {
+    known_y <- intersect(idx_y, which(identity_y$identity_status == "known" &
+                                        !is.na(identity_y$accepted_id) &
+                                        !is.na(identity_y$provider) &
+                                        !is.na(identity_y$version) &
+                                        !is.na(identity_y$rank)))
+    if (length(known_y)) {
+      identity_key <- function(x) {
+        paste(x$provider, x$version, x$rank, x$accepted_id, sep = "\034")
+      }
+      identity_groups <- split(known_y, identity_key(identity_y[known_y, ]))
+      for (j in seq_along(identity_groups)) {
+        assign(names(identity_groups)[[j]], identity_groups[[j]],
+               identity_y_groups)
+      }
+    }
+  }
   completed <- 0L
   started <- proc.time()[["elapsed"]]
   last_progress <- started
@@ -110,80 +155,206 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
     possible <- possible[close]
     gd <- as.numeric(utils::adist(gx, unique_genus_y[possible]))
     possible <- possible[gd <= 2L]
-    gd <- gd[gd <= 2L]
     candidate_genera <- unique_genus_y[possible]
     cand_y <- unlist(genus_y_groups[candidate_genera], use.names = FALSE)
     # Keep genus-alphabetical / original-within-genus ordering for score ties.
-    g_dist <- rep(gd, lengths(genus_y_groups[candidate_genera]))
-    g_maxlen <- pmax(nchar(gx), nchar(py$genus[cand_y]))
-    g_sim <- ifelse(g_maxlen == 0, 1, 1 - g_dist / g_maxlen)
-    epithets_y <- py$epithet[cand_y]
-    cache <- new.env(hash = TRUE, parent = emptyenv())
+    base_g_dist <- as.numeric(utils::adist(gx, py$genus[cand_y]))
+    base_g_maxlen <- pmax(nchar(gx), nchar(py$genus[cand_y]))
+    base_g_sim <- ifelse(base_g_maxlen == 0, 1,
+                         1 - base_g_dist / base_g_maxlen)
+    # Retain only the most recent score vector for repeated epithets. Keeping
+    # one full vector per unique epithet grows with query epithets × targets.
+    cached_key <- NULL
+    cached_scores <- NULL
     for (i in groups_x[[gx]]) {
       ex <- px$epithet[i]
-      cache_key <- paste0("epithet:", ex)
-      if (length(cand_y)) {
-        if (identity_guard) {
-          ep_dists <- as.numeric(utils::adist(ex, epithets_y))
-          ep_maxlen <- pmax(nchar(ex), nchar(epithets_y))
-          ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
-          scores <- 0.6 * g_sim + 0.4 * ep_sim
-          known_x <- identity_x$identity_status[i] == "known"
-          known_y <- identity_y$identity_status[cand_y] == "known"
-          same_source <- identity_x$provider[i] == identity_y$provider[cand_y] &
-            identity_x$version[i] == identity_y$version[cand_y] &
-            identity_x$rank[i] == identity_y$rank[cand_y]
-          same_id <- !is.na(identity_x$accepted_id[i]) &
-            !is.na(identity_y$accepted_id[cand_y]) &
-            identity_x$accepted_id[i] == identity_y$accepted_id[cand_y]
-          eligible <- known_x & known_y & same_source & same_id
-          above_threshold <- which(scores >= threshold)
-          blocked_idx <- above_threshold[!eligible[above_threshold]]
-          if (length(blocked_idx)) {
-            blocked_count <- blocked_count + 1L
-            blocked[[blocked_count]] <- tibble(
-              name_x = names_x[i], name_y = names_y[cand_y[blocked_idx]],
-              score = round(scores[blocked_idx], 4),
-              identity_state = ifelse(
-                known_x & known_y[blocked_idx] & same_source[blocked_idx],
-                "conflict", "unknown"
-              ),
-              eligible = FALSE,
-              reason = ifelse(
-                known_x & known_y[blocked_idx] & same_source[blocked_idx],
-                "distinct_accepted_ids", "identity_not_established"
-              ),
-              x_id = if (known_x) rep(identity_x$accepted_id[i], length(blocked_idx)) else NA_character_,
-              y_id = ifelse(known_y[blocked_idx],
-                            identity_y$accepted_id[cand_y[blocked_idx]], NA_character_),
-              provider = ifelse(same_source[blocked_idx],
-                                identity_x$provider[i], NA_character_),
-              version = ifelse(same_source[blocked_idx],
-                               identity_x$version[i], NA_character_)
-            )
-          }
-          eligible_idx <- which(eligible & scores >= threshold)
-          if (length(eligible_idx)) {
-            best_k <- eligible_idx[which.max(scores[eligible_idx])]
-            best <- c(index = cand_y[best_k], score = scores[best_k])
+      gender_targets <- if (!is.na(names_x[i]) &&
+                              exists(names_x[i], gender_targets_by_input,
+                                     inherits = FALSE)) {
+        get(names_x[i], gender_targets_by_input, inherits = FALSE)
+      } else {
+        character()
+      }
+      candidate_y <- cand_y
+      appended_y <- integer()
+      cross_fallback_y <- integer()
+      known_x <- FALSE
+      if (identity_guard) {
+        known_x <- isTRUE(identity_x$identity_status[i] == "known") &&
+          !is.na(identity_x$accepted_id[i]) && !is.na(identity_x$provider[i]) &&
+          !is.na(identity_x$version[i]) && !is.na(identity_x$rank[i])
+        if (known_x) {
+          key <- paste(
+            identity_x$provider[i], identity_x$version[i],
+            identity_x$rank[i], identity_x$accepted_id[i], sep = "\034"
+          )
+          same_id_y <- if (exists(key, identity_y_groups, inherits = FALSE)) {
+            get(key, identity_y_groups, inherits = FALSE)
           } else {
-            best <- c(index = NA_real_, score = -Inf)
+            integer()
           }
-        } else if (exists(cache_key, cache, inherits = FALSE)) {
-          best <- get(cache_key, cache, inherits = FALSE)
-        } else {
-          ep_dists <- as.numeric(utils::adist(ex, epithets_y))
-          ep_maxlen <- pmax(nchar(ex), nchar(epithets_y))
-          ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
-          scores <- 0.6 * g_sim + 0.4 * ep_sim
-          best_k <- which.max(scores)
-          best <- c(index = cand_y[best_k], score = scores[best_k])
-          assign(cache_key, best, cache)
+          if (length(same_id_y)) {
+            # Every authority-confirmed cross-genus target follows the same
+            # eligibility rule, whether or not its genus entered the spelling
+            # prefilter. Append only the targets not already in that pool.
+            cross_fallback_y <- same_id_y[py$genus[same_id_y] != gx]
+            appended_y <- setdiff(cross_fallback_y, cand_y)
+            candidate_y <- c(cand_y, appended_y)
+          }
         }
-        if (is.finite(best[["score"]]) && best[["score"]] >= threshold) {
-          j <- as.integer(best[["index"]])
+      }
+
+      if (length(candidate_y)) {
+        cache_key <- paste0("epithet:", ex, "\034",
+                            paste(sort(gender_targets), collapse = "\034"))
+        if (!identity_guard && rank == "species" &&
+              identical(cache_key, cached_key)) {
+          scores <- cached_scores
+          g_sim_i <- base_g_sim
+        } else {
+          if (identity_guard) {
+            if (length(appended_y)) {
+              g_dist_extra <- as.numeric(utils::adist(gx, py$genus[appended_y]))
+              g_maxlen_extra <- pmax(nchar(gx), nchar(py$genus[appended_y]))
+              g_sim_i <- c(
+                base_g_sim,
+                ifelse(g_maxlen_extra == 0, 1,
+                       1 - g_dist_extra / g_maxlen_extra)
+              )
+            } else {
+              g_sim_i <- base_g_sim
+            }
+          } else {
+            g_sim_i <- base_g_sim
+          }
+          ep_dists <- as.numeric(utils::adist(ex, py$epithet[candidate_y]))
+          ep_maxlen <- pmax(nchar(ex), nchar(py$epithet[candidate_y]))
+          ep_sim <- ifelse(ep_maxlen == 0, 1, 1 - ep_dists / ep_maxlen)
+          if (rank == "subspecies") {
+            sub_x <- px$infraspecific[i]
+            sub_y <- py$infraspecific[candidate_y]
+            both_missing <- is.na(sub_x) & is.na(sub_y)
+            one_missing <- xor(is.na(sub_x), is.na(sub_y))
+            sub_sim <- numeric(length(candidate_y))
+            sub_sim[both_missing] <- 1
+            comparable <- which(!is.na(sub_x) & !is.na(sub_y))
+            if (length(comparable)) {
+              sub_d <- as.numeric(utils::adist(sub_x, sub_y[comparable]))
+              sub_maxlen <- pmax(nchar(sub_x), nchar(sub_y[comparable]))
+              sub_sim[comparable] <- ifelse(
+                sub_maxlen == 0, 1, 1 - sub_d / sub_maxlen
+              )
+            }
+            sub_sim[one_missing] <- 0
+            scores <- 0.55 * g_sim_i + 0.30 * ep_sim + 0.15 * sub_sim
+          } else {
+            sub_sim <- rep(1, length(candidate_y))
+            scores <- 0.6 * g_sim_i + 0.4 * ep_sim
+          }
+          if (!identity_guard && rank == "species") {
+            cached_key <- cache_key
+            cached_scores <- scores
+          }
+        }
+        gender_variant <- names_y[candidate_y] %in% gender_targets
+        # The helper encodes only the two supported ending groups. Treat
+        # those endings as equivalent for the spelling score, while keeping
+        # authority identity as a separate eligibility requirement.
+        if (rank == "subspecies") {
+          scores[gender_variant] <- 0.55 * g_sim_i[gender_variant] +
+            0.30 + 0.15 * sub_sim[gender_variant]
+        } else {
+          scores[gender_variant] <- 0.6 * g_sim_i[gender_variant] + 0.4
+        }
+
+        if (identity_guard) {
+          known_y <- !is.na(identity_y$identity_status[candidate_y]) &
+            identity_y$identity_status[candidate_y] == "known"
+          known_y[is.na(known_y)] <- FALSE
+          same_source <- !is.na(identity_x$provider[i]) &
+            !is.na(identity_y$provider[candidate_y]) &
+            identity_x$provider[i] == identity_y$provider[candidate_y] &
+            identity_x$version[i] == identity_y$version[candidate_y] &
+            identity_x$rank[i] == identity_y$rank[candidate_y]
+          same_source[is.na(same_source)] <- FALSE
+          same_id <- !is.na(identity_x$accepted_id[i]) &
+            !is.na(identity_y$accepted_id[candidate_y]) &
+            identity_x$accepted_id[i] == identity_y$accepted_id[candidate_y]
+          same_id[is.na(same_id)] <- FALSE
+          eligible <- known_x & known_y & same_source & same_id
+          blocked_idx <- which(
+            !eligible & (scores >= threshold | gender_variant)
+          )
+        } else {
+          known_y <- rep(FALSE, length(candidate_y))
+          same_source <- rep(FALSE, length(candidate_y))
+          eligible <- rep(TRUE, length(candidate_y))
+          blocked_idx <- which(gender_variant)
+        }
+
+        if (length(blocked_idx)) {
+          conflict <- if (identity_guard) {
+            known_x & known_y[blocked_idx] & same_source[blocked_idx]
+          } else {
+            rep(FALSE, length(blocked_idx))
+          }
+          x_id <- if (known_x) {
+            rep(identity_x$accepted_id[i], length(blocked_idx))
+          } else {
+            NA_character_
+          }
+          y_id <- identity_y$accepted_id[candidate_y[blocked_idx]]
+          y_id[!known_y[blocked_idx]] <- NA_character_
+          blocked_count <- blocked_count + 1L
+          blocked[[blocked_count]] <- tibble(
+            name_x = names_x[i], name_y = names_y[candidate_y[blocked_idx]],
+            score = round(scores[blocked_idx], 4),
+            identity_state = ifelse(conflict, "conflict", "unknown"),
+            eligible = FALSE,
+            reason = ifelse(conflict, "distinct_accepted_ids",
+                            "identity_not_established"),
+            x_id = x_id,
+            y_id = y_id,
+            provider = ifelse(same_source[blocked_idx],
+                              identity_x$provider[i], NA_character_),
+            version = ifelse(same_source[blocked_idx],
+                             identity_x$version[i], NA_character_)
+          )
+        }
+
+        eligible_idx <- which(
+          eligible & (scores >= threshold | candidate_y %in% cross_fallback_y)
+        )
+        if (!identity_guard) {
+          rank_compatible <- if (rank == "subspecies") {
+            sub_sim >= threshold
+          } else {
+            rep(TRUE, length(scores))
+          }
+          eligible_idx <- which(scores >= threshold & !gender_variant &
+                                  rank_compatible)
+        }
+        if (length(eligible_idx)) {
+          best_k <- eligible_idx[which.max(scores[eligible_idx])]
+          j <- candidate_y[best_k]
           result_count <- result_count + 1L
-          results[[result_count]] <- list(i = i, j = j, score = best[["score"]])
+          result_provider <- if (identity_guard && eligible[best_k]) {
+            identity_x$provider[i]
+          } else {
+            NA_character_
+          }
+          result_version <- if (identity_guard && eligible[best_k]) {
+            identity_x$version[i]
+          } else {
+            NA_character_
+          }
+          results[[result_count]] <- list(
+            i = i, j = j, score = scores[best_k],
+            gender_variant = gender_variant[best_k],
+            cross_genus = j %in% cross_fallback_y,
+            provider = result_provider,
+            version = result_version
+          )
         }
       }
       completed <- completed + 1L
@@ -212,10 +383,27 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
   i <- vapply(results, `[[`, integer(1), "i")
   j <- vapply(results, `[[`, integer(1), "j")
   raw_score <- vapply(results, `[[`, numeric(1), "score")
+  gender_variant <- vapply(results, `[[`, logical(1), "gender_variant")
+  cross_genus <- vapply(results, `[[`, logical(1), "cross_genus")
+  provider <- vapply(results, `[[`, character(1), "provider")
+  version <- vapply(results, `[[`, character(1), "version")
   order_x <- order(i)
+  notes <- sprintf("Fuzzy match (score %.3f): '%s' ~ '%s'",
+                   raw_score, norm_x[i], norm_y[j])
+  if (any(gender_variant)) {
+    notes[gender_variant] <- paste0(
+      notes[gender_variant], "; Latin-aware ending candidate confirmed by ",
+      provider[gender_variant], "@", version[gender_variant]
+    )
+  }
+  if (any(cross_genus)) {
+    notes[cross_genus] <- paste0(
+      notes[cross_genus], "; authority-confirmed cross-genus candidate (",
+      provider[cross_genus], "@", version[cross_genus], ")"
+    )
+  }
   out <- tibble(name_x = names_x[i], name_y = names_y[j], score = round(raw_score, 4),
-                notes = sprintf("Fuzzy match (score %.3f): '%s' ~ '%s'",
-                                raw_score, norm_x[i], norm_y[j]))[order_x, ]
+                notes = notes)[order_x, ]
   attr(out, "identity_candidates") <- if (length(blocked)) dplyr::bind_rows(blocked) else NULL
   out
 }

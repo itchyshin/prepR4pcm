@@ -45,6 +45,8 @@ navbar:
       menu:
       - text: "Getting started"
         href: articles/getting-started.html
+      - text: "Latin-aware botanical name matching"
+        href: articles/latin-aware-matching.html
       - text: "Bird trait workflow (PGLS + PGLMM)"
         href: articles/bird-workflow.html
       - text: "Mammal database-assembly workflow"
@@ -82,6 +84,7 @@ reference:
   contents:
   - reconcile_summary
   - reconcile_mapping
+  - reconcile_candidates
   - reconcile_plot
   - reconcile_suggest
   - reconcile_diff

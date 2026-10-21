@@ -29,14 +29,21 @@ pr_fuzzy_match(
 A tibble with columns: \code{name_x}, \code{name_y}, \code{score}, \code{notes}.
 }
 \description{
-Uses component-based similarity: the genus and epithet are matched
-separately, then combined with weights (genus 0.6, epithet 0.4) to
-reflect that genus-level errors are more informative. Uses base R
-\code{utils::adist()} for Levenshtein distance — no extra dependencies.
+Uses component-based similarity: genus and epithet are matched separately,
+then combined with weights (genus 0.6, species epithet 0.4; at subspecies
+rank, genus 0.55, species epithet 0.30, and infraspecific epithet 0.15).
+Uses base R \code{utils::adist()} for Levenshtein distance — no extra dependencies.
 }
 \details{
-Genus pre-filtering is applied: only names whose genus is within 2
-edits of each other are compared. This reduces the number of pairwise
-comparisons dramatically for large datasets.
+Candidate generation starts with names whose genus is within 2 edits.
+When comparable authority identity is available, same-ID names in other
+genera can also be considered. The existing \code{\link[=pr_suggest_gender]{pr_suggest_gender()}} helper
+identifies its limited \code{-us/-a/-um} and \code{-is/-e} ending pairs. These pairs
+are withheld without identity evidence and can match only when provider,
+snapshot, rank, and accepted ID agree. The adjusted score treats the
+supported species-epithet ending as equivalent; at subspecies rank, the
+infraspecific epithet must also be sufficiently similar. This does not
+establish grammar or identity.
+Other fuzzy matches retain their spelling-based behavior.
 }
 \keyword{internal}

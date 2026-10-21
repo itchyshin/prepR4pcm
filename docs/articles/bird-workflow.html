@@ -39,6 +39,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/latin-aware-matching.html">Latin-aware botanical name matching</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
@@ -130,7 +131,7 @@ variants, taxonomic synonyms — are exactly what prepR4pcm resolves.</p>
 <span><span class="co">#&gt;   Source x: avonet_subset</span></span>
 <span><span class="co">#&gt;   Source y: phylo (657 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-09-25 06:42:09</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-10-20 23:45:06</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -320,7 +321,7 @@ analyse.</strong></p>
 <span><span class="co">#&gt;   Source x: nesttrait_subset</span></span>
 <span><span class="co">#&gt;   Source y: avonet_subset</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-09-25 06:42:25</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-10-20 23:45:21</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [██████████████████████████████] 100% (916/916)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
@@ -567,12 +568,12 @@ tree using genus-level placement:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
 <span><span class="co">#&gt;   species                  placed_near             branch_length</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Acanthiza cinerea        Acanthiza lineata                5.04</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Calamanthus cautus       Calamanthus fuliginosus          3.80</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Calamanthus montanellus  Calamanthus fuliginosus          3.80</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Calamanthus pyrrhopygius Calamanthus fuliginosus          3.80</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Gerygone citrina         Gerygone magnirostris            2.91</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Pyrrholaemus sagittatus  Pyrrholaemus brunneus           15.5</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Acanthiza cinerea        Acanthiza lineata               5.64 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Calamanthus cautus       Calamanthus fuliginosus         1.90 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Calamanthus montanellus  Calamanthus fuliginosus         0.951</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Calamanthus pyrrhopygius Calamanthus fuliginosus         0.475</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Gerygone citrina         Gerygone magnirostris           1.20 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Pyrrholaemus sagittatus  Pyrrholaemus brunneus           7.74</span></span></code></pre></div>
 <p>Use the augmented tree in downstream analyses. Pass the augmented
 tree to <code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> — the existing reconciliation
 object is still valid as the name-mapping key, but the new tree contains
@@ -710,13 +711,10 @@ multi-trait models for continuous and categorical characters.
 10.1111/j.1420-9101.2009.01915.x</li>
 <li>Mizuno, A., Drobniak, S.M., Williams, C., Lagisz, M. &amp; Nakagawa,
 S.
-<ol start="2025" style="list-style-type: decimal">
-<li>Promoting the use of phylogenetic multinomial generalised
+(2025) Promoting the use of phylogenetic multinomial generalised
 mixed-effects model to understand the evolution of discrete traits.
 <em>Journal of Evolutionary Biology</em> 38:1699–1715. DOI
 10.1093/jeb/voaf116. Tutorial: <a href="https://ayumi-495.github.io/multinomial-GLMM-tutorial/" class="external-link uri">https://ayumi-495.github.io/multinomial-GLMM-tutorial/</a>
-</li>
-</ol>
 </li>
 <li>Norman, K.E., Chamberlain, S. &amp; Boettiger, C. (2020) taxadb: A
 high-performance local taxonomic database interface. <em>Methods in

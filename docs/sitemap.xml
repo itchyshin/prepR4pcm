@@ -6,6 +6,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/db-assembly-workflow_mammals.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/getting-started.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/index.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/articles/latin-aware-matching.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/meta-analysis-with-rotl.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/articles/posterior-tree-pipeline.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/authors.html</loc></url>
@@ -51,6 +52,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_standardise_case.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_strip_authority.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_strip_infraspecific.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_suggest_gender.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_tree_cache_clear.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_tree_cache_dir.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/pr_tree_cache_status.html</loc></url>
@@ -63,6 +65,7 @@
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/print.reconciliation_summary.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_apply.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_augment.html</loc></url>
+<url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_candidates.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_crosswalk.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_crosswalk_supplement.html</loc></url>
 <url><loc>https://itchyshin.github.io/prepR4pcm/reference/reconcile_data.html</loc></url>

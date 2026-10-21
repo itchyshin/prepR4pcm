@@ -29,6 +29,7 @@ workflow."><meta property="og:image" content="https://itchyshin.github.io/prepR4
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/latin-aware-matching.html">Latin-aware botanical name matching</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
@@ -75,7 +76,8 @@ workflow.</p>
 <span>  flag_threshold <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  resolve <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"flag"</span>, <span class="st">"first"</span><span class="op">)</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  x_label <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  x_label <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  backbone <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -240,6 +242,19 @@ Set this explicitly when calling <code><a href="reconcile_data.html">reconcile_d
 so the label reflects the real data source rather than the local argument
 name.</p></dd>
 
+
+<dt id="arg-backbone">backbone<a class="anchor" aria-label="anchor" href="#arg-backbone"></a></dt>
+<dd><p>An optional frozen identity source. Supply a list with
+<code>records</code> (a data frame with <code>input</code>, <code>accepted_name</code>, <code>accepted_id</code>, and
+<code>status</code> columns), plus single values <code>provider</code>, <code>version</code>, and <code>rank</code>.
+An optional <code>side</code> column can be <code>"x"</code>, <code>"y"</code>, or <code>"both"</code> (default).
+When supplied, this source governs synonym and fuzzy matching and guards
+exact/normalised pairs where it has records. It replaces authority lookup
+for this call; conflicting accepted IDs are withheld from automatic
+matching and available through <code><a href="reconcile_candidates.html">reconcile_candidates()</a></code>. The declared
+rank must equal <code>rank</code>. Names without sufficient evidence remain
+unresolved for review; spelling alone does not establish taxon identity.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -330,7 +345,7 @@ phylogenetics and evolutionary analyses in R. <em>Bioinformatics</em>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Source x: avonet_subset</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Source y: phylo (657 tips)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Authority: none</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-09-25 06:42:04</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Timestamp: 2026-10-20 23:45:01</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████░░░░░░░░░] 71% (657/919)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Match summary</span> ──</span>
@@ -348,9 +363,10 @@ phylogenetics and evolutionary analyses in R. <em>Bioinformatics</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> === Reconciliation Report ===</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Type: data_tree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-09-25 06:42:04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Timestamp: 2026-10-20 23:45:01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Package: prepR4pcm 1.0.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Authority: NONE (version: latest)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Identity evidence: none@not_queried (taxonomy_unchecked_spelling; rank: species)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Rank: species</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> --- Match Summary ---</span>

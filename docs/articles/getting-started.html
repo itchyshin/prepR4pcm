@@ -39,6 +39,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/getting-started.html">Getting started</a></li>
+    <li><a class="dropdown-item" href="../articles/latin-aware-matching.html">Latin-aware botanical name matching</a></li>
     <li><a class="dropdown-item" href="../articles/bird-workflow.html">Bird trait workflow (PGLS + PGLMM)</a></li>
     <li><a class="dropdown-item" href="../articles/db-assembly-workflow_mammals.html">Mammal database-assembly workflow</a></li>
     <li><a class="dropdown-item" href="../articles/posterior-tree-pipeline.html">Posterior-tree pipeline (prepR4pcm + pigauto)</a></li>
@@ -184,32 +185,32 @@ tree.</li>
 <span>  authority <span class="op">=</span> <span class="cn">NULL</span>,        <span class="co"># skip synonym lookup for this example</span></span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; ℹ Reconciling 6 data names vs 6 tree tips</span></span>
-<span><span class="co">#&gt; ✔ Matched 5/6 data names to tree tips</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reconciling 6 data names vs 6 tree tips</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Matched 5/6 data names to tree tips</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="inspect-the-result">Inspect the result<a class="anchor" aria-label="anchor" href="#inspect-the-result"></a>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Reconciliation: data vs tree ────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Reconciliation: data vs tree</span> <span style="color: #00BBBB;">────────────────────────────────────────────────</span></span></span>
 <span><span class="co">#&gt;   Source x: trait_data</span></span>
 <span><span class="co">#&gt;   Source y: phylo (6 tips)</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-10-17 10:28:41</span></span>
-<span><span class="co">#&gt; ℹ Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-10-20 23:45:40</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [█████████████████████████░░░░░] 83% (5/6)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Match summary ──</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; • Exact: 1 (16.7%)</span></span>
-<span><span class="co">#&gt; • Normalized: 4 (66.7%)</span></span>
-<span><span class="co">#&gt; • Synonym: 0 ( 0.0%)</span></span>
-<span><span class="co">#&gt; • Fuzzy: 0 ( 0.0%)</span></span>
-<span><span class="co">#&gt; • Manual: 0 ( 0.0%)</span></span>
-<span><span class="co">#&gt; ! Unresolved (x only):1 (16.7%)</span></span>
-<span><span class="co">#&gt; ! Unresolved (y only):1</span></span>
-<span><span class="co">#&gt; ! Flagged for review: 0</span></span>
-<span><span class="co">#&gt; ℹ Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Exact: <span style="color: #0000BB;">1</span> (16.7%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Normalized: <span style="color: #0000BB;">4</span> (66.7%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Synonym: <span style="color: #0000BB;">0</span> ( 0.0%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Fuzzy: <span style="color: #0000BB;">0</span> ( 0.0%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Manual: <span style="color: #0000BB;">0</span> ( 0.0%)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Unresolved (x only):<span style="color: #0000BB;">1</span> (16.7%)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Unresolved (y only):<span style="color: #0000BB;">1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Flagged for review: <span style="color: #0000BB;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span></span></code></pre></div>
 <p>The “Reconciliation: data vs tree” header at the top of the output
 tells you the call that produced the result; the “Match summary” block
 underneath gives the count in each match category (exact, normalised,
@@ -217,17 +218,17 @@ synonym, fuzzy, manual, unresolved). Use
 <code><a href="../reference/reconcile_mapping.html">reconcile_mapping()</a></code> to see the full per-name table:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/reconcile_mapping.html">reconcile_mapping</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 7 × 9</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 7 × 9</span></span></span>
 <span><span class="co">#&gt;   name_x    name_y name_resolved match_type match_score match_source in_x  in_y </span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;         &lt;chr&gt;            &lt;dbl&gt; &lt;chr&gt;        &lt;lgl&gt; &lt;lgl&gt;</span></span>
-<span><span class="co">#&gt; 1 Pan_trog… Pan_t… &lt;NA&gt;          exact                1 exact_string TRUE  TRUE </span></span>
-<span><span class="co">#&gt; 2 Homo sap… Homo_… &lt;NA&gt;          normalized           1 normalisati… TRUE  TRUE </span></span>
-<span><span class="co">#&gt; 3 Gorilla … Goril… &lt;NA&gt;          normalized           1 normalisati… TRUE  TRUE </span></span>
-<span><span class="co">#&gt; 4 Pongo py… Pongo… &lt;NA&gt;          normalized           1 normalisati… TRUE  TRUE </span></span>
-<span><span class="co">#&gt; 5 Macaca m… Macac… &lt;NA&gt;          normalized           1 normalisati… TRUE  TRUE </span></span>
-<span><span class="co">#&gt; 6 Cebus ca… &lt;NA&gt;   &lt;NA&gt;          unresolved          NA &lt;NA&gt;         TRUE  FALSE</span></span>
-<span><span class="co">#&gt; 7 &lt;NA&gt;      Papio… &lt;NA&gt;          unresolved          NA &lt;NA&gt;         FALSE TRUE </span></span>
-<span><span class="co">#&gt; # ℹ 1 more variable: notes &lt;chr&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Pan_trog… Pan_t… <span style="color: #BB0000;">NA</span>            exact                1 exact_string TRUE  TRUE </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Homo sap… Homo_… <span style="color: #BB0000;">NA</span>            normalized           1 normalisati… TRUE  TRUE </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Gorilla … Goril… <span style="color: #BB0000;">NA</span>            normalized           1 normalisati… TRUE  TRUE </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Pongo py… Pongo… <span style="color: #BB0000;">NA</span>            normalized           1 normalisati… TRUE  TRUE </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Macaca m… Macac… <span style="color: #BB0000;">NA</span>            normalized           1 normalisati… TRUE  TRUE </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Cebus ca… <span style="color: #BB0000;">NA</span>     <span style="color: #BB0000;">NA</span>            unresolved          <span style="color: #BB0000;">NA</span> <span style="color: #BB0000;">NA</span>           TRUE  FALSE</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> <span style="color: #BB0000;">NA</span>        Papio… <span style="color: #BB0000;">NA</span>            unresolved          <span style="color: #BB0000;">NA</span> <span style="color: #BB0000;">NA</span>           FALSE TRUE </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: notes &lt;chr&gt;</span></span></span></code></pre></div>
 <p>What the columns mean:</p>
 <ul>
 <li>
@@ -277,7 +278,7 @@ the analysis. You can document this decision:</p>
 <span>  action <span class="op">=</span> <span class="st">"reject"</span>,</span>
 <span>  note <span class="op">=</span> <span class="st">"Not in target phylogeny; exclude from analysis"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; ✔ Override applied: 'Cebus capucinus' -&gt; 'NA' (reject)</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Override applied: 'Cebus capucinus' -&gt; 'NA' (reject)</span></span></code></pre></div>
 <p><code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> updates the existing
 <code>result</code> (the <code>reconciliation</code> you built earlier)
 in place — no need to re-run <code><a href="../reference/reconcile_tree.html">reconcile_tree()</a></code>. The three
@@ -305,8 +306,8 @@ actions you can pass to <code>action = ...</code> are:</p>
 <span>  species_col <span class="op">=</span> <span class="st">"species"</span>,</span>
 <span>  drop_unresolved <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; ! Dropped 1 rows with unresolved species from data</span></span>
-<span><span class="co">#&gt; ℹ Tree has 5 tips after alignment</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Dropped 1 rows with unresolved species from data</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Tree has 5 tips after alignment</span></span>
 <span></span>
 <span><span class="co"># Aligned data frame — only species present in both data and tree</span></span>
 <span><span class="va">aligned</span><span class="op">$</span><span class="va">data</span></span>
@@ -358,30 +359,30 @@ Here is a toy example:</p>
 <span>  authority <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; ℹ Auto-detected species column: species</span></span>
-<span><span class="co">#&gt; ℹ Auto-detected species column: species</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Auto-detected species column: <span style="color: #00BB00;">species</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Auto-detected species column: <span style="color: #00BB00;">species</span></span></span>
 <span></span>
 <span><span class="co"># The output shows how many names matched, and via which stage.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Reconciliation: data vs data ────────────────────────────────────────────────</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Reconciliation: data vs data</span> <span style="color: #00BBBB;">────────────────────────────────────────────────</span></span></span>
 <span><span class="co">#&gt;   Source x: df1</span></span>
 <span><span class="co">#&gt;   Source y: df2</span></span>
 <span><span class="co">#&gt;   Authority: none</span></span>
-<span><span class="co">#&gt;   Timestamp: 2026-10-17 10:28:41</span></span>
-<span><span class="co">#&gt; ℹ Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
+<span><span class="co">#&gt;   Timestamp: 2026-10-20 23:45:41</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Match coverage: [████████████████████░░░░░░░░░░] 67% (2/3)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── Match summary ──</span></span>
+<span><span class="co">#&gt; ── <span style="font-weight: bold;">Match summary</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; • Exact: 1 (33.3%)</span></span>
-<span><span class="co">#&gt; • Normalized: 1 (33.3%)</span></span>
-<span><span class="co">#&gt; • Synonym: 0 ( 0.0%)</span></span>
-<span><span class="co">#&gt; • Fuzzy: 0 ( 0.0%)</span></span>
-<span><span class="co">#&gt; • Manual: 0 ( 0.0%)</span></span>
-<span><span class="co">#&gt; ! Unresolved (x only):1 (33.3%)</span></span>
-<span><span class="co">#&gt; ! Unresolved (y only):1</span></span>
-<span><span class="co">#&gt; ! Flagged for review: 0</span></span>
-<span><span class="co">#&gt; ℹ Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Exact: <span style="color: #0000BB;">1</span> (33.3%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Normalized: <span style="color: #0000BB;">1</span> (33.3%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Synonym: <span style="color: #0000BB;">0</span> ( 0.0%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Fuzzy: <span style="color: #0000BB;">0</span> ( 0.0%)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Manual: <span style="color: #0000BB;">0</span> ( 0.0%)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Unresolved (x only):<span style="color: #0000BB;">1</span> (33.3%)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Unresolved (y only):<span style="color: #0000BB;">1</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Flagged for review: <span style="color: #0000BB;">0</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Use `reconcile_summary()` for details, `reconcile_mapping()` for the full table.</span></span></code></pre></div>
 <p><code>Pan_troglodytes</code> (underscore) in <code>df1</code> is
 matched to <code>Pan troglodytes</code> (space) in <code>df2</code> via
 normalisation. <code>Gorilla gorilla</code> is in <code>df1</code> only
@@ -455,6 +456,65 @@ Life) to the same accepted name</td>
 </tr>
 </tbody>
 </table>
+<p>Fuzzy scores measure spelling similarity, not taxonomic identity.
+When a single taxonomic authority returns distinct accepted IDs, synonym
+or fuzzy pairs are withheld from automatic matching regardless of score
+or <code>resolve = "first"</code>. Inspect these pairs with
+<code><a href="../reference/reconcile_candidates.html">reconcile_candidates()</a></code> or
+<code>reconcile_review(type = "identity_candidates")</code>. A
+pair-specific <code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> records your decision
+and retains the original evidence.</p>
+<div class="section level3">
+<h3 id="guard-matches-with-a-frozen-backbone">Guard matches with a frozen backbone<a class="anchor" aria-label="anchor" href="#guard-matches-with-a-frozen-backbone"></a>
+</h3>
+<p>For a dated taxonomy such as WCVP, pass the exact snapshot you want
+to use. The records must contain the input name, accepted name, accepted
+taxon ID, status, provider, version, and comparison rank. A backbone
+governs both synonym and fuzzy matching and checks exact/normalised
+pairs for which it has records. It replaces authority lookups during
+that reconciliation. Names with missing or conflicting evidence are kept
+unresolved for review.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">backbone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  records <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Plant syna"</span>, <span class="st">"Plant synb"</span>, <span class="st">"Plant sync"</span>, <span class="st">"Plant alba"</span><span class="op">)</span>,</span>
+<span>    accepted_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Plant alba"</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>    accepted_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"WCVP:101"</span>, <span class="st">"WCVP:202"</span>, <span class="st">"WCVP:303"</span>, <span class="st">"WCVP:303"</span><span class="op">)</span>,</span>
+<span>    status <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"synonym"</span>, <span class="st">"synonym"</span>, <span class="st">"synonym"</span>, <span class="st">"accepted"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  provider <span class="op">=</span> <span class="st">"WCVP"</span>,</span>
+<span>  version <span class="op">=</span> <span class="st">"2025"</span>,</span>
+<span>  rank <span class="op">=</span> <span class="st">"species"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_data.html">reconcile_data</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>species <span class="op">=</span> <span class="st">"Plant syna"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>species <span class="op">=</span> <span class="st">"Plant synb"</span><span class="op">)</span>,</span>
+<span>  x_species <span class="op">=</span> <span class="st">"species"</span>, y_species <span class="op">=</span> <span class="st">"species"</span>,</span>
+<span>  authority <span class="op">=</span> <span class="cn">NULL</span>, backbone <span class="op">=</span> <span class="va">backbone</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Reconciling 1 names (x) vs 1 names (y)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Looking up 1 + 1 names in <span style="color: #0000BB;">"WCVP"</span>...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Authority lookup complete; matching accepted names...</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Synonym matching complete: 1 candidate pairs.</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Matched 0/1 names from x</span></span>
+<span><span class="fu"><a href="../reference/reconcile_candidates.html">reconcile_candidates</a></span><span class="op">(</span><span class="va">checked</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 15</span></span></span>
+<span><span class="co">#&gt;   name_x  name_y name_resolved match_source notes identity_state eligible reason</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Plant … Plant… Plant alba    WCVP_synonym Both… conflict       FALSE    disti…</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: x_id &lt;chr&gt;, y_id &lt;chr&gt;, provider &lt;chr&gt;, version &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   stage &lt;chr&gt;, review_status &lt;chr&gt;, review_note &lt;chr&gt;</span></span></span></code></pre></div>
+<p>Side-specific <code>side = "x"</code> or <code>side = "y"</code>
+records are available when the same spelling occurs with different
+identities in the two sources. Duplicate records with the same ID are
+harmless; conflicting IDs for one lookup key are treated as ambiguous.
+Set the backbone rank to the requested <code>rank</code>; species level
+records therefore preserve the package’s intentional species-level
+aggregation of subspecies names. Without a backbone, exact and
+normalised matches remain lexical alignment, and
+<code>authority = NULL</code> fuzzy matching is explicitly
+spelling-only.</p>
 <p><code><a href="../reference/reconcile_apply.html">reconcile_apply()</a></code> and <code><a href="../reference/reconcile_export.html">reconcile_export()</a></code>
 exclude flagged pairs by default and warn with the pairs that need
 review. With <code>drop_unresolved = TRUE</code>, the corresponding data
@@ -466,6 +526,7 @@ reviewing the whole list.</p>
 <p>Use
 <code>reconcile_summary(result, detail = "mismatches_only")</code> to
 see only the rows that need attention.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="example-3-using-a-taxonomic-authority">Example 3: Using a taxonomic authority<a class="anchor" aria-label="anchor" href="#example-3-using-a-taxonomic-authority"></a>
@@ -491,23 +552,27 @@ progress.</p>
 epithet spellings. For large plant lists, use
 <code><a href="../reference/pr_suggest_gender.html">pr_suggest_gender()</a></code> to find common ending variants already
 present in your reference:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pr_suggest_gender.html">pr_suggest_gender</a></span><span class="op">(</span><span class="st">"Plant albus"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Plant alba"</span>, <span class="st">"Plant album"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 2 × 5</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 5</span></span></span>
 <span><span class="co">#&gt;   input       suggestion  ending_group ambiguous requires_review</span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;        &lt;lgl&gt;     &lt;lgl&gt;          </span></span>
-<span><span class="co">#&gt; 1 Plant albus Plant alba  us/a/um      TRUE      TRUE           </span></span>
-<span><span class="co">#&gt; 2 Plant albus Plant album us/a/um      TRUE      TRUE</span></span></code></pre></div>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Plant albus Plant alba  us/a/um      TRUE      TRUE           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Plant albus Plant album us/a/um      TRUE      TRUE</span></span></code></pre></div>
 <p>The helper compares <code>-us/-a/-um</code> and <code>-is/-e</code>
 endings within the same genus, without a pairwise distance matrix. It
 retains ambiguous alternatives. An ending does not establish grammatical
-gender or taxonomic identity: <a href="https://www.iapt-taxon.org/nomen/pages/main/art_23.html" class="external-link">nouns and
+gender or taxonomic identity: <a href="https://www.iaptglobal.org/madrid-code-online" class="external-link">nouns and
 adjectives follow different rules</a>. Check the candidates against a
 taxonomic authority before accepting pairs with
 <code><a href="../reference/reconcile_override.html">reconcile_override()</a></code> or
-<code><a href="../reference/reconcile_override_batch.html">reconcile_override_batch()</a></code>. No suggestion is applied
-automatically. For example, after creating a reconciliation:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code><a href="../reference/reconcile_override_batch.html">reconcile_override_batch()</a></code>. No suggestion is applied by
+this review helper. The fuzzy stage also uses these ending patterns to
+find candidates, but requires matching, comparable authority IDs before
+it can return a Latin-aware automatic match. See the dedicated <a href="latin-aware-matching.html">Latin-aware matching article</a> for
+the scope and limitations. For example, after creating a
+reconciliation:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">unresolved</span> <span class="op">&lt;-</span> <span class="va">rec</span><span class="op">$</span><span class="va">mapping</span><span class="op">$</span><span class="va">name_x</span><span class="op">[</span><span class="va">rec</span><span class="op">$</span><span class="va">mapping</span><span class="op">$</span><span class="va">match_type</span> <span class="op">==</span> <span class="st">"unresolved"</span> <span class="op">&amp;</span></span>
 <span>                                 <span class="va">rec</span><span class="op">$</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_x</span> <span class="op">&amp;</span> <span class="op">!</span><span class="va">rec</span><span class="op">$</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_y</span><span class="op">]</span></span>
 <span><span class="va">reference</span> <span class="op">&lt;-</span> <span class="va">rec</span><span class="op">$</span><span class="va">mapping</span><span class="op">$</span><span class="va">name_y</span><span class="op">[</span><span class="va">rec</span><span class="op">$</span><span class="va">mapping</span><span class="op">$</span><span class="va">in_y</span><span class="op">]</span></span>
@@ -590,7 +655,7 @@ access (we degrade to “name not found” on failure, so the rest of the
 cascade still runs), and the request adds a round-trip to
 <code>verifier.globalnames.org</code>. Install
 (<code>install.packages("httr2")</code>) before first use.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requires taxadb and a local database download (automatic on first use)</span></span>
 <span><span class="va">result3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconcile_tree.html">reconcile_tree</a></span><span class="op">(</span></span>
 <span>  x <span class="op">=</span> <span class="va">trait_data</span>,</span>
@@ -613,7 +678,7 @@ and <code>phylo</code> object). They are marked
 <code>eval = FALSE</code> so the vignette renders without requiring
 those objects to exist.</p>
 </blockquote>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># A data frame of known corrections</span></span>
 <span><span class="va">corrections</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  name_x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Corvus sp."</span>, <span class="st">"Turdus merulaa"</span><span class="op">)</span>,</span>
@@ -646,7 +711,7 @@ for automatic rows and review split/lump cases before applying them.</p>
 </h2>
 <p><code><a href="../reference/reconcile_multi.html">reconcile_multi()</a></code> reconciles several datasets at once,
 pooling all unique species names before running the cascade:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Suppose you have several data frames to reconcile against one tree.</span></span>
 <span><span class="co"># `my_ecology_data`, `my_morpho_data`, and `my_tree` are **hypothetical**</span></span>
 <span><span class="co"># user-supplied objects; substitute your own.</span></span>
@@ -690,7 +755,7 @@ substitute your own paths. The chunk is marked <code>eval = FALSE</code>
 so it doesn’t try to read files that don’t exist when the vignette is
 rendered.</p>
 </blockquote>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/itchyshin/prepR4pcm" class="external-link">prepR4pcm</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 1. Load your data and tree (hypothetical paths -- substitute your own)</span></span>

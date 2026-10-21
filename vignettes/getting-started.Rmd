@@ -350,10 +350,14 @@ pr_suggest_gender("Plant albus", c("Plant alba", "Plant album"))
 The helper compares `-us/-a/-um` and `-is/-e` endings within the same genus,
 without a pairwise distance matrix. It retains ambiguous alternatives.
 An ending does not establish grammatical gender or taxonomic identity:
-[nouns and adjectives follow different rules](https://www.iapt-taxon.org/nomen/pages/main/art_23.html).
+[nouns and adjectives follow different rules](https://www.iaptglobal.org/madrid-code-online).
 Check the candidates against a taxonomic authority before accepting pairs
 with `reconcile_override()` or `reconcile_override_batch()`. No suggestion
-is applied automatically. For example, after creating a reconciliation:
+is applied by this review helper. The fuzzy stage also uses these ending
+patterns to find candidates, but requires matching, comparable authority IDs
+before it can return a Latin-aware automatic match. See the dedicated
+[Latin-aware matching article](latin-aware-matching.html) for the scope and
+limitations. For example, after creating a reconciliation:
 
 ```{r gender-review-workflow, eval=FALSE}
 unresolved <- rec$mapping$name_x[rec$mapping$match_type == "unresolved" &
