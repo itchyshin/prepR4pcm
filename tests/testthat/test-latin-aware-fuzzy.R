@@ -1,5 +1,5 @@
-latin_identity_rows <- function(inputs, ids, provider = "WCVP", version = "2025",
-                                rank = "species") {
+latin_identity_rows <- function(inputs, ids, provider = "WCVP",
+                                version = "2025", rank = "species") {
   tibble::tibble(
     input = inputs,
     identity_status = ifelse(is.na(ids), "unknown", "known"),
@@ -24,7 +24,7 @@ test_that("gender endings are candidates but not identity evidence", {
   expect_identical(candidates$identity_state, "unknown")
 })
 
-test_that("a supported gender-ending candidate matches only with the same authority identity", {
+test_that("gender-ending candidates require the same authority identity", {
   x <- "Plant albus"
   y <- "Plant alba"
   ix <- latin_identity_rows(x, "WCVP:1")
@@ -98,7 +98,7 @@ test_that("same authority identity supplies a cross-genus fallback candidate", {
   expect_lt(out$score, 0.9)
 })
 
-test_that("same-ID cross-genus candidates do not depend on genus edit distance", {
+test_that("same-ID cross-genus candidates ignore genus edit distance", {
   x <- "Abies alba"
   close_genus <- "Abias nigra"
   distant_genus <- "Quercus nigra"
@@ -119,7 +119,7 @@ test_that("same-ID cross-genus candidates do not depend on genus edit distance",
   expect_match(distant$notes, "cross-genus")
 })
 
-test_that("Latin-aware matching does not relabel stem changes as gender variants", {
+test_that("stem changes are not relabelled as gender variants", {
   x <- "Plant albus"
   y <- "Plant arbus"
   out <- pr_fuzzy_match(x, y, quiet = TRUE)
@@ -128,7 +128,7 @@ test_that("Latin-aware matching does not relabel stem changes as gender variants
   expect_false(grepl("Latin-aware", out$notes, fixed = TRUE))
 })
 
-test_that("the cascade keeps an unauthorised gender candidate visible for review", {
+test_that("the cascade keeps unauthorised gender candidates for review", {
   out <- pr_run_cascade(
     "Plant albus", "Plant alba", authority = NULL, fuzzy = TRUE, quiet = TRUE
   )
@@ -146,7 +146,7 @@ test_that("genus similarity cannot rescue a weak epithet", {
   expect_equal(nrow(out), 0L)
 })
 
-test_that("Erick's five distinct valid taxa remain blocked by authority identity", {
+test_that("Erick's five distinct taxa remain blocked by authority identity", {
   pairs <- list(
     c("Coelogyne candoonensis", "Coelogyne cantonensis"),
     c("Coussarea petiolaris", "Coussarea impetiolaris"),
@@ -179,7 +179,9 @@ test_that("subspecies gender candidates preserve the infraspecific epithet", {
   confirmed <- pr_fuzzy_match(
     x, same_subspecies, rank = "subspecies",
     identity_x = latin_identity_rows(x, "WCVP:9", rank = "subspecies"),
-    identity_y = latin_identity_rows(same_subspecies, "WCVP:9", rank = "subspecies"),
+    identity_y = latin_identity_rows(
+      same_subspecies, "WCVP:9", rank = "subspecies"
+    ),
     quiet = TRUE
   )
   expect_equal(nrow(confirmed), 1L)

@@ -5,7 +5,8 @@
 #' Uses component-based similarity: genus and epithet are matched separately,
 #' then combined with weights (genus 0.6, species epithet 0.4; at subspecies
 #' rank, genus 0.55, species epithet 0.30, and infraspecific epithet 0.15).
-#' Uses base R `utils::adist()` for Levenshtein distance — no extra dependencies.
+#' Uses base R `utils::adist()` for Levenshtein distance, with no extra
+#' dependencies.
 #'
 #' Candidate generation starts with names whose genus is within 2 edits.
 #' When comparable authority identity is available, same-ID names in other
@@ -123,8 +124,9 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
                                         !is.na(identity_y$version) &
                                         !is.na(identity_y$rank)))
     if (length(known_y)) {
-      identity_key <- function(x) paste(x$provider, x$version, x$rank,
-                                         x$accepted_id, sep = "\034")
+      identity_key <- function(x) {
+        paste(x$provider, x$version, x$rank, x$accepted_id, sep = "\034")
+      }
       identity_groups <- split(known_y, identity_key(identity_y[known_y, ]))
       for (j in seq_along(identity_groups)) {
         assign(names(identity_groups)[[j]], identity_groups[[j]],
@@ -167,10 +169,12 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
     for (i in groups_x[[gx]]) {
       ex <- px$epithet[i]
       gender_targets <- if (!is.na(names_x[i]) &&
-                            exists(names_x[i], gender_targets_by_input,
-                                   inherits = FALSE)) {
+                              exists(names_x[i], gender_targets_by_input,
+                                     inherits = FALSE)) {
         get(names_x[i], gender_targets_by_input, inherits = FALSE)
-      } else character()
+      } else {
+        character()
+      }
       candidate_y <- cand_y
       appended_y <- integer()
       cross_fallback_y <- integer()
@@ -180,11 +184,15 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           !is.na(identity_x$accepted_id[i]) && !is.na(identity_x$provider[i]) &&
           !is.na(identity_x$version[i]) && !is.na(identity_x$rank[i])
         if (known_x) {
-          key <- paste(identity_x$provider[i], identity_x$version[i],
-                       identity_x$rank[i], identity_x$accepted_id[i], sep = "\034")
+          key <- paste(
+            identity_x$provider[i], identity_x$version[i],
+            identity_x$rank[i], identity_x$accepted_id[i], sep = "\034"
+          )
           same_id_y <- if (exists(key, identity_y_groups, inherits = FALSE)) {
             get(key, identity_y_groups, inherits = FALSE)
-          } else integer()
+          } else {
+            integer()
+          }
           if (length(same_id_y)) {
             # Every authority-confirmed cross-genus target follows the same
             # eligibility rule, whether or not its genus entered the spelling
@@ -200,7 +208,7 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
         cache_key <- paste0("epithet:", ex, "\034",
                             paste(sort(gender_targets), collapse = "\034"))
         if (!identity_guard && rank == "species" &&
-            identical(cache_key, cached_key)) {
+              identical(cache_key, cached_key)) {
           scores <- cached_scores
           g_sim_i <- base_g_sim
         } else {
@@ -274,8 +282,9 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
             identity_x$accepted_id[i] == identity_y$accepted_id[candidate_y]
           same_id[is.na(same_id)] <- FALSE
           eligible <- known_x & known_y & same_source & same_id
-          blocked_idx <- which(!eligible &
-            (scores >= threshold | gender_variant))
+          blocked_idx <- which(
+            !eligible & (scores >= threshold | gender_variant)
+          )
         } else {
           known_y <- rep(FALSE, length(candidate_y))
           same_source <- rep(FALSE, length(candidate_y))
@@ -286,7 +295,16 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
         if (length(blocked_idx)) {
           conflict <- if (identity_guard) {
             known_x & known_y[blocked_idx] & same_source[blocked_idx]
-          } else rep(FALSE, length(blocked_idx))
+          } else {
+            rep(FALSE, length(blocked_idx))
+          }
+          x_id <- if (known_x) {
+            rep(identity_x$accepted_id[i], length(blocked_idx))
+          } else {
+            NA_character_
+          }
+          y_id <- identity_y$accepted_id[candidate_y[blocked_idx]]
+          y_id[!known_y[blocked_idx]] <- NA_character_
           blocked_count <- blocked_count + 1L
           blocked[[blocked_count]] <- tibble(
             name_x = names_x[i], name_y = names_y[candidate_y[blocked_idx]],
@@ -295,9 +313,8 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
             eligible = FALSE,
             reason = ifelse(conflict, "distinct_accepted_ids",
                             "identity_not_established"),
-            x_id = if (known_x) rep(identity_x$accepted_id[i], length(blocked_idx)) else NA_character_,
-            y_id = ifelse(known_y[blocked_idx],
-                          identity_y$accepted_id[candidate_y[blocked_idx]], NA_character_),
+            x_id = x_id,
+            y_id = y_id,
             provider = ifelse(same_source[blocked_idx],
                               identity_x$provider[i], NA_character_),
             version = ifelse(same_source[blocked_idx],
@@ -305,12 +322,15 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           )
         }
 
-        eligible_idx <- which(eligible &
-          (scores >= threshold | candidate_y %in% cross_fallback_y))
+        eligible_idx <- which(
+          eligible & (scores >= threshold | candidate_y %in% cross_fallback_y)
+        )
         if (!identity_guard) {
           rank_compatible <- if (rank == "subspecies") {
             sub_sim >= threshold
-          } else rep(TRUE, length(scores))
+          } else {
+            rep(TRUE, length(scores))
+          }
           eligible_idx <- which(scores >= threshold & !gender_variant &
                                   rank_compatible)
         }
@@ -318,12 +338,22 @@ pr_fuzzy_match <- function(names_x, names_y, threshold = 0.9,
           best_k <- eligible_idx[which.max(scores[eligible_idx])]
           j <- candidate_y[best_k]
           result_count <- result_count + 1L
+          result_provider <- if (identity_guard && eligible[best_k]) {
+            identity_x$provider[i]
+          } else {
+            NA_character_
+          }
+          result_version <- if (identity_guard && eligible[best_k]) {
+            identity_x$version[i]
+          } else {
+            NA_character_
+          }
           results[[result_count]] <- list(
             i = i, j = j, score = scores[best_k],
             gender_variant = gender_variant[best_k],
             cross_genus = j %in% cross_fallback_y,
-            provider = if (identity_guard && eligible[best_k]) identity_x$provider[i] else NA_character_,
-            version = if (identity_guard && eligible[best_k]) identity_x$version[i] else NA_character_
+            provider = result_provider,
+            version = result_version
           )
         }
       }
