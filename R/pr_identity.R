@@ -100,7 +100,16 @@ utils::globalVariables(".data", package = "prepR4pcm")
     ])),
     .groups = "drop"
   )
-  cached <- list(summary = summary, names_by_id = names_by_id)
+  review_names <- dplyr::summarise(
+    dplyr::group_by(records, .data$key),
+    candidate_names = list(unique(.data$accepted_name[
+      !is.na(.data$status) & .data$status != "not_found" &
+        !is.na(.data$accepted_name) & nzchar(.data$accepted_name)
+    ])),
+    .groups = "drop"
+  )
+  cached <- list(summary = summary, names_by_id = names_by_id,
+                 review_names = review_names)
   assign(side, cached, envir = backbone$index)
   cached
 }
@@ -166,6 +175,14 @@ utils::globalVariables(".data", package = "prepR4pcm")
   has_name_index <- !is.na(name_index) & identity_status == "known"
   accepted_name[has_name_index] <- vapply(
     names_by_id$accepted_names[name_index[has_name_index]],
+    function(x) if (length(x) == 1L) x[[1L]] else NA_character_,
+    character(1)
+  )
+  review_index <- match(key, side_index$review_names$key)
+  reviewable <- !is.na(review_index) & identity_status != "known" &
+    status != "not_found"
+  accepted_name[reviewable] <- vapply(
+    side_index$review_names$candidate_names[review_index[reviewable]],
     function(x) if (length(x) == 1L) x[[1L]] else NA_character_,
     character(1)
   )

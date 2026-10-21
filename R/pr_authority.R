@@ -424,7 +424,35 @@ pr_lookup_authority <- function(names, authority = "col", db_version = NULL,
       synonym <- hits[status_class == "synonym", , drop = FALSE]
       unsupported <- hits[status_class == "unknown", , drop = FALSE]
       if (nrow(unsupported) > 0L) {
-        return(tibble(input = name, accepted_name = NA_character_,
+        # COL's "ambiguous synonym" records can still point to a single
+        # accepted-name target. Preserve that text only as a review hint:
+        # the status remains unknown and no canonical ID is exposed, so the
+        # identity guard cannot use it for an automatic match.
+        candidate_name <- NA_character_
+        unsupported_status <- tolower(trimws(as.character(
+          hits$taxonomicStatus[status_class == "unknown"]
+        )))
+        if (all(status_class == "unknown") &&
+            length(unsupported_status) > 0L &&
+            !anyNA(unsupported_status) &&
+            all(unsupported_status == "ambiguous synonym") &&
+            "acceptedNameUsageID" %in% names(hits)) {
+          target_ids <- unique(as.character(
+            hits$acceptedNameUsageID[status_class == "unknown"]
+          ))
+          target_ids <- target_ids[!is.na(target_ids) & nzchar(target_ids)]
+          if (length(target_ids) == 1L) {
+            target <- tryCatch({
+              id_args <- list(target_ids[[1L]], provider = authority)
+              if (!is.null(db_version)) id_args$version <- db_version
+              .pr_taxadb_accepted_target(
+                do.call(taxadb::filter_id, id_args), target_ids[[1L]]
+              )
+            }, error = function(e) NULL)
+            if (!is.null(target)) candidate_name <- target$accepted_name
+          }
+        }
+        return(tibble(input = name, accepted_name = candidate_name,
                       status = "unknown", taxon_id = NA_character_,
                       authority = authority))
       }

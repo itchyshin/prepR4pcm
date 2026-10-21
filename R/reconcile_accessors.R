@@ -308,7 +308,8 @@ reconcile_override <- function(reconciliation, name_x, name_y = NULL,
     # Mark the match as unresolved
     idx <- which(mapping$name_x == name_x & !is.na(mapping$name_x))
     if (!is.null(name_y)) {
-      idx <- idx[!is.na(mapping$name_y[idx]) & mapping$name_y[idx] == name_y]
+      idx <- idx[!is.na(mapping$name_y[idx]) &
+                    normalize(mapping$name_y[idx]) == normalize(name_y)]
     }
     if (length(idx) > 0L) {
       old_y <- mapping$name_y[idx[1]]

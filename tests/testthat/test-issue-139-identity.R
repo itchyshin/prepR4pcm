@@ -127,6 +127,7 @@ test_that("#139 supplied backbones keep unsupported statuses unknown", {
 
   expect_identical(found$identity_status, rep("unknown", 3))
   expect_true(all(is.na(found$accepted_id)))
+  expect_identical(found$accepted_name, rep("Plant accepted", 3))
 
   backbone$records <- rbind(
     backbone$records,
@@ -157,6 +158,32 @@ test_that("#139 supplied backbones keep unsupported statuses unknown", {
   )
   expect_identical(incomplete$identity_status, "unknown")
   expect_true(is.na(incomplete$accepted_id))
+})
+
+test_that("#139 backbone ambiguity keeps a review candidate but never an automatic synonym", {
+  backbone <- list(
+    records = tibble::tibble(
+      input = c("Plant ambiguous", "Plant alba"),
+      accepted_name = c("Plant alba", "Plant alba"),
+      accepted_id = c(NA_character_, "W:1"),
+      status = c("ambiguous synonym", "accepted"),
+      side = "both"
+    ),
+    provider = "WCVP", version = "2025", rank = "species"
+  )
+  reconciled <- reconcile_data(
+    data.frame(species = "Plant ambiguous"),
+    data.frame(species = "Plant alba"),
+    x_species = "species", y_species = "species", authority = NULL,
+    backbone = backbone, quiet = TRUE
+  )
+
+  expect_false(any(reconciled$mapping$match_type == "synonym"))
+  expect_true(any(
+    reconciled$candidates$name_x == "Plant ambiguous" &
+      reconciled$candidates$name_y == "Plant alba" &
+      reconciled$candidates$reason == "identity_not_established"
+  ))
 })
 
 test_that("#139 distinct IDs block only the conflicting candidate and keep an eligible runner-up", {
@@ -362,11 +389,47 @@ test_that("#139 rejecting a withheld pair leaves a different accepted pair intac
   expect_identical(out$mapping$name_y[synonym_rows], "Plant newa")
   before <- out$mapping
   reviewed <- reconcile_override(
-    out, "Plant olda", "Plant alba", action = "reject", note = "distinct IDs"
+    out, "Plant olda", "Plant_alba", action = "reject", note = "distinct IDs"
   )
 
   expect_identical(reviewed$mapping, before)
   expect_identical(reviewed$candidates$review_status, "rejected_manual")
+})
+
+test_that("#139 rejection normalizes the target for an active pair", {
+  backbone <- list(
+    records = tibble::tibble(
+      input = c("Plant olda", "Plant alba", "Plant newa"),
+      accepted_name = c("Plant alba", "Plant alba", "Plant alba"),
+      accepted_id = c("W:1", "W:2", "W:1"),
+      status = c("synonym", "accepted", "synonym"),
+      side = c("x", "y", "y")
+    ),
+    provider = "WCVP", version = "2025", rank = "species"
+  )
+  out <- reconcile_data(
+    data.frame(species = "Plant olda"),
+    data.frame(species = c("Plant alba", "Plant newa")),
+    x_species = "species", y_species = "species", authority = NULL,
+    backbone = backbone, fuzzy = FALSE, quiet = TRUE
+  )
+  expect_true(any(out$mapping$match_source == "WCVP_synonym", na.rm = TRUE))
+
+  reviewed <- reconcile_override(
+    out, "Plant olda", "Plant_newa", action = "reject",
+    note = "manual identity review"
+  )
+
+  expect_false(any(reviewed$mapping$match_source == "WCVP_synonym", na.rm = TRUE))
+  expect_true(any(
+    reviewed$mapping$match_type == "unresolved" &
+      reviewed$mapping$name_x == "Plant olda" & !reviewed$mapping$in_y
+  ))
+  expect_true(any(
+    reviewed$mapping$match_type == "unresolved" &
+      reviewed$mapping$name_y == "Plant newa" & !reviewed$mapping$in_x
+  ))
+  expect_identical(reviewed$candidates$review_status, "pending")
 })
 
 test_that("#139 tree augmentation retains withheld identity provenance", {
@@ -642,6 +705,105 @@ test_that("#139 taxadb adapter does not treat unsupported statuses as synonyms",
   expect_true(is.na(mixed$taxon_id))
 })
 
+test_that("#139 missing unsupported statuses stay unknown without following IDs", {
+  skip_if_not_installed("taxadb")
+  filter_id_called <- FALSE
+  testthat::local_mocked_bindings(
+    filter_name = function(names, ...) {
+      status <- if (names == "Aus alba") {
+        NA_character_
+      } else {
+        c("ambiguous synonym", NA_character_)
+      }
+      tibble::tibble(
+        scientificName = rep(names, length(status)),
+        taxonomicStatus = status,
+        taxonID = paste0("COL:", names, seq_along(status)),
+        acceptedNameUsageID = rep("COL:target", length(status))
+      )
+    },
+    filter_id = function(...) {
+      filter_id_called <<- TRUE
+      stop("unknown statuses must not be followed")
+    },
+    .package = "taxadb"
+  )
+
+  missing <- prepR4pcm:::.pr_lookup_taxadb("Aus alba", "col", "2025")
+  mixed <- prepR4pcm:::.pr_lookup_taxadb("Bus alba", "col", "2025")
+
+  expect_identical(missing$status, "unknown")
+  expect_true(is.na(missing$accepted_name))
+  expect_true(is.na(missing$taxon_id))
+  expect_identical(mixed$status, "unknown")
+  expect_true(is.na(mixed$accepted_name))
+  expect_true(is.na(mixed$taxon_id))
+  expect_false(filter_id_called)
+})
+
+test_that("#139 ambiguous synonym targets remain reviewable without becoming automatic evidence", {
+  skip_if_not_installed("taxadb")
+  testthat::local_mocked_bindings(
+    filter_name = function(...) tibble::tibble(
+      scientificName = "Asperula galioides",
+      taxonomicStatus = "ambiguous synonym",
+      taxonID = "COL:ambiguous",
+      acceptedNameUsageID = "COL:3F6N3"
+    ),
+    filter_id = function(...) tibble::tibble(
+      scientificName = "Galium triflorum",
+      taxonomicStatus = "accepted",
+      taxonID = "COL:3F6N3",
+      acceptedNameUsageID = "COL:3F6N3"
+    ),
+    .package = "taxadb"
+  )
+
+  out <- prepR4pcm:::.pr_lookup_taxadb(
+    "Asperula galioides", "col", "2025"
+  )
+
+  expect_identical(out$status, "unknown")
+  expect_identical(out$accepted_name, "Galium triflorum")
+  expect_true(is.na(out$taxon_id))
+
+  mock_lookup <- function(names, authority, db_version = NULL, quiet = TRUE) {
+    ambiguous <- names == "Asperula galioides"
+    tibble::tibble(
+      input = names,
+      accepted_name = ifelse(ambiguous, "Galium triflorum", names),
+      status = ifelse(ambiguous, "unknown", "accepted"),
+      taxon_id = ifelse(ambiguous, NA_character_, "COL:3F6N3"),
+      authority = authority
+    )
+  }
+  testthat::local_mocked_bindings(
+    pr_lookup_authority = mock_lookup,
+    .package = "prepR4pcm"
+  )
+  reconciled <- reconcile_data(
+    data.frame(species = "Asperula galioides"),
+    data.frame(species = "Galium triflorum"),
+    x_species = "species", y_species = "species", authority = "col",
+    quiet = TRUE
+  )
+
+  expect_false(any(reconciled$mapping$match_type == "synonym"))
+  expect_true(any(
+    reconciled$candidates$name_x == "Asperula galioides" &
+      reconciled$candidates$name_y == "Galium triflorum" &
+      reconciled$candidates$reason == "identity_not_established"
+  ))
+  expect_identical(
+    out[c("status", "accepted_name", "taxon_id")],
+    tibble::tibble(
+      input = "Asperula galioides", status = "unknown",
+      accepted_name = "Galium triflorum", taxon_id = NA_character_,
+      authority = "col"
+    )[c("status", "accepted_name", "taxon_id")]
+  )
+})
+
 test_that("#139 shared accepted-name synonyms pair by identity before consuming names", {
   backbone <- list(
     records = tibble::tibble(
@@ -667,4 +829,34 @@ test_that("#139 shared accepted-name synonyms pair by identity before consuming 
     c("Plant olda Plant newb", "Plant oldb Plant newa")
   )
   expect_equal(nrow(out$candidates), 0L)
+})
+
+test_that("#139 shared synonym identity pairing scales across many accepted names", {
+  n <- 20000L
+  accepted <- sprintf("Plant accepted%05d", seq_len(n))
+  x <- tibble::tibble(
+    input = sprintf("Plant old%05d", seq_len(n)),
+    accepted_name = accepted,
+    identity_status = "known",
+    accepted_id = sprintf("COL:%05d", seq_len(n)),
+    provider = "COL", version = "2026", rank = "species"
+  )
+  y <- tibble::tibble(
+    input = sprintf("Plant new%05d", seq_len(n)),
+    accepted_name = accepted,
+    identity_status = "known",
+    accepted_id = sprintf("COL:%05d", seq_len(n)),
+    provider = "COL", version = "2026", rank = "species"
+  )
+
+  elapsed <- system.time({
+    out <- prepR4pcm:::pr_resolve_synonyms(
+      x$input, y$input, authority = "COL", quiet = TRUE,
+      lookup_x = x, lookup_y = y
+    )
+  })[["elapsed"]]
+
+  expect_equal(nrow(out), n)
+  expect_identical(out$name_resolved, accepted)
+  expect_lt(elapsed, 5)
 })

@@ -168,42 +168,59 @@ pr_resolve_synonyms <- function(unmatched_x, unmatched_y,
         chosen_x <- chosen_y <- integer()
       }
     } else {
-      chosen_x <- chosen_y <- integer()
-      for (accepted in groups) {
-        group_x <- ix[lookup_x$accepted_name[ix] == accepted]
-        group_y <- iy[lookup_y$accepted_name[iy] == accepted]
-        if (!length(group_x) || !length(group_y)) next
+      x_group_id <- match(lookup_x$accepted_name[ix], groups)
+      y_group_id <- match(lookup_y$accepted_name[iy], groups)
+      known_x <- ix[lookup_x$identity_status[ix] == "known" &
+                      !is.na(lookup_x$accepted_id[ix]) &
+                      nzchar(lookup_x$accepted_id[ix])]
+      known_y <- iy[lookup_y$identity_status[iy] == "known" &
+                      !is.na(lookup_y$accepted_id[iy]) &
+                      nzchar(lookup_y$accepted_id[iy])]
 
-        paired_x <- paired_y <- integer()
-        known_x <- group_x[lookup_x$identity_status[group_x] == "known" &
-                             !is.na(lookup_x$accepted_id[group_x]) &
-                             nzchar(lookup_x$accepted_id[group_x])]
-        known_y <- group_y[lookup_y$identity_status[group_y] == "known" &
-                             !is.na(lookup_y$accepted_id[group_y]) &
-                             nzchar(lookup_y$accepted_id[group_y])]
-        for (x_i in known_x) {
-          eligible_y <- known_y[
-            lookup_y$accepted_id[known_y] == lookup_x$accepted_id[x_i] &
-              !known_y %in% paired_y
-          ]
-          if (length(eligible_y)) {
-            paired_x <- c(paired_x, x_i)
-            paired_y <- c(paired_y, eligible_y[[1L]])
-          }
-        }
-
-        # Preserve order for remaining candidates; identity-supported pairs
-        # have already been removed from both sides.
-        remaining_x <- group_x[!group_x %in% paired_x]
-        remaining_y <- group_y[!group_y %in% paired_y]
-        n_pairs <- min(length(remaining_x), length(remaining_y))
-        if (n_pairs) {
-          paired_x <- c(paired_x, remaining_x[seq_len(n_pairs)])
-          paired_y <- c(paired_y, remaining_y[seq_len(n_pairs)])
-        }
-        chosen_x <- c(chosen_x, paired_x)
-        chosen_y <- c(chosen_y, paired_y)
+      group_occurrence <- function(group, order_key) {
+        occurrence <- integer(length(group))
+        valid <- !is.na(group)
+        if (!any(valid)) return(occurrence)
+        ord <- order(group[valid], order_key[valid], method = "radix")
+        positions <- which(valid)[ord]
+        occurrence[positions] <- sequence(rle(group[positions])$lengths)
+        occurrence
       }
+
+      # Match repeated IDs by their occurrence within each accepted-name
+      # group. This preserves first-in/first-out pairing without scanning
+      # every name group against the full unmatched vectors.
+      known_x_group <- match(lookup_x$accepted_name[known_x], groups)
+      known_y_group <- match(lookup_y$accepted_name[known_y], groups)
+      known_x_key <- paste(known_x_group, lookup_x$accepted_id[known_x],
+                           sep = "\034")
+      known_y_key <- paste(known_y_group, lookup_y$accepted_id[known_y],
+                           sep = "\034")
+      known_x_occurrence <- group_occurrence(known_x_key, known_x)
+      known_y_occurrence <- group_occurrence(known_y_key, known_y)
+      known_y_match <- match(
+        paste(known_x_key, known_x_occurrence, sep = "\034"),
+        paste(known_y_key, known_y_occurrence, sep = "\034")
+      )
+      paired_x <- known_x[!is.na(known_y_match)]
+      paired_y <- known_y[known_y_match[!is.na(known_y_match)]]
+
+      # Pair any remaining candidates by accepted-name group and original
+      # order, retaining the review route for unknown or unmatched IDs.
+      remaining_x <- ix[!ix %in% paired_x]
+      remaining_y <- iy[!iy %in% paired_y]
+      remaining_x_group <- match(lookup_x$accepted_name[remaining_x], groups)
+      remaining_y_group <- match(lookup_y$accepted_name[remaining_y], groups)
+      remaining_x_occurrence <- group_occurrence(remaining_x_group, remaining_x)
+      remaining_y_occurrence <- group_occurrence(remaining_y_group, remaining_y)
+      remaining_y_match <- match(
+        paste(remaining_x_group, remaining_x_occurrence, sep = ":"),
+        paste(remaining_y_group, remaining_y_occurrence, sep = ":")
+      )
+      paired_remaining <- which(!is.na(remaining_y_match) &
+                                  !is.na(remaining_x_group))
+      chosen_x <- c(paired_x, remaining_x[paired_remaining])
+      chosen_y <- c(paired_y, remaining_y[remaining_y_match[paired_remaining]])
     }
 
     if (length(chosen_x)) {
