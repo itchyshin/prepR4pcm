@@ -54,7 +54,7 @@ The focused tests exercise invalid sources, missing optional package behavior, s
 - Issue #139: local work was continued after the user directed us to address Erick's comment. A cautious reply draft is saved locally; it has not been posted.
 - Adapter bug found and fixed: accepted botanical names with parenthetical author citations did not match canonical target tips under the general normalizer.
 - Live R-client access limitation recorded; direct API behavior remains unverified in this environment.
-- A public test branch is being prepared so Erick can install the prototype. No issue reply, PR, merge, or CRAN work has been done.
+- The public test branch `codex/latin-review-recovery` is available so Erick can install the prototype. No issue reply, PR, merge, or CRAN work has been done.
 
 ## 8. Consistency Audit
 
