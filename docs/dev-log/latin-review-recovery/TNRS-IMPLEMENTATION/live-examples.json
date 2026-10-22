@@ -1,0 +1,17 @@
+{
+  "generated_utc": "2026-10-22 01:18:47 UTC",
+  "source": "wcvp",
+  "source_version": null,
+  "client_version": "0.3.6",
+  "service_metadata": null,
+  "queried_names": ["Trema tomentosa", "Trema orientalis", "Coelogyne candoonensis", "Coussarea petiolaris", "Croton heterocarpus", "Croton leiophyllus", "Croton stenopetalus", "Bignonia ternata", "Quercus robrr"],
+  "target_tips": ["Trema tomentosum", "Trema orientale", "Coelogyne cantonensis", "Coussarea impetiolaris", "Croton heterochrous", "Croton leucophyllus", "Croton stenosepalus", "Adenocalymma ternatum", "Adenocalymma macrophyllum", "Quercus robur"],
+  "query_status": "unavailable",
+  "service_error": "TNRS query failed: The TNRS client returned no result; check internet access and service availability.",
+  "warnings": [],
+  "missing_submitted_names": ["Trema tomentosa", "Trema orientalis", "Coelogyne candoonensis", "Coussarea petiolaris", "Croton heterocarpus", "Croton leiophyllus", "Croton stenopetalus", "Bignonia ternata", "Quercus robrr"],
+  "target_audit": null,
+  "candidates": null,
+  "raw_results": null,
+  "mapping_unchanged": null
+}

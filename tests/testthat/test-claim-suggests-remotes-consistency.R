@@ -19,6 +19,8 @@
   "caper", "clootl", "dbplyr", "digest", "dplyr", "fishtree", "httr2", "knitr",
   "MCMCglmm", "phytools", "piggyback", "pkgdown", "readr", "rgnparser",
   "rmarkdown", "rotl", "rtrees", "spelling", "stringr", "taxadb",
+  # TNRS is the CRAN package for the botanical name-resolution client.
+  "TNRS",
   "testthat",
   # standard packages bundled with R
   "stats", "tools", "utils", "graphics", "grDevices", "methods"

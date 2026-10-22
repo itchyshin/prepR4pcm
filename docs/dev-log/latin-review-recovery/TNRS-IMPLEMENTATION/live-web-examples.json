@@ -1,0 +1,42 @@
+{
+  "source": "wcvp",
+  "interface": "TNRS public web application",
+  "interface_version": "5.3.1",
+  "query_date": "2026-10-21",
+  "submitted_names": [
+    "Trema tomentosa",
+    "Trema orientalis",
+    "Coelogyne candoonensis",
+    "Coussarea petiolaris",
+    "Croton heterocarpus",
+    "Croton leiophyllus",
+    "Croton stenopetalus",
+    "Bignonia ternata",
+    "Quercus robrr"
+  ],
+  "visible_match_threshold": 0.53,
+  "results": [
+    {"submitted":"Trema tomentosa","matched":"Trema tomentosum (Roxb.) H.Hara","source":"wcvp","score":0.96,"status":"Accepted","accepted":"Trema tomentosum (Roxb.) H.Hara"},
+    {"submitted":"Trema orientalis","matched":"Trema orientale (L.) Blume","source":"wcvp","score":0.96,"status":"Accepted","accepted":"Trema orientale (L.) Blume"},
+    {"submitted":"Coelogyne candoonensis","matched":"Coelogyne candoonensis Ames","source":"wcvp","score":1.00,"status":"Accepted","accepted":"Coelogyne candoonensis Ames"},
+    {"submitted":"Coussarea petiolaris","matched":"Coussarea petiolaris (Benth.) Standl.","source":"wcvp","score":1.00,"status":"Accepted","accepted":"Coussarea petiolaris (Benth.) Standl."},
+    {"submitted":"Croton heterocarpus","matched":"Croton heterocarpus Müll.Arg.","source":"wcvp","score":1.00,"status":"Accepted","accepted":"Croton heterocarpus Müll.Arg."},
+    {"submitted":"Croton leiophyllus","matched":"Croton leiophyllus Müll.Arg.","source":"wcvp","score":1.00,"status":"Accepted","accepted":"Croton leiophyllus Müll.Arg."},
+    {"submitted":"Croton stenopetalus","matched":"Croton stenopetalus G.L.Webster","source":"wcvp","score":1.00,"status":"Accepted","accepted":"Croton stenopetalus G.L.Webster"},
+    {"submitted":"Bignonia ternata","matched":"Bignonia ternata Vell.","source":"wcvp","score":1.00,"status":"Synonym","accepted":"Adenocalymma ternatum (Vell.) Netto ex Bureau & K.Schum."},
+    {"submitted":"Quercus robrr","matched":"Quercus robur L.","source":"wcvp","score":0.96,"status":"Accepted","accepted":"Quercus robur L."}
+  ],
+  "interpretation": {
+    "trema": "Both names raised by Erick resolve to the expected spelling forms at 0.96.",
+    "distinct_name_controls": "For the five older near-spelling controls, WCVP returned the submitted name as accepted; it did not support the proposed alternate tree-tip spellings.",
+    "bignonia": "Bignonia ternata is reported as a synonym of Adenocalymma ternatum, not Adenocalymma macrophyllum.",
+    "spelling_control": "Quercus robrr resolves to Quercus robur at 0.96.",
+    "not_authority": "These service outputs are candidate evidence and do not establish biological truth or tree membership by themselves."
+  },
+  "limitations": [
+    "The UI displayed its 0.53 matching threshold; this is not a one-to-one reproduction of the R client's all-matches, zero-threshold request.",
+    "The R client could not reach the network in this execution environment, so this is a browser-service receipt, not a live adapter/API receipt.",
+    "Warnings/details were not expanded and the service source-release version was not visible in the captured result table.",
+    "Only the visible result fields are transcribed; this is not a raw TNRS API response."
+  ]
+}

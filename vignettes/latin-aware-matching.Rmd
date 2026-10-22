@@ -92,5 +92,32 @@ taxonomic source yourself. Record a deliberate decision with
 `reconcile_override()` or `reconcile_override_batch()`; do not treat a
 grammatical-looking ending as a taxonomic crosswalk.
 
+## Optional botanical TNRS suggestions
+
+For plant data, `reconcile_tnrs()` can query one explicit source from the
+botanical Taxonomic Name Resolution Service (TNRS). Install the optional CRAN
+package `TNRS` and choose a source such as WCVP:
+
+```{r tnrs-review, eval = FALSE}
+botanical_review <- reconcile_tnrs(result, source = "wcvp")
+botanical_review$tnrs$source_version
+reconcile_candidates(botanical_review)
+reconcile_review(botanical_review, type = "flagged")
+```
+
+This makes an online request for unresolved names. The reconciliation keeps
+the returned response, scores, warnings, source metadata, and client version
+for later review. A suggestion is added only when the TNRS accepted name
+matches one actual target tip after ordinary name normalization. Names absent
+from the tree, or matching multiple tips, remain in the audit record without
+becoming candidates. The selected source and its version are recorded when
+the service reports them.
+
+TNRS results are review evidence, not taxonomic validation. The adapter never
+adds a match to the mapping or applies a name change. Review a suggestion and
+accept it explicitly only after checking the name and the tree's taxonomy.
+This botanical service is distinct from OpenTree name resolution used by some
+tree-download workflows.
+
 For the related spelling-only review helper, see the “Reviewing grammatical
 endings” section in the [getting-started article](getting-started.html).
