@@ -303,3 +303,52 @@ test_that("a frozen live WCVP sample recovers useful tips and rejects five distr
   expect_true(all(out$candidates$name_y %in% tips))
   expect_equal(nrow(out$tnrs$results), 9L)
 })
+
+test_that("TNRS response processing normalizes and appends in batches", {
+  n <- 100L
+  x <- rev(sprintf("Genus%03d species%03d", seq_len(n), seq_len(n)))
+  y <- rev(sprintf("Target%03d species%03d", seq_len(n), seq_len(n)))
+  rec <- tnrs_test_reconciliation(x = x, y = y)
+  normalized_lengths <- integer()
+  bind_calls <- 0L
+  original_name_key <- .pr_tnrs_name_key
+  original_bind_rows <- .pr_tnrs_bind_rows
+
+  local_mocked_bindings(
+    .pr_tnrs_client_available = function() TRUE,
+    .pr_tnrs_query = function(names, source) {
+      list(
+        results = data.frame(
+          Name_submitted = names,
+          Accepted_name = sub("^Genus", "Target", names),
+          Accepted_name_id = seq_along(names),
+          Overall_score = rep("1.00", length(names)),
+          Taxonomic_status = rep("Accepted", length(names)),
+          Source = rep("WCVP", length(names)),
+          stringsAsFactors = FALSE
+        ),
+        source_metadata = data.frame(sourceName = "WCVP", version = "synthetic"),
+        service_metadata = NULL,
+        client_version = "synthetic",
+        warnings = character()
+      )
+    },
+    .pr_tnrs_name_key = function(names, rank) {
+      normalized_lengths <<- c(normalized_lengths, length(names))
+      original_name_key(names, rank)
+    },
+    .pr_tnrs_bind_rows = function(x, y) {
+      bind_calls <<- bind_calls + 1L
+      original_bind_rows(x, y)
+    },
+    .package = "prepR4pcm"
+  )
+
+  out <- reconcile_tnrs(rec, source = "wcvp")
+
+  expect_equal(nrow(out$candidates), n)
+  expect_identical(out$candidates$name_x, x)
+  expect_equal(sum(normalized_lengths == n), 4L)
+  expect_equal(sum(normalized_lengths == 1L), 0L)
+  expect_equal(bind_calls, 1L)
+})

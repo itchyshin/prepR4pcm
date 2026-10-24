@@ -85,6 +85,9 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
     mapping$in_y & !is.na(mapping$name_y) & nzchar(trimws(mapping$name_y))
   ])
   target_norm <- norm(target_names)
+  input_norm <- norm(input_names)
+  input_lookup <- split(input_names, input_norm)
+  target_lookup <- split(target_names, target_norm)
   result <- response$results
   submitted <- if (nrow(result)) as.character(result$Name_submitted) else character()
   accepted <- if ("Accepted_name" %in% names(result)) {
@@ -108,6 +111,8 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
   matched <- if ("Name_matched" %in% names(result)) {
     as.character(result$Name_matched)
   } else rep(NA_character_, nrow(result))
+  submitted_norm <- norm(submitted)
+  accepted_norm <- norm(accepted)
 
   source_version <- .pr_tnrs_source_version(response$source_metadata, source)
   source_version_label <- if (is.na(source_version) || !nzchar(source_version)) {
@@ -122,18 +127,20 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
   )
   new_candidates <- list()
   for (i in seq_len(nrow(result))) {
-    x_norm <- norm(submitted[[i]])
-    x_hits <- input_names[norm(input_names) == x_norm]
-    y_norm <- norm(accepted[[i]])
-    y_hits <- target_names[target_norm == y_norm]
     if (is.na(accepted[[i]]) || !nzchar(trimws(accepted[[i]]))) {
       audit$status[[i]] <- "no_accepted_name"
       next
     }
+    x_norm <- submitted_norm[[i]]
+    x_hits <- if (is.na(x_norm)) NULL else input_lookup[[x_norm]]
+    if (is.null(x_hits)) x_hits <- character()
     if (!length(x_hits)) {
       audit$status[[i]] <- "submitted_name_not_in_query"
       next
     }
+    y_norm <- accepted_norm[[i]]
+    y_hits <- if (is.na(y_norm)) NULL else target_lookup[[y_norm]]
+    if (is.null(y_hits)) y_hits <- character()
     if (!length(y_hits)) {
       audit$status[[i]] <- "accepted_name_absent_from_tips"
       next
@@ -183,30 +190,49 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
   }
   if (length(new_candidates)) {
     additions <- tibble::as_tibble(do.call(rbind, new_candidates))
-    for (i in seq_len(nrow(additions))) {
-      key <- !is.na(candidates$name_x) & !is.na(candidates$name_y) &
-        candidates$name_x == additions$name_x[[i]] &
-        candidates$name_y == additions$name_y[[i]]
-      existing <- which(key)
-      if (length(existing)) {
-        for (j in existing) {
-          old <- candidates$evidence_detail[[j]]
-          candidates$evidence_detail[[j]] <- paste(
-            unique(c(old, additions$evidence_detail[[i]]))[!is.na(
-              unique(c(old, additions$evidence_detail[[i]])))], collapse = " | "
-          )
-        }
-      } else {
-        candidates <- .pr_tnrs_bind_rows(candidates, additions[i, , drop = FALSE])
-      }
+    encode <- function(x) {
+      out <- rep("missing", length(x))
+      present <- !is.na(x)
+      out[present] <- paste0("value:", nchar(x[present], type = "bytes"), ":", x[present])
+      out
+    }
+    pair_key <- function(x, y) paste(encode(x), encode(y), sep = "\r")
+    addition_keys <- pair_key(additions$name_x, additions$name_y)
+    group_keys <- unique(addition_keys)
+    addition_groups <- split(
+      seq_along(addition_keys), factor(addition_keys, levels = group_keys)
+    )
+    first_in_group <- vapply(addition_groups, `[[`, integer(1), 1L)
+    group_evidence <- lapply(addition_groups, function(rows) {
+      details <- unique(additions$evidence_detail[rows])
+      details[!is.na(details)]
+    })
+    additions <- additions[first_in_group, , drop = FALSE]
+    additions$evidence_detail <- vapply(
+      group_evidence, function(details) paste(details, collapse = " | "), character(1)
+    )
+
+    candidate_keys <- pair_key(candidates$name_x, candidates$name_y)
+    existing_group <- match(candidate_keys, group_keys)
+    for (row in which(!is.na(existing_group))) {
+      details <- unique(c(
+        candidates$evidence_detail[[row]],
+        group_evidence[[existing_group[[row]]]]
+      ))
+      details <- details[!is.na(details)]
+      candidates$evidence_detail[[row]] <- paste(details, collapse = " | ")
+    }
+
+    new_rows <- is.na(match(group_keys, candidate_keys))
+    if (any(new_rows)) {
+      candidates <- .pr_tnrs_bind_rows(candidates, additions[new_rows, , drop = FALSE])
     }
   }
   reconciliation$candidates <- tibble::as_tibble(candidates)
 
   query_warnings <- response$warnings %||% character()
-  returned <- unique(norm(submitted[!is.na(submitted)]))
-  queried <- unique(norm(input_names))
-  missing_names <- input_names[!queried %in% returned]
+  returned <- unique(submitted_norm[!is.na(submitted_norm)])
+  missing_names <- input_names[!input_norm %in% returned]
   receipt <- list(
     source = source, source_version = source_version_label,
     source_metadata = response$source_metadata %||% NULL,
