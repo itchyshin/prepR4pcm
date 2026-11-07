@@ -2,8 +2,9 @@
 #'
 #' Resolve currently unmatched input names with one selected botanical TNRS
 #' reference source, then compare each returned accepted name with the actual
-#' target-name inventory. Only exact normalized matches to one target name are
-#' added as pending review candidates. TNRS suggestions do not become mapping
+#' target-name inventory. Without a local WCVP table, exact normalized matches
+#' to one target name become pending candidates. With `wcvp`, shared local
+#' accepted identity can also recover synonym-labelled targets. Suggestions do not become mapping
 #' rows and are never applied automatically.
 #'
 #' @param reconciliation A [reconciliation] object from a reconciliation
@@ -11,8 +12,9 @@
 #' @param source One botanical TNRS source: `"wcvp"`, `"wfo"`, or `"cact"`.
 #'   The source is explicit so results from different taxonomic backbones are
 #'   not combined.
+#' @inheritParams reconcile_wcvp
 #'
-#' @return The reconciliation with a `tnrs` audit record and any eligible
+#' @return The reconciliation with a `tnrs` audit record and any supported
 #'   review-only candidates added to `reconcile_candidates()`.
 #'
 #' @details
@@ -20,10 +22,17 @@
 #' requests all service matches with the lowest supported score threshold so
 #' that alternatives are retained. It records the raw response, warnings,
 #' source and service metadata, client version, and query time. A target is
-#' suggested only when the service's accepted name matches exactly, after the
+#' suggested without `wcvp` only when the service's accepted name matches exactly, after the
 #' package's ordinary name normalization, to one name in the reconciliation's
 #' target inventory. Names absent from the tree and ambiguous normalized tree
 #' labels remain in the audit record but are not candidates.
+#'
+#' With `wcvp`, the accepted names returned by TNRS and the target labels
+#' are resolved against that frozen local table instead. This recovers
+#' synonym-labelled tips without collapsing ranks. Ambiguous local identities
+#' and multiple target labels are withheld. The service release and local
+#' reference release are recorded separately; service IDs are never compared
+#' directly with local WCVP IDs. Supply only `source = "wcvp"` with this option.
 #'
 #' The returned candidates have unknown identity status and are ineligible for
 #' automatic mapping. Review them with [reconcile_review()]. Service resolution
@@ -38,7 +47,7 @@
 #' }
 #'
 #' @export
-reconcile_tnrs <- function(reconciliation, source = "wcvp") {
+reconcile_tnrs <- function(reconciliation, source = "wcvp", wcvp = NULL) {
   validate_reconciliation(reconciliation)
   if (length(source) != 1L || is.na(source) || !is.character(source)) {
     abort("`source` must name exactly one TNRS source: 'wcvp', 'wfo', or 'cact'.",
@@ -49,6 +58,11 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
     abort("`source` must be one of 'wcvp', 'wfo', or 'cact'.",
           call = caller_env())
   }
+  if (!is.null(wcvp) && source != "wcvp") {
+    abort("A local `wcvp` reference can only accompany source = 'wcvp'.")
+  }
+
+  if (!is.null(wcvp)) .pr_validate_wcvp(wcvp)
 
   mapping <- reconciliation$mapping
   input_names <- unique(mapping$name_x[
@@ -80,7 +94,9 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
   }
 
   rank <- reconciliation$meta$rank %||% "species"
-  norm <- function(x) .pr_tnrs_name_key(x, rank = rank)
+  norm <- if (is.null(wcvp)) {
+    function(x) .pr_tnrs_name_key(x, rank = rank)
+  } else .pr_wcvp_key
   target_names <- unique(mapping$name_y[
     mapping$in_y & !is.na(mapping$name_y) & nzchar(trimws(mapping$name_y))
   ])
@@ -114,48 +130,79 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
   submitted_norm <- norm(submitted)
   accepted_norm <- norm(accepted)
 
+  local_index <- NULL
+  if (!is.null(wcvp)) {
+    # Service IDs and local WCVP IDs are separate namespaces. Resolve names
+    # locally rather than comparing IDs from potentially different releases.
+    accepted_canonical <- .pr_tnrs_name_key(accepted, rank = "subspecies")
+    local_index <- .pr_wcvp_index(wcvp, unique(c(input_names, target_names,
+                                               accepted, accepted_canonical)))
+    local_targets <- .pr_wcvp_lookup(target_names, local_index)
+    local_accepted <- .pr_wcvp_lookup(accepted, local_index)
+    fallback <- which(local_accepted$status == "not_found")
+    if (length(fallback)) {
+      local_accepted[fallback, ] <- .pr_wcvp_lookup(accepted_canonical[fallback], local_index)
+    }
+    local_inputs <- .pr_wcvp_lookup(submitted, local_index)
+    local_target_lookup <- split(local_targets$name[local_targets$status == "resolved"],
+                                  local_targets$identity[local_targets$status == "resolved"])
+  }
+
   source_version <- .pr_tnrs_source_version(response$source_metadata, source)
   source_version_label <- if (is.na(source_version) || !nzchar(source_version)) {
     NA_character_
   } else source_version
-  audit <- tibble::tibble(
-    row = seq_len(nrow(result)),
-    name_submitted = submitted,
-    accepted_name = accepted,
-    target_tip = NA_character_,
-    status = NA_character_
-  )
+  input_rows <- .pr_tnrs_lookup_index(submitted_norm, input_lookup)
+  target_rows <- if (is.null(local_index)) {
+    .pr_tnrs_lookup_index(accepted_norm, target_lookup)
+  } else .pr_tnrs_lookup_index(local_accepted$identity, local_target_lookup)
+  audit_status <- rep(NA_character_, nrow(result))
+  audit_tip <- rep(NA_character_, nrow(result))
   new_candidates <- list()
   for (i in seq_len(nrow(result))) {
     if (is.na(accepted[[i]]) || !nzchar(trimws(accepted[[i]]))) {
-      audit$status[[i]] <- "no_accepted_name"
+      audit_status[[i]] <- "no_accepted_name"
       next
     }
-    x_norm <- submitted_norm[[i]]
-    x_hits <- if (is.na(x_norm)) NULL else input_lookup[[x_norm]]
+    x_hits <- if (is.na(input_rows[[i]])) NULL else input_lookup[[input_rows[[i]]]]
     if (is.null(x_hits)) x_hits <- character()
     if (!length(x_hits)) {
-      audit$status[[i]] <- "submitted_name_not_in_query"
+      audit_status[[i]] <- "submitted_name_not_in_query"
       next
     }
-    y_norm <- accepted_norm[[i]]
-    y_hits <- if (is.na(y_norm)) NULL else target_lookup[[y_norm]]
+    if (is.null(local_index)) {
+      y_hits <- if (is.na(target_rows[[i]])) NULL else target_lookup[[target_rows[[i]]]]
+    } else {
+      if (local_accepted$status[[i]] != "resolved") {
+        audit_status[[i]] <- "wcvp_accepted_identity_unresolved"
+        next
+      }
+      if (local_inputs$status[[i]] == "resolved" &&
+          local_inputs$identity[[i]] != local_accepted$identity[[i]]) {
+        audit_status[[i]] <- "wcvp_input_identity_conflict"
+        next
+      }
+      y_hits <- if (is.na(target_rows[[i]])) NULL else local_target_lookup[[target_rows[[i]]]]
+    }
     if (is.null(y_hits)) y_hits <- character()
     if (!length(y_hits)) {
-      audit$status[[i]] <- "accepted_name_absent_from_tips"
+      audit_status[[i]] <- "accepted_name_absent_from_tips"
       next
     }
     if (length(y_hits) != 1L) {
-      audit$status[[i]] <- "accepted_name_matches_multiple_tips"
+      audit_status[[i]] <- "accepted_name_matches_multiple_tips"
       next
     }
-    audit$target_tip[[i]] <- y_hits[[1L]]
-    audit$status[[i]] <- "candidate"
+    audit_tip[[i]] <- y_hits[[1L]]
+    audit_status[[i]] <- "candidate"
 
     warning_text <- unique(c(warnings[[i]], warning_codes[[i]]))
     warning_text <- warning_text[!is.na(warning_text) & nzchar(trimws(warning_text))]
     detail <- paste0(
       "TNRS/", toupper(source), "; accepted name: ", accepted[[i]],
+      if (!is.null(local_index)) paste0("; target WCVP@", wcvp$version,
+        "; local accepted ID: ", local_accepted$accepted_id[[i]],
+        "; rank: ", local_accepted$accepted_rank[[i]]) else "",
       if (!is.na(matched[[i]]) && nzchar(matched[[i]])) {
         paste0("; matched name: ", matched[[i]])
       } else "",
@@ -183,52 +230,13 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
     }
   }
 
-  candidates <- reconciliation$candidates
-  if (is.null(candidates)) candidates <- tibble::tibble()
-  if (!"evidence_detail" %in% names(candidates)) {
-    candidates$evidence_detail <- rep(NA_character_, nrow(candidates))
-  }
-  if (length(new_candidates)) {
-    additions <- tibble::as_tibble(do.call(rbind, new_candidates))
-    encode <- function(x) {
-      out <- rep("missing", length(x))
-      present <- !is.na(x)
-      out[present] <- paste0("value:", nchar(x[present], type = "bytes"), ":", x[present])
-      out
-    }
-    pair_key <- function(x, y) paste(encode(x), encode(y), sep = "\r")
-    addition_keys <- pair_key(additions$name_x, additions$name_y)
-    group_keys <- unique(addition_keys)
-    addition_groups <- split(
-      seq_along(addition_keys), factor(addition_keys, levels = group_keys)
-    )
-    first_in_group <- vapply(addition_groups, `[[`, integer(1), 1L)
-    group_evidence <- lapply(addition_groups, function(rows) {
-      details <- unique(additions$evidence_detail[rows])
-      details[!is.na(details)]
-    })
-    additions <- additions[first_in_group, , drop = FALSE]
-    additions$evidence_detail <- vapply(
-      group_evidence, function(details) paste(details, collapse = " | "), character(1)
-    )
+  audit <- tibble::tibble(row = seq_len(nrow(result)), name_submitted = submitted,
+    accepted_name = accepted, target_tip = audit_tip, status = audit_status)
 
-    candidate_keys <- pair_key(candidates$name_x, candidates$name_y)
-    existing_group <- match(candidate_keys, group_keys)
-    for (row in which(!is.na(existing_group))) {
-      details <- unique(c(
-        candidates$evidence_detail[[row]],
-        group_evidence[[existing_group[[row]]]]
-      ))
-      details <- details[!is.na(details)]
-      candidates$evidence_detail[[row]] <- paste(details, collapse = " | ")
-    }
-
-    new_rows <- is.na(match(group_keys, candidate_keys))
-    if (any(new_rows)) {
-      candidates <- .pr_tnrs_bind_rows(candidates, additions[new_rows, , drop = FALSE])
-    }
-  }
-  reconciliation$candidates <- tibble::as_tibble(candidates)
+  additions <- if (length(new_candidates)) {
+    tibble::as_tibble(do.call(rbind, new_candidates))
+  } else tibble::tibble()
+  reconciliation$candidates <- .pr_merge_review_candidates(reconciliation$candidates, additions)
 
   query_warnings <- response$warnings %||% character()
   returned <- unique(submitted_norm[!is.na(submitted_norm)])
@@ -243,6 +251,11 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
     missing_submitted_names = missing_names,
     status = if (length(missing_names) || length(query_warnings)) "partial" else "complete"
   )
+  if (!is.null(local_index)) {
+    receipt$target_reference_version <- wcvp$version
+    receipt$target_reference_fingerprint <- local_index$fingerprint
+    receipt$target_reference_audit <- local_targets
+  }
   previous <- reconciliation$tnrs$queries %||% list()
   if (!length(previous) && !is.null(reconciliation$tnrs)) {
     previous <- list(reconciliation$tnrs)
@@ -333,3 +346,56 @@ reconcile_tnrs <- function(reconciliation, source = "wcvp") {
   }
   tibble::as_tibble(rbind(fill(x, y), fill(y, x)))
 }
+
+# Shared batched, idempotent append. Existing review decisions are preserved.
+.pr_merge_review_candidates <- function(candidates, additions) {
+  if (is.null(candidates)) candidates <- tibble::tibble()
+  if (!"evidence_detail" %in% names(candidates)) {
+    candidates$evidence_detail <- rep(NA_character_, nrow(candidates))
+  }
+  if (nrow(additions)) {
+    encode <- function(x) {
+      out <- rep("missing", length(x))
+      present <- !is.na(x)
+      out[present] <- paste0("value:", nchar(x[present], type = "bytes"), ":", x[present])
+      out
+    }
+    pair_key <- function(x, y) paste(encode(x), encode(y), sep = "\r")
+    addition_keys <- pair_key(additions$name_x, additions$name_y)
+    group_keys <- unique(addition_keys)
+    addition_groups <- split(
+      seq_along(addition_keys), factor(addition_keys, levels = group_keys)
+    )
+    first_in_group <- vapply(addition_groups, `[[`, integer(1), 1L)
+    group_evidence <- lapply(addition_groups, function(rows) {
+      details <- unique(additions$evidence_detail[rows])
+      details[!is.na(details)]
+    })
+    additions <- additions[first_in_group, , drop = FALSE]
+    additions$evidence_detail <- vapply(
+      group_evidence, function(details) paste(details, collapse = " | "), character(1)
+    )
+
+    candidate_keys <- pair_key(candidates$name_x, candidates$name_y)
+    existing_group <- match(candidate_keys, group_keys)
+    for (row in which(!is.na(existing_group))) {
+      details <- unique(c(
+        candidates$evidence_detail[[row]],
+        group_evidence[[existing_group[[row]]]]
+      ))
+      details <- details[!is.na(details)]
+      candidates$evidence_detail[[row]] <- paste(details, collapse = " | ")
+    }
+
+    new_rows <- is.na(match(group_keys, candidate_keys))
+    if (any(new_rows)) {
+      candidates <- .pr_tnrs_bind_rows(candidates, additions[new_rows, , drop = FALSE])
+    }
+  }
+  tibble::as_tibble(candidates)
+
+}
+
+# Resolve all positions once. Repeated [[string]] access in a named list
+# scans its names for every response row on full botanical inventories.
+.pr_tnrs_lookup_index <- function(keys, lookup) match(keys, names(lookup))

@@ -94,12 +94,28 @@ grammatical-looking ending as a taxonomic crosswalk.
 
 ## Optional botanical TNRS suggestions
 
+For offline synonym review, supply a frozen WCVP names table and its release.
+For example, with your local rWCVPdata names table loaded:
+
+```{r wcvp-synonym-review, eval = FALSE}
+wcvp <- list(names = wcvp_names, version = "16")
+botanical_review <- reconcile_wcvp(result, wcvp = wcvp)
+reconcile_candidates(botanical_review)
+botanical_review$wcvp$input_audit
+```
+
+Both input names and target labels are resolved against that same table.
+An unambiguous shared accepted taxon ID and rank can produce a review
+candidate even when the target label is a synonym. Infraspecific identities
+are preserved. Ambiguous names and identities represented by several target
+labels remain audit-only; occupied targets need attention during review.
+
 For plant data, `reconcile_tnrs()` can query one explicit source from the
 botanical Taxonomic Name Resolution Service (TNRS). Install the optional CRAN
 package `TNRS` and choose a source such as WCVP:
 
 ```{r tnrs-review, eval = FALSE}
-botanical_review <- reconcile_tnrs(result, source = "wcvp")
+botanical_review <- reconcile_tnrs(result, source = "wcvp", wcvp = wcvp)
 botanical_review$tnrs$source_version
 reconcile_candidates(botanical_review)
 reconcile_review(botanical_review, type = "flagged")
@@ -107,11 +123,26 @@ reconcile_review(botanical_review, type = "flagged")
 
 This makes an online request for unresolved names. The reconciliation keeps
 the returned response, scores, warnings, source metadata, and client version
-for later review. A suggestion is added only when the TNRS accepted name
-matches one actual target tip after ordinary name normalization. Names absent
-from the tree, or matching multiple tips, remain in the audit record without
-becoming candidates. The selected source and its version are recorded when
-the service reports them.
+for later review. With `wcvp`, returned accepted names are resolved against
+the local reference before comparison with target identities. Service IDs
+are not compared directly with local WCVP IDs, and their release labels are
+recorded separately. Without a local table, the existing exact normalized
+accepted-name-to-target comparison is used. Names absent from the tree, or
+matching multiple tips, remain audit-only.
+
+Both steps can also be requested directly from `reconcile_tree()`:
+
+```{r integrated-botanical-review, eval = FALSE}
+botanical_review <- reconcile_tree(
+  search, phylo, x_species = "search_name",
+  authority = "col", fuzzy = TRUE,
+  wcvp = wcvp, tnrs = TRUE, tnrs_source = "wcvp"
+)
+```
+
+The default `tnrs = FALSE` makes no TNRS request. Local WCVP matching does
+not require TNRS or a network connection. The live TNRS service may use an
+older WCVP release than your local table; inspect the recorded versions.
 
 TNRS results are review evidence, not taxonomic validation. The adapter never
 adds a match to the mapping or applies a name change. Review a suggestion and

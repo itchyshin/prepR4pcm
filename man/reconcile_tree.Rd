@@ -18,7 +18,10 @@ reconcile_tree(
   resolve = c("flag", "first"),
   quiet = FALSE,
   x_label = NULL,
-  backbone = NULL
+  backbone = NULL,
+  wcvp = NULL,
+  tnrs = FALSE,
+  tnrs_source = "wcvp"
 )
 }
 \arguments{
@@ -145,6 +148,14 @@ for this call; conflicting accepted IDs are withheld from automatic
 matching and available through \code{\link[=reconcile_candidates]{reconcile_candidates()}}. The declared
 rank must equal \code{rank}. Names without sufficient evidence remain
 unresolved for review; spelling alone does not establish taxon identity.}
+
+\item{wcvp}{\code{NULL}, or a frozen list containing \code{names}, a raw Kew or
+rWCVPdata names table, and \code{version}, a non-empty version string.}
+
+\item{tnrs}{Whether to request TNRS review for unresolved names. Defaults
+to \code{FALSE}, so no TNRS request is made.}
+
+\item{tnrs_source}{TNRS source: \code{"wcvp"}, \code{"wfo"}, or \code{"cact"}.}
 }
 \value{
 A \link{reconciliation} object with \code{meta$type == "data_tree"}.
@@ -169,6 +180,13 @@ typically differ from data names only in formatting (underscores,
 capitalisation, authority strings), so even with \code{authority = NULL}
 you usually recover most matches at the \emph{normalized} stage. Turn on
 \code{fuzzy = TRUE} to also catch spelling mistakes.
+
+Botanical review is optional. Supply a frozen WCVP names table with its
+version in \code{wcvp} to add local review candidates. Set \code{tnrs = TRUE} to
+query the optional TNRS service for unresolved names, which requires a
+network connection. These candidates require review and do not create
+automatic mappings. When both options are used, \code{tnrs_source} must be
+\code{"wcvp"}.
 
 After reconciliation, the typical workflow is:
 \enumerate{

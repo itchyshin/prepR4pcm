@@ -16,6 +16,13 @@
 #' you usually recover most matches at the *normalized* stage. Turn on
 #' `fuzzy = TRUE` to also catch spelling mistakes.
 #'
+#' Botanical review is optional. Supply a frozen WCVP names table with its
+#' version in `wcvp` to add local review candidates. Set `tnrs = TRUE` to
+#' query the optional TNRS service for unresolved names, which requires a
+#' network connection. These candidates require review and do not create
+#' automatic mappings. When both options are used, `tnrs_source` must be
+#' `"wcvp"`.
+#'
 #' After reconciliation, the typical workflow is:
 #' \enumerate{
 #'   \item Inspect with [reconcile_summary()] or [reconcile_plot()].
@@ -43,6 +50,11 @@
 #'   is not exhaustive --- pass the column name explicitly if your
 #'   data uses a non-standard label.
 #' @inheritParams reconcile_data
+#' @param wcvp `NULL`, or a frozen list containing `names`, a raw Kew or
+#'   rWCVPdata names table, and `version`, a non-empty version string.
+#' @param tnrs Whether to request TNRS review for unresolved names. Defaults
+#'   to `FALSE`, so no TNRS request is made.
+#' @param tnrs_source TNRS source: `"wcvp"`, `"wfo"`, or `"cact"`.
 #'
 #' @return A [reconciliation] object with `meta$type == "data_tree"`.
 #'   The `mapping` tibble has one row per unique name: matched species
@@ -100,13 +112,34 @@ reconcile_tree <- function(x, tree,
                            resolve = c("flag", "first"),
                            quiet = FALSE,
                            x_label = NULL,
-                           backbone = NULL) {
+                           backbone = NULL,
+                           wcvp = NULL,
+                           tnrs = FALSE,
+                           tnrs_source = "wcvp") {
 
   # Capture source label before any modifications to x
   x_source <- x_label %||% deparse(substitute(x))
 
   rank <- match.arg(rank)
   resolve <- match.arg(resolve)
+
+  if (!is.logical(tnrs) || length(tnrs) != 1L || is.na(tnrs)) {
+    abort("`tnrs` must be TRUE or FALSE.", call = caller_env())
+  }
+  if (!is.character(tnrs_source) || length(tnrs_source) != 1L ||
+      is.na(tnrs_source)) {
+    abort("`tnrs_source` must be one of 'wcvp', 'wfo', or 'cact'.",
+          call = caller_env())
+  }
+  tnrs_source <- tolower(trimws(tnrs_source))
+  if (!tnrs_source %in% c("wcvp", "wfo", "cact")) {
+    abort("`tnrs_source` must be one of 'wcvp', 'wfo', or 'cact'.",
+          call = caller_env())
+  }
+  if (tnrs && !is.null(wcvp) && tnrs_source != "wcvp") {
+    abort("`wcvp` requires `tnrs_source = 'wcvp'` when `tnrs = TRUE`.",
+          call = caller_env())
+  }
 
   # Validate data frame
   if (!is.data.frame(x)) abort("`x` must be a data frame.", call = caller_env())
@@ -188,6 +221,9 @@ reconcile_tree <- function(x, tree,
   )
 
   result <- new_reconciliation(mapping = mapping, meta = meta)
+
+  if (!is.null(wcvp)) result <- reconcile_wcvp(result, wcvp = wcvp)
+  if (tnrs) result <- reconcile_tnrs(result, source = tnrs_source, wcvp = wcvp)
 
   # Surface unused overrides (issue #8a). Silent drops are surprising;
   # warn the user and direct them to `result$unused_overrides`.

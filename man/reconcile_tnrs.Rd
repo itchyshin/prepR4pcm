@@ -4,7 +4,7 @@
 \alias{reconcile_tnrs}
 \title{Add botanical TNRS suggestions to a reconciliation for review}
 \usage{
-reconcile_tnrs(reconciliation, source = "wcvp")
+reconcile_tnrs(reconciliation, source = "wcvp", wcvp = NULL)
 }
 \arguments{
 \item{reconciliation}{A \link{reconciliation} object from a reconciliation
@@ -13,16 +13,22 @@ function.}
 \item{source}{One botanical TNRS source: \code{"wcvp"}, \code{"wfo"}, or \code{"cact"}.
 The source is explicit so results from different taxonomic backbones are
 not combined.}
+
+\item{wcvp}{A list with \code{names}, a raw Kew WCVP names data frame (such as
+the \code{wcvp_names} table from rWCVPdata), and \code{version}, a non-empty character label for
+that frozen release. Required columns are \code{plant_name_id}, \code{taxon_name},
+\code{taxon_status}, \code{taxon_rank}, and \code{accepted_plant_name_id}.}
 }
 \value{
-The reconciliation with a \code{tnrs} audit record and any eligible
+The reconciliation with a \code{tnrs} audit record and any supported
 review-only candidates added to \code{reconcile_candidates()}.
 }
 \description{
 Resolve currently unmatched input names with one selected botanical TNRS
 reference source, then compare each returned accepted name with the actual
-target-name inventory. Only exact normalized matches to one target name are
-added as pending review candidates. TNRS suggestions do not become mapping
+target-name inventory. Without a local WCVP table, exact normalized matches
+to one target name become pending candidates. With \code{wcvp}, shared local
+accepted identity can also recover synonym-labelled targets. Suggestions do not become mapping
 rows and are never applied automatically.
 }
 \details{
@@ -30,10 +36,17 @@ This function is opt-in and requires the optional CRAN package \code{TNRS}. It
 requests all service matches with the lowest supported score threshold so
 that alternatives are retained. It records the raw response, warnings,
 source and service metadata, client version, and query time. A target is
-suggested only when the service's accepted name matches exactly, after the
+suggested without \code{wcvp} only when the service's accepted name matches exactly, after the
 package's ordinary name normalization, to one name in the reconciliation's
 target inventory. Names absent from the tree and ambiguous normalized tree
 labels remain in the audit record but are not candidates.
+
+With \code{wcvp}, the accepted names returned by TNRS and the target labels
+are resolved against that frozen local table instead. This recovers
+synonym-labelled tips without collapsing ranks. Ambiguous local identities
+and multiple target labels are withheld. The service release and local
+reference release are recorded separately; service IDs are never compared
+directly with local WCVP IDs. Supply only \code{source = "wcvp"} with this option.
 
 The returned candidates have unknown identity status and are ineligible for
 automatic mapping. Review them with \code{\link[=reconcile_review]{reconcile_review()}}. Service resolution

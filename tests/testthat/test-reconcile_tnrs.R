@@ -352,3 +352,25 @@ test_that("TNRS response processing normalizes and appends in batches", {
   expect_equal(sum(normalized_lengths == 1L), 0L)
   expect_equal(bind_calls, 1L)
 })
+
+test_that("TNRS aligns large response inventories with vector indexes", {
+  n <- 100L
+  rec <- tnrs_test_reconciliation(x = sprintf("Query%03d species", 1:n),
+                                  y = sprintf("Target%03d species", 1:n))
+  expect_true(exists(".pr_tnrs_lookup_index", mode = "function"))
+  if (!exists(".pr_tnrs_lookup_index", mode = "function")) return()
+  lengths_seen <- integer()
+  original <- .pr_tnrs_lookup_index
+  local_mocked_bindings(
+    .pr_tnrs_client_available = function() TRUE,
+    .pr_tnrs_query = function(names, source) list(results = data.frame(
+      Name_submitted = names, Accepted_name = sub("Query", "Target", names))),
+    .pr_tnrs_lookup_index = function(keys, lookup) {
+      lengths_seen <<- c(lengths_seen, length(keys))
+      original(keys, lookup)
+    }, .package = "prepR4pcm"
+  )
+  out <- reconcile_tnrs(rec)
+  expect_equal(nrow(out$candidates), n)
+  expect_identical(lengths_seen, c(n, n))
+})

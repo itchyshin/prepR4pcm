@@ -87,6 +87,8 @@ reference:
   - reconcile_candidates
   - reconcile_plot
   - reconcile_suggest
+  - reconcile_wcvp
+  - reconcile_tnrs
   - reconcile_diff
   - reconcile_report
   - reconcile_review
