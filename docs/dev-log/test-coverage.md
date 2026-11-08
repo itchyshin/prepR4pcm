@@ -79,6 +79,58 @@ On `push` to `main`, checkout SHA, branch HEAD, and Codecov commit coincide.
   GitHub Actions allowlist click. That is a platform gate, not a token
   request.
 
+## Source-layout overlay (`_pkgdown.yml`)
+
+Claim tests resolve `.claim_root()` to the first directory with
+`DESCRIPTION` + `R/`. Under `covr::package_coverage()` that is the
+instrumented install library (`$RUNNER_TEMP/package/prepR4pcm`), not the
+Actions checkout. `_pkgdown.yml` is in `.Rbuildignore` (correct for CRAN),
+so `R CMD INSTALL` omits it. Two claim tests then `readLines()` it without
+a missing-file skip and error.
+
+The coverage job copies the checkout `_pkgdown.yml` onto that install tree
+immediately before `tools::testInstalledPackage()` runs. Test files,
+assertions, and `skip()` calls are unchanged. Logs should show
+`PREPR4PCM_OVERLAY_PKGDOWN=` and `PREPR4PCM_CHECKOUT_PKGDOWN=`.
+
+Observed on PR 143 head `8783245` / merge checkout `eb95343`: those two
+errors were `cannot open file '.../prepR4pcm/_pkgdown.yml'`. A sibling
+claim test already skipped (`_pkgdown.yml not found` at
+`test-claim-doc-consistency.R:124`).
+
+## Residual: issue-137 5s elapsed guard under covr
+
+`tests/testthat/test-issue-137.R` line 59 keeps `setTimeLimit(elapsed=5)`
+around `pr_run_cascade()` for 10k synonym candidates. That test is **not**
+excluded from covr.
+
+On the same instrumented run that failed:
+
+- The earlier 5s guard in the same file (`n=5000`, `pr_resolve_synonyms`)
+  **passed**.
+- The 10k `pr_run_cascade` guard **failed** with `reached elapsed time
+  limit` inside `pr_standardise_case` → `vapply` from
+  `.pr_check_identity_candidates`.
+- Suite tally: `FAIL 3 | WARN 30 | SKIP 28 | PASS 3001` (two of the three
+  fails were the missing `_pkgdown.yml` errors above).
+- Uninstrumented R-CMD-check on the same SHA: `FAIL 0 | WARN 28 | SKIP 41
+  | PASS 2977` (https://github.com/itchyshin/prepR4pcm/actions/runs/42526849234).
+  Claim tests skip there because `.claim_root()` is `NA`; issue-137 is not
+  a claim test and did pass without tracing.
+
+Covr tracing overhead is **plausible** (sibling 5s guard passed; this one
+died in a traced per-element `vapply`). It is **not** proven as the sole
+cause from the non-instrumented pass alone: neither log records per-test
+elapsed seconds, and this host has no R to measure both modes.
+
+Lawful CI/environment options that would keep every test and this timing
+guard were not found (raising `setTimeLimit`, skipping the file, disabling
+tracing, or uploading after `continue-on-error` would weaken the guard or
+label partial coverage as full). **Explicit remaining blocker:** a green
+full-suite covr job on ubuntu-latest cannot be claimed while this 5s
+elapsed guard still trips under instrumentation. Do not treat a later
+upload of a failed-suite artifact as coverage finish.
+
 ## Local covr (when R is available)
 
 ```r

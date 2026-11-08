@@ -69,13 +69,61 @@ jobs:
 
       - name: Test coverage
         run: |
+          install_path <- file.path(
+            normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"),
+            "package"
+          )
+          ws <- Sys.getenv("GITHUB_WORKSPACE")
+          if (!nzchar(ws)) ws <- normalizePath(getwd())
+          src_yml <- file.path(ws, "_pkgdown.yml")
+          if (!file.exists(src_yml)) {
+            stop("checkout source-layout missing: ", src_yml)
+          }
+
+          # Claim tests call .claim_root(), which returns the first tree
+          # with DESCRIPTION+R/. Under covr that is the instrumented
+          # install library, not the Actions checkout. _pkgdown.yml is
+          # correctly Rbuildignored for CRAN, so INSTALL omits it and
+          # those tests error instead of skipping. Overlay the checkout
+          # file onto the install tree immediately before
+          # tools::testInstalledPackage() runs the existing suite.
+          # Assertions and skip() calls are unchanged.
+          tracer <- bquote({
+            src <- .(src_yml)
+            lib <- if (is.null(lib.loc) || !length(lib.loc)) {
+              .libPaths()[[1L]]
+            } else {
+              lib.loc[[1L]]
+            }
+            dest_dir <- file.path(lib, pkg)
+            dest <- file.path(dest_dir, "_pkgdown.yml")
+            if (!dir.exists(dest_dir)) {
+              stop("covr install tree missing, cannot overlay _pkgdown.yml: ",
+                   dest_dir)
+            }
+            ok <- file.copy(src, dest, overwrite = TRUE)
+            if (!isTRUE(ok) || !file.exists(dest)) {
+              stop("failed to overlay checkout _pkgdown.yml onto ", dest)
+            }
+            cat(sprintf("PREPR4PCM_OVERLAY_PKGDOWN=%s\n", dest))
+            cat(sprintf("PREPR4PCM_CHECKOUT_PKGDOWN=%s\n", src))
+          })
+          suppressMessages(trace(
+            "testInstalledPackage",
+            where = asNamespace("tools"),
+            tracer = tracer,
+            at = 1L,
+            print = FALSE
+          ))
+          on.exit(suppressMessages(untrace(
+            "testInstalledPackage",
+            where = asNamespace("tools")
+          )), add = TRUE)
+
           cov <- covr::package_coverage(
             quiet = FALSE,
             clean = FALSE,
-            install_path = file.path(
-              normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"),
-              "package"
-            )
+            install_path = install_path
           )
           print(cov)
           pct <- round(covr::percent_coverage(cov), 2)
@@ -87,6 +135,7 @@ jobs:
                 "",
                 paste0("- package coverage: ", pct, "%"),
                 "- suite: existing testthat (skips unchanged)",
+                "- checkout _pkgdown.yml overlaid onto covr install tree",
                 "- this print is CI coverage finish, not upload or dashboard evidence",
                 paste0("- GITHUB_SHA (checkout): ", Sys.getenv("GITHUB_SHA"))
               ),
