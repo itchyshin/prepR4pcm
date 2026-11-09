@@ -588,13 +588,14 @@ test_that("reconcile_augment attaches withheld identity candidates to the result
 })
 
 
-test_that("pr_get_tree_status network probe tolerates unreachable hosts", {
+test_that("pr_get_tree_status network probe marks unreachable rotl backends", {
   testthat::local_mocked_bindings(
-    .pr_network_ok = function(url) FALSE,
+    .pr_check_backend_reachable = function(source) FALSE,
     .package = "prepR4pcm"
   )
   st <- pr_get_tree_status(check_network = TRUE)
-  expect_true(all(is.na(st$reachable) | !st$reachable))
+  rotl_row <- st[st$source == "rotl", ]
+  expect_false(rotl_row$reachable)
 })
 
 
