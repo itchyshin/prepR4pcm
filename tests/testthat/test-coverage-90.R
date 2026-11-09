@@ -708,7 +708,7 @@ test_that("reconcile_augment quiet = FALSE reports nothing to add", {
 test_that("reconcile_augment skips names without extractable genus", {
   tree <- ape::read.tree(text = "(Parus_major:1);")
   mapping <- tibble::tibble(
-    name_x = c("123", "Parus minor"),
+    name_x = c("", "Parus minor"),
     name_y = NA_character_,
     name_resolved = NA_character_,
     match_type = "unresolved",
@@ -723,7 +723,7 @@ test_that("reconcile_augment skips names without extractable genus", {
   aug <- reconcile_augment(rec, tree, seed = 1, quiet = TRUE)
   expect_true(any(grepl("Added", msgs, fixed = TRUE)))
   expect_true(nrow(aug$skipped) >= 1L)
-  genus_skip <- aug$skipped[aug$skipped$species == "123", , drop = FALSE]
+  genus_skip <- aug$skipped[is.na(aug$skipped$genus) | aug$skipped$species == "", , drop = FALSE]
   expect_match(genus_skip$reason[1], "extract genus", ignore.case = TRUE)
 })
 
