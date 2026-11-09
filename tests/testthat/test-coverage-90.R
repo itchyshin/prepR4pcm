@@ -915,3 +915,101 @@ test_that("reconcile_report includes identity and override detail blocks", {
 })
 
 
+test_that("reconcile_to_trees quiet = FALSE reports per-tree progress", {
+  df <- data.frame(species = factor(c("Homo sapiens", "Pan troglodytes")))
+  trees <- list(
+    jetz = ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
+  )
+  msgs <- capture_messages(reconcile_to_trees(
+    df, trees, x_species = "species", authority = NULL, quiet = FALSE
+  ))
+  expect_true(any(grepl("Reconciling", msgs, fixed = TRUE)))
+  expect_true(any(grepl("Matched", msgs, fixed = TRUE)))
+})
+
+
+test_that("reconcile_to_trees loads trees from nexus file paths", {
+  df <- data.frame(species = "Homo sapiens")
+  tr <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
+  nex <- tempfile(fileext = ".nex")
+  on.exit(unlink(nex))
+  ape::write.nexus(tr, file = nex)
+  out <- reconcile_to_trees(
+    df, list(from_disk = nex), x_species = "species",
+    authority = NULL, quiet = TRUE
+  )
+  expect_equal(out$from_disk$meta$y_source, basename(nex))
+})
+
+
+test_that("reconcile_export newick format prints success messages", {
+  df <- data.frame(species = "Homo sapiens", trait = 1)
+  tree <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
+  rec <- reconcile_tree(df, tree, x_species = "species", authority = NULL, quiet = TRUE)
+  out_dir <- tempfile("cov-export-")
+  on.exit(unlink(out_dir, recursive = TRUE))
+  msgs <- capture_messages(reconcile_export(
+    rec, data = df, tree = tree, species_col = "species",
+    dir = out_dir, tree_format = "newick"
+  ))
+  expect_true(any(grepl("Tree written", msgs, fixed = TRUE)))
+  expect_true(file.exists(file.path(out_dir, "reconciled_tree.nwk")))
+})
+
+
+test_that(".pr_check_backend_reachable rotl branch succeeds when mocked", {
+  req_ns <- getFromNamespace("requireNamespace", "base")
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (identical(package, "rotl")) return(TRUE)
+      req_ns(package, ..., quietly = quietly)
+    },
+    .package = "base"
+  )
+  testthat::local_mocked_bindings(
+    tnrs_match_names = function(...) data.frame(unique_name = "x"),
+    .package = "rotl"
+  )
+  expect_true(prepR4pcm:::.pr_check_backend_reachable("rotl"))
+})
+
+
+test_that("reconcile_augment vphylomaker quiet = FALSE reports progress", {
+  tree <- ape::rtree(3, tip.label = c("Quercus_robur", "Quercus_alba", "Pinus_syl"))
+  df <- data.frame(
+    species = c(gsub("_", " ", tree$tip.label), "Quercus rubra"),
+    stringsAsFactors = FALSE
+  )
+  rec <- suppressMessages(
+    reconcile_tree(df, tree, x_species = "species", authority = NULL, quiet = TRUE)
+  )
+  testthat::local_mocked_bindings(
+    .pr_augment_vphylomaker = function(...) {
+      list(
+        tree = tree,
+        augmented = tibble::tibble(
+          species = "Quercus rubra", genus = "Quercus",
+          placed_near = "V.PhyloMaker (S3)", branch_length = NA_real_,
+          method = "vphylomaker/S3", n_congeners = NA_integer_
+        ),
+        skipped = tibble::tibble(),
+        backend_meta = list(backend = "vphylomaker", package = "V.PhyloMaker2")
+      )
+    },
+    .package = "prepR4pcm"
+  )
+  msgs <- capture_messages(reconcile_augment(
+    rec, tree, source = "vphylomaker", quiet = FALSE, check_ultrametric = FALSE
+  ))
+  expect_true(any(grepl("V.PhyloMaker", msgs, fixed = TRUE)))
+})
+
+
+test_that("reconcile_summary mismatches_only detail lists non-exact rows", {
+  rec <- fx_rec_tree()
+  summ <- reconcile_summary(rec, format = "data.frame", detail = "mismatches_only")
+  expect_s3_class(summ, "reconciliation_summary")
+  expect_true(length(summ$tables) >= 1L)
+})
+
+
