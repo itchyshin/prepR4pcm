@@ -1013,3 +1013,67 @@ test_that("reconcile_summary mismatches_only detail lists non-exact rows", {
 })
 
 
+test_that("pr_cite_tree text format lists multiple provenance entries", {
+  tr <- ape::rcoal(3)
+  res <- structure(
+    list(
+      tree = tr,
+      source = "datelife",
+      backend_meta = list(
+        tree_provenance = list(
+          list(citation = "Tree A", calibration_method = "path1"),
+          list(citation = "Tree B", calibration_method = "path2")
+        )
+      )
+    ),
+    class = "pr_tree_result"
+  )
+  txt <- pr_cite_tree(res, format = "text")
+  expect_match(txt, "Per-tree source citations")
+  expect_match(txt, "Tree A")
+})
+
+
+test_that("pr_get_tree_status tolerates packageVersion failures", {
+  pv <- utils::packageVersion
+  testthat::local_mocked_bindings(
+    packageVersion = function(pkg) {
+      if (identical(pkg, "rotl")) stop("mock version failure")
+      pv(pkg)
+    },
+    .package = "utils"
+  )
+  st <- pr_get_tree_status()
+  rotl <- st[st$source == "rotl", ]
+  expect_true(is.na(rotl$version))
+  expect_true(rotl$installed)
+})
+
+
+test_that(".pr_check_backend_reachable returns FALSE on fishtree errors", {
+  req_ns <- getFromNamespace("requireNamespace", "base")
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (identical(package, "fishtree")) return(TRUE)
+      req_ns(package, ..., quietly = quietly)
+    },
+    .package = "base"
+  )
+  testthat::local_mocked_bindings(
+    fishtree_taxonomy = function(...) stop("offline"),
+    .package = "fishtree"
+  )
+  expect_false(prepR4pcm:::.pr_check_backend_reachable("fishtree"))
+})
+
+
+test_that("reconcile_trees quiet = FALSE prints reconciliation summary", {
+  tree1 <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
+  tree2 <- ape::read.tree(text = "(Homo_sapiens:1,Gorilla_gorilla:1);")
+  msgs <- capture_messages(reconcile_trees(
+    tree1, tree2, authority = NULL, quiet = FALSE
+  ))
+  expect_true(length(msgs) >= 1L)
+})
+
+
