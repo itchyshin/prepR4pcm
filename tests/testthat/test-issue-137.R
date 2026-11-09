@@ -1,3 +1,29 @@
+# covr sets R_COVR while tracing (same signal as testthat::skip_on_covr()).
+# Instrumentation slows hot paths enough to trip setTimeLimit() guards that
+# still pass under ordinary R CMD check — so elapsed guards apply only there.
+issue137_on_covr <- function() {
+  isTRUE(as.logical(Sys.getenv("R_COVR", unset = "false")))
+}
+
+issue137_begin_elapsed_guard <- function(seconds = 5) {
+  if (issue137_on_covr()) {
+    message(
+      "issue-137: ", seconds,
+      "s elapsed guard not enforced under covr instrumentation (R_COVR)"
+    )
+    return(FALSE)
+  }
+  setTimeLimit(elapsed = seconds, transient = TRUE)
+  on.exit(setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE), add = TRUE)
+  TRUE
+}
+
+issue137_end_elapsed_guard <- function(active) {
+  if (isTRUE(active)) {
+    setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
+  }
+}
+
 test_that("post-lookup matching scales beyond a Cartesian scan", {
   n <- 5000L
   testthat::local_mocked_bindings(
@@ -6,11 +32,10 @@ test_that("post-lookup matching scales beyond a Cartesian scan", {
     }, .package="prepR4pcm")
   # The predecessor takes tens of seconds here. Indexed matching has a wide
   # margin below this limit; this is a guard against a quadratic regression.
-  setTimeLimit(elapsed=5, transient=TRUE)
-  on.exit(setTimeLimit(cpu=Inf, elapsed=Inf, transient=FALSE), add=TRUE)
+  guard <- issue137_begin_elapsed_guard(5)
   expect_equal(nrow(pr_resolve_synonyms(paste("X",seq_len(n)),
                                        paste("Y",seq_len(n)), quiet=TRUE)), 0L)
-  setTimeLimit(cpu=Inf, elapsed=Inf, transient=FALSE)
+  issue137_end_elapsed_guard(guard)
 })
 
 test_that("synonym matching retains predecessor priorities and row order", {
@@ -54,10 +79,9 @@ test_that("applying many synonym candidates does not build one tibble per pair",
     tibble::tibble(input=names,accepted_name=accepted_name,status=status,
                    taxon_id=taxon_id)
   }, .package='prepR4pcm')
-  setTimeLimit(elapsed=5,transient=TRUE)
-  on.exit(setTimeLimit(cpu=Inf,elapsed=Inf,transient=FALSE),add=TRUE)
+  guard <- issue137_begin_elapsed_guard(5)
   out<-pr_run_cascade(x,y,quiet=TRUE)
-  setTimeLimit(cpu=Inf,elapsed=Inf,transient=FALSE)
+  issue137_end_elapsed_guard(guard)
   expect_equal(nrow(out),n)
   expect_true(all(out$match_type=='synonym'))
 })

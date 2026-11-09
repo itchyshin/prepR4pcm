@@ -8,6 +8,9 @@
 #     (macOS + Windows) is enabled by adding the `os: full` input to a
 #     workflow_dispatch run -- use it before a release / CRAN
 #     submission, not on every PR.
+#   * Coverage collection lives in test-coverage.yaml (ubuntu-only, one
+#     Codecov OIDC upload). Do not add covr here: a second upload would
+#     double-count the same testthat suite. os=full stays check-only.
 #
 # Background: GitHub Actions minutes cost real money on macOS / Windows
 # runners. Local Mac runs the same checks instantly; the team-level
@@ -34,6 +37,8 @@ permissions: read-all
 
 jobs:
   R-CMD-check:
+    # Coverage collection lives in test-coverage.yaml (ubuntu-only, one
+    # Codecov upload). Do not add covr to this OS matrix.
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})

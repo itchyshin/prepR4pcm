@@ -29,3 +29,5 @@
 ^\.ignore$
 ^graft$
 ^\.unlazy$
+^codecov\.yml$
+^\.codecov\.yml$
