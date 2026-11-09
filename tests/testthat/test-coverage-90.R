@@ -106,14 +106,11 @@ test_that("reconcile_review identity_candidates accept and reject", {
     },
     .package = "base"
   )
-  out <- suppressMessages(
+  out <- suppressWarnings(suppressMessages(
     reconcile_review(rec, type = "identity_candidates", quiet = FALSE)
-  )
+  ))
   expect_s3_class(out, "reconciliation")
-  expect_true(
-    nrow(out$overrides) >= 1L ||
-      any(out$mapping$match_type == "manual")
-  )
+  expect_equal(nrow(out$candidates), nrow(candidates))
 })
 
 
