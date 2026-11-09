@@ -570,6 +570,34 @@ test_that(".pr_resolved_taxadb_version caches resolved snapshot", {
 })
 
 
+test_that("reconcile_augment attaches withheld identity candidates to the result", {
+  rec <- fx_rec_tree()
+  rec$candidates <- tibble::tibble(
+    name_x = "Parus ater", name_y = "Parus_minor",
+    identity_state = "withheld", eligible = FALSE,
+    reason = "test id", x_id = "1", y_id = "2",
+    provider = "col", version = "2025",
+    stage = "fuzzy", review_status = "pending",
+    review_note = NA_character_
+  )
+  aug <- suppressMessages(
+    reconcile_augment(rec, fx_tree_with_congeners(), seed = 1, quiet = TRUE)
+  )
+  expect_true(nrow(aug$candidates) >= 1L)
+  expect_equal(aug$candidates$name_x[1], "Parus ater")
+})
+
+
+test_that("pr_get_tree_status network probe tolerates unreachable hosts", {
+  testthat::local_mocked_bindings(
+    .pr_network_ok = function(url) FALSE,
+    .package = "prepR4pcm"
+  )
+  st <- pr_get_tree_status(check_network = TRUE)
+  expect_true(all(is.na(st$reachable) | !st$reachable))
+})
+
+
 test_that(".pr_lookup_taxadb returns ambiguous when canonical IDs disagree", {
   skip_if_not_installed("taxadb")
   testthat::local_mocked_bindings(
