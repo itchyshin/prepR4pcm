@@ -106,8 +106,8 @@ hot paths enough that the guard can fail under `package_coverage()` while
 still passing in ordinary `R CMD check`.
 
 The tests still run under covr (same assertions and coverage paths). Only
-the elapsed limit is omitted when `testthat::in_covr()` is true — covr sets
-`R_COVR`, which is the same signal as `testthat::skip_on_covr()`. A
+the elapsed limit is omitted when covr sets `R_COVR` (same signal as
+`testthat::skip_on_covr()`). A
 `message()` records when the guard is not enforced so CI logs show the
 deferral explicitly. The 5s limit remains in force on every non-covr run,
 including the ubuntu `R-CMD-check` job.

@@ -1,8 +1,12 @@
-# covr sets R_COVR; testthat::in_covr() is the standard hook. Instrumentation
-# slows hot paths enough to trip setTimeLimit() guards that still pass under
-# ordinary R CMD check — so elapsed guards apply only outside coverage runs.
+# covr sets R_COVR while tracing (same signal as testthat::skip_on_covr()).
+# Instrumentation slows hot paths enough to trip setTimeLimit() guards that
+# still pass under ordinary R CMD check — so elapsed guards apply only there.
+issue137_on_covr <- function() {
+  isTRUE(as.logical(Sys.getenv("R_COVR", unset = "false")))
+}
+
 issue137_begin_elapsed_guard <- function(seconds = 5) {
-  if (testthat::in_covr()) {
+  if (issue137_on_covr()) {
     message(
       "issue-137: ", seconds,
       "s elapsed guard not enforced under covr instrumentation (R_COVR)"
