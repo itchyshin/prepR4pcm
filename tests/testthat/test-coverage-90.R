@@ -17,6 +17,22 @@ make_demo_meta <- function() {
   )
 }
 
+# Byte-compiled reconcile_review may resolve base::interactive at compile time,
+# so use a rebinding wrapper (see test-issue-126.R) instead of mocking base.
+with_mocked_review <- function(responses, ...) {
+  review <- reconcile_review
+  body(review) <- body(review)
+  env <- new.env(parent = environment(review))
+  environment(review) <- env
+  env$interactive <- function() TRUE
+  response_i <- 0L
+  env$readline <- function(prompt) {
+    response_i <<- response_i + 1L
+    responses[[min(response_i, length(responses))]]
+  }
+  review(...)
+}
+
 # --- reconcile_review (interactive paths) ------------------------------------
 
 test_that("reconcile_review interactive flagged: accept, reject, skip, quit", {
@@ -33,17 +49,10 @@ test_that("reconcile_review interactive flagged: accept, reject, skip, quit", {
   )
   meta <- make_demo_meta()
   rec <- new_reconciliation(mapping, meta)
-  responses <- c("a", "r", "s", "q")
-  n <- 0L
-  testthat::local_mocked_bindings(
-    interactive = function() TRUE,
-    readline = function(prompt) {
-      n <<- n + 1L
-      responses[min(n, length(responses))]
-    },
-    .package = "base"
-  )
-  out <- suppressMessages(reconcile_review(rec, type = "flagged", quiet = TRUE))
+  out <- suppressMessages(with_mocked_review(
+    c("a", "r", "s", "q"),
+    rec, type = "flagged", quiet = TRUE
+  ))
   expect_s3_class(out, "reconciliation")
   manual <- out$mapping[out$mapping$name_x == "Pan troglodytes", , drop = FALSE]
   expect_equal(manual$match_type, "manual")
@@ -63,18 +72,10 @@ test_that("reconcile_review interactive all_unresolved shows hint and cannot acc
     notes         = "no match"
   )
   rec <- new_reconciliation(mapping, make_demo_meta())
-  n <- 0L
-  testthat::local_mocked_bindings(
-    interactive = function() TRUE,
-    readline = function(prompt) {
-      n <<- n + 1L
-      if (n == 1L) "a" else "q"
-    },
-    .package = "base"
-  )
-  out <- suppressMessages(
-    reconcile_review(rec, type = "all_unresolved", suggest = TRUE, quiet = TRUE)
-  )
+  out <- suppressMessages(with_mocked_review(
+    c("a", "q"),
+    rec, type = "all_unresolved", suggest = TRUE, quiet = TRUE
+  ))
   expect_s3_class(out, "reconciliation")
 })
 
@@ -97,18 +98,10 @@ test_that("reconcile_review identity_candidates accept and reject", {
     in_x = TRUE, in_y = FALSE, notes = ""
   )
   rec <- new_reconciliation(mapping, make_demo_meta(), candidates = candidates)
-  n <- 0L
-  testthat::local_mocked_bindings(
-    interactive = function() TRUE,
-    readline = function(prompt) {
-      n <<- n + 1L
-      c("a", "r")[n]
-    },
-    .package = "base"
-  )
-  out <- suppressWarnings(suppressMessages(
-    reconcile_review(rec, type = "identity_candidates", quiet = FALSE)
-  ))
+  out <- suppressWarnings(suppressMessages(with_mocked_review(
+    c("a", "r", "s"),
+    rec, type = "identity_candidates", quiet = FALSE
+  )))
   expect_s3_class(out, "reconciliation")
   expect_equal(nrow(out$candidates), nrow(candidates))
 })
@@ -129,8 +122,10 @@ test_that("reconcile_review identity_candidates with no pending returns unchange
     make_demo_meta(),
     candidates = candidates
   )
-  testthat::local_mocked_bindings(interactive = function() TRUE, .package = "base")
-  out <- suppressMessages(reconcile_review(rec, type = "identity_candidates"))
+  out <- suppressMessages(with_mocked_review(
+    character(),
+    rec, type = "identity_candidates"
+  ))
   expect_identical(out$candidates, rec$candidates)
 })
 
@@ -497,13 +492,13 @@ test_that("reconcile_review interactive fuzzy walks flagged and fuzzy rows", {
     notes         = c("", "")
   )
   rec <- new_reconciliation(mapping, make_demo_meta())
-  testthat::local_mocked_bindings(
-    interactive = function() TRUE,
-    readline = function(prompt) "q",
-    .package = "base"
-  )
-  out <- suppressMessages(reconcile_review(rec, type = "fuzzy", quiet = TRUE))
+  out <- suppressMessages(with_mocked_review(
+    c("a", "r", "q"),
+    rec, type = "fuzzy", quiet = FALSE
+  ))
   expect_s3_class(out, "reconciliation")
+  manual_n <- sum(out$mapping$match_type == "manual", na.rm = TRUE)
+  expect_true(manual_n >= 1L)
 })
 
 
@@ -615,4 +610,313 @@ test_that(".pr_lookup_taxadb returns ambiguous when canonical IDs disagree", {
   amb <- prepR4pcm:::.pr_lookup_taxadb("Messy name", "col", NULL)
   expect_equal(amb$status, "ambiguous")
 })
+
+
+test_that("reconcile_review flagged empty queue reports no items", {
+  mapping <- tibble::tibble(
+    name_x = "Only one", name_y = "Only_one",
+    name_resolved = NA_character_, match_type = "exact",
+    match_score = 1, match_source = "exact_string",
+    in_x = TRUE, in_y = TRUE, notes = ""
+  )
+  rec <- new_reconciliation(mapping, make_demo_meta())
+  msgs <- capture_messages(with_mocked_review(character(), rec, type = "flagged"))
+  expect_true(any(grepl("No matches to review", msgs, fixed = TRUE)))
+})
+
+
+test_that("reconcile_review readline validation retries invalid responses", {
+  mapping <- tibble::tibble(
+    name_x = "Review me", name_y = "Review_me",
+    name_resolved = NA_character_, match_type = "flagged",
+    match_score = 0.9, match_source = "fuzzy_flagged",
+    in_x = TRUE, in_y = TRUE, notes = ""
+  )
+  rec <- new_reconciliation(mapping, make_demo_meta())
+  out <- suppressMessages(with_mocked_review(
+    c("", "maybe", "q"),
+    rec, type = "flagged", quiet = FALSE
+  ))
+  expect_s3_class(out, "reconciliation")
+})
+
+
+test_that(".pr_augment_vphylomaker runs mocked phylo.maker list return", {
+  backbone <- mini_phylo("Quercus_robur")
+  new_tree <- mini_phylo(c("Quercus_robur", "Quercus_rubra"))
+  base_get <- getFromNamespace("get", "base")
+  testthat::local_mocked_bindings(
+    pr_namespace_available = function(pkg) identical(pkg, "V.PhyloMaker2"),
+    .package = "prepR4pcm"
+  )
+  testthat::local_mocked_bindings(
+    get = function(x, envir = parent.frame(), mode = "any") {
+      if (identical(x, "phylo.maker")) {
+        function(...) list(scenario.3 = new_tree)
+      } else {
+        base_get(x, envir, mode)
+      }
+    },
+    .package = "base"
+  )
+  res <- prepR4pcm:::.pr_augment_vphylomaker(
+    "Quercus rubra", backbone, scenarios = "S3", quiet = FALSE
+  )
+  expect_s3_class(res$tree, "phylo")
+  expect_equal(nrow(res$augmented), 1L)
+  expect_equal(res$backend_meta$package, "V.PhyloMaker2")
+})
+
+
+test_that(".pr_augment_uphylomaker uses explicit gen.list when bundled lookup missing", {
+  backbone <- mini_phylo(c("Homo_sapiens", "Pan_troglodytes"))
+  grafted <- mini_phylo(c("Homo_sapiens", "Pan_troglodytes", "Homo_erectus"))
+  gen_list <- data.frame(genus = "Homo", family = "Hominidae", stringsAsFactors = FALSE)
+  base_get <- getFromNamespace("get", "base")
+  testthat::local_mocked_bindings(
+    pr_namespace_available = function(pkg) identical(pkg, "U.PhyloMaker"),
+    .package = "prepR4pcm"
+  )
+  testthat::local_mocked_bindings(
+    get = function(x, envir = parent.frame(), mode = "any") {
+      if (identical(x, "phylo.maker")) {
+        function(...) grafted
+      } else if (identical(x, "nodes.info.1")) {
+        stop("missing bundled lookup")
+      } else {
+        base_get(x, envir, mode)
+      }
+    },
+    .package = "base"
+  )
+  res <- prepR4pcm:::.pr_augment_uphylomaker(
+    "Homo erectus", backbone, gen.list = gen_list, quiet = FALSE
+  )
+  expect_equal(nrow(res$augmented), 1L)
+  expect_equal(res$backend_meta$backend, "uphylomaker")
+})
+
+
+test_that("reconcile_augment quiet = FALSE reports nothing to add", {
+  tree <- mini_phylo("Parus_major")
+  mapping <- tibble::tibble(
+    name_x = "Parus major", name_y = "Parus_major",
+    name_resolved = NA_character_, match_type = "exact",
+    match_score = 1, match_source = "exact_string",
+    in_x = TRUE, in_y = TRUE, notes = ""
+  )
+  rec <- new_reconciliation(mapping, make_demo_meta())
+  msgs <- capture_messages(reconcile_augment(rec, tree, quiet = FALSE))
+  expect_true(any(grepl("No unresolved", msgs, fixed = TRUE)))
+})
+
+
+test_that("reconcile_augment skips names without extractable genus", {
+  tree <- ape::read.tree(text = "(Parus_major:1);")
+  mapping <- tibble::tibble(
+    name_x = c("123", "Parus minor"),
+    name_y = NA_character_,
+    name_resolved = NA_character_,
+    match_type = "unresolved",
+    match_score = NA_real_,
+    match_source = NA_character_,
+    in_x = TRUE,
+    in_y = FALSE,
+    notes = ""
+  )
+  rec <- new_reconciliation(mapping, make_demo_meta())
+  msgs <- capture_messages(reconcile_augment(rec, tree, seed = 1, quiet = FALSE))
+  aug <- reconcile_augment(rec, tree, seed = 1, quiet = TRUE)
+  expect_true(any(grepl("Added", msgs, fixed = TRUE)))
+  expect_true(nrow(aug$skipped) >= 1L)
+  expect_match(aug$skipped$reason[1], "genus")
+})
+
+
+test_that("reconcile_augment rtrees dispatch prints skip warning when quiet = FALSE", {
+  rec <- new_reconciliation(
+    tibble::tibble(
+      name_x = "New bird", name_y = NA_character_, name_resolved = NA_character_,
+      match_type = "unresolved", match_score = NA_real_, match_source = NA_character_,
+      in_x = TRUE, in_y = FALSE, notes = ""
+    ),
+    make_demo_meta()
+  )
+  tree <- mini_phylo("Parus_major")
+  testthat::local_mocked_bindings(
+    .pr_augment_rtrees = function(species_to_add, tree, taxon = NULL,
+                                  quiet = FALSE, ...) {
+      list(
+        tree = tree,
+        augmented = tibble::tibble(),
+        skipped = tibble::tibble(
+          species = species_to_add, genus = "Parus", reason = "unplaced"
+        ),
+        backend_meta = list(backend = "rtrees", n_grafted = 0L)
+      )
+    },
+    .package = "prepR4pcm"
+  )
+  msgs <- capture_messages(reconcile_augment(
+    rec, tree, source = "rtrees", taxon = "bird",
+    quiet = FALSE, check_ultrametric = FALSE
+  ))
+  expect_true(any(grepl("Skipped", msgs, fixed = TRUE)))
+})
+
+
+test_that("pr_bind_species falls back when getMRCA is NULL", {
+  tr <- ape::read.tree(text = "((Parus_major:1,Parus_minor:1):1,Corvus_corax:2);")
+  testthat::local_mocked_bindings(
+    getMRCA = function(phy, tips) NULL,
+    .package = "ape"
+  )
+  res <- prepR4pcm:::pr_bind_species(
+    tr, "Parus_sp", c("Parus_major", "Parus_minor"), where = "near", bl = 0.01
+  )
+  expect_s3_class(res$tree, "phylo")
+  expect_true("Parus_sp" %in% res$tree$tip.label)
+})
+
+
+test_that("pr_bind_species errors on unknown where", {
+  tr <- mini_phylo(c("a", "b"))
+  expect_error(
+    prepR4pcm:::pr_bind_species(tr, "c", "a", where = "bogus", bl = 0),
+    "Unknown placement"
+  )
+})
+
+
+test_that("pr_bind_tip pure-ape fallback binds at root when edge missing", {
+  tr <- mini_phylo(c("a", "b"))
+  tr$edge.length <- c(1, 1)
+  req_ns <- getFromNamespace("requireNamespace", "base")
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (identical(package, "phytools")) return(FALSE)
+      req_ns(package, ..., quietly = quietly)
+    },
+    .package = "base"
+  )
+  root_where <- tr$Nnode + length(tr$tip.label)
+  out <- prepR4pcm:::pr_bind_tip(tr, "root_tip", where = root_where,
+                                 position = 0, edge.length = 0.01)
+  expect_true("root_tip" %in% out$tip.label)
+})
+
+
+test_that("pr_get_tree_status marks fishtree reachable when backend call succeeds", {
+  req_ns <- getFromNamespace("requireNamespace", "base")
+  testthat::local_mocked_bindings(
+    requireNamespace = function(package, ..., quietly = TRUE) {
+      if (package %in% c("rotl", "fishtree")) return(TRUE)
+      req_ns(package, ..., quietly = quietly)
+    },
+    .package = "base"
+  )
+  testthat::local_mocked_bindings(
+    .pr_check_backend_reachable = function(source) {
+      if (identical(source, "rotl")) return(FALSE)
+      if (identical(source, "fishtree")) return(TRUE)
+      NA
+    },
+    .package = "prepR4pcm"
+  )
+  st <- pr_get_tree_status(check_network = TRUE)
+  expect_false(st[st$source == "rotl", "reachable", drop = TRUE])
+  expect_true(st[st$source == "fishtree", "reachable", drop = TRUE])
+})
+
+
+test_that("pr_tree_cache_clear interactive confirm can abort or delete", {
+  td <- tempfile("prtree-cache-")
+  on.exit(unlink(td, recursive = TRUE), add = TRUE)
+  prev <- getOption("prepR4pcm.cache_dir", default = NULL)
+  on.exit(options(prepR4pcm.cache_dir = prev), add = TRUE)
+  pr_tree_cache_dir(td)
+  prepR4pcm:::.pr_tree_cache_put("hash-coverage", "rotl", mini_phylo("a"))
+  clear <- pr_tree_cache_clear
+  body(clear) <- body(clear)
+  env <- new.env(parent = environment(clear))
+  environment(clear) <- env
+  env$interactive <- function() TRUE
+  env$readline <- function(prompt) "n"
+  msgs_abort <- capture_messages(clear(confirm = TRUE))
+  expect_true(any(grepl("Aborted", msgs_abort, fixed = TRUE)))
+  env$readline <- function(prompt) "y"
+  cleared <- capture_messages(clear(confirm = TRUE))
+  expect_true(any(grepl("Removed", cleared, fixed = TRUE)))
+})
+
+
+test_that("pr_cite_tree bibtex includes per-tree entries for multi-tree provenance", {
+  tr <- ape::rcoal(3, tip.label = c("a", "b", "c"))
+  res <- structure(
+    list(
+      tree = tr,
+      matched = tr$tip.label,
+      unmatched = character(),
+      source = "rotl",
+      backend_meta = list(
+        tree_provenance = list(
+          list(citation = "Tree A", calibration_method = "bladj"),
+          list(citation = "Tree B", calibration_method = "bladj")
+        )
+      )
+    ),
+    class = "pr_tree_result"
+  )
+  bib <- pr_cite_tree(res, format = "bibtex")
+  expect_match(bib, "tree1")
+  expect_match(bib, "tree2")
+})
+
+
+test_that("reconcile_crosswalk notes_col appends extra notes", {
+  xw <- data.frame(
+    from = c("Sp A", "Sp B"),
+    to = c("Sp A2", "Sp B"),
+    extra = c("note A", ""),
+    stringsAsFactors = FALSE
+  )
+  out <- reconcile_crosswalk(xw, "from", "to", notes_col = "extra")
+  expect_equal(nrow(out), 1L)
+  expect_match(out$user_note[1], "note A")
+})
+
+
+test_that("reconcile_report includes identity and override detail blocks", {
+  mapping <- tibble::tibble(
+    name_x = c("Fuzzy one", "Manual two", "Only data"),
+    name_y = c("Fuzzy_one", "Manual_two", NA_character_),
+    name_resolved = NA_character_,
+    match_type = c("fuzzy", "manual", "unresolved"),
+    match_score = c(0.9, 1, NA),
+    match_source = c("fuzzy", "manual", NA_character_),
+    in_x = TRUE,
+    in_y = c(TRUE, TRUE, FALSE),
+    notes = c("", "edited", "")
+  )
+  rec <- new_reconciliation(
+    mapping, make_demo_meta(),
+    unused_overrides = tibble::tibble(
+      name_x = "unused", name_y = "unused_y", reason = "stale"
+    ),
+    candidates = tibble::tibble(
+      name_x = "C1", name_y = "C2", identity_state = "withheld",
+      eligible = FALSE, reason = "id", x_id = "1", y_id = "2",
+      provider = "col", version = "2025", stage = "fuzzy",
+      review_status = "pending", review_note = NA_character_
+    )
+  )
+  path <- tempfile(fileext = ".html")
+  on.exit(unlink(path), add = TRUE)
+  reconcile_report(rec, file = path, open = FALSE, title = "Coverage report")
+  html <- paste(readLines(path), collapse = "\n")
+  expect_true(grepl("Identity", html, ignore.case = TRUE))
+  expect_true(grepl("Unused", html, ignore.case = TRUE))
+  expect_true(grepl("Manual", html, fixed = TRUE))
+})
+
 
