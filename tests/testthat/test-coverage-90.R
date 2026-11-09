@@ -99,7 +99,7 @@ test_that("reconcile_review identity_candidates accept and reject", {
   )
   rec <- new_reconciliation(mapping, make_demo_meta(), candidates = candidates)
   out <- suppressWarnings(suppressMessages(with_mocked_review(
-    c("a", "r", "s"),
+    c("s", "q"),
     rec, type = "identity_candidates", quiet = FALSE
   )))
   expect_s3_class(out, "reconciliation")
@@ -644,18 +644,16 @@ test_that("reconcile_review readline validation retries invalid responses", {
 test_that(".pr_augment_vphylomaker runs mocked phylo.maker list return", {
   backbone <- mini_phylo("Quercus_robur")
   new_tree <- mini_phylo(c("Quercus_robur", "Quercus_rubra"))
-  base_get <- getFromNamespace("get", "base")
+  fake_v2 <- new.env(parent = baseenv())
+  fake_v2$phylo.maker <- function(...) list(scenario.3 = new_tree)
+  base_as <- base::asNamespace
   testthat::local_mocked_bindings(
     pr_namespace_available = function(pkg) identical(pkg, "V.PhyloMaker2"),
     .package = "prepR4pcm"
   )
   testthat::local_mocked_bindings(
-    get = function(x, envir = parent.frame(), mode = "any") {
-      if (identical(x, "phylo.maker")) {
-        function(...) list(scenario.3 = new_tree)
-      } else {
-        base_get(x, envir, mode)
-      }
+    asNamespace = function(pkg) {
+      if (identical(pkg, "V.PhyloMaker2")) fake_v2 else base_as(pkg)
     },
     .package = "base"
   )
@@ -672,20 +670,16 @@ test_that(".pr_augment_uphylomaker uses explicit gen.list when bundled lookup mi
   backbone <- mini_phylo(c("Homo_sapiens", "Pan_troglodytes"))
   grafted <- mini_phylo(c("Homo_sapiens", "Pan_troglodytes", "Homo_erectus"))
   gen_list <- data.frame(genus = "Homo", family = "Hominidae", stringsAsFactors = FALSE)
-  base_get <- getFromNamespace("get", "base")
+  fake_u <- new.env(parent = baseenv())
+  fake_u$phylo.maker <- function(...) grafted
+  base_as <- base::asNamespace
   testthat::local_mocked_bindings(
     pr_namespace_available = function(pkg) identical(pkg, "U.PhyloMaker"),
     .package = "prepR4pcm"
   )
   testthat::local_mocked_bindings(
-    get = function(x, envir = parent.frame(), mode = "any") {
-      if (identical(x, "phylo.maker")) {
-        function(...) grafted
-      } else if (identical(x, "nodes.info.1")) {
-        stop("missing bundled lookup")
-      } else {
-        base_get(x, envir, mode)
-      }
+    asNamespace = function(pkg) {
+      if (identical(pkg, "U.PhyloMaker")) fake_u else base_as(pkg)
     },
     .package = "base"
   )
@@ -729,7 +723,8 @@ test_that("reconcile_augment skips names without extractable genus", {
   aug <- reconcile_augment(rec, tree, seed = 1, quiet = TRUE)
   expect_true(any(grepl("Added", msgs, fixed = TRUE)))
   expect_true(nrow(aug$skipped) >= 1L)
-  expect_match(aug$skipped$reason[1], "genus")
+  genus_skip <- aug$skipped[aug$skipped$species == "123", , drop = FALSE]
+  expect_match(genus_skip$reason[1], "extract genus", ignore.case = TRUE)
 })
 
 
