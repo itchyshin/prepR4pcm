@@ -59,7 +59,7 @@ test_that("reconcile_review interactive flagged: accept, reject, skip, quit", {
 })
 
 
-test_that("reconcile_review interactive all_unresolved shows hint and cannot accept empty target", {
+test_that("reconcile_review interactive all_unresolved cannot accept empty target", {
   mapping <- tibble::tibble(
     name_x        = "Missing species",
     name_y        = NA_character_,
@@ -72,15 +72,17 @@ test_that("reconcile_review interactive all_unresolved shows hint and cannot acc
     notes         = "no match"
   )
   rec <- new_reconciliation(mapping, make_demo_meta())
-  out <- suppressMessages(with_mocked_review(
+  out <- with_mocked_review(
     c("a", "q"),
     rec, type = "all_unresolved", suggest = TRUE, quiet = TRUE
-  ))
-  expect_s3_class(out, "reconciliation")
+  )
+  expect_equal(out$mapping$match_type, "unresolved")
+  expect_equal(out$mapping$name_resolved, NA_character_)
+  expect_equal(nrow(out$overrides), 0L)
 })
 
 
-test_that("reconcile_review identity_candidates accept and reject", {
+identity_candidates_review_fixture <- function() {
   candidates <- tibble::tibble(
     name_x = c("Alpha a", "Beta b"),
     name_y = c("Alpha x", "Beta y"),
@@ -97,13 +99,30 @@ test_that("reconcile_review identity_candidates accept and reject", {
     match_score = NA_real_, match_source = NA_character_,
     in_x = TRUE, in_y = FALSE, notes = ""
   )
-  rec <- new_reconciliation(mapping, make_demo_meta(), candidates = candidates)
-  out <- suppressWarnings(suppressMessages(with_mocked_review(
+  new_reconciliation(mapping, make_demo_meta(), candidates = candidates)
+}
+
+
+test_that("reconcile_review identity_candidates skip and quit leave state unchanged", {
+  rec <- identity_candidates_review_fixture()
+  out <- suppressMessages(with_mocked_review(
     c("s", "q"),
     rec, type = "identity_candidates", quiet = FALSE
-  )))
-  expect_s3_class(out, "reconciliation")
-  expect_equal(nrow(out$candidates), nrow(candidates))
+  ))
+  expect_identical(out$mapping, rec$mapping)
+  expect_equal(out$candidates$review_status, rep("pending", 2L))
+  expect_equal(nrow(out$overrides), 0L)
+})
+
+
+test_that("reconcile_review identity accept aborts without y inventory (issue #145)", {
+  rec <- identity_candidates_review_fixture()
+  expect_error(
+    suppressMessages(with_mocked_review(
+      "a", rec, type = "identity_candidates", quiet = TRUE
+    )),
+    "not found uniquely in target `y`"
+  )
 })
 
 
@@ -493,12 +512,15 @@ test_that("reconcile_review interactive fuzzy walks flagged and fuzzy rows", {
   )
   rec <- new_reconciliation(mapping, make_demo_meta())
   out <- suppressMessages(with_mocked_review(
-    c("a", "r", "q"),
+    c("a", "r"),
     rec, type = "fuzzy", quiet = FALSE
   ))
-  expect_s3_class(out, "reconciliation")
-  manual_n <- sum(out$mapping$match_type == "manual", na.rm = TRUE)
-  expect_true(manual_n >= 1L)
+  one <- out$mapping[out$mapping$name_x == "Species one", , drop = FALSE]
+  two <- out$mapping[out$mapping$name_x == "Species two", , drop = FALSE]
+  expect_equal(one$match_type, "manual")
+  expect_equal(one$name_y, "Species_one")
+  expect_equal(two$match_type, "unresolved")
+  expect_equal(two$name_y, NA_character_)
 })
 
 
@@ -507,7 +529,11 @@ test_that("reconcile_suggest quiet = FALSE prints a table header", {
   tree <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
   rec <- reconcile_tree(df, tree, x_species = "species", authority = NULL, quiet = TRUE)
   msgs <- capture_messages(reconcile_suggest(rec, n = 2, threshold = 0.5, quiet = FALSE))
-  expect_true(length(msgs) >= 1L)
+  expect_true(any(grepl("Found suggestions", msgs, fixed = TRUE)))
+  sugg <- reconcile_suggest(rec, n = 2, threshold = 0.5, quiet = TRUE)
+  expect_equal(sugg$unresolved[1], "Pan trogloytes")
+  expect_equal(sugg$suggestion[1], "Pan_troglodytes")
+  expect_true(sugg$score[1] >= 0.5)
 })
 
 
@@ -633,11 +659,13 @@ test_that("reconcile_review readline validation retries invalid responses", {
     in_x = TRUE, in_y = TRUE, notes = ""
   )
   rec <- new_reconciliation(mapping, make_demo_meta())
-  out <- suppressMessages(with_mocked_review(
+  msgs <- capture_messages(out <- with_mocked_review(
     c("", "maybe", "q"),
     rec, type = "flagged", quiet = FALSE
   ))
-  expect_s3_class(out, "reconciliation")
+  expect_equal(out$mapping$match_type, "flagged")
+  expect_equal(out$mapping$name_y, "Review_me")
+  expect_true(any(grepl("Quit early", msgs, fixed = TRUE)))
 })
 
 
@@ -1005,11 +1033,17 @@ test_that("reconcile_augment vphylomaker quiet = FALSE reports progress", {
 })
 
 
-test_that("reconcile_summary mismatches_only detail lists non-exact rows", {
-  rec <- fx_rec_tree()
-  summ <- reconcile_summary(rec, format = "data.frame", detail = "mismatches_only")
-  expect_s3_class(summ, "reconciliation_summary")
-  expect_true(length(summ$tables) >= 1L)
+test_that("reconcile_summary brief console output is shorter than full", {
+  rec <- fx_rec_unresolved()
+  brief <- reconcile_summary(rec, format = "console", detail = "brief")
+  full <- reconcile_summary(rec, format = "console", detail = "full")
+  expect_true(nchar(full$formatted_text) > nchar(brief$formatted_text))
+  expect_true(grepl("Match Summary", full$formatted_text, fixed = TRUE))
+  expect_false(grepl("--- Normalized Matches", brief$formatted_text, fixed = TRUE))
+  # detail = "mismatches_only" is accepted; filtering is issue #146 — not asserted here.
+  mo <- reconcile_summary(rec, format = "data.frame", detail = "mismatches_only")
+  expect_equal(mo$tables$by_type$match_type,
+               full$tables$by_type$match_type)
 })
 
 
@@ -1070,10 +1104,13 @@ test_that(".pr_check_backend_reachable returns FALSE on fishtree errors", {
 test_that("reconcile_trees quiet = FALSE prints reconciliation summary", {
   tree1 <- ape::read.tree(text = "(Homo_sapiens:1,Pan_troglodytes:1);")
   tree2 <- ape::read.tree(text = "(Homo_sapiens:1,Gorilla_gorilla:1);")
-  msgs <- capture_messages(reconcile_trees(
+  msgs <- capture_messages(rec <- reconcile_trees(
     tree1, tree2, authority = NULL, quiet = FALSE
   ))
-  expect_true(length(msgs) >= 1L)
+  expect_true(any(grepl("Reconciling", msgs, fixed = TRUE)))
+  expect_true(any(grepl("Matched", msgs, fixed = TRUE)))
+  expect_equal(rec$meta$type, "tree_tree")
+  expect_equal(rec$counts$n_exact, 1L)
 })
 
 
