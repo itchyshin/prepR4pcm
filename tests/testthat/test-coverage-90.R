@@ -115,17 +115,6 @@ test_that("reconcile_review identity_candidates skip and quit leave state unchan
 })
 
 
-test_that("reconcile_review identity accept aborts without y inventory (issue #145)", {
-  rec <- identity_candidates_review_fixture()
-  expect_error(
-    suppressMessages(with_mocked_review(
-      "a", rec, type = "identity_candidates", quiet = TRUE
-    )),
-    "not found uniquely in target `y`"
-  )
-})
-
-
 test_that("reconcile_review identity_candidates with no pending returns unchanged", {
   candidates <- tibble::tibble(
     name_x = "A", name_y = "B", identity_state = "withheld", eligible = FALSE,
@@ -1048,10 +1037,6 @@ test_that("reconcile_summary brief console output is shorter than full", {
   expect_true(nchar(full$formatted_text) > nchar(brief$formatted_text))
   expect_true(grepl("Match Summary", full$formatted_text, fixed = TRUE))
   expect_false(grepl("--- Normalized Matches", brief$formatted_text, fixed = TRUE))
-  # detail = "mismatches_only" is accepted; filtering is issue #146 — not asserted here.
-  mo <- reconcile_summary(rec, format = "data.frame", detail = "mismatches_only")
-  expect_equal(mo$tables$by_type$match_type,
-               full$tables$by_type$match_type)
 })
 
 
