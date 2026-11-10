@@ -1077,3 +1077,48 @@ test_that("reconcile_trees quiet = FALSE prints reconciliation summary", {
 })
 
 
+test_that("reconcile_export writes unused overrides and identity candidates", {
+  df <- data.frame(species = "Homo sapiens", trait = 1)
+  tree <- ape::read.tree(text = "(Homo_sapiens:1);")
+  rec <- reconcile_tree(df, tree, x_species = "species", authority = NULL, quiet = TRUE)
+  rec$unused_overrides <- tibble::tibble(
+    name_x = "ghost", name_y = "ghost_y", reason = "stale override"
+  )
+  rec$candidates <- tibble::tibble(
+    name_x = "Homo sapiens", name_y = "Homo_neanderthalensis",
+    identity_state = "withheld", eligible = FALSE, reason = "id",
+    x_id = "1", y_id = "2", provider = "col", version = "2025",
+    stage = "fuzzy", review_status = "pending", review_note = NA_character_
+  )
+  out_dir <- tempfile("cov-export-extra-")
+  on.exit(unlink(out_dir, recursive = TRUE))
+  msgs <- capture_messages(paths <- suppressWarnings(reconcile_export(
+    rec, data = df, tree = tree, species_col = "species", dir = out_dir
+  )))
+  expect_true(any(grepl("Unused overrides", msgs, fixed = TRUE)))
+  expect_true(file.exists(paths$unused_overrides))
+  expect_true(file.exists(paths$candidates))
+})
+
+
+test_that("pr_cite_tree markdown lists multiple provenance bullets", {
+  tr <- ape::rcoal(3)
+  res <- structure(
+    list(
+      tree = tr,
+      source = "fishtree",
+      backend_meta = list(
+        tree_provenance = list(
+          list(citation = "Calibration A", calibration_method = "m1"),
+          list(citation = "Calibration B", calibration_method = "m2")
+        )
+      )
+    ),
+    class = "pr_tree_result"
+  )
+  md <- pr_cite_tree(res, format = "markdown")
+  expect_match(md, "Per-tree source citations")
+  expect_match(md, "Calibration B")
+})
+
+
