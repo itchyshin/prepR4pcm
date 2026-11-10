@@ -515,8 +515,16 @@ test_that("reconcile_review interactive fuzzy walks flagged and fuzzy rows", {
     c("a", "r"),
     rec, type = "fuzzy", quiet = FALSE
   ))
-  one <- out$mapping[out$mapping$name_x == "Species one", , drop = FALSE]
-  two <- out$mapping[out$mapping$name_x == "Species two", , drop = FALSE]
+  one <- out$mapping[
+    out$mapping$name_x == "Species one" & out$mapping$in_x,
+    , drop = FALSE
+  ]
+  two <- out$mapping[
+    out$mapping$name_x == "Species two" & out$mapping$in_x,
+    , drop = FALSE
+  ]
+  expect_equal(nrow(one), 1L)
+  expect_equal(nrow(two), 1L)
   expect_equal(one$match_type, "manual")
   expect_equal(one$name_y, "Species_one")
   expect_equal(two$match_type, "unresolved")
